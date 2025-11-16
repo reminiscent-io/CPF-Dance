@@ -14,10 +14,13 @@ export function useUser() {
     const supabase = createClient()
 
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      console.log('useUser: Fetching user...')
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('useUser: User result:', { user: !!user, error: userError })
       setUser(user)
 
       if (user) {
+        console.log('useUser: Fetching profile for user:', user.id)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -26,10 +29,17 @@ export function useUser() {
 
         if (profileError) {
           console.error('Profile fetch error in useUser:', profileError)
+        } else {
+          console.log('useUser: Profile loaded:', profileData?.role)
         }
         setProfile(profileData)
+      } else {
+        console.log('useUser: No user found, checking session...')
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('useUser: Session check:', { hasSession: !!session })
       }
 
+      console.log('useUser: Setting loading to false')
       setLoading(false)
     }
 

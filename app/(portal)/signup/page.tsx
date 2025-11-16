@@ -103,8 +103,8 @@ export default function SignupPage() {
       }
 
       if (result.success && result.redirectUrl) {
-        // Small delay to ensure cookies are set before redirect
-        await new Promise(resolve => setTimeout(resolve, 200))
+        // Longer delay to ensure cookies are fully set in Replit environment
+        await new Promise(resolve => setTimeout(resolve, 1000))
         window.location.replace(result.redirectUrl)
       }
     } catch (err) {

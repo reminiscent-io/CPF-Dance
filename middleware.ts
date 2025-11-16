@@ -12,11 +12,15 @@ export async function middleware(request: NextRequest) {
   const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
 
   if (isPortalPage) {
-    console.log('Middleware check:', { 
+    const cookies = request.cookies.getAll()
+    const supabaseCookies = cookies.filter(c => c.name.includes('supabase'))
+    console.log('Middleware check:', {
       path: request.nextUrl.pathname,
-      hasUser: !!user, 
+      hasUser: !!user,
       hasProfile: !!profile,
-      profileRole: profile?.role 
+      profileRole: profile?.role,
+      cookieCount: cookies.length,
+      supabaseCookieCount: supabaseCookies.length
     })
   }
 

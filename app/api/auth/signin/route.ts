@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password } = body
 
+    console.log('Signin attempt for:', email)
+
     const supabase = await createClient()
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -45,13 +47,10 @@ export async function POST(request: Request) {
 
     console.log('Signin successful for:', authData.user.email, 'role:', profile.role, 'redirecting to:', redirectUrl)
 
-    // Create response with proper headers
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
       redirectUrl,
     })
-
-    return response
   } catch (error) {
     console.error('Signin error:', error)
     return NextResponse.json(

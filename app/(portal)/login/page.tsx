@@ -1,23 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-
-    const formData = {
-      email: email.trim(),
-      password,
-    }
 
     try {
       const response = await fetch('/api/auth/signin', {
@@ -25,11 +21,13 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
       })
 
       const result = await response.json()
-      console.log('Login response:', result)
 
       if (!response.ok || result.error) {
         setError(result.error || 'An unexpected error occurred')
@@ -38,14 +36,8 @@ export default function LoginPage() {
       }
 
       if (result.success && result.redirectUrl) {
-        console.log('Redirecting to:', result.redirectUrl)
-        // Small delay to ensure cookies are set before redirect
-        await new Promise(resolve => setTimeout(resolve, 200))
-        window.location.replace(result.redirectUrl)
-      } else {
-        console.log('No redirect - result:', result)
-        setError('Login successful but no redirect URL received')
-        setLoading(false)
+        // Force a full page navigation to ensure cookies are read
+        window.location.href = result.redirectUrl
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -131,4 +123,8 @@ export default function LoginPage() {
       </div>
     </div>
   )
+}
+
+export default function LoginPage() {
+  return <LoginForm />
 }
