@@ -103,7 +103,9 @@ export default function SignupPage() {
       }
 
       if (result.success && result.redirectUrl) {
-        window.location.href = result.redirectUrl
+        // Small delay to ensure cookies are set before redirect
+        await new Promise(resolve => setTimeout(resolve, 200))
+        window.location.replace(result.redirectUrl)
       }
     } catch (err) {
       setError('An unexpected error occurred')

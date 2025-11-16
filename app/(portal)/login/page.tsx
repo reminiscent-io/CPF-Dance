@@ -39,7 +39,8 @@ export default function LoginPage() {
 
       if (result.success && result.redirectUrl) {
         console.log('Redirecting to:', result.redirectUrl)
-        // Force a full page reload to ensure cookies are set
+        // Small delay to ensure cookies are set before redirect
+        await new Promise(resolve => setTimeout(resolve, 200))
         window.location.replace(result.redirectUrl)
       } else {
         console.log('No redirect - result:', result)

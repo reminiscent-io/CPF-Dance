@@ -4,8 +4,11 @@ import { getCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[Dancer Stats] Starting request...')
     const student = await getCurrentDancerStudent()
+    console.log('[Dancer Stats] Student:', student)
     const profile = await requireDancer()
+    console.log('[Dancer Stats] Profile:', profile)
     const supabase = await createClient()
 
     const now = new Date().toISOString()
