@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from '@/lib/auth/actions'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -20,10 +19,28 @@ export default function LoginPage() {
       password,
     }
 
-    const result = await signIn(formData)
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
 
-    if (result?.error) {
-      setError(result.error)
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setError(result.error || 'An unexpected error occurred')
+        setLoading(false)
+        return
+      }
+
+      if (result.success && result.redirectUrl) {
+        window.location.href = result.redirectUrl
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
       setLoading(false)
     }
   }

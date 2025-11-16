@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signUp } from '@/lib/auth/actions'
 import Link from 'next/link'
 import type { UserRole } from '@/lib/auth/types'
 
@@ -86,10 +85,28 @@ export default function SignupPage() {
       guardianEmail: formData.guardianEmail.trim() || undefined,
     }
 
-    const result = await signUp(signUpData)
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(signUpData),
+      })
 
-    if (result?.error) {
-      setError(result.error)
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setError(result.error || 'An unexpected error occurred')
+        setLoading(false)
+        return
+      }
+
+      if (result.success && result.redirectUrl) {
+        window.location.href = result.redirectUrl
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
       setLoading(false)
     }
   }
