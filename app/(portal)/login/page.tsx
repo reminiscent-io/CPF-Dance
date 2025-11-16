@@ -29,6 +29,7 @@ export default function LoginPage() {
       })
 
       const result = await response.json()
+      console.log('Login response:', result)
 
       if (!response.ok || result.error) {
         setError(result.error || 'An unexpected error occurred')
@@ -37,7 +38,12 @@ export default function LoginPage() {
       }
 
       if (result.success && result.redirectUrl) {
+        console.log('Redirecting to:', result.redirectUrl)
         window.location.href = result.redirectUrl
+      } else {
+        console.log('No redirect - result:', result)
+        setError('Login successful but no redirect URL received')
+        setLoading(false)
       }
     } catch (err) {
       setError('An unexpected error occurred')

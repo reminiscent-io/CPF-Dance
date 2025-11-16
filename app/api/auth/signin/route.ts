@@ -21,11 +21,15 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single()
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError)
+      }
 
       if (profile) {
         const roleRedirects: Record<UserRole, string> = {
@@ -35,10 +39,13 @@ export async function POST(request: Request) {
           guardian: '/dancer',
         }
 
+        console.log('Signin successful, redirecting to:', roleRedirects[profile.role as UserRole])
         return NextResponse.json({
           success: true,
           redirectUrl: roleRedirects[profile.role as UserRole] || '/dancer',
         })
+      } else {
+        console.log('No profile found, using default redirect')
       }
     }
 
