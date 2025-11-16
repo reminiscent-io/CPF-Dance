@@ -18,12 +18,15 @@ export function useUser() {
       setUser(user)
 
       if (user) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
 
+        if (profileError) {
+          console.error('Profile fetch error in useUser:', profileError)
+        }
         setProfile(profileData)
       }
 
@@ -37,12 +40,15 @@ export function useUser() {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single()
 
+          if (profileError) {
+            console.error('Profile fetch error in auth state change:', profileError)
+          }
           setProfile(profileData)
         } else {
           setProfile(null)
