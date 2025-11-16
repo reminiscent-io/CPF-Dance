@@ -1,7 +1,10 @@
-import { updateSession } from './lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Auth bypass for development - allow all portal access
+  return NextResponse.next()
+  
+  /* Auth disabled
   const { response, user, profile } = await updateSession(request)
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
@@ -64,6 +67,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return response
+  */
 }
 
 export const config = {

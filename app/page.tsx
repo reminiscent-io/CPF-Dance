@@ -77,9 +77,9 @@ export default function HomePage() {
             Track progress, manage schedules, and elevate your dance journey with expert guidance
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slideUp">
-            <Link href="/signup">
+            <Link href="/dev">
               <Button size="lg" className="w-full sm:w-auto min-w-[200px]">
-                Get Started
+                View Portals (Dev)
               </Button>
             </Link>
             <Button
@@ -90,11 +90,6 @@ export default function HomePage() {
             >
               Studio Inquiry
             </Button>
-          </div>
-          <div className="mt-12 text-sm text-gray-600">
-            <Link href="/login" className="hover:text-rose-600 transition-colors">
-              Already have an account? Sign in
-            </Link>
           </div>
         </div>
       </section>
