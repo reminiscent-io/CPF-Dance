@@ -11,7 +11,17 @@ export async function middleware(request: NextRequest) {
   const isStudioPage = request.nextUrl.pathname.startsWith('/studio')
   const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
 
+  if (isPortalPage) {
+    console.log('Middleware check:', { 
+      path: request.nextUrl.pathname,
+      hasUser: !!user, 
+      hasProfile: !!profile,
+      profileRole: profile?.role 
+    })
+  }
+
   if (!user && isPortalPage) {
+    console.log('No user, redirecting to login')
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
