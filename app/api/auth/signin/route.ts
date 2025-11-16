@@ -9,50 +9,49 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (error) {
+      console.error('Signin error:', error)
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError)
-      }
-
-      if (profile) {
-        const roleRedirects: Record<UserRole, string> = {
-          instructor: '/instructor',
-          dancer: '/dancer',
-          studio_admin: '/studio',
-          guardian: '/dancer',
-        }
-
-        console.log('Signin successful, redirecting to:', roleRedirects[profile.role as UserRole])
-        return NextResponse.json({
-          success: true,
-          redirectUrl: roleRedirects[profile.role as UserRole] || '/dancer',
-        })
-      } else {
-        console.log('No profile found, using default redirect')
-      }
+    if (!authData.user) {
+      return NextResponse.json({ error: 'No user returned' }, { status: 401 })
     }
 
-    return NextResponse.json({
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
+    }
+
+    const roleRedirects: Record<UserRole, string> = {
+      instructor: '/instructor',
+      dancer: '/dancer',
+      studio_admin: '/studio',
+      guardian: '/dancer',
+    }
+
+    const redirectUrl = roleRedirects[profile.role as UserRole] || '/dancer'
+
+    console.log('Signin successful for:', authData.user.email, 'role:', profile.role, 'redirecting to:', redirectUrl)
+
+    // Create response with proper headers
+    const response = NextResponse.json({
       success: true,
-      redirectUrl: '/dancer',
+      redirectUrl,
     })
+
+    return response
   } catch (error) {
     console.error('Signin error:', error)
     return NextResponse.json(

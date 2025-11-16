@@ -39,7 +39,8 @@ export default function LoginPage() {
 
       if (result.success && result.redirectUrl) {
         console.log('Redirecting to:', result.redirectUrl)
-        window.location.href = result.redirectUrl
+        // Force a full page reload to ensure cookies are set
+        window.location.replace(result.redirectUrl)
       } else {
         console.log('No redirect - result:', result)
         setError('Login successful but no redirect URL received')
