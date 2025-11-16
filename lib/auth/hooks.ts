@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { Profile } from './types'
-import { getMockUserRole, getMockProfile } from './mock-profiles'
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null)
@@ -11,17 +11,52 @@ export function useUser() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Use mock profiles instead of Supabase auth
-    const mockRole = getMockUserRole()
-    
-    if (mockRole) {
-      const mockProfile = getMockProfile(mockRole)
-      setProfile(mockProfile)
-      // Create a minimal mock user object
-      setUser({ id: mockProfile?.id || '' } as User)
+    const supabase = createClient()
+
+    // Get current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+
+      if (session?.user) {
+        // Fetch profile data
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            setProfile(profileData)
+            setLoading(false)
+          })
+          .catch(() => {
+            setLoading(false)
+          })
+      } else {
+        setLoading(false)
+      }
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            setProfile(profileData)
+          })
+      } else {
+        setProfile(null)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
-    
-    setLoading(false)
   }, [])
 
   return { user, profile, loading }

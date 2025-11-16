@@ -36,19 +36,23 @@ export async function GET(request: NextRequest) {
     const authorIds = [...new Set(notes?.map(n => n.author_id) || [])]
     const { data: authors } = await supabase
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, role')
       .in('id', authorIds)
 
     const authorMap = new Map(
-      authors?.map(a => [a.id, a.full_name]) || []
+      authors?.map(a => [a.id, { full_name: a.full_name, role: a.role }]) || []
     )
 
-    const notesWithAuthors = notes?.map(note => ({
-      ...note,
-      author_name: authorMap.get(note.author_id) || 'Unknown',
-      is_personal: note.author_id === profile.id,
-      is_shared: note.visibility !== 'private'
-    })) || []
+    const notesWithAuthors = notes?.map(note => {
+      const author = authorMap.get(note.author_id)
+      return {
+        ...note,
+        author_name: author?.full_name || 'Unknown',
+        author_role: author?.role || 'unknown',
+        is_personal: note.author_id === profile.id,
+        is_shared: note.visibility !== 'private'
+      }
+    }) || []
 
     return NextResponse.json({ notes: notesWithAuthors })
   } catch (error) {

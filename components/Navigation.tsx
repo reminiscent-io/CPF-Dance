@@ -30,8 +30,7 @@ export function Navigation({ profile }: NavigationProps) {
         return [
           { href: '/dancer', label: 'Dashboard' },
           { href: '/dancer/classes', label: 'My Classes' },
-          { href: '/dancer/progress', label: 'Progress' },
-          { href: '/dancer/my-notes', label: 'My Notes' },
+          { href: '/dancer/notes', label: 'Notes' },
           { href: '/dancer/request-lesson', label: 'Request Lesson' },
           { href: '/dancer/payments', label: 'Payments' },
           { href: '/dancer/profile', label: 'Profile' },

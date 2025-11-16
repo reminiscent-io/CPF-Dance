@@ -21,6 +21,15 @@ export default function StudentDetailPage() {
   const [requests, setRequests] = useState<PrivateLessonRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showNoteModal, setShowNoteModal] = useState(false)
+  const [noteFormData, setNoteFormData] = useState({
+    title: '',
+    content: '',
+    tags: '',
+    class_id: '',
+    visibility: 'shared_with_student'
+  })
+  const [savingNote, setSavingNote] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor') {
@@ -70,6 +79,54 @@ export default function StudentDetailPage() {
     } catch (error) {
       console.error('Error updating student:', error)
       addToast('Failed to update student', 'error')
+    }
+  }
+
+  const handleCreateNote = async () => {
+    if (!noteFormData.content.trim()) {
+      addToast('Please enter note content', 'error')
+      return
+    }
+
+    setSavingNote(true)
+    try {
+      const tags = noteFormData.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+
+      const payload = {
+        student_id: student?.id,
+        title: noteFormData.title.trim() || null,
+        content: noteFormData.content.trim(),
+        tags,
+        class_id: noteFormData.class_id || null,
+        visibility: noteFormData.visibility
+      }
+
+      const response = await fetch('/api/instructor/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) throw new Error('Failed to create note')
+
+      await fetchStudentDetails()
+      setShowNoteModal(false)
+      setNoteFormData({
+        title: '',
+        content: '',
+        tags: '',
+        class_id: '',
+        visibility: 'shared_with_student'
+      })
+      addToast('Note created successfully', 'success')
+    } catch (error) {
+      console.error('Error creating note:', error)
+      addToast('Failed to create note', 'error')
+    } finally {
+      setSavingNote(false)
     }
   }
 
@@ -188,21 +245,41 @@ export default function StudentDetailPage() {
           </Card>
 
           <Card>
-            <CardTitle>Notes Timeline ({notes.length})</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Notes Timeline ({notes.length})</CardTitle>
+              <Button variant="primary" size="sm" onClick={() => setShowNoteModal(true)}>
+                + Add Note
+              </Button>
+            </div>
             <CardContent className="mt-4">
               {notes.length === 0 ? (
-                <p className="text-gray-600">No notes yet</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-600 mb-4">No notes yet</p>
+                  <Button variant="outline" onClick={() => setShowNoteModal(true)}>
+                    Create First Note
+                  </Button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {notes.map((note: any) => (
                     <div key={note.id} className="border-l-4 border-rose-500 pl-4 py-2">
                       <div className="flex justify-between items-start mb-2">
-                        <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
+                        <div>
+                          <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={note.author_id === profile?.id ? 'primary' : 'default'} size="sm">
+                              {note.author_id === profile?.id ? 'You' : note.author_name || 'Student'}
+                            </Badge>
+                            {note.class_name && (
+                              <span className="text-xs text-gray-600">{note.class_name}</span>
+                            )}
+                          </div>
+                        </div>
                         <p className="text-xs text-gray-500">
                           {new Date(note.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <p className="text-gray-700 mb-2">{note.content}</p>
+                      <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.map((tag: string, idx: number) => (
@@ -275,6 +352,68 @@ export default function StudentDetailPage() {
           onClose={() => setShowEditModal(false)}
           onSubmit={handleUpdateStudent}
         />
+      )}
+
+      {showNoteModal && (
+        <Modal
+          isOpen={true}
+          onClose={() => setShowNoteModal(false)}
+          title="Add Note for Student"
+          size="lg"
+        >
+          <div className="space-y-4">
+            <Input
+              label="Title (optional)"
+              placeholder="Note title..."
+              value={noteFormData.title}
+              onChange={(e) => setNoteFormData({ ...noteFormData, title: e.target.value })}
+            />
+            <Textarea
+              label="Content"
+              placeholder="Share your feedback, observations, or progress notes..."
+              rows={6}
+              value={noteFormData.content}
+              onChange={(e) => setNoteFormData({ ...noteFormData, content: e.target.value })}
+            />
+            <Input
+              label="Tags (optional)"
+              placeholder="technique, improvement, strength (comma-separated)"
+              value={noteFormData.tags}
+              onChange={(e) => setNoteFormData({ ...noteFormData, tags: e.target.value })}
+              helperText="Add tags to categorize this note"
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Visibility
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                value={noteFormData.visibility}
+                onChange={(e) => setNoteFormData({ ...noteFormData, visibility: e.target.value })}
+              >
+                <option value="shared_with_student">Share with Student</option>
+                <option value="shared_with_guardian">Share with Guardian</option>
+                <option value="private">Private (Instructor Only)</option>
+              </select>
+            </div>
+          </div>
+
+          <ModalFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setShowNoteModal(false)}
+              disabled={savingNote}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateNote}
+              disabled={savingNote}
+            >
+              {savingNote ? 'Saving...' : 'Save Note'}
+            </Button>
+          </ModalFooter>
+        </Modal>
       )}
     </PortalLayout>
   )
