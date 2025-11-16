@@ -33,11 +33,15 @@ export async function updateSession(request: NextRequest) {
 
   let profile = null
   if (user) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id, role')
       .eq('id', user.id)
       .single()
+    
+    if (error) {
+      console.error('Middleware profile fetch error:', error)
+    }
     profile = data
   }
 
