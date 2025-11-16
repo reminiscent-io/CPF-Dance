@@ -1,0 +1,311 @@
+'use client'
+
+import { useUser } from '@/lib/auth/hooks'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { PortalLayout } from '@/components/PortalLayout'
+import { Card, CardTitle, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Input, Textarea } from '@/components/ui/Input'
+import { Spinner } from '@/components/ui/Spinner'
+
+interface LessonRequest {
+  id: string
+  requested_focus: string | null
+  preferred_dates: string[] | null
+  additional_notes: string | null
+  status: string
+  instructor_response: string | null
+  created_at: string
+  updated_at: string
+}
+
+export default function RequestPrivateLessonPage() {
+  const { user, profile, loading } = useUser()
+  const router = useRouter()
+  const [requests, setRequests] = useState<LessonRequest[]>([])
+  const [loadingRequests, setLoadingRequests] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState({
+    requested_focus: '',
+    preferred_dates: '',
+    additional_notes: ''
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
+  useEffect(() => {
+    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian') {
+      router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
+    }
+  }, [loading, profile, router])
+
+  useEffect(() => {
+    if (!loading && user && profile) {
+      fetchRequests()
+    }
+  }, [loading, user, profile])
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('/api/dancer/lesson-requests')
+      if (response.ok) {
+        const data = await response.json()
+        setRequests(data.requests)
+      }
+    } catch (error) {
+      console.error('Error fetching requests:', error)
+    } finally {
+      setLoadingRequests(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.requested_focus.trim()) {
+      alert('Please describe what you would like to focus on')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const preferredDatesArray = formData.preferred_dates
+        .split(',')
+        .map((d) => d.trim())
+        .filter((d) => d.length > 0)
+
+      const response = await fetch('/api/dancer/lesson-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requested_focus: formData.requested_focus.trim(),
+          preferred_dates: preferredDatesArray,
+          additional_notes: formData.additional_notes.trim() || null
+        })
+      })
+
+      if (response.ok) {
+        setSuccessMessage('Your private lesson request has been submitted! 🎉')
+        setFormData({
+          requested_focus: '',
+          preferred_dates: '',
+          additional_notes: ''
+        })
+        setShowForm(false)
+        await fetchRequests()
+        
+        setTimeout(() => setSuccessMessage(''), 5000)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to submit request')
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error)
+      alert('Failed to submit request')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="text-gray-600 mt-4">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user || !profile) {
+    return null
+  }
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, any> = {
+      pending: 'warning',
+      approved: 'success',
+      scheduled: 'primary',
+      declined: 'danger'
+    }
+    return colors[status] || 'default'
+  }
+
+  const getStatusIcon = (status: string) => {
+    const icons: Record<string, string> = {
+      pending: '⏳',
+      approved: '✅',
+      scheduled: '📅',
+      declined: '❌'
+    }
+    return icons[status] || '📝'
+  }
+
+  return (
+    <PortalLayout profile={profile}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Private Lesson Requests 💫
+        </h1>
+        <p className="text-gray-600">
+          Request one-on-one time with your instructor to focus on specific skills
+        </p>
+      </div>
+
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+          {successMessage}
+        </div>
+      )}
+
+      {!showForm ? (
+        <div className="mb-8">
+          <Button variant="primary" size="lg" onClick={() => setShowForm(true)}>
+            ✨ Request New Private Lesson
+          </Button>
+        </div>
+      ) : (
+        <Card className="mb-8">
+          <CardTitle className="p-6 pb-4">New Private Lesson Request</CardTitle>
+          <CardContent className="px-6 pb-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Textarea
+                label="What would you like to focus on? *"
+                placeholder="Describe the skills, techniques, or areas you'd like to work on..."
+                rows={4}
+                value={formData.requested_focus}
+                onChange={(e) =>
+                  setFormData({ ...formData, requested_focus: e.target.value })
+                }
+                required
+              />
+              <Input
+                label="Preferred Dates"
+                placeholder="e.g., Next Tuesday, December 20th, Weekday afternoons"
+                value={formData.preferred_dates}
+                onChange={(e) =>
+                  setFormData({ ...formData, preferred_dates: e.target.value })
+                }
+                helperText="Separate multiple dates with commas"
+              />
+              <Textarea
+                label="Additional Notes"
+                placeholder="Any other information that would be helpful..."
+                rows={3}
+                value={formData.additional_notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, additional_notes: e.target.value })
+                }
+              />
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Request'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">Your Requests</h2>
+      </div>
+
+      {loadingRequests ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : requests.length > 0 ? (
+        <div className="space-y-4">
+          {requests.map((request) => (
+            <Card key={request.id}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{getStatusIcon(request.status)}</span>
+                    <Badge variant={getStatusColor(request.status)}>
+                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {new Date(request.created_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-1">Focus Areas:</h4>
+                    <p className="text-gray-700">{request.requested_focus}</p>
+                  </div>
+
+                  {request.preferred_dates && request.preferred_dates.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Preferred Dates:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {request.preferred_dates.map((date, idx) => (
+                          <Badge key={idx} variant="default" size="sm">
+                            {date}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {request.additional_notes && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Additional Notes:</h4>
+                      <p className="text-gray-700">{request.additional_notes}</p>
+                    </div>
+                  )}
+
+                  {request.instructor_response && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 bg-rose-50 -m-6 mt-4 p-6 rounded-b-lg">
+                      <h4 className="font-medium text-rose-900 mb-2 flex items-center gap-2">
+                        <span>💬</span>
+                        Instructor Response:
+                      </h4>
+                      <p className="text-rose-800">{request.instructor_response}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="text-6xl mb-4">🌟</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No Requests Yet
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Ready to take your dancing to the next level? Request a private lesson
+              to get personalized attention and focus on your goals!
+            </p>
+            {!showForm && (
+              <Button variant="primary" onClick={() => setShowForm(true)}>
+                Request Your First Private Lesson
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </PortalLayout>
+  )
+}

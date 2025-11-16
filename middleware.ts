@@ -1,0 +1,59 @@
+import { updateSession } from './lib/supabase/middleware'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  const { response, user, profile } = await updateSession(request)
+
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
+                     request.nextUrl.pathname.startsWith('/signup')
+  const isInstructorPage = request.nextUrl.pathname.startsWith('/instructor')
+  const isDancerPage = request.nextUrl.pathname.startsWith('/dancer')
+  const isStudioPage = request.nextUrl.pathname.startsWith('/studio')
+  const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
+
+  if (!user && isPortalPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && profile && isPortalPage) {
+    if (isInstructorPage && profile.role !== 'instructor') {
+      const url = request.nextUrl.clone()
+      url.pathname = profile.role === 'dancer' ? '/dancer' : '/studio'
+      return NextResponse.redirect(url)
+    }
+    
+    if (isDancerPage && profile.role !== 'dancer') {
+      const url = request.nextUrl.clone()
+      url.pathname = profile.role === 'instructor' ? '/instructor' : '/studio'
+      return NextResponse.redirect(url)
+    }
+    
+    if (isStudioPage && profile.role !== 'studio_admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  if (user && isAuthPage && profile) {
+    const url = request.nextUrl.clone()
+    if (profile.role === 'instructor') {
+      url.pathname = '/instructor'
+    } else if (profile.role === 'studio_admin') {
+      url.pathname = '/studio'
+    } else {
+      url.pathname = '/dancer'
+    }
+    return NextResponse.redirect(url)
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

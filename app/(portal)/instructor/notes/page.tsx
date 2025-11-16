@@ -1,0 +1,321 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@/lib/auth/hooks'
+import { PortalLayout } from '@/components/PortalLayout'
+import { Card, Button, Badge, Modal, ModalFooter, Textarea, Input, useToast, Spinner } from '@/components/ui'
+import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
+
+export default function NotesPage() {
+  const { user, profile, loading: authLoading } = useUser()
+  const router = useRouter()
+  const { addToast } = useToast()
+  
+  const [notes, setNotes] = useState<Note[]>([])
+  const [students, setStudents] = useState<Student[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [filterStudent, setFilterStudent] = useState<string>('')
+  const [filterVisibility, setFilterVisibility] = useState<NoteVisibility | ''>('')
+  const [filterTag, setFilterTag] = useState<string>('')
+
+  useEffect(() => {
+    if (!authLoading && profile && profile.role !== 'instructor') {
+      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    }
+  }, [authLoading, profile, router])
+
+  useEffect(() => {
+    if (user) {
+      fetchNotes()
+      fetchStudents()
+    }
+  }, [user, filterStudent, filterVisibility, filterTag])
+
+  const fetchNotes = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (filterStudent) params.append('student_id', filterStudent)
+      if (filterVisibility) params.append('visibility', filterVisibility)
+      if (filterTag) params.append('tag', filterTag)
+      
+      const response = await fetch(`/api/notes?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch notes')
+      
+      const data = await response.json()
+      setNotes(data.notes || [])
+    } catch (error) {
+      console.error('Error fetching notes:', error)
+      addToast('Failed to load notes', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchStudents = async () => {
+    try {
+      const response = await fetch('/api/students?is_active=true')
+      if (!response.ok) throw new Error('Failed to fetch students')
+      
+      const data = await response.json()
+      setStudents(data.students || [])
+    } catch (error) {
+      console.error('Error fetching students:', error)
+    }
+  }
+
+  const handleAddNote = async (formData: CreateNoteData) => {
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) throw new Error('Failed to create note')
+
+      const { note } = await response.json()
+      setNotes(prev => [note, ...prev])
+      setShowAddModal(false)
+      addToast('Note added successfully', 'success')
+    } catch (error) {
+      console.error('Error adding note:', error)
+      addToast('Failed to add note', 'error')
+    }
+  }
+
+  if (authLoading || !profile || profile.role !== 'instructor') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
+
+  return (
+    <PortalLayout profile={profile}>
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Notes</h1>
+            <p className="text-gray-600 mt-1">Track student progress and observations</p>
+          </div>
+          <Button onClick={() => setShowAddModal(true)}>
+            Add Note
+          </Button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            value={filterStudent}
+            onChange={(e) => setFilterStudent(e.target.value)}
+          >
+            <option value="">All Students</option>
+            {students.map(student => (
+              <option key={student.id} value={student.id}>
+                {student.profile?.full_name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            value={filterVisibility}
+            onChange={(e) => setFilterVisibility(e.target.value as NoteVisibility | '')}
+          >
+            <option value="">All Visibility</option>
+            <option value="private">Private</option>
+            <option value="shared_with_student">Shared with Student</option>
+            <option value="shared_with_guardian">Shared with Guardian</option>
+            <option value="shared_with_studio">Shared with Studio</option>
+          </select>
+
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+          >
+            <option value="">All Tags</option>
+            {availableTags.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : notes.length === 0 ? (
+        <Card>
+          <div className="text-center py-12 text-gray-600">
+            No notes found
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {notes.map((note: any) => (
+            <Card key={note.id} hover>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">{note.title || 'Untitled Note'}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                    <span>{note.student?.profile?.full_name}</span>
+                    <span>•</span>
+                    <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <Badge variant="secondary">{note.visibility.replace(/_/g, ' ')}</Badge>
+              </div>
+
+              <p className="text-gray-700 mb-3">{note.content}</p>
+
+              {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {note.tags.map((tag: string, idx: number) => (
+                    <Badge key={idx} variant="primary" size="sm">{tag}</Badge>
+                  ))}
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {showAddModal && (
+        <AddNoteModal
+          students={students}
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddNote}
+        />
+      )}
+    </PortalLayout>
+  )
+}
+
+interface AddNoteModalProps {
+  students: Student[]
+  onClose: () => void
+  onSubmit: (data: CreateNoteData) => void
+}
+
+function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
+  const [formData, setFormData] = useState<CreateNoteData>({
+    student_id: '',
+    title: '',
+    content: '',
+    tags: [],
+    visibility: 'private'
+  })
+
+  const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
+
+  const toggleTag = (tag: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags?.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...(prev.tags || []), tag]
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.student_id || !formData.content) {
+      return
+    }
+    onSubmit(formData)
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Add Note" size="lg">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Student *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.student_id}
+              onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+            >
+              <option value="">Select a student</option>
+              {students.map(student => (
+                <option key={student.id} value={student.id}>
+                  {student.profile?.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Input
+            label="Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+
+          <Textarea
+            label="Content *"
+            required
+            rows={5}
+            value={formData.content}
+            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    formData.tags?.includes(tag)
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Visibility *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.visibility}
+              onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
+            >
+              <option value="private">Private (Only me)</option>
+              <option value="shared_with_student">Shared with Student</option>
+              <option value="shared_with_guardian">Shared with Guardian</option>
+              <option value="shared_with_studio">Shared with Studio</option>
+            </select>
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Add Note</Button>
+        </ModalFooter>
+      </form>
+    </Modal>
+  )
+}

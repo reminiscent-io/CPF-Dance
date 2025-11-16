@@ -1,0 +1,373 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { useUser } from '@/lib/auth/hooks'
+import { PortalLayout } from '@/components/PortalLayout'
+import { Card, CardTitle, CardContent, Button, Badge, useToast, Spinner, Input, Textarea, Modal, ModalFooter } from '@/components/ui'
+import type { Student, Note, Enrollment, Payment, PrivateLessonRequest, UpdateStudentData } from '@/lib/types'
+
+export default function StudentDetailPage() {
+  const params = useParams()
+  const id = params?.id as string
+  const { user, profile, loading: authLoading } = useUser()
+  const router = useRouter()
+  const { addToast } = useToast()
+  
+  const [student, setStudent] = useState<Student | null>(null)
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [requests, setRequests] = useState<PrivateLessonRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showEditModal, setShowEditModal] = useState(false)
+
+  useEffect(() => {
+    if (!authLoading && profile && profile.role !== 'instructor') {
+      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    }
+  }, [authLoading, profile, router])
+
+  useEffect(() => {
+    if (user && id) {
+      fetchStudentDetails()
+    }
+  }, [user, id])
+
+  const fetchStudentDetails = async () => {
+    try {
+      const response = await fetch(`/api/students/${id}`)
+      if (!response.ok) throw new Error('Failed to fetch student')
+      
+      const data = await response.json()
+      setStudent(data.student)
+      setEnrollments(data.enrollments || [])
+      setNotes(data.notes || [])
+      setPayments(data.payments || [])
+      setRequests(data.private_lesson_requests || [])
+    } catch (error) {
+      console.error('Error fetching student:', error)
+      addToast('Failed to load student details', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateStudent = async (formData: UpdateStudentData) => {
+    try {
+      const response = await fetch(`/api/students/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) throw new Error('Failed to update student')
+
+      const { student: updatedStudent } = await response.json()
+      setStudent(updatedStudent)
+      setShowEditModal(false)
+      addToast('Student updated successfully', 'success')
+    } catch (error) {
+      console.error('Error updating student:', error)
+      addToast('Failed to update student', 'error')
+    }
+  }
+
+  if (authLoading || loading || !profile || profile.role !== 'instructor') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!student) {
+    return (
+      <PortalLayout profile={profile}>
+        <div className="text-center py-12">
+          <p className="text-gray-600">Student not found</p>
+          <Button onClick={() => router.push('/instructor/students')} className="mt-4">
+            Back to Students
+          </Button>
+        </div>
+      </PortalLayout>
+    )
+  }
+
+  return (
+    <PortalLayout profile={profile}>
+      <div className="mb-6">
+        <Button variant="outline" onClick={() => router.push('/instructor/students')}>
+          ← Back to Students
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <Card>
+            <CardTitle>Student Profile</CardTitle>
+            <CardContent className="mt-4 space-y-3">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">{student.profile?.full_name}</h3>
+                <Badge variant={student.is_active ? 'success' : 'default'} className="mt-2">
+                  {student.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200">
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="text-gray-900">{student.profile?.email || 'N/A'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">Phone</p>
+                <p className="text-gray-900">{student.profile?.phone || 'N/A'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">Age Group</p>
+                <p className="text-gray-900">{student.age_group || 'N/A'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">Skill Level</p>
+                <p className="text-gray-900">{student.skill_level || 'N/A'}</p>
+              </div>
+
+              {student.goals && (
+                <div>
+                  <p className="text-sm text-gray-600">Goals</p>
+                  <p className="text-gray-900">{student.goals}</p>
+                </div>
+              )}
+
+              {student.medical_notes && (
+                <div>
+                  <p className="text-sm text-gray-600">Medical Notes</p>
+                  <p className="text-gray-900">{student.medical_notes}</p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm text-gray-600">Emergency Contact</p>
+                <p className="text-gray-900">{student.emergency_contact_name}</p>
+                <p className="text-gray-900">{student.emergency_contact_phone}</p>
+              </div>
+
+              <Button onClick={() => setShowEditModal(true)} className="w-full mt-4">
+                Edit Student Info
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardTitle>Enrolled Classes ({enrollments.length})</CardTitle>
+            <CardContent className="mt-4">
+              {enrollments.length === 0 ? (
+                <p className="text-gray-600">No enrollments yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {enrollments.map((enrollment: any) => (
+                    <div key={enrollment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">{enrollment.class?.title}</p>
+                        <p className="text-sm text-gray-600">
+                          {new Date(enrollment.class?.start_time).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {enrollment.attendance_status && (
+                        <Badge variant="default">{enrollment.attendance_status}</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardTitle>Notes Timeline ({notes.length})</CardTitle>
+            <CardContent className="mt-4">
+              {notes.length === 0 ? (
+                <p className="text-gray-600">No notes yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {notes.map((note: any) => (
+                    <div key={note.id} className="border-l-4 border-rose-500 pl-4 py-2">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(note.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-gray-700 mb-2">{note.content}</p>
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {note.tags.map((tag: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardTitle>Private Lesson Requests ({requests.length})</CardTitle>
+            <CardContent className="mt-4">
+              {requests.length === 0 ? (
+                <p className="text-gray-600">No requests</p>
+              ) : (
+                <div className="space-y-3">
+                  {requests.map((request: any) => (
+                    <div key={request.id} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="font-medium text-gray-900">{request.requested_focus}</p>
+                        <Badge variant={request.status === 'pending' ? 'warning' : 'success'}>
+                          {request.status}
+                        </Badge>
+                      </div>
+                      {request.additional_notes && (
+                        <p className="text-sm text-gray-600">{request.additional_notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardTitle>Payment History ({payments.length})</CardTitle>
+            <CardContent className="mt-4">
+              {payments.length === 0 ? (
+                <p className="text-gray-600">No payment history</p>
+              ) : (
+                <div className="space-y-3">
+                  {payments.map((payment: any) => (
+                    <div key={payment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">${payment.amount}</p>
+                        <p className="text-sm text-gray-600">
+                          {new Date(payment.transaction_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant={payment.payment_status === 'confirmed' ? 'success' : 'warning'}>
+                        {payment.payment_status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {showEditModal && student && (
+        <EditStudentModal
+          student={student}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleUpdateStudent}
+        />
+      )}
+    </PortalLayout>
+  )
+}
+
+interface EditStudentModalProps {
+  student: Student
+  onClose: () => void
+  onSubmit: (data: UpdateStudentData) => void
+}
+
+function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps) {
+  const [formData, setFormData] = useState<UpdateStudentData>({
+    age_group: student.age_group || '',
+    skill_level: student.skill_level || '',
+    goals: student.goals || '',
+    medical_notes: student.medical_notes || '',
+    emergency_contact_name: student.emergency_contact_name || '',
+    emergency_contact_phone: student.emergency_contact_phone || '',
+    is_active: student.is_active
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(formData)
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Edit Student" size="lg">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Age Group"
+              value={formData.age_group}
+              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+            />
+            <Input
+              label="Skill Level"
+              value={formData.skill_level}
+              onChange={(e) => setFormData({ ...formData, skill_level: e.target.value })}
+            />
+          </div>
+
+          <Textarea
+            label="Goals"
+            rows={3}
+            value={formData.goals}
+            onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
+          />
+
+          <Textarea
+            label="Medical Notes"
+            rows={2}
+            value={formData.medical_notes}
+            onChange={(e) => setFormData({ ...formData, medical_notes: e.target.value })}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Emergency Contact Name"
+              value={formData.emergency_contact_name}
+              onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+            />
+            <Input
+              label="Emergency Contact Phone"
+              type="tel"
+              value={formData.emergency_contact_phone}
+              onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="is_active"
+              checked={formData.is_active}
+              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              className="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+            />
+            <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
+              Active Student
+            </label>
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Save Changes</Button>
+        </ModalFooter>
+      </form>
+    </Modal>
+  )
+}
