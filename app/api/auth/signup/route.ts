@@ -9,12 +9,22 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
+    // Pass user data as metadata - the database trigger will create profile and student records
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+          phone: phone || null,
+          role: role,
+          date_of_birth: dateOfBirth || null,
+        }
+      }
     })
 
     if (signUpError) {
+      console.error('Supabase signup error:', signUpError)
       return NextResponse.json({ error: signUpError.message }, { status: 400 })
     }
 
@@ -22,33 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to create user account' }, { status: 400 })
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: authData.user.id,
-      email,
-      phone: phone || null,
-      full_name: fullName,
-      role,
-      date_of_birth: dateOfBirth || null,
-      consent_given: false,
-    })
-
-    if (profileError) {
-      return NextResponse.json(
-        { error: 'Failed to create profile: ' + profileError.message },
-        { status: 400 }
-      )
-    }
-
-    if (role === 'dancer') {
-      const { error: studentError } = await supabase.from('students').insert({
-        profile_id: authData.user.id,
-        is_active: true,
-      })
-
-      if (studentError) {
-        console.error('Failed to create student record:', studentError)
-      }
-    }
+    // Profile and student records are automatically created by the database trigger
 
     const roleRedirects: Record<UserRole, string> = {
       instructor: '/instructor',

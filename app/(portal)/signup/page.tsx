@@ -200,7 +200,6 @@ export default function SignupPage() {
               disabled={loading}
             >
               <option value="dancer">Dancer</option>
-              <option value="instructor">Instructor</option>
               <option value="studio_admin">Studio Admin</option>
             </select>
           </div>

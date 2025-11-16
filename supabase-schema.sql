@@ -198,6 +198,8 @@ CREATE POLICY "Instructors can view all profiles"
     )
   );
 
+-- Note: No INSERT policy needed - the handle_new_user() trigger creates profiles with SECURITY DEFINER
+
 -- RLS Policies for students
 CREATE POLICY "Students can view their own student record"
   ON students FOR SELECT
@@ -358,6 +360,43 @@ CREATE POLICY "Instructors can view all inquiries"
       WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
     )
   );
+
+-- Create function to automatically create profile when user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  -- Get role from metadata, default to 'dancer' if not provided
+  user_role := COALESCE(NEW.raw_user_meta_data->>'role', 'dancer');
+
+  -- Insert profile
+  INSERT INTO public.profiles (id, email, phone, full_name, role, date_of_birth, consent_given)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'phone',
+    NEW.raw_user_meta_data->>'full_name',
+    user_role::user_role,
+    (NEW.raw_user_meta_data->>'date_of_birth')::DATE,
+    false
+  );
+
+  -- If role is dancer, also create student record
+  IF user_role = 'dancer' THEN
+    INSERT INTO public.students (profile_id, is_active)
+    VALUES (NEW.id, true);
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to create profile automatically when user signs up
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
