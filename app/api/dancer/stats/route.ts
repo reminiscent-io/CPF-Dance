@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       .from('notes')
       .select('id', { count: 'exact', head: true })
       .eq('student_id', student.id)
-      .neq('author_id', user.id)
+      .neq('author_id', profile.id)
       .in('visibility', ['shared_with_student', 'shared_with_guardian'])
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
