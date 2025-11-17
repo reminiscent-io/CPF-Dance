@@ -73,7 +73,11 @@ export default function ClassesPage() {
         body: JSON.stringify(formData)
       })
 
-      if (!response.ok) throw new Error('Failed to create class')
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || 'Failed to create class')
+      }
 
       const { class: newClass } = await response.json()
       setClasses(prev => [newClass, ...prev])
@@ -81,7 +85,8 @@ export default function ClassesPage() {
       addToast('Class created successfully', 'success')
     } catch (error) {
       console.error('Error creating class:', error)
-      addToast('Failed to create class', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create class'
+      addToast(errorMessage, 'error')
     }
   }
 

@@ -233,7 +233,8 @@ CREATE POLICY "Everyone can view active classes"
 
 CREATE POLICY "Instructors can manage their classes"
   ON classes FOR ALL
-  USING (instructor_id = auth.uid());
+  USING (instructor_id = auth.uid())
+  WITH CHECK (instructor_id = auth.uid());
 
 -- RLS Policies for enrollments
 CREATE POLICY "Students can view their enrollments"

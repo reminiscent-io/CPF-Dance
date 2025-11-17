@@ -61,19 +61,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const profile = await getCurrentUserWithRole()
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     if (profile.role !== 'instructor') {
       return NextResponse.json({ error: 'Forbidden: Only instructors can create classes' }, { status: 403 })
     }
-    
+
     const supabase = await createClient()
 
     const body = await request.json()
-    
+
     const {
       studio_id,
       class_type,
@@ -86,20 +86,33 @@ export async function POST(request: NextRequest) {
       price
     } = body
 
+    // Convert datetime-local format to ISO 8601 if needed
+    const startTimeISO = start_time.includes('T') && !start_time.includes('Z')
+      ? new Date(start_time).toISOString()
+      : start_time
+
+    const endTimeISO = end_time.includes('T') && !end_time.includes('Z')
+      ? new Date(end_time).toISOString()
+      : end_time
+
+    const insertData = {
+      instructor_id: profile.id,
+      studio_id: studio_id || null,
+      class_type,
+      title,
+      description: description || null,
+      location: location || null,
+      start_time: startTimeISO,
+      end_time: endTimeISO,
+      max_capacity: max_capacity || null,
+      price: price || null
+    }
+
+    console.log('Attempting to insert class:', insertData)
+
     const { data: classData, error } = await supabase
       .from('classes')
-      .insert({
-        instructor_id: profile.id,
-        studio_id,
-        class_type,
-        title,
-        description,
-        location,
-        start_time,
-        end_time,
-        max_capacity,
-        price
-      })
+      .insert(insertData)
       .select(`
         *,
         studio:studios(name, city, state)
@@ -107,13 +120,18 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error creating class:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Supabase error creating class:', error)
+      return NextResponse.json({
+        error: error.message,
+        details: error.details,
+        hint: error.hint
+      }, { status: 500 })
     }
 
     return NextResponse.json({ class: classData }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
