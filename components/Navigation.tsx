@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
 import type { Profile } from '@/lib/auth/types'
 
@@ -13,6 +13,7 @@ export interface NavigationProps {
 export function Navigation({ profile }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const getNavigationLinks = () => {
     if (!profile) return []
@@ -50,7 +51,21 @@ export function Navigation({ profile }: NavigationProps) {
   const navLinks = getNavigationLinks()
 
   const handleSignOut = async () => {
-    await signOut()
+    try {
+      const result = await signOut()
+      if (result?.error) {
+        console.error('Sign out error:', result.error)
+        alert('Failed to sign out. Please try again.')
+      } else {
+        // Redirect to login page
+        router.push('/login')
+        // Force a hard refresh to clear all client-side state
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Unexpected sign out error:', error)
+      alert('An unexpected error occurred. Please try again.')
+    }
   }
 
   return (

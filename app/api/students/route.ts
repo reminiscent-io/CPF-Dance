@@ -15,7 +15,21 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('students')
       .select(`
-        *,
+        id,
+        profile_id,
+        guardian_id,
+        full_name,
+        email,
+        phone,
+        age_group,
+        skill_level,
+        goals,
+        medical_notes,
+        emergency_contact_name,
+        emergency_contact_phone,
+        is_active,
+        created_at,
+        updated_at,
         profile:profiles!students_profile_id_fkey(full_name, email, phone, date_of_birth),
         guardian:profiles!students_guardian_id_fkey(full_name, email, phone)
       `)
@@ -65,33 +79,25 @@ export async function POST(request: NextRequest) {
       phone
     } = body
 
-    let studentProfileId = profile_id
-
-    if (!profile_id && full_name) {
-      const { data: newProfile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          full_name,
-          email,
-          phone,
-          role: 'dancer'
-        })
-        .select()
-        .single()
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError)
-        return NextResponse.json({ error: profileError.message }, { status: 500 })
-      }
-
-      studentProfileId = newProfile.id
+    // If no profile_id and no full_name, we can't create a student
+    if (!profile_id && !full_name) {
+      return NextResponse.json(
+        { error: 'Full name is required' },
+        { status: 400 }
+      )
     }
 
+    // Create student record
+    // If profile_id exists, student is linked to an authenticated dancer
+    // If not, store contact info directly on student record until they sign up
     const { data: student, error } = await supabase
       .from('students')
       .insert({
-        profile_id: studentProfileId,
+        profile_id: profile_id || null,
         guardian_id,
+        full_name: full_name || null,
+        email: email || null,
+        phone: phone || null,
         age_group,
         skill_level,
         goals,

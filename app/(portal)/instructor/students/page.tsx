@@ -79,7 +79,7 @@ export default function StudentsPage() {
   }
 
   const filteredStudents = students.filter(student => {
-    const studentName = student.profile?.full_name?.toLowerCase() || ''
+    const studentName = (student.full_name || student.profile?.full_name || '').toLowerCase()
     return studentName.includes(search.toLowerCase())
   })
 
@@ -87,7 +87,16 @@ export default function StudentsPage() {
     {
       key: 'name',
       header: 'Name',
-      render: (student: Student) => student.profile?.full_name || 'N/A'
+      render: (student: Student) => (
+        <div className="flex items-center gap-2">
+          <span>{student.full_name || student.profile?.full_name || 'N/A'}</span>
+          {!student.profile_id && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              Not Linked
+            </span>
+          )}
+        </div>
+      )
     },
     {
       key: 'age_group',
@@ -104,8 +113,8 @@ export default function StudentsPage() {
       header: 'Status',
       render: (student: Student) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          student.is_active 
-            ? 'bg-green-100 text-green-800' 
+          student.is_active
+            ? 'bg-green-100 text-green-800'
             : 'bg-gray-100 text-gray-800'
         }`}>
           {student.is_active ? 'Active' : 'Inactive'}
@@ -230,15 +239,13 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Age Group"
-              required
+              label="Age Group (optional)"
               placeholder="e.g., 8-12"
               value={formData.age_group}
               onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
             />
             <Input
-              label="Skill Level"
-              required
+              label="Skill Level (optional)"
               placeholder="e.g., Beginner, Intermediate"
               value={formData.skill_level}
               onChange={(e) => setFormData({ ...formData, skill_level: e.target.value })}
@@ -246,14 +253,14 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
           </div>
 
           <Textarea
-            label="Goals"
+            label="Goals (optional)"
             rows={3}
             value={formData.goals}
             onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
           />
 
           <Textarea
-            label="Medical Notes"
+            label="Medical Notes (optional)"
             rows={2}
             value={formData.medical_notes}
             onChange={(e) => setFormData({ ...formData, medical_notes: e.target.value })}
@@ -261,15 +268,13 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Emergency Contact Name"
-              required
+              label="Emergency Contact Name (optional)"
               value={formData.emergency_contact_name}
               onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
             />
             <Input
-              label="Emergency Contact Phone"
+              label="Emergency Contact Phone (optional)"
               type="tel"
-              required
               value={formData.emergency_contact_phone}
               onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
             />

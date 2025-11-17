@@ -22,6 +22,9 @@ export default function StudentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showNoteModal, setShowNoteModal] = useState(false)
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [linkEmail, setLinkEmail] = useState('')
+  const [linking, setLinking] = useState(false)
   const [noteFormData, setNoteFormData] = useState({
     title: '',
     content: '',
@@ -130,6 +133,39 @@ export default function StudentDetailPage() {
     }
   }
 
+  const handleLinkAccount = async () => {
+    if (!linkEmail.trim()) {
+      addToast('Please enter an email address', 'error')
+      return
+    }
+
+    setLinking(true)
+    try {
+      const response = await fetch(`/api/students/${id}/link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: linkEmail.trim() })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        addToast(data.error || 'Failed to link account', 'error')
+        return
+      }
+
+      setStudent(data.student)
+      setShowLinkModal(false)
+      setLinkEmail('')
+      addToast(data.message || 'Account linked successfully', 'success')
+    } catch (error) {
+      console.error('Error linking account:', error)
+      addToast('Failed to link account', 'error')
+    } finally {
+      setLinking(false)
+    }
+  }
+
   if (authLoading || loading || !profile || profile.role !== 'instructor') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -165,20 +201,45 @@ export default function StudentDetailPage() {
             <CardTitle>Student Profile</CardTitle>
             <CardContent className="mt-4 space-y-3">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{student.profile?.full_name}</h3>
-                <Badge variant={student.is_active ? 'success' : 'default'} className="mt-2">
-                  {student.is_active ? 'Active' : 'Inactive'}
-                </Badge>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {student.full_name || student.profile?.full_name}
+                </h3>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant={student.is_active ? 'success' : 'default'}>
+                    {student.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                  {!student.profile_id && (
+                    <Badge variant="warning">Not Linked</Badge>
+                  )}
+                </div>
               </div>
+
+              {!student.profile_id && (
+                <div className="pt-3 pb-3 border-b border-gray-200">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800 mb-2">
+                      This student doesn't have a linked dancer account yet.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowLinkModal(true)}
+                      className="w-full"
+                    >
+                      Link to Dancer Account
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-3 border-t border-gray-200">
                 <p className="text-sm text-gray-600">Email</p>
-                <p className="text-gray-900">{student.profile?.email || 'N/A'}</p>
+                <p className="text-gray-900">{student.email || student.profile?.email || 'N/A'}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-600">Phone</p>
-                <p className="text-gray-900">{student.profile?.phone || 'N/A'}</p>
+                <p className="text-gray-900">{student.phone || student.profile?.phone || 'N/A'}</p>
               </div>
 
               <div>
@@ -354,6 +415,52 @@ export default function StudentDetailPage() {
         />
       )}
 
+      {showLinkModal && (
+        <Modal
+          isOpen={true}
+          onClose={() => {
+            setShowLinkModal(false)
+            setLinkEmail('')
+          }}
+          title="Link Student to Dancer Account"
+          size="md"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter the email address the dancer used to create their account. This will link this student record to their dancer portal access.
+            </p>
+            <Input
+              label="Dancer Email Address"
+              type="email"
+              required
+              placeholder="dancer@example.com"
+              value={linkEmail}
+              onChange={(e) => setLinkEmail(e.target.value)}
+              helperText="The dancer must have already signed up with this email"
+            />
+          </div>
+
+          <ModalFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowLinkModal(false)
+                setLinkEmail('')
+              }}
+              disabled={linking}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleLinkAccount}
+              disabled={linking || !linkEmail.trim()}
+            >
+              {linking ? 'Linking...' : 'Link Account'}
+            </Button>
+          </ModalFooter>
+        </Modal>
+      )}
+
       {showNoteModal && (
         <Modal
           isOpen={true}
@@ -382,6 +489,26 @@ export default function StudentDetailPage() {
               onChange={(e) => setNoteFormData({ ...noteFormData, tags: e.target.value })}
               helperText="Add tags to categorize this note"
             />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Related Class (optional)
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                value={noteFormData.class_id}
+                onChange={(e) => setNoteFormData({ ...noteFormData, class_id: e.target.value })}
+              >
+                <option value="">-- General Note (No Specific Class) --</option>
+                {enrollments.map((enrollment: any) => (
+                  <option key={enrollment.class_id} value={enrollment.class_id}>
+                    {enrollment.class?.title} - {new Date(enrollment.class?.start_time).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Link this note to a specific class the student is enrolled in
+              </p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Visibility

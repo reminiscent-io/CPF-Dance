@@ -92,8 +92,13 @@ export async function signUp(data: SignUpData) {
 
 export async function signOut() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/login')
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
 }
 
 export async function updateProfile(updates: {

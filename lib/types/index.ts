@@ -10,6 +10,9 @@ export interface Student {
   id: string
   profile_id: string | null
   guardian_id: string | null
+  full_name: string | null // Stored directly on student when no profile linked
+  email: string | null // Stored directly on student when no profile linked
+  phone: string | null // Stored directly on student when no profile linked
   age_group: string | null
   skill_level: string | null
   goals: string | null
@@ -148,13 +151,13 @@ export interface RecentActivity {
 export interface CreateStudentData {
   profile_id?: string
   guardian_id?: string
-  age_group: string
-  skill_level: string
+  age_group?: string
+  skill_level?: string
   goals?: string
   medical_notes?: string
-  emergency_contact_name: string
-  emergency_contact_phone: string
-  full_name?: string
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
+  full_name: string // Required - the only mandatory field
   email?: string
   phone?: string
 }
