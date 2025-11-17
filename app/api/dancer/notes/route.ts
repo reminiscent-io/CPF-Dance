@@ -20,7 +20,13 @@ export async function GET(request: NextRequest) {
         updated_at,
         author_id,
         class_id,
+        personal_class_id,
         classes (
+          id,
+          title,
+          start_time
+        ),
+        personal_classes (
           id,
           title,
           start_time
@@ -71,7 +77,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { title, content, tags } = body
+    const { title, content, tags, class_id, personal_class_id } = body
 
     if (!content) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
@@ -85,6 +91,8 @@ export async function POST(request: NextRequest) {
         title,
         content,
         tags: tags || [],
+        class_id: class_id || null,
+        personal_class_id: personal_class_id || null,
         visibility: 'private'
       })
       .select()
@@ -110,7 +118,7 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { id, title, content, tags } = body
+    const { id, title, content, tags, class_id, personal_class_id } = body
 
     if (!id || !content) {
       return NextResponse.json({ error: 'ID and content are required' }, { status: 400 })
@@ -121,7 +129,9 @@ export async function PUT(request: NextRequest) {
       .update({
         title,
         content,
-        tags: tags || []
+        tags: tags || [],
+        class_id: class_id || null,
+        personal_class_id: personal_class_id || null
       })
       .eq('id', id)
       .eq('author_id', profile.id)

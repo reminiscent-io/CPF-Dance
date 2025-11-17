@@ -21,7 +21,13 @@ interface Note {
   updated_at: string
   author_id: string
   class_id: string | null
+  personal_class_id: string | null
   classes: {
+    id: string
+    title: string
+    start_time: string
+  } | null
+  personal_classes: {
     id: string
     title: string
     start_time: string
@@ -30,6 +36,13 @@ interface Note {
   author_role: string
   is_personal: boolean
   is_shared: boolean
+}
+
+interface ClassOption {
+  id: string
+  title: string
+  start_time: string
+  type: 'enrolled' | 'personal'
 }
 
 type TabType = 'all' | 'instructor' | 'personal'
@@ -47,9 +60,13 @@ export default function DancerNotesPage() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    tags: ''
+    tags: '',
+    class_id: '',
+    class_type: '' as 'enrolled' | 'personal' | ''
   })
   const [saving, setSaving] = useState(false)
+  const [classes, setClasses] = useState<ClassOption[]>([])
+  const [loadingClasses, setLoadingClasses] = useState(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian') {
@@ -60,6 +77,7 @@ export default function DancerNotesPage() {
   useEffect(() => {
     if (!loading && user && profile) {
       fetchNotes()
+      fetchClasses()
     }
   }, [loading, user, profile])
 
@@ -77,17 +95,61 @@ export default function DancerNotesPage() {
     }
   }
 
+  const fetchClasses = async () => {
+    setLoadingClasses(true)
+    try {
+      const [enrolledResponse, personalResponse] = await Promise.all([
+        fetch('/api/dancer/classes'),
+        fetch('/api/dancer/personal-classes')
+      ])
+
+      const allClasses: ClassOption[] = []
+
+      if (enrolledResponse.ok) {
+        const data = await enrolledResponse.json()
+        allClasses.push(...data.classes.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          start_time: c.start_time,
+          type: 'enrolled' as const
+        })))
+      }
+
+      if (personalResponse.ok) {
+        const data = await personalResponse.json()
+        allClasses.push(...data.classes.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          start_time: c.start_time,
+          type: 'personal' as const
+        })))
+      }
+
+      // Sort by most recent first
+      allClasses.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+      setClasses(allClasses)
+    } catch (error) {
+      console.error('Error fetching classes:', error)
+    } finally {
+      setLoadingClasses(false)
+    }
+  }
+
   const handleOpenModal = (note?: Note) => {
     if (note) {
       setEditingNote(note)
+      const classId = note.class_id || note.personal_class_id || ''
+      const classType = note.class_id ? 'enrolled' : note.personal_class_id ? 'personal' : ''
       setFormData({
         title: note.title || '',
         content: note.content,
-        tags: note.tags?.join(', ') || ''
+        tags: note.tags?.join(', ') || '',
+        class_id: classId,
+        class_type: classType as 'enrolled' | 'personal' | ''
       })
     } else {
       setEditingNote(null)
-      setFormData({ title: '', content: '', tags: '' })
+      setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '' })
     }
     setIsModalOpen(true)
   }
@@ -95,7 +157,7 @@ export default function DancerNotesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingNote(null)
-    setFormData({ title: '', content: '', tags: '' })
+    setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '' })
   }
 
   const handleSave = async () => {
@@ -111,10 +173,22 @@ export default function DancerNotesPage() {
         .map((t) => t.trim())
         .filter((t) => t.length > 0)
 
-      const payload = {
+      const payload: any = {
         title: formData.title.trim() || null,
         content: formData.content.trim(),
         tags
+      }
+
+      // Add class reference based on type
+      if (formData.class_id && formData.class_type === 'enrolled') {
+        payload.class_id = formData.class_id
+        payload.personal_class_id = null
+      } else if (formData.class_id && formData.class_type === 'personal') {
+        payload.class_id = null
+        payload.personal_class_id = formData.class_id
+      } else {
+        payload.class_id = null
+        payload.personal_class_id = null
       }
 
       const url = '/api/dancer/notes'
@@ -341,9 +415,9 @@ export default function DancerNotesPage() {
                       >
                         {note.is_personal ? '✍️ Self' : '📝 ' + note.author_name}
                       </Badge>
-                      {note.classes && (
+                      {(note.classes || note.personal_classes) && (
                         <Badge variant="secondary" size="sm">
-                          {note.classes.title}
+                          {note.classes?.title || note.personal_classes?.title}
                         </Badge>
                       )}
                     </div>
@@ -461,6 +535,41 @@ export default function DancerNotesPage() {
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
           />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Link to Class (optional)
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              value={formData.class_id ? `${formData.class_type}:${formData.class_id}` : ''}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  setFormData({ ...formData, class_id: '', class_type: '' })
+                } else {
+                  const [type, id] = e.target.value.split(':')
+                  setFormData({
+                    ...formData,
+                    class_id: id,
+                    class_type: type as 'enrolled' | 'personal'
+                  })
+                }
+              }}
+            >
+              <option value="">No class selected</option>
+              {classes.map((cls) => (
+                <option key={`${cls.type}:${cls.id}`} value={`${cls.type}:${cls.id}`}>
+                  {cls.title} - {new Date(cls.start_time).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })} {cls.type === 'personal' ? '(Personal)' : ''}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-gray-500">
+              Associate this note with a specific class
+            </p>
+          </div>
           <Input
             label="Tags (optional)"
             placeholder="technique, goals, choreography (comma-separated)"

@@ -13,12 +13,23 @@ export async function GET(request: NextRequest) {
 
     const now = new Date().toISOString()
 
-    const { count: upcomingClassesCount } = await supabase
+    // Count upcoming enrolled classes
+    const { count: upcomingEnrolledCount } = await supabase
       .from('enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('student_id', student.id)
       .gte('classes.start_time', now)
       .eq('classes.is_cancelled', false)
+
+    // Count upcoming personal classes
+    const { count: upcomingPersonalCount } = await supabase
+      .from('personal_classes')
+      .select('id', { count: 'exact', head: true })
+      .eq('student_id', student.id)
+      .gte('start_time', now)
+
+    // Total upcoming classes (enrolled + personal)
+    const upcomingClassesCount = (upcomingEnrolledCount || 0) + (upcomingPersonalCount || 0)
 
     const { count: totalClassesCount } = await supabase
       .from('enrollments')
@@ -34,7 +45,8 @@ export async function GET(request: NextRequest) {
       .in('visibility', ['shared_with_student', 'shared_with_guardian'])
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
-    const { data: nextClass } = await supabase
+    // Get next enrolled class
+    const { data: nextEnrolledClass } = await supabase
       .from('enrollments')
       .select(`
         id,
@@ -56,6 +68,49 @@ export async function GET(request: NextRequest) {
       .order('classes(start_time)', { ascending: true })
       .limit(1)
       .single()
+
+    // Get next personal class
+    const { data: nextPersonalClass } = await supabase
+      .from('personal_classes')
+      .select('*')
+      .eq('student_id', student.id)
+      .gte('start_time', now)
+      .order('start_time', { ascending: true })
+      .limit(1)
+      .single()
+
+    // Determine which class is actually next
+    let nextClass = null
+    if (nextEnrolledClass?.classes && nextPersonalClass) {
+      // Compare timestamps to find the soonest
+      const enrolledTime = new Date(nextEnrolledClass.classes.start_time).getTime()
+      const personalTime = new Date(nextPersonalClass.start_time).getTime()
+      if (personalTime < enrolledTime) {
+        nextClass = {
+          id: nextPersonalClass.id,
+          title: nextPersonalClass.title,
+          description: null,
+          location: nextPersonalClass.location,
+          start_time: nextPersonalClass.start_time,
+          end_time: nextPersonalClass.end_time,
+          studios: nextPersonalClass.instructor_name ? { name: nextPersonalClass.instructor_name } : null
+        }
+      } else {
+        nextClass = nextEnrolledClass.classes
+      }
+    } else if (nextEnrolledClass?.classes) {
+      nextClass = nextEnrolledClass.classes
+    } else if (nextPersonalClass) {
+      nextClass = {
+        id: nextPersonalClass.id,
+        title: nextPersonalClass.title,
+        description: null,
+        location: nextPersonalClass.location,
+        start_time: nextPersonalClass.start_time,
+        end_time: nextPersonalClass.end_time,
+        studios: nextPersonalClass.instructor_name ? { name: nextPersonalClass.instructor_name } : null
+      }
+    }
 
     const { data: recentNotes } = await supabase
       .from('notes')
@@ -96,11 +151,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       stats: {
-        upcoming_classes: upcomingClassesCount || 0,
+        upcoming_classes: upcomingClassesCount,
         total_classes_attended: totalClassesCount || 0,
         recent_notes: recentNotesCount || 0
       },
-      next_class: nextClass?.classes || null,
+      next_class: nextClass,
       recent_notes: notesWithAuthors
     })
   } catch (error) {
