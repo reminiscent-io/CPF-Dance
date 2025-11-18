@@ -12,7 +12,8 @@
       "Bash(else echo \"No .env.local file found\")",
       "Bash(fi)",
       "Bash(env)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

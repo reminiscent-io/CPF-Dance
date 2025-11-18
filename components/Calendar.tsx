@@ -127,24 +127,25 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
       return date
     })
 
-    const hours = Array.from({ length: 15 }, (_, i) => i + 7) // 7 AM to 9 PM
+    const hours = Array.from({ length: 13 }, (_, i) => i + 7) // 7 AM to 7 PM (reduced hours)
 
     return (
-      <div className="flex-1 overflow-auto">
-        <div className="grid grid-cols-8 border-b border-gray-200">
-          <div className="p-2 border-r border-gray-200 bg-gray-50"></div>
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Header */}
+        <div className="grid grid-cols-8 border-b border-gray-200 flex-shrink-0">
+          <div className="p-1.5 sm:p-2 border-r border-gray-200 bg-gray-50"></div>
           {days.map((day, index) => (
             <div
               key={index}
-              className={`p-2 text-center border-r border-gray-200 ${
+              className={`p-1 sm:p-2 text-center border-r border-gray-200 ${
                 isToday(day) ? 'bg-rose-50' : 'bg-gray-50'
               }`}
             >
-              <div className="text-xs text-gray-600">
+              <div className="text-[10px] sm:text-xs text-gray-600">
                 {day.toLocaleDateString('en-US', { weekday: 'short' })}
               </div>
               <div
-                className={`text-lg font-semibold ${
+                className={`text-sm sm:text-lg font-semibold ${
                   isToday(day) ? 'text-rose-600' : 'text-gray-900'
                 }`}
               >
@@ -154,20 +155,23 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
           ))}
         </div>
 
-        <div className="grid grid-cols-8">
-          <div className="border-r border-gray-200">
+        {/* Time grid - flex-1 to fill remaining space */}
+        <div className="grid grid-cols-8 flex-1 min-h-0">
+          {/* Time column */}
+          <div className="border-r border-gray-200 flex flex-col">
             {hours.map(hour => (
               <div
                 key={hour}
-                className="h-16 border-b border-gray-200 p-1 text-xs text-gray-500 text-right pr-2"
+                className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 text-[10px] sm:text-xs text-gray-500 text-right pr-1 sm:pr-2 flex items-start"
               >
                 {hour % 12 || 12} {hour < 12 ? 'AM' : 'PM'}
               </div>
             ))}
           </div>
 
+          {/* Day columns */}
           {days.map((day, dayIndex) => (
-            <div key={dayIndex} className="border-r border-gray-200">
+            <div key={dayIndex} className="border-r border-gray-200 flex flex-col">
               {hours.map(hour => {
                 const dayEvents = getEventsForDate(day).filter(event => {
                   const eventHour = new Date(event.start_time).getHours()
@@ -177,13 +181,13 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
                 return (
                   <div
                     key={hour}
-                    className="h-16 border-b border-gray-200 p-1 relative"
+                    className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 relative min-h-[32px] sm:min-h-[40px]"
                   >
                     {dayEvents.map(event => (
                       <div
                         key={event.id}
                         onClick={() => onEventClick?.(event)}
-                        className={`absolute inset-1 rounded p-1 cursor-pointer hover:shadow-md transition-shadow text-xs ${
+                        className={`absolute inset-0.5 sm:inset-1 rounded p-0.5 sm:p-1 cursor-pointer hover:shadow-md transition-shadow text-[10px] sm:text-xs overflow-hidden ${
                           event.is_cancelled
                             ? 'bg-gray-200 opacity-50'
                             : 'bg-rose-100 border border-rose-300'
@@ -192,7 +196,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
                         <div className="font-semibold truncate text-gray-900">
                           {event.title}
                         </div>
-                        <div className="text-gray-600 truncate">
+                        <div className="text-gray-600 truncate hidden sm:block">
                           {formatTime(event.start_time)}
                         </div>
                       </div>
@@ -224,61 +228,68 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
       days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))
     }
 
+    // Calculate number of rows needed
+    const numRows = Math.ceil(days.length / 7)
+
     return (
-      <div className="flex-1">
-        <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Header */}
+        <div className="grid grid-cols-7 border-b border-gray-200 flex-shrink-0">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div
               key={day}
-              className="p-2 text-center text-sm font-semibold text-gray-700 bg-gray-50 border-r border-gray-200"
+              className="p-1 sm:p-2 text-center text-xs sm:text-sm font-semibold text-gray-700 bg-gray-50 border-r border-gray-200"
             >
-              {day}
+              <span className="hidden sm:inline">{day}</span>
+              <span className="sm:hidden">{day.charAt(0)}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7">
+        {/* Calendar grid - dynamically sized rows */}
+        <div className={`grid grid-cols-7 flex-1 min-h-0`} style={{ gridTemplateRows: `repeat(${numRows}, minmax(0, 1fr))` }}>
           {days.map((day, index) => {
             if (!day) {
               return <div key={index} className="border-r border-b border-gray-200 bg-gray-50"></div>
             }
 
             const dayEvents = getEventsForDate(day)
+            const maxEventsToShow = 2 // Reduced for better fit
 
             return (
               <div
                 key={index}
-                className={`min-h-[120px] border-r border-b border-gray-200 p-2 ${
+                className={`border-r border-b border-gray-200 p-1 sm:p-2 flex flex-col overflow-hidden ${
                   isToday(day) ? 'bg-rose-50' : ''
                 }`}
               >
                 <div
-                  className={`text-sm font-semibold mb-1 ${
+                  className={`text-xs sm:text-sm font-semibold mb-0.5 sm:mb-1 flex-shrink-0 ${
                     isToday(day) ? 'text-rose-600' : 'text-gray-700'
                   }`}
                 >
                   {day.getDate()}
                 </div>
-                <div className="space-y-1">
-                  {dayEvents.slice(0, 3).map(event => (
+                <div className="space-y-0.5 sm:space-y-1 flex-1 overflow-hidden">
+                  {dayEvents.slice(0, maxEventsToShow).map(event => (
                     <div
                       key={event.id}
                       onClick={() => onEventClick?.(event)}
-                      className={`text-xs p-1 rounded cursor-pointer hover:shadow-md transition-shadow ${
+                      className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer hover:shadow-md transition-shadow ${
                         event.is_cancelled
                           ? 'bg-gray-200 opacity-50'
                           : 'bg-rose-100 border border-rose-300'
                       }`}
                     >
-                      <div className="font-semibold truncate text-gray-900">
+                      <div className="font-semibold truncate text-gray-900 leading-tight">
                         {formatTime(event.start_time)}
                       </div>
-                      <div className="truncate text-gray-700">{event.title}</div>
+                      <div className="truncate text-gray-700 leading-tight hidden sm:block">{event.title}</div>
                     </div>
                   ))}
-                  {dayEvents.length > 3 && (
-                    <div className="text-xs text-gray-500 pl-1">
-                      +{dayEvents.length - 3} more
+                  {dayEvents.length > maxEventsToShow && (
+                    <div className="text-[10px] sm:text-xs text-gray-500 pl-0.5 sm:pl-1">
+                      +{dayEvents.length - maxEventsToShow}
                     </div>
                   )}
                 </div>
@@ -291,10 +302,11 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-900">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Header Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-4 border-b border-gray-200 gap-2 sm:gap-0 flex-shrink-0">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
             {viewMode === 'month' ? formatMonthYear(currentDate) : formatWeekRange(currentDate)}
           </h2>
           <Button variant="outline" size="sm" onClick={navigateToday}>
@@ -302,8 +314,8 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 mr-4">
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant={viewMode === 'week' ? 'primary' : 'outline'}
               size="sm"
@@ -320,39 +332,42 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
             </Button>
           </div>
 
-          <Button variant="outline" size="sm" onClick={navigatePrevious}>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </Button>
-          <Button variant="outline" size="sm" onClick={navigateNext}>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={navigatePrevious}>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </Button>
+            <Button variant="outline" size="sm" onClick={navigateNext}>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Calendar View - fills remaining space */}
       {viewMode === 'week' ? renderWeekView() : renderMonthView()}
     </div>
   )

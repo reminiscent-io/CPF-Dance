@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@/lib/auth/hooks'
+import { PortalLayout } from '@/components/PortalLayout'
 import { Calendar } from '@/components/Calendar'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -31,11 +34,19 @@ interface ClassEvent {
 }
 
 export default function StudioSchedulePage() {
+  const { user, profile, loading: authLoading } = useUser()
+  const router = useRouter()
   const [classes, setClasses] = useState<ClassEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
+
+  useEffect(() => {
+    if (!authLoading && profile && profile.role !== 'studio_admin' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'instructor' ? 'instructor' : 'dancer'}`)
+    }
+  }, [authLoading, profile, router])
 
   const fetchSchedule = async (startDate?: Date, endDate?: Date) => {
     try {
@@ -129,38 +140,53 @@ export default function StudioSchedulePage() {
     }
   }
 
-  if (loading && classes.length === 0) {
+  if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="text-gray-600 mt-4">Loading...</p>
+        </div>
       </div>
     )
   }
 
+  if (!user || !profile || (profile.role !== 'studio_admin' && profile.role !== 'admin')) {
+    return null
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Studio Schedule</h1>
-          <p className="text-gray-600 mt-1">View all classes across all instructors</p>
+    <PortalLayout profile={profile}>
+      <div className="flex flex-col h-[calc(100vh-280px)]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4 flex-shrink-0">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Studio Schedule</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">View all classes across all instructors</p>
+          </div>
+          <Button onClick={() => router.push('/studio/classes')} className="self-start sm:self-auto">
+            Manage Classes
+          </Button>
         </div>
-        <Button onClick={() => window.location.href = '/studio/classes'}>
-          Manage Classes
-        </Button>
-      </div>
 
-      {error && (
-        <Card className="bg-red-50 border-red-200">
-          <p className="text-red-700">{error}</p>
-        </Card>
-      )}
+        {error && (
+          <Card className="bg-red-50 border-red-200 mb-4 flex-shrink-0">
+            <p className="text-red-700">{error}</p>
+          </Card>
+        )}
 
-      <div className="h-[calc(100vh-250px)]">
-        <Calendar
-          events={classes}
-          onEventClick={handleEventClick}
-          onDateChange={handleDateChange}
-        />
+        {loading && classes.length === 0 ? (
+          <div className="flex items-center justify-center flex-1">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0">
+            <Calendar
+              events={classes}
+              onEventClick={handleEventClick}
+              onDateChange={handleDateChange}
+            />
+          </div>
+        )}
       </div>
 
       <Modal
@@ -286,6 +312,6 @@ export default function StudioSchedulePage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PortalLayout>
   )
 }
