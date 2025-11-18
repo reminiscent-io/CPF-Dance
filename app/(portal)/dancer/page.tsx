@@ -48,7 +48,7 @@ export default function DancerPortalPage() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian') {
+    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian' && profile.role !== 'admin') {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
     }
   }, [loading, profile, router])

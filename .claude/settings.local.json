@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(lsof:*)",
+      "Bash(find:*)",
+      "Bash(if [ -f .env.local ])",
+      "Bash(then echo \"=== .env.local exists ===\")",
+      "Bash(else echo \"No .env.local file found\")",
+      "Bash(fi)",
+      "Bash(env)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

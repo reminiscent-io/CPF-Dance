@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // Auth bypass for development - allow all portal access
-  return NextResponse.next()
-  
-  /* Auth disabled
   const { response, user, profile } = await updateSession(request)
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
@@ -35,19 +32,24 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && profile && isPortalPage) {
+    // Admin role has access to all portals
+    if (profile.role === 'admin') {
+      return response
+    }
+
     if (isInstructorPage && profile.role !== 'instructor') {
       const url = request.nextUrl.clone()
       url.pathname = profile.role === 'dancer' ? '/dancer' : '/studio'
       return NextResponse.redirect(url)
     }
-    
+
     if (isDancerPage && profile.role !== 'dancer') {
       const url = request.nextUrl.clone()
       url.pathname = profile.role === 'instructor' ? '/instructor' : '/studio'
       return NextResponse.redirect(url)
     }
-    
-    if (isStudioPage && profile.role !== 'studio_admin') {
+
+    if (isStudioPage && profile.role !== 'studio') {
       const url = request.nextUrl.clone()
       url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
       return NextResponse.redirect(url)
@@ -58,8 +60,10 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     if (profile.role === 'instructor') {
       url.pathname = '/instructor'
-    } else if (profile.role === 'studio_admin') {
+    } else if (profile.role === 'studio') {
       url.pathname = '/studio'
+    } else if (profile.role === 'admin') {
+      url.pathname = '/instructor' // Default admin landing page
     } else {
       url.pathname = '/dancer'
     }
@@ -67,7 +71,6 @@ export async function middleware(request: NextRequest) {
   }
 
   return response
-  */
 }
 
 export const config = {

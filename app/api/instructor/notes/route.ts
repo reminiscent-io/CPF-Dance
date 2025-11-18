@@ -18,8 +18,8 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || profile.role !== 'instructor') {
-      return NextResponse.json({ error: 'Unauthorized - Instructors only' }, { status: 403 })
+    if (profileError || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized - Instructors and Admins only' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -58,8 +58,12 @@ export async function POST(request: Request) {
       .single()
 
     if (noteError) {
-      console.error('Error creating note:', noteError)
-      return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
+      console.error('Supabase error creating note:', noteError)
+      return NextResponse.json({
+        error: noteError.message,
+        details: noteError.details,
+        hint: noteError.hint
+      }, { status: 500 })
     }
 
     return NextResponse.json({

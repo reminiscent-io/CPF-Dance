@@ -5,9 +5,9 @@ import type { UserRole } from '@/lib/auth/types'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password } = body
+    const { email, password, portal } = body
 
-    console.log('Signin attempt for:', email)
+    console.log('Signin attempt for:', email, 'portal:', portal)
 
     const supabase = await createClient()
 
@@ -36,14 +36,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
     }
 
+    const userRole = profile.role as UserRole
+
+    // Default role-based redirects
     const roleRedirects: Record<UserRole, string> = {
       instructor: '/instructor',
       dancer: '/dancer',
-      studio_admin: '/studio',
+      studio: '/studio',
       guardian: '/dancer',
+      admin: '/instructor',
     }
 
-    const redirectUrl = roleRedirects[profile.role as UserRole] || '/dancer'
+    let redirectUrl: string
+
+    // Admin users can access any portal they selected
+    if (userRole === 'admin' && portal) {
+      const portalRedirects: Record<string, string> = {
+        dancer: '/dancer',
+        instructor: '/instructor',
+        studio: '/studio',
+      }
+      redirectUrl = portalRedirects[portal] || '/instructor'
+    } else {
+      // Non-admin users go to their role-specific portal regardless of selection
+      redirectUrl = roleRedirects[userRole] || '/dancer'
+    }
 
     console.log('Signin successful for:', authData.user.email, 'role:', profile.role, 'redirecting to:', redirectUrl)
 

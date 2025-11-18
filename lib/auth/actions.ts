@@ -29,8 +29,9 @@ export async function signIn(data: SignInData) {
       const roleRedirects: Record<UserRole, string> = {
         instructor: '/instructor',
         dancer: '/dancer',
-        studio_admin: '/studio',
+        studio: '/studio',
         guardian: '/dancer',
+        admin: '/instructor',
       }
       redirect(roleRedirects[profile.role as UserRole] || '/dancer')
     }
@@ -83,8 +84,9 @@ export async function signUp(data: SignUpData) {
   const roleRedirects: Record<UserRole, string> = {
     instructor: '/instructor',
     dancer: '/dancer',
-    studio_admin: '/studio',
+    studio: '/studio',
     guardian: '/dancer',
+    admin: '/instructor',
   }
 
   redirect(roleRedirects[data.role] || '/dancer')
@@ -95,10 +97,11 @@ export async function signOut() {
   const { error } = await supabase.auth.signOut()
 
   if (error) {
+    console.error('Sign out error:', error)
     return { error: error.message }
   }
 
-  return { success: true }
+  redirect('/login')
 }
 
 export async function updateProfile(updates: {

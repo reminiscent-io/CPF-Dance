@@ -16,13 +16,15 @@ export default function ClassesPage() {
   const [studios, setStudios] = useState<Studio[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null)
   const [filterStudio, setFilterStudio] = useState<string>('')
   const [filterType, setFilterType] = useState<ClassType | ''>('')
   const [upcomingOnly, setUpcomingOnly] = useState(true)
 
   useEffect(() => {
-    if (!authLoading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [authLoading, profile, router])
 
@@ -65,12 +67,42 @@ export default function ClassesPage() {
     }
   }
 
-  const handleCreateClass = async (formData: CreateClassData) => {
+  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string }) => {
     try {
+      let studioId = formData.studio_id
+
+      // If a new studio name is provided, create it first
+      if (formData.newStudioName && formData.newStudioName.trim()) {
+        const studioResponse = await fetch('/api/studios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.newStudioName.trim(),
+            is_active: true
+          })
+        })
+
+        if (!studioResponse.ok) {
+          const errorData = await studioResponse.json()
+          throw new Error(errorData.error || 'Failed to create studio')
+        }
+
+        const { studio } = await studioResponse.json()
+        studioId = studio.id
+
+        // Refresh studios list
+        fetchStudios()
+        addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
+      }
+
+      // Create the class with the studio_id (either selected or newly created)
+      const classData = { ...formData, studio_id: studioId }
+      delete (classData as any).newStudioName // Remove the temporary field
+
       const response = await fetch('/api/classes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(classData)
       })
 
       if (!response.ok) {
@@ -90,7 +122,68 @@ export default function ClassesPage() {
     }
   }
 
-  if (authLoading || !profile || profile.role !== 'instructor') {
+  const handleUpdateClass = async (classId: string, formData: CreateClassData & { newStudioName?: string }) => {
+    try {
+      let studioId = formData.studio_id
+
+      // If a new studio name is provided, create it first
+      if (formData.newStudioName && formData.newStudioName.trim()) {
+        const studioResponse = await fetch('/api/studios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.newStudioName.trim(),
+            is_active: true
+          })
+        })
+
+        if (!studioResponse.ok) {
+          const errorData = await studioResponse.json()
+          throw new Error(errorData.error || 'Failed to create studio')
+        }
+
+        const { studio } = await studioResponse.json()
+        studioId = studio.id
+
+        // Refresh studios list
+        fetchStudios()
+        addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
+      }
+
+      // Update the class with the studio_id (either selected or newly created)
+      const classData = { ...formData, studio_id: studioId }
+      delete (classData as any).newStudioName // Remove the temporary field
+
+      const response = await fetch(`/api/classes/${classId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(classData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || 'Failed to update class')
+      }
+
+      const { class: updatedClass } = await response.json()
+      setClasses(prev => prev.map(cls => cls.id === classId ? updatedClass : cls))
+      setShowEditModal(false)
+      setSelectedClass(null)
+      addToast('Class updated successfully', 'success')
+    } catch (error) {
+      console.error('Error updating class:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update class'
+      addToast(errorMessage, 'error')
+    }
+  }
+
+  const handleClassClick = (cls: Class) => {
+    setSelectedClass(cls)
+    setShowEditModal(true)
+  }
+
+  if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -159,11 +252,11 @@ export default function ClassesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {classes.map((cls: any) => (
-            <Card 
-              key={cls.id} 
+            <Card
+              key={cls.id}
               hover
               className="cursor-pointer"
-              onClick={() => router.push(`/instructor/classes/${cls.id}`)}
+              onClick={() => handleClassClick(cls)}
             >
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-lg font-semibold text-gray-900 flex-1">{cls.title}</h3>
@@ -216,18 +309,250 @@ export default function ClassesPage() {
           onSubmit={handleCreateClass}
         />
       )}
+
+      {showEditModal && selectedClass && (
+        <EditClassModal
+          classData={selectedClass}
+          studios={studios}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedClass(null)
+          }}
+          onSubmit={(formData) => handleUpdateClass(selectedClass.id, formData)}
+        />
+      )}
     </PortalLayout>
+  )
+}
+
+interface EditClassModalProps {
+  classData: Class
+  studios: Studio[]
+  onClose: () => void
+  onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
+}
+
+function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModalProps) {
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string }>({
+    studio_id: classData.studio_id || '',
+    class_type: classData.class_type,
+    title: classData.title,
+    description: classData.description || '',
+    location: classData.location || '',
+    start_time: new Date(classData.start_time).toISOString().slice(0, 16),
+    end_time: new Date(classData.end_time).toISOString().slice(0, 16),
+    max_capacity: classData.max_capacity || undefined,
+    price: classData.price || undefined,
+    newStudioName: ''
+  })
+  const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
+
+  // Calculate initial duration from existing start_time and end_time
+  const calculateDuration = (start: string, end: string): number => {
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+    return Math.round((endDate.getTime() - startDate.getTime()) / 60000) // Convert to minutes
+  }
+
+  const [durationMinutes, setDurationMinutes] = useState(
+    calculateDuration(classData.start_time, classData.end_time)
+  )
+
+  // Helper function to format duration for display
+  const formatDuration = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours === 0) return `${mins}min`
+    if (mins === 0) return `${hours}hr`
+    return `${hours}hr ${mins}min`
+  }
+
+  // Generate duration options in 5-minute increments
+  const durationOptions = [
+    15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
+    75, 90, 105, 120, // 1.25hr, 1.5hr, 1.75hr, 2hr
+    150, 180, 210, 240 // 2.5hr, 3hr, 3.5hr, 4hr
+  ]
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.title || !formData.start_time || !durationMinutes) {
+      return
+    }
+
+    // Calculate end_time from start_time + duration
+    const startDate = new Date(formData.start_time)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+    const endTimeISO = endDate.toISOString().slice(0, 16)
+
+    // Submit with calculated end_time
+    onSubmit({
+      ...formData,
+      end_time: endTimeISO
+    })
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Edit Class" size="lg">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <Input
+            label="Class Title *"
+            required
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+
+          <Textarea
+            label="Description"
+            rows={3}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Studio
+            </label>
+            <div className="flex gap-4 mb-2">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="studioOption"
+                  checked={!isCreatingNewStudio}
+                  onChange={() => {
+                    setIsCreatingNewStudio(false)
+                    setFormData({ ...formData, newStudioName: '' })
+                  }}
+                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                />
+                <span className="text-sm text-gray-700">Select existing</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="studioOption"
+                  checked={isCreatingNewStudio}
+                  onChange={() => {
+                    setIsCreatingNewStudio(true)
+                    setFormData({ ...formData, studio_id: '' })
+                  }}
+                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                />
+                <span className="text-sm text-gray-700">Create new</span>
+              </label>
+            </div>
+
+            {isCreatingNewStudio ? (
+              <Input
+                placeholder="Enter new studio name"
+                value={formData.newStudioName || ''}
+                onChange={(e) => setFormData({ ...formData, newStudioName: e.target.value })}
+              />
+            ) : (
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={formData.studio_id}
+                onChange={(e) => setFormData({ ...formData, studio_id: e.target.value })}
+              >
+                <option value="">Select a studio</option>
+                {studios.map(studio => (
+                  <option key={studio.id} value={studio.id}>
+                    {studio.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Class Type *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.class_type}
+              onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
+            >
+              <option value="group">Group</option>
+              <option value="private">Private</option>
+              <option value="workshop">Workshop</option>
+              <option value="master_class">Master Class</option>
+            </select>
+          </div>
+
+          <Input
+            label="Location"
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Start Time *"
+              type="datetime-local"
+              required
+              value={formData.start_time}
+              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Length *
+              </label>
+              <select
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+              >
+                {durationOptions.map(minutes => (
+                  <option key={minutes} value={minutes}>
+                    {formatDuration(minutes)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Max Capacity"
+              type="number"
+              min="1"
+              value={formData.max_capacity || ''}
+              onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
+            />
+            <Input
+              label="Price ($)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.price || ''}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value ? parseFloat(e.target.value) : undefined })}
+            />
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Save Changes</Button>
+        </ModalFooter>
+      </form>
+    </Modal>
   )
 }
 
 interface CreateClassModalProps {
   studios: Studio[]
   onClose: () => void
-  onSubmit: (data: CreateClassData) => void
+  onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
 }
 
 function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps) {
-  const [formData, setFormData] = useState<CreateClassData>({
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string }>({
     studio_id: '',
     class_type: 'group',
     title: '',
@@ -236,15 +561,44 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     start_time: '',
     end_time: '',
     max_capacity: undefined,
-    price: undefined
+    price: undefined,
+    newStudioName: ''
   })
+  const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
+  const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
+
+  // Helper function to format duration for display
+  const formatDuration = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours === 0) return `${mins}min`
+    if (mins === 0) return `${hours}hr`
+    return `${hours}hr ${mins}min`
+  }
+
+  // Generate duration options in 5-minute increments
+  const durationOptions = [
+    15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
+    75, 90, 105, 120, // 1.25hr, 1.5hr, 1.75hr, 2hr
+    150, 180, 210, 240 // 2.5hr, 3hr, 3.5hr, 4hr
+  ]
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title || !formData.start_time || !formData.end_time) {
+    if (!formData.title || !formData.start_time || !durationMinutes) {
       return
     }
-    onSubmit(formData)
+
+    // Calculate end_time from start_time + duration
+    const startDate = new Date(formData.start_time)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000) // Add duration in milliseconds
+    const endTimeISO = endDate.toISOString().slice(0, 16) // Format as datetime-local
+
+    // Submit with calculated end_time
+    onSubmit({
+      ...formData,
+      end_time: endTimeISO
+    })
   }
 
   return (
@@ -265,11 +619,46 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Studio
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Studio
+            </label>
+            <div className="flex gap-4 mb-2">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="studioOption"
+                  checked={!isCreatingNewStudio}
+                  onChange={() => {
+                    setIsCreatingNewStudio(false)
+                    setFormData({ ...formData, newStudioName: '' })
+                  }}
+                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                />
+                <span className="text-sm text-gray-700">Select existing</span>
               </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="studioOption"
+                  checked={isCreatingNewStudio}
+                  onChange={() => {
+                    setIsCreatingNewStudio(true)
+                    setFormData({ ...formData, studio_id: '' })
+                  }}
+                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                />
+                <span className="text-sm text-gray-700">Create new</span>
+              </label>
+            </div>
+
+            {isCreatingNewStudio ? (
+              <Input
+                placeholder="Enter new studio name"
+                value={formData.newStudioName || ''}
+                onChange={(e) => setFormData({ ...formData, newStudioName: e.target.value })}
+              />
+            ) : (
               <select
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.studio_id}
@@ -282,24 +671,24 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Class Type *
-              </label>
-              <select
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                value={formData.class_type}
-                onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
-              >
-                <option value="group">Group</option>
-                <option value="private">Private</option>
-                <option value="workshop">Workshop</option>
-                <option value="master_class">Master Class</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Class Type *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.class_type}
+              onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
+            >
+              <option value="group">Group</option>
+              <option value="private">Private</option>
+              <option value="workshop">Workshop</option>
+              <option value="master_class">Master Class</option>
+            </select>
           </div>
 
           <Input
@@ -316,13 +705,23 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
-            <Input
-              label="End Time *"
-              type="datetime-local"
-              required
-              value={formData.end_time}
-              onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Length *
+              </label>
+              <select
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+              >
+                {durationOptions.map(minutes => (
+                  <option key={minutes} value={minutes}>
+                    {formatDuration(minutes)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

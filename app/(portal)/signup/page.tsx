@@ -1,56 +1,86 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import type { UserRole } from '@/lib/auth/types'
 
+const portalConfig = {
+  dancer: {
+    title: 'Dancer Signup',
+    subtitle: 'Start your dance journey today',
+    icon: '💃',
+    gradient: 'from-rose-50 to-pink-50',
+    buttonColor: 'bg-rose-600 hover:bg-rose-700',
+    ringColor: 'focus:ring-rose-500',
+    textColor: 'text-rose-600',
+    defaultRole: 'dancer' as UserRole,
+  },
+  instructor: {
+    title: 'Instructor Signup',
+    subtitle: 'Join our teaching community',
+    icon: '👩‍🏫',
+    gradient: 'from-mauve-50 to-purple-50',
+    buttonColor: 'bg-mauve-600 hover:bg-mauve-700',
+    ringColor: 'focus:ring-mauve-500',
+    textColor: 'text-mauve-600',
+    defaultRole: 'instructor' as UserRole,
+  },
+  studio: {
+    title: 'Studio Signup',
+    subtitle: 'Manage your studio with ease',
+    icon: '🏢',
+    gradient: 'from-gray-50 to-slate-50',
+    buttonColor: 'bg-gray-700 hover:bg-gray-800',
+    ringColor: 'focus:ring-gray-500',
+    textColor: 'text-gray-700',
+    defaultRole: 'studio' as UserRole,
+  },
+}
+
 export default function SignupPage() {
+  const searchParams = useSearchParams()
+  const portal = (searchParams.get('portal') || 'dancer') as keyof typeof portalConfig
+  const config = portalConfig[portal] || portalConfig.dancer
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'dancer' as UserRole,
-    dateOfBirth: '',
+    role: config.defaultRole,
+    isAtLeast13: true,
     guardianEmail: '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showGuardianField, setShowGuardianField] = useState(false)
 
-  function calculateAge(birthDate: string): number {
-    const today = new Date()
-    const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
-    
-    return age
-  }
+  // Update role when portal changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, role: config.defaultRole }))
+  }, [portal, config.defaultRole])
 
-  function handleDateOfBirthChange(dateOfBirth: string) {
-    setFormData({ ...formData, dateOfBirth })
-    
-    if (dateOfBirth && formData.role === 'dancer') {
-      const age = calculateAge(dateOfBirth)
-      setShowGuardianField(age < 13)
-    } else {
-      setShowGuardianField(false)
+  function handleAgeConfirmationChange(isAtLeast13: boolean) {
+    setFormData({ ...formData, isAtLeast13 })
+
+    if (formData.role === 'dancer') {
+      setShowGuardianField(!isAtLeast13)
+      if (isAtLeast13) {
+        setFormData(prev => ({ ...prev, guardianEmail: '' }))
+      }
     }
   }
 
   function handleRoleChange(role: UserRole) {
     setFormData({ ...formData, role })
-    
+
     if (role !== 'dancer') {
       setShowGuardianField(false)
-    } else if (formData.dateOfBirth) {
-      const age = calculateAge(formData.dateOfBirth)
-      setShowGuardianField(age < 13)
+      setFormData(prev => ({ ...prev, guardianEmail: '', isAtLeast13: true }))
+    } else {
+      setShowGuardianField(!formData.isAtLeast13)
     }
   }
 
@@ -73,6 +103,14 @@ export default function SignupPage() {
       return
     }
 
+    if (showGuardianField && formData.guardianEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.guardianEmail.trim())) {
+        setError('Please enter a valid guardian email address')
+        return
+      }
+    }
+
     setLoading(true)
 
     const signUpData = {
@@ -81,8 +119,9 @@ export default function SignupPage() {
       fullName: formData.fullName.trim(),
       phone: formData.phone.trim() || undefined,
       role: formData.role,
-      dateOfBirth: formData.dateOfBirth || undefined,
+      isAtLeast13: formData.isAtLeast13,
       guardianEmail: formData.guardianEmail.trim() || undefined,
+      portal,
     }
 
     try {
@@ -114,13 +153,14 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-mauve-50 px-4 py-8">
+    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4 py-8`}>
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="text-6xl text-center mb-4">{config.icon}</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
-          Get Started
+          {config.title}
         </h1>
         <p className="text-center text-gray-600 mb-6">
-          Create your account
+          {config.subtitle}
         </p>
 
         {error && (
@@ -143,7 +183,7 @@ export default function SignupPage() {
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="Jane Smith"
               disabled={loading}
             />
@@ -162,7 +202,7 @@ export default function SignupPage() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -180,7 +220,7 @@ export default function SignupPage() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="(555) 123-4567"
               disabled={loading}
             />
@@ -198,30 +238,47 @@ export default function SignupPage() {
               value={formData.role}
               onChange={(e) => handleRoleChange(e.target.value as UserRole)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               disabled={loading}
             >
               <option value="dancer">Dancer</option>
-              <option value="studio_admin">Studio Admin</option>
+              <option value="instructor">Instructor</option>
+              <option value="studio">Studio Admin</option>
+              <option value="admin">Admin (Development)</option>
             </select>
           </div>
 
           {formData.role === 'dancer' && (
             <div>
-              <label
-                htmlFor="dateOfBirth"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Date of Birth
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Are you at least 13 years old?
               </label>
-              <input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={(e) => handleDateOfBirthChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
-                disabled={loading}
-              />
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ageConfirmation"
+                    value="yes"
+                    checked={formData.isAtLeast13}
+                    onChange={() => handleAgeConfirmationChange(true)}
+                    disabled={loading}
+                    className="mr-2 w-4 h-4 text-rose-600 focus:ring-rose-500"
+                  />
+                  <span className="text-gray-700">Yes</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ageConfirmation"
+                    value="no"
+                    checked={!formData.isAtLeast13}
+                    onChange={() => handleAgeConfirmationChange(false)}
+                    disabled={loading}
+                    className="mr-2 w-4 h-4 text-rose-600 focus:ring-rose-500"
+                  />
+                  <span className="text-gray-700">No</span>
+                </label>
+              </div>
             </div>
           )}
 
@@ -233,8 +290,8 @@ export default function SignupPage() {
               >
                 Guardian Email
               </label>
-              <p className="text-xs text-gray-600 mb-2">
-                Since you are under 13, we need your guardian's email for consent
+              <p className="text-xs text-gray-600 mb-3">
+                Since you are under 13, we need your guardian's email. A guardian account will be created and they'll receive a notification to provide consent.
               </p>
               <input
                 id="guardianEmail"
@@ -242,7 +299,7 @@ export default function SignupPage() {
                 value={formData.guardianEmail}
                 onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+                className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
                 placeholder="guardian@example.com"
                 disabled={loading}
               />
@@ -263,7 +320,7 @@ export default function SignupPage() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
               minLength={8}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -283,7 +340,7 @@ export default function SignupPage() {
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -292,7 +349,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-rose-600 text-white py-3 rounded-md hover:bg-rose-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
@@ -302,8 +359,8 @@ export default function SignupPage() {
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link
-              href="/login"
-              className="text-rose-600 hover:text-rose-700 font-medium"
+              href={`/login?portal=${portal}`}
+              className={`${config.textColor} hover:underline font-medium`}
             >
               Sign in
             </Link>

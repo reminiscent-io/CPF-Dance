@@ -15,8 +15,46 @@ export function Navigation({ profile }: NavigationProps) {
   const pathname = usePathname()
   const router = useRouter()
 
+  const getCurrentPortal = () => {
+    if (!pathname) return 'instructor'
+    if (pathname.startsWith('/instructor')) return 'instructor'
+    if (pathname.startsWith('/dancer')) return 'dancer'
+    if (pathname.startsWith('/studio')) return 'studio'
+    return 'instructor' // default for admin
+  }
+
   const getNavigationLinks = () => {
     if (!profile) return []
+
+    // Admin role: show navigation based on current portal
+    if (profile.role === 'admin') {
+      const portal = getCurrentPortal()
+      switch (portal) {
+        case 'instructor':
+          return [
+            { href: '/instructor', label: 'Dashboard' },
+            { href: '/instructor/schedule', label: 'Schedule' },
+            { href: '/instructor/students', label: 'Students' },
+            { href: '/instructor/classes', label: 'Classes' },
+            { href: '/instructor/studios', label: 'Studios' },
+          ]
+        case 'dancer':
+          return [
+            { href: '/dancer', label: 'Dashboard' },
+            { href: '/dancer/classes', label: 'My Classes' },
+            { href: '/dancer/notes', label: 'Notes' },
+            { href: '/dancer/request-lesson', label: 'Request Lesson' },
+            { href: '/dancer/payments', label: 'Payments' },
+          ]
+        case 'studio':
+          return [
+            { href: '/studio', label: 'Dashboard' },
+            { href: '/studio/instructors', label: 'Instructors' },
+            { href: '/studio/students', label: 'Students' },
+            { href: '/studio/reports', label: 'Reports' },
+          ]
+      }
+    }
 
     switch (profile.role) {
       case 'instructor':
@@ -25,6 +63,7 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/instructor/schedule', label: 'Schedule' },
           { href: '/instructor/students', label: 'Students' },
           { href: '/instructor/classes', label: 'Classes' },
+          { href: '/instructor/studios', label: 'Studios' },
         ]
       case 'dancer':
       case 'guardian':
@@ -34,9 +73,8 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/dancer/notes', label: 'Notes' },
           { href: '/dancer/request-lesson', label: 'Request Lesson' },
           { href: '/dancer/payments', label: 'Payments' },
-          { href: '/dancer/profile', label: 'Profile' },
         ]
-      case 'studio_admin':
+      case 'studio':
         return [
           { href: '/studio', label: 'Dashboard' },
           { href: '/studio/instructors', label: 'Instructors' },
@@ -50,21 +88,43 @@ export function Navigation({ profile }: NavigationProps) {
 
   const navLinks = getNavigationLinks()
 
+  const portalOptions = [
+    { value: 'instructor', label: 'Instructor Portal', href: '/instructor' },
+    { value: 'dancer', label: 'Dancer Portal', href: '/dancer' },
+    { value: 'studio', label: 'Studio Portal', href: '/studio' },
+  ]
+
+  const getProfileUrl = () => {
+    if (!profile) return '#'
+
+    // Admin users: profile URL depends on current portal
+    if (profile.role === 'admin') {
+      const portal = getCurrentPortal()
+      return `/${portal}/profile`
+    }
+
+    // Regular users: profile URL based on role
+    switch (profile.role) {
+      case 'dancer':
+      case 'guardian':
+        return '/dancer/profile'
+      case 'instructor':
+        return '/instructor/profile'
+      case 'studio':
+        return '/studio/profile'
+      default:
+        return '#'
+    }
+  }
+
   const handleSignOut = async () => {
     try {
-      const result = await signOut()
-      if (result?.error) {
-        console.error('Sign out error:', result.error)
-        alert('Failed to sign out. Please try again.')
-      } else {
-        // Redirect to login page
-        router.push('/login')
-        // Force a hard refresh to clear all client-side state
-        router.refresh()
-      }
+      await signOut()
+      // Server action will redirect to /login
     } catch (error) {
       console.error('Unexpected sign out error:', error)
-      alert('An unexpected error occurred. Please try again.')
+      // If there's an error, manually redirect
+      router.push('/login')
     }
   }
 
@@ -73,7 +133,7 @@ export function Navigation({ profile }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role}` : '/'} className="flex items-center">
+            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center">
               <span className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent">
                 Dance Studio
               </span>
@@ -102,12 +162,31 @@ export function Navigation({ profile }: NavigationProps) {
           </div>
 
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <div className="text-sm text-gray-700">
+            {profile?.role === 'admin' && (
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Portal:</span>
+                <select
+                  value={getCurrentPortal()}
+                  onChange={(e) => router.push(portalOptions.find(p => p.value === e.target.value)?.href || '/instructor')}
+                  className="text-sm font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  {portalOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Link
+              href={getProfileUrl()}
+              className="text-sm text-gray-700 hover:text-rose-600 transition-colors"
+            >
               <span className="font-medium">{profile?.full_name}</span>
               <span className="text-gray-500 ml-2 capitalize">
-                ({profile?.role === 'studio_admin' ? 'Studio Admin' : profile?.role})
+                ({profile?.role})
               </span>
-            </div>
+            </Link>
             <button
               onClick={handleSignOut}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -160,14 +239,39 @@ export function Navigation({ profile }: NavigationProps) {
               )
             })}
           </div>
-          <div className="border-t border-gray-200 px-4 py-3">
-            <div className="flex items-center justify-between">
+          <div className="border-t border-gray-200 px-4 py-3 space-y-3">
+            {profile?.role === 'admin' && (
               <div>
+                <label className="block text-xs text-gray-500 font-medium uppercase tracking-wide mb-2">
+                  Switch Portal
+                </label>
+                <select
+                  value={getCurrentPortal()}
+                  onChange={(e) => {
+                    router.push(portalOptions.find(p => p.value === e.target.value)?.href || '/instructor')
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="w-full text-sm font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  {portalOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <Link
+                href={getProfileUrl()}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-rose-600 transition-colors"
+              >
                 <p className="text-sm font-medium text-gray-900">{profile?.full_name}</p>
                 <p className="text-sm text-gray-500 capitalize">
-                  {profile?.role === 'studio_admin' ? 'Studio Admin' : profile?.role}
+                  {profile?.role}
                 </p>
-              </div>
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

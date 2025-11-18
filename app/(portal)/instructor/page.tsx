@@ -15,13 +15,13 @@ export default function InstructorPortalPage() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (user && profile?.role === 'instructor') {
+    if (user && (profile?.role === 'instructor' || profile?.role === 'admin')) {
       fetchDashboardData()
     }
   }, [user, profile])
@@ -52,7 +52,7 @@ export default function InstructorPortalPage() {
     )
   }
 
-  if (!user || !profile || profile.role !== 'instructor') {
+  if (!user || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return null
   }
 

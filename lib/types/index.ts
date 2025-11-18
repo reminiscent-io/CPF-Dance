@@ -1,4 +1,4 @@
-export type UserRole = 'instructor' | 'dancer' | 'guardian' | 'studio_admin'
+export type UserRole = 'instructor' | 'dancer' | 'guardian' | 'studio' | 'admin'
 export type PaymentStatus = 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 export type PaymentMethod = 'stripe' | 'cash' | 'check' | 'other'
 export type ClassType = 'group' | 'private' | 'workshop' | 'master_class'

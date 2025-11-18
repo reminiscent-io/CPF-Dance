@@ -4,21 +4,24 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Input, Modal, ModalFooter, Textarea, Table, useToast, Spinner } from '@/components/ui'
+import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner } from '@/components/ui'
 import type { Studio, CreateStudioData } from '@/lib/types'
 
 export default function StudiosPage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
   const { addToast } = useToast()
-  
+
   const [studios, setStudios] = useState<Studio[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null)
+  const [filterActive, setFilterActive] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (!authLoading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [authLoading, profile, router])
 
@@ -26,13 +29,18 @@ export default function StudiosPage() {
     if (user) {
       fetchStudios()
     }
-  }, [user])
+  }, [user, filterActive])
 
   const fetchStudios = async () => {
     try {
-      const response = await fetch('/api/studios')
+      const params = new URLSearchParams()
+      if (filterActive !== null) {
+        params.append('is_active', filterActive.toString())
+      }
+
+      const response = await fetch(`/api/studios?${params}`)
       if (!response.ok) throw new Error('Failed to fetch studios')
-      
+
       const data = await response.json()
       setStudios(data.studios || [])
     } catch (error) {
@@ -63,7 +71,33 @@ export default function StudiosPage() {
     }
   }
 
-  if (authLoading || !profile || profile.role !== 'instructor') {
+  const handleUpdateStudio = async (studioId: string, formData: CreateStudioData & { is_active?: boolean }) => {
+    try {
+      const response = await fetch(`/api/studios/${studioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) throw new Error('Failed to update studio')
+
+      const { studio } = await response.json()
+      setStudios(prev => prev.map(s => s.id === studioId ? studio : s))
+      setShowEditModal(false)
+      setSelectedStudio(null)
+      addToast('Studio updated successfully', 'success')
+    } catch (error) {
+      console.error('Error updating studio:', error)
+      addToast('Failed to update studio', 'error')
+    }
+  }
+
+  const handleStudioClick = (studio: Studio) => {
+    setSelectedStudio(studio)
+    setShowEditModal(true)
+  }
+
+  if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -71,43 +105,9 @@ export default function StudiosPage() {
     )
   }
 
-  const columns = [
-    {
-      key: 'name',
-      header: 'Name'
-    },
-    {
-      key: 'location',
-      header: 'Location',
-      render: (studio: Studio) => {
-        const parts = [studio.city, studio.state].filter(Boolean)
-        return parts.length > 0 ? parts.join(', ') : 'N/A'
-      }
-    },
-    {
-      key: 'contact_email',
-      header: 'Email',
-      render: (studio: Studio) => studio.contact_email || 'N/A'
-    },
-    {
-      key: 'contact_phone',
-      header: 'Phone',
-      render: (studio: Studio) => studio.contact_phone || 'N/A'
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (studio: Studio) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          studio.is_active 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {studio.is_active ? 'Active' : 'Inactive'}
-        </span>
-      )
-    }
-  ]
+  const filteredStudios = filterActive !== null
+    ? studios.filter(s => s.is_active === filterActive)
+    : studios
 
   return (
     <PortalLayout profile={profile}>
@@ -115,20 +115,117 @@ export default function StudiosPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Studios</h1>
-            <p className="text-gray-600 mt-1">Manage studio locations</p>
+            <p className="text-gray-600 mt-1">Manage studio locations and contacts</p>
           </div>
           <Button onClick={() => setShowAddModal(true)}>
             Add Studio
           </Button>
         </div>
+
+        <div className="flex gap-3">
+          <Button
+            variant={filterActive === null ? 'primary' : 'outline'}
+            onClick={() => setFilterActive(null)}
+          >
+            All Studios
+          </Button>
+          <Button
+            variant={filterActive === true ? 'primary' : 'outline'}
+            onClick={() => setFilterActive(true)}
+          >
+            Active
+          </Button>
+          <Button
+            variant={filterActive === false ? 'primary' : 'outline'}
+            onClick={() => setFilterActive(false)}
+          >
+            Inactive
+          </Button>
+        </div>
       </div>
 
-      <Table
-        data={studios}
-        columns={columns}
-        loading={loading}
-        emptyMessage="No studios found"
-      />
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : filteredStudios.length === 0 ? (
+        <Card>
+          <div className="text-center py-12 text-gray-600">
+            No studios found
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredStudios.map((studio) => (
+            <Card
+              key={studio.id}
+              hover
+              className="cursor-pointer"
+              onClick={() => handleStudioClick(studio)}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                  {studio.name}
+                </h3>
+                <Badge variant={studio.is_active ? 'success' : 'default'}>
+                  {studio.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              {/* Address */}
+              {(studio.address || studio.city || studio.state || studio.zip_code) && (
+                <div className="mb-4">
+                  <div className="text-sm font-medium text-gray-700 mb-1">📍 Location</div>
+                  {studio.address && (
+                    <div className="text-sm text-gray-600">{studio.address}</div>
+                  )}
+                  {(studio.city || studio.state || studio.zip_code) && (
+                    <div className="text-sm text-gray-600">
+                      {[studio.city, studio.state, studio.zip_code].filter(Boolean).join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Contact Information */}
+              <div className="space-y-2 mb-4">
+                {studio.contact_email && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-700">📧 Email</div>
+                    <a
+                      href={`mailto:${studio.contact_email}`}
+                      className="text-sm text-rose-600 hover:text-rose-700"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {studio.contact_email}
+                    </a>
+                  </div>
+                )}
+                {studio.contact_phone && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-700">📞 Phone</div>
+                    <a
+                      href={`tel:${studio.contact_phone}`}
+                      className="text-sm text-rose-600 hover:text-rose-700"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {studio.contact_phone}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              {studio.notes && (
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="text-sm font-medium text-gray-700 mb-1">Notes</div>
+                  <p className="text-sm text-gray-600 line-clamp-2">{studio.notes}</p>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
 
       {showAddModal && (
         <AddStudioModal
@@ -136,7 +233,129 @@ export default function StudiosPage() {
           onSubmit={handleAddStudio}
         />
       )}
+
+      {showEditModal && selectedStudio && (
+        <EditStudioModal
+          studio={selectedStudio}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedStudio(null)
+          }}
+          onSubmit={(formData) => handleUpdateStudio(selectedStudio.id, formData)}
+        />
+      )}
     </PortalLayout>
+  )
+}
+
+interface EditStudioModalProps {
+  studio: Studio
+  onClose: () => void
+  onSubmit: (data: CreateStudioData & { is_active?: boolean }) => void
+}
+
+function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
+  const [formData, setFormData] = useState<CreateStudioData & { is_active: boolean }>({
+    name: studio.name,
+    address: studio.address || '',
+    city: studio.city || '',
+    state: studio.state || '',
+    zip_code: studio.zip_code || '',
+    contact_email: studio.contact_email || '',
+    contact_phone: studio.contact_phone || '',
+    notes: studio.notes || '',
+    is_active: studio.is_active
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name) {
+      return
+    }
+    onSubmit(formData)
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Edit Studio" size="lg">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <Input
+            label="Studio Name *"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+
+          <Input
+            label="Address"
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          />
+
+          <div className="grid grid-cols-3 gap-4">
+            <Input
+              label="City"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            />
+            <Input
+              label="State"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+            />
+            <Input
+              label="Zip Code"
+              value={formData.zip_code}
+              onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Contact Email"
+              type="email"
+              value={formData.contact_email}
+              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+            />
+            <Input
+              label="Contact Phone"
+              type="tel"
+              value={formData.contact_phone}
+              onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+            />
+          </div>
+
+          <Textarea
+            label="Notes"
+            rows={3}
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          />
+
+          <div>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="mr-2 h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700">Active Studio</span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              Inactive studios won't appear in class creation dropdowns
+            </p>
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Save Changes</Button>
+        </ModalFooter>
+      </form>
+    </Modal>
   )
 }
 

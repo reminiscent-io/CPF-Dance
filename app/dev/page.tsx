@@ -21,15 +21,14 @@ export default function DevPage() {
           Select a user profile to test the portals
         </p>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div onClick={() => selectRole('dancer', '/dancer')} className="cursor-pointer">
             <Card className="text-center hover:shadow-lg transition-shadow h-full">
               <CardContent>
                 <div className="text-4xl mb-3">💃</div>
-                <h3 className="font-semibold text-lg mb-2">Dancer</h3>
-                <p className="text-sm text-gray-600 mb-4">Sarah Johnson</p>
+                <h3 className="font-semibold text-lg mb-4">Dancer</h3>
                 <Button variant="outline" size="sm" className="w-full">
-                  View Portal
+                  Access Portal
                 </Button>
               </CardContent>
             </Card>
@@ -39,23 +38,33 @@ export default function DevPage() {
             <Card className="text-center hover:shadow-lg transition-shadow h-full">
               <CardContent>
                 <div className="text-4xl mb-3">👩‍🏫</div>
-                <h3 className="font-semibold text-lg mb-2">Instructor</h3>
-                <p className="text-sm text-gray-600 mb-4">Courtney Martinez</p>
+                <h3 className="font-semibold text-lg mb-4">Instructor</h3>
                 <Button variant="outline" size="sm" className="w-full">
-                  View Portal
+                  Access Portal
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          <div onClick={() => selectRole('studio_admin', '/studio')} className="cursor-pointer">
+          <div onClick={() => selectRole('studio', '/studio')} className="cursor-pointer">
             <Card className="text-center hover:shadow-lg transition-shadow h-full">
               <CardContent>
                 <div className="text-4xl mb-3">🏢</div>
-                <h3 className="font-semibold text-lg mb-2">Studio Admin</h3>
-                <p className="text-sm text-gray-600 mb-4">Michael Chen</p>
+                <h3 className="font-semibold text-lg mb-4">Studio</h3>
                 <Button variant="outline" size="sm" className="w-full">
-                  View Portal
+                  Access Portal
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div onClick={() => selectRole('admin', '/instructor')} className="cursor-pointer">
+            <Card className="text-center hover:shadow-lg transition-shadow h-full border-2 border-rose-300">
+              <CardContent>
+                <div className="text-4xl mb-3">👑</div>
+                <h3 className="font-semibold text-lg mb-4">Admin</h3>
+                <Button variant="outline" size="sm" className="w-full">
+                  Access Portal
                 </Button>
               </CardContent>
             </Card>

@@ -19,8 +19,8 @@ export default function StudentsPage() {
   const [filterActive, setFilterActive] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (!authLoading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [authLoading, profile, router])
 
@@ -70,7 +70,7 @@ export default function StudentsPage() {
     }
   }
 
-  if (authLoading || !profile || profile.role !== 'instructor') {
+  if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -238,12 +238,21 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Age Group (optional)"
-              placeholder="e.g., 8-12"
-              value={formData.age_group}
-              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Age Group (optional)
+              </label>
+              <select
+                value={formData.age_group}
+                onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              >
+                <option value="">Select age group...</option>
+                <option value="Child (<13)">Child (&lt;13)</option>
+                <option value="Teen (13-18)">Teen (13-18)</option>
+                <option value="Adult (+18)">Adult (+18)</option>
+              </select>
+            </div>
             <Input
               label="Skill Level (optional)"
               placeholder="e.g., Beginner, Intermediate"

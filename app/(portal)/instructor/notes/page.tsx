@@ -21,8 +21,8 @@ export default function NotesPage() {
   const [filterTag, setFilterTag] = useState<string>('')
 
   useEffect(() => {
-    if (!authLoading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [authLoading, profile, router])
 
@@ -85,7 +85,7 @@ export default function NotesPage() {
     }
   }
 
-  if (authLoading || !profile || profile.role !== 'instructor') {
+  if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />

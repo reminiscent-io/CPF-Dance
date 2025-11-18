@@ -35,8 +35,8 @@ export default function StudentDetailPage() {
   const [savingNote, setSavingNote] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && profile && profile.role !== 'instructor') {
-      router.push(`/${profile.role === 'studio_admin' ? 'studio' : 'dancer'}`)
+    if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [authLoading, profile, router])
 
@@ -113,7 +113,11 @@ export default function StudentDetailPage() {
         body: JSON.stringify(payload)
       })
 
-      if (!response.ok) throw new Error('Failed to create note')
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || 'Failed to create note')
+      }
 
       await fetchStudentDetails()
       setShowNoteModal(false)
@@ -127,7 +131,8 @@ export default function StudentDetailPage() {
       addToast('Note created successfully', 'success')
     } catch (error) {
       console.error('Error creating note:', error)
-      addToast('Failed to create note', 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create note'
+      addToast(errorMessage, 'error')
     } finally {
       setSavingNote(false)
     }
@@ -166,7 +171,7 @@ export default function StudentDetailPage() {
     }
   }
 
-  if (authLoading || loading || !profile || profile.role !== 'instructor') {
+  if (authLoading || loading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -573,11 +578,21 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Age Group"
-              value={formData.age_group}
-              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Age Group
+              </label>
+              <select
+                value={formData.age_group}
+                onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              >
+                <option value="">Select age group...</option>
+                <option value="Child (<13)">Child (&lt;13)</option>
+                <option value="Teen (13-18)">Teen (13-18)</option>
+                <option value="Adult (+18)">Adult (+18)</option>
+              </select>
+            </div>
             <Input
               label="Skill Level"
               value={formData.skill_level}

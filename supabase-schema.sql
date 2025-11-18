@@ -278,12 +278,19 @@ CREATE POLICY "Students can view shared notes about them"
     OR author_id = auth.uid()
   );
 
-CREATE POLICY "Instructors can manage all notes"
+CREATE POLICY "Instructors and Admins can manage all notes"
   ON notes FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
+      WHERE profiles.id = auth.uid() AND profiles.role IN ('instructor', 'admin')
+    )
+    OR author_id = auth.uid()
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role IN ('instructor', 'admin')
     )
     OR author_id = auth.uid()
   );

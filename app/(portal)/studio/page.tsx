@@ -31,7 +31,7 @@ export default function StudioPortalPage() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'studio_admin') {
+    if (!loading && profile && profile.role !== 'studio' && profile.role !== 'admin') {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'dancer'}`)
     }
   }, [loading, profile, router])
@@ -68,7 +68,7 @@ export default function StudioPortalPage() {
     )
   }
 
-  if (!user || !profile || profile.role !== 'studio_admin') {
+  if (!user || !profile || (profile.role !== 'studio' && profile.role !== 'admin')) {
     return null
   }
 

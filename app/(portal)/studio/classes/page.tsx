@@ -33,7 +33,7 @@ export default function StudioClassesPage() {
   const [filter, setFilter] = useState<FilterType>('upcoming')
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'studio_admin') {
+    if (!loading && profile && profile.role !== 'studio' && profile.role !== 'admin') {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'dancer'}`)
     }
   }, [loading, profile, router])
@@ -69,7 +69,7 @@ export default function StudioClassesPage() {
     )
   }
 
-  if (!user || !profile || profile.role !== 'studio_admin') {
+  if (!user || !profile || profile.role !== 'studio' && profile.role !== 'admin') {
     return null
   }
 

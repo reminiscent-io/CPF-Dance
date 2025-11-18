@@ -36,7 +36,7 @@ export default function DancerMyNotesPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian') {
+    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
     }
   }, [loading, profile, router])

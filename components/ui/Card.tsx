@@ -1,6 +1,6 @@
 import React from 'react'
 
-export interface CardProps {
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
   className?: string
   padding?: 'none' | 'sm' | 'md' | 'lg'
@@ -11,7 +11,9 @@ export function Card({
   children,
   className = '',
   padding = 'md',
-  hover = false
+  hover = false,
+  onClick,
+  ...props
 }: CardProps) {
   const paddingStyles = {
     none: '',
@@ -19,11 +21,11 @@ export function Card({
     md: 'p-6',
     lg: 'p-8'
   }
-  
+
   const hoverStyles = hover
     ? 'hover:shadow-lg hover:-translate-y-1 transition-all duration-200'
     : ''
-  
+
   return (
     <div
       className={`
@@ -32,6 +34,8 @@ export function Card({
         ${hoverStyles}
         ${className}
       `}
+      onClick={onClick}
+      {...props}
     >
       {children}
     </div>

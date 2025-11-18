@@ -77,11 +77,13 @@ export default function HomePage() {
             Track progress, manage schedules, and elevate your dance journey with expert guidance
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slideUp">
-            <Link href="/dev">
-              <Button size="lg" className="w-full sm:w-auto min-w-[200px]">
-                View Portals (Dev)
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-full sm:w-auto min-w-[200px]"
+            >
+              View Portals
+            </Button>
             <Button
               variant="outline"
               size="lg"
@@ -94,8 +96,82 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
+      <section id="portals" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+              Choose Your Portal
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Access your personalized dashboard based on your role
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-20">
+            <Card hover className="text-center overflow-hidden p-0">
+              <div className="relative w-full h-48 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1555656220-46e30749d330?"
+                  alt="Dancer"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Dancer Portal</h3>
+                <p className="text-gray-600 mb-6">
+                  Track your progress, view classes, and manage your dance journey
+                </p>
+                <Link href="/login?portal=dancer">
+                  <Button size="lg" className="w-full">
+                    Join or Log In
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+
+            <Card hover className="text-center overflow-hidden p-0">
+              <div className="relative w-full h-48 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1685339009948-d807094b1457?"
+                  alt="Instructor"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Instructor Portal</h3>
+                <p className="text-gray-600 mb-6">
+                  Manage students, schedule classes, and track student progress
+                </p>
+                <Link href="/login?portal=instructor">
+                  <Button size="lg" className="w-full">
+                    Join or Log In
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+
+            <Card hover className="text-center overflow-hidden p-0">
+              <div className="relative w-full h-48 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?"
+                  alt="Studio"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Studio Portal</h3>
+                <p className="text-gray-600 mb-6">
+                  Oversee operations, manage locations, and coordinate schedules
+                </p>
+                <Link href="/login?portal=studio">
+                  <Button size="lg" className="w-full">
+                    Join or Log In
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          </div>
+
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Everything You Need to Succeed

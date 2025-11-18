@@ -4,7 +4,41 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
+const portalConfig = {
+  dancer: {
+    title: 'Dancer Login',
+    subtitle: 'Access your dance journey',
+    icon: '💃',
+    gradient: 'from-rose-50 to-pink-50',
+    buttonColor: 'bg-rose-600 hover:bg-rose-700',
+    ringColor: 'focus:ring-rose-500',
+    textColor: 'text-rose-600',
+  },
+  instructor: {
+    title: 'Instructor Login',
+    subtitle: 'Manage your students and classes',
+    icon: '👩‍🏫',
+    gradient: 'from-mauve-50 to-purple-50',
+    buttonColor: 'bg-mauve-600 hover:bg-mauve-700',
+    ringColor: 'focus:ring-mauve-500',
+    textColor: 'text-mauve-600',
+  },
+  studio: {
+    title: 'Studio Login',
+    subtitle: 'Oversee your studio operations',
+    icon: '🏢',
+    gradient: 'from-gray-50 to-slate-50',
+    buttonColor: 'bg-gray-700 hover:bg-gray-800',
+    ringColor: 'focus:ring-gray-500',
+    textColor: 'text-gray-700',
+  },
+}
+
 function LoginForm() {
+  const searchParams = useSearchParams()
+  const portal = (searchParams.get('portal') || 'dancer') as keyof typeof portalConfig
+  const config = portalConfig[portal] || portalConfig.dancer
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,6 +58,7 @@ function LoginForm() {
         body: JSON.stringify({
           email: email.trim(),
           password,
+          portal,
         }),
       })
 
@@ -46,13 +81,14 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-mauve-50 px-4">
+    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4`}>
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="text-6xl text-center mb-4">{config.icon}</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
-          Welcome Back
+          {config.title}
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Sign in to your account
+          {config.subtitle}
         </p>
 
         {error && (
@@ -75,7 +111,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -94,7 +130,7 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -103,7 +139,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-rose-600 text-white py-3 rounded-md hover:bg-rose-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -113,8 +149,8 @@ function LoginForm() {
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link
-              href="/signup"
-              className="text-rose-600 hover:text-rose-700 font-medium"
+              href={`/signup?portal=${portal}`}
+              className={`${config.textColor} hover:underline font-medium`}
             >
               Sign up
             </Link>
