@@ -5,6 +5,7 @@ export type ClassType = 'group' | 'private' | 'workshop' | 'master_class'
 export type NoteVisibility = 'private' | 'shared_with_student' | 'shared_with_guardian' | 'shared_with_studio'
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused'
 export type PrivateLessonRequestStatus = 'pending' | 'approved' | 'scheduled' | 'declined'
+export type PricingModel = 'per_person' | 'per_class' | 'per_hour' | 'tiered'
 
 export interface Student {
   id: string
@@ -61,7 +62,18 @@ export interface Class {
   start_time: string
   end_time: string
   max_capacity: number | null
+
+  // Pricing structure
+  pricing_model: PricingModel
+  base_cost: number | null // Base/flat cost for per_class or tiered models
+  cost_per_person: number | null // Cost per student for per_person model
+  cost_per_hour: number | null // Cost per hour for per_hour model
+  tiered_base_students: number | null // Number of students included in base cost (tiered model)
+  tiered_additional_cost: number | null // Cost per additional student beyond base (tiered model)
+
+  // Legacy field (deprecated)
   price: number | null
+
   is_cancelled: boolean
   cancellation_reason: string | null
   created_at: string
@@ -190,6 +202,16 @@ export interface CreateClassData {
   start_time: string
   end_time: string
   max_capacity?: number
+
+  // Pricing structure
+  pricing_model?: PricingModel
+  base_cost?: number // For per_class or tiered models
+  cost_per_person?: number // For per_person model
+  cost_per_hour?: number // For per_hour model
+  tiered_base_students?: number // For tiered model
+  tiered_additional_cost?: number // For tiered model
+
+  // Legacy field (backward compatibility)
   price?: number
 }
 

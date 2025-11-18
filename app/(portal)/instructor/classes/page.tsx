@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner } from '@/components/ui'
-import type { Class, Studio, CreateClassData, ClassType } from '@/lib/types'
+import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
+import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -293,9 +294,9 @@ export default function ClassesPage() {
                   {cls.enrolled_count || 0}
                   {cls.max_capacity && ` / ${cls.max_capacity}`} enrolled
                 </span>
-                {cls.price && (
-                  <span className="text-sm font-semibold text-gray-900">${cls.price}</span>
-                )}
+                <span className="text-sm font-semibold text-gray-900">
+                  {getPricingModelDescription(cls)}
+                </span>
               </div>
             </Card>
           ))}
@@ -342,7 +343,13 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     start_time: new Date(classData.start_time).toISOString().slice(0, 16),
     end_time: new Date(classData.end_time).toISOString().slice(0, 16),
     max_capacity: classData.max_capacity || undefined,
-    price: classData.price || undefined,
+    pricing_model: classData.pricing_model || 'per_person',
+    cost_per_person: classData.cost_per_person || undefined,
+    base_cost: classData.base_cost || undefined,
+    cost_per_hour: classData.cost_per_hour || undefined,
+    tiered_base_students: classData.tiered_base_students || undefined,
+    tiered_additional_cost: classData.tiered_additional_cost || undefined,
+    price: classData.price || undefined, // Legacy field
     newStudioName: ''
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
@@ -515,23 +522,105 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Max Capacity"
+            type="number"
+            min="1"
+            value={formData.max_capacity || ''}
+            onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Pricing Model *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.pricing_model || 'per_person'}
+              onChange={(e) => setFormData({ ...formData, pricing_model: e.target.value as PricingModel })}
+            >
+              <option value="per_person">Per Person</option>
+              <option value="per_class">Per Class (Flat Rate)</option>
+              <option value="per_hour">Per Hour</option>
+              <option value="tiered">Tiered (Base + Additional)</option>
+            </select>
+          </div>
+
+          {/* Conditional pricing fields based on selected model */}
+          {formData.pricing_model === 'per_person' && (
             <Input
-              label="Max Capacity"
-              type="number"
-              min="1"
-              value={formData.max_capacity || ''}
-              onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
-            />
-            <Input
-              label="Price ($)"
+              label="Cost Per Person ($) *"
               type="number"
               min="0"
               step="0.01"
-              value={formData.price || ''}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value ? parseFloat(e.target.value) : undefined })}
+              required
+              value={formData.cost_per_person || ''}
+              onChange={(e) => setFormData({ ...formData, cost_per_person: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 25.00"
             />
-          </div>
+          )}
+
+          {formData.pricing_model === 'per_class' && (
+            <Input
+              label="Base Cost (Flat Rate) ($) *"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={formData.base_cost || ''}
+              onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 150.00"
+            />
+          )}
+
+          {formData.pricing_model === 'per_hour' && (
+            <Input
+              label="Cost Per Hour ($) *"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={formData.cost_per_hour || ''}
+              onChange={(e) => setFormData({ ...formData, cost_per_hour: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 75.00"
+            />
+          )}
+
+          {formData.pricing_model === 'tiered' && (
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Set a base cost for the first X students, then charge per additional student</p>
+              <Input
+                label="Base Cost ($) *"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={formData.base_cost || ''}
+                onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="e.g., 100.00"
+              />
+              <Input
+                label="Students Included in Base Cost *"
+                type="number"
+                min="1"
+                required
+                value={formData.tiered_base_students || ''}
+                onChange={(e) => setFormData({ ...formData, tiered_base_students: e.target.value ? parseInt(e.target.value) : undefined })}
+                placeholder="e.g., 5"
+              />
+              <Input
+                label="Cost Per Additional Student ($) *"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={formData.tiered_additional_cost || ''}
+                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="e.g., 15.00"
+              />
+            </div>
+          )}
         </div>
 
         <ModalFooter className="mt-6">
@@ -561,7 +650,13 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     start_time: '',
     end_time: '',
     max_capacity: undefined,
-    price: undefined,
+    pricing_model: 'per_person',
+    cost_per_person: undefined,
+    base_cost: undefined,
+    cost_per_hour: undefined,
+    tiered_base_students: undefined,
+    tiered_additional_cost: undefined,
+    price: undefined, // Legacy field
     newStudioName: ''
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
@@ -724,23 +819,105 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Max Capacity"
+            type="number"
+            min="1"
+            value={formData.max_capacity || ''}
+            onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Pricing Model *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.pricing_model || 'per_person'}
+              onChange={(e) => setFormData({ ...formData, pricing_model: e.target.value as PricingModel })}
+            >
+              <option value="per_person">Per Person</option>
+              <option value="per_class">Per Class (Flat Rate)</option>
+              <option value="per_hour">Per Hour</option>
+              <option value="tiered">Tiered (Base + Additional)</option>
+            </select>
+          </div>
+
+          {/* Conditional pricing fields based on selected model */}
+          {formData.pricing_model === 'per_person' && (
             <Input
-              label="Max Capacity"
-              type="number"
-              min="1"
-              value={formData.max_capacity || ''}
-              onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
-            />
-            <Input
-              label="Price ($)"
+              label="Cost Per Person ($) *"
               type="number"
               min="0"
               step="0.01"
-              value={formData.price || ''}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value ? parseFloat(e.target.value) : undefined })}
+              required
+              value={formData.cost_per_person || ''}
+              onChange={(e) => setFormData({ ...formData, cost_per_person: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 25.00"
             />
-          </div>
+          )}
+
+          {formData.pricing_model === 'per_class' && (
+            <Input
+              label="Base Cost (Flat Rate) ($) *"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={formData.base_cost || ''}
+              onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 150.00"
+            />
+          )}
+
+          {formData.pricing_model === 'per_hour' && (
+            <Input
+              label="Cost Per Hour ($) *"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={formData.cost_per_hour || ''}
+              onChange={(e) => setFormData({ ...formData, cost_per_hour: e.target.value ? parseFloat(e.target.value) : undefined })}
+              placeholder="e.g., 75.00"
+            />
+          )}
+
+          {formData.pricing_model === 'tiered' && (
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Set a base cost for the first X students, then charge per additional student</p>
+              <Input
+                label="Base Cost ($) *"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={formData.base_cost || ''}
+                onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="e.g., 100.00"
+              />
+              <Input
+                label="Students Included in Base Cost *"
+                type="number"
+                min="1"
+                required
+                value={formData.tiered_base_students || ''}
+                onChange={(e) => setFormData({ ...formData, tiered_base_students: e.target.value ? parseInt(e.target.value) : undefined })}
+                placeholder="e.g., 5"
+              />
+              <Input
+                label="Cost Per Additional Student ($) *"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={formData.tiered_additional_cost || ''}
+                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="e.g., 15.00"
+              />
+            </div>
+          )}
         </div>
 
         <ModalFooter className="mt-6">

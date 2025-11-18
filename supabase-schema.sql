@@ -10,6 +10,7 @@ CREATE TYPE payment_status AS ENUM ('pending', 'confirmed', 'disputed', 'cancell
 CREATE TYPE payment_method AS ENUM ('stripe', 'cash', 'check', 'other');
 CREATE TYPE class_type AS ENUM ('group', 'private', 'workshop', 'master_class');
 CREATE TYPE note_visibility AS ENUM ('private', 'shared_with_student', 'shared_with_guardian', 'shared_with_studio');
+CREATE TYPE pricing_model AS ENUM ('per_person', 'per_class', 'per_hour', 'tiered');
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE profiles (
@@ -70,7 +71,18 @@ CREATE TABLE classes (
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
   max_capacity INTEGER,
-  price DECIMAL(10, 2),
+
+  -- Pricing structure (supports multiple pricing models)
+  pricing_model pricing_model DEFAULT 'per_person',
+  base_cost DECIMAL(10, 2), -- Base/flat cost for per_class or tiered models
+  cost_per_person DECIMAL(10, 2), -- Cost per student for per_person model
+  cost_per_hour DECIMAL(10, 2), -- Cost per hour for per_hour model
+  tiered_base_students INTEGER, -- Number of students included in base cost (tiered model)
+  tiered_additional_cost DECIMAL(10, 2), -- Cost per additional student beyond base (tiered model)
+
+  -- Legacy field (deprecated, use pricing_model fields instead)
+  price DECIMAL(10, 2), -- Kept for backward compatibility
+
   is_cancelled BOOLEAN DEFAULT false,
   cancellation_reason TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
