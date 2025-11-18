@@ -1,0 +1,359 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+
+interface CalendarEvent {
+  id: string
+  title: string
+  start_time: string
+  end_time: string
+  class_type: string
+  location?: string
+  is_cancelled: boolean
+  enrolled_count?: number
+  max_capacity?: number
+}
+
+interface CalendarProps {
+  events: CalendarEvent[]
+  onEventClick?: (event: CalendarEvent) => void
+  onDateChange?: (date: Date) => void
+}
+
+type ViewMode = 'month' | 'week'
+
+export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) {
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewMode, setViewMode] = useState<ViewMode>('week')
+
+  const handleDateChange = (newDate: Date) => {
+    setCurrentDate(newDate)
+    onDateChange?.(newDate)
+  }
+
+  const navigatePrevious = () => {
+    const newDate = new Date(currentDate)
+    if (viewMode === 'month') {
+      newDate.setMonth(newDate.getMonth() - 1)
+    } else {
+      newDate.setDate(newDate.getDate() - 7)
+    }
+    handleDateChange(newDate)
+  }
+
+  const navigateNext = () => {
+    const newDate = new Date(currentDate)
+    if (viewMode === 'month') {
+      newDate.setMonth(newDate.getMonth() + 1)
+    } else {
+      newDate.setDate(newDate.getDate() + 7)
+    }
+    handleDateChange(newDate)
+  }
+
+  const navigateToday = () => {
+    handleDateChange(new Date())
+  }
+
+  const formatMonthYear = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
+
+  const formatWeekRange = (date: Date) => {
+    const startOfWeek = getStartOfWeek(date)
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(endOfWeek.getDate() + 6)
+
+    return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+  }
+
+  const getStartOfWeek = (date: Date) => {
+    const d = new Date(date)
+    const day = d.getDay()
+    const diff = d.getDate() - day
+    return new Date(d.setDate(diff))
+  }
+
+  const getStartOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+  }
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => {
+      const eventDate = new Date(event.start_time)
+      return eventDate.toDateString() === date.toDateString()
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  const getClassTypeColor = (type: string) => {
+    switch (type) {
+      case 'private':
+        return 'purple'
+      case 'group':
+        return 'blue'
+      case 'workshop':
+        return 'green'
+      case 'master_class':
+        return 'amber'
+      default:
+        return 'gray'
+    }
+  }
+
+  const isToday = (date: Date) => {
+    const today = new Date()
+    return date.toDateString() === today.toDateString()
+  }
+
+  const renderWeekView = () => {
+    const startOfWeek = getStartOfWeek(currentDate)
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startOfWeek)
+      date.setDate(date.getDate() + i)
+      return date
+    })
+
+    const hours = Array.from({ length: 15 }, (_, i) => i + 7) // 7 AM to 9 PM
+
+    return (
+      <div className="flex-1 overflow-auto">
+        <div className="grid grid-cols-8 border-b border-gray-200">
+          <div className="p-2 border-r border-gray-200 bg-gray-50"></div>
+          {days.map((day, index) => (
+            <div
+              key={index}
+              className={`p-2 text-center border-r border-gray-200 ${
+                isToday(day) ? 'bg-rose-50' : 'bg-gray-50'
+              }`}
+            >
+              <div className="text-xs text-gray-600">
+                {day.toLocaleDateString('en-US', { weekday: 'short' })}
+              </div>
+              <div
+                className={`text-lg font-semibold ${
+                  isToday(day) ? 'text-rose-600' : 'text-gray-900'
+                }`}
+              >
+                {day.getDate()}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-8">
+          <div className="border-r border-gray-200">
+            {hours.map(hour => (
+              <div
+                key={hour}
+                className="h-16 border-b border-gray-200 p-1 text-xs text-gray-500 text-right pr-2"
+              >
+                {hour % 12 || 12} {hour < 12 ? 'AM' : 'PM'}
+              </div>
+            ))}
+          </div>
+
+          {days.map((day, dayIndex) => (
+            <div key={dayIndex} className="border-r border-gray-200">
+              {hours.map(hour => {
+                const dayEvents = getEventsForDate(day).filter(event => {
+                  const eventHour = new Date(event.start_time).getHours()
+                  return eventHour === hour
+                })
+
+                return (
+                  <div
+                    key={hour}
+                    className="h-16 border-b border-gray-200 p-1 relative"
+                  >
+                    {dayEvents.map(event => (
+                      <div
+                        key={event.id}
+                        onClick={() => onEventClick?.(event)}
+                        className={`absolute inset-1 rounded p-1 cursor-pointer hover:shadow-md transition-shadow text-xs ${
+                          event.is_cancelled
+                            ? 'bg-gray-200 opacity-50'
+                            : 'bg-rose-100 border border-rose-300'
+                        }`}
+                      >
+                        <div className="font-semibold truncate text-gray-900">
+                          {event.title}
+                        </div>
+                        <div className="text-gray-600 truncate">
+                          {formatTime(event.start_time)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const renderMonthView = () => {
+    const startOfMonth = getStartOfMonth(currentDate)
+    const daysInMonth = getDaysInMonth(currentDate)
+    const startDay = startOfMonth.getDay()
+
+    const days = []
+
+    // Add empty cells for days before the month starts
+    for (let i = 0; i < startDay; i++) {
+      days.push(null)
+    }
+
+    // Add all days in the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))
+    }
+
+    return (
+      <div className="flex-1">
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div
+              key={day}
+              className="p-2 text-center text-sm font-semibold text-gray-700 bg-gray-50 border-r border-gray-200"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7">
+          {days.map((day, index) => {
+            if (!day) {
+              return <div key={index} className="border-r border-b border-gray-200 bg-gray-50"></div>
+            }
+
+            const dayEvents = getEventsForDate(day)
+
+            return (
+              <div
+                key={index}
+                className={`min-h-[120px] border-r border-b border-gray-200 p-2 ${
+                  isToday(day) ? 'bg-rose-50' : ''
+                }`}
+              >
+                <div
+                  className={`text-sm font-semibold mb-1 ${
+                    isToday(day) ? 'text-rose-600' : 'text-gray-700'
+                  }`}
+                >
+                  {day.getDate()}
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.slice(0, 3).map(event => (
+                    <div
+                      key={event.id}
+                      onClick={() => onEventClick?.(event)}
+                      className={`text-xs p-1 rounded cursor-pointer hover:shadow-md transition-shadow ${
+                        event.is_cancelled
+                          ? 'bg-gray-200 opacity-50'
+                          : 'bg-rose-100 border border-rose-300'
+                      }`}
+                    >
+                      <div className="font-semibold truncate text-gray-900">
+                        {formatTime(event.start_time)}
+                      </div>
+                      <div className="truncate text-gray-700">{event.title}</div>
+                    </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <div className="text-xs text-gray-500 pl-1">
+                      +{dayEvents.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {viewMode === 'month' ? formatMonthYear(currentDate) : formatWeekRange(currentDate)}
+          </h2>
+          <Button variant="outline" size="sm" onClick={navigateToday}>
+            Today
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 mr-4">
+            <Button
+              variant={viewMode === 'week' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </Button>
+            <Button
+              variant={viewMode === 'month' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('month')}
+            >
+              Month
+            </Button>
+          </div>
+
+          <Button variant="outline" size="sm" onClick={navigatePrevious}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </Button>
+          <Button variant="outline" size="sm" onClick={navigateNext}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === 'week' ? renderWeekView() : renderMonthView()}
+    </div>
+  )
+}

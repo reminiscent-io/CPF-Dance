@@ -49,9 +49,9 @@ export function Navigation({ profile }: NavigationProps) {
         case 'studio':
           return [
             { href: '/studio', label: 'Dashboard' },
-            { href: '/studio/instructors', label: 'Instructors' },
+            { href: '/studio/schedule', label: 'Schedule' },
+            { href: '/studio/classes', label: 'Classes' },
             { href: '/studio/students', label: 'Students' },
-            { href: '/studio/reports', label: 'Reports' },
           ]
       }
     }
@@ -74,12 +74,12 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/dancer/request-lesson', label: 'Request Lesson' },
           { href: '/dancer/payments', label: 'Payments' },
         ]
-      case 'studio':
+      case 'studio_admin':
         return [
           { href: '/studio', label: 'Dashboard' },
-          { href: '/studio/instructors', label: 'Instructors' },
+          { href: '/studio/schedule', label: 'Schedule' },
+          { href: '/studio/classes', label: 'Classes' },
           { href: '/studio/students', label: 'Students' },
-          { href: '/studio/reports', label: 'Reports' },
         ]
       default:
         return []
