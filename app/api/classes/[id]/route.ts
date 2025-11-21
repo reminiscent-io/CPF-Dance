@@ -53,8 +53,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor') {
-      return NextResponse.json({ error: 'Forbidden: Only instructors can update classes' }, { status: 403 })
+    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Only instructors and admins can update classes' }, { status: 403 })
     }
 
     const supabase = await createClient()
@@ -70,7 +70,13 @@ export async function PATCH(
       start_time,
       end_time,
       max_capacity,
-      price,
+      price, // Legacy field
+      pricing_model,
+      base_cost,
+      cost_per_person,
+      cost_per_hour,
+      tiered_base_students,
+      tiered_additional_cost,
       is_cancelled,
       cancellation_reason
     } = body
@@ -98,14 +104,28 @@ export async function PATCH(
     if (end_time !== undefined) updateData.end_time = endTimeISO
     if (max_capacity !== undefined) updateData.max_capacity = max_capacity || null
     if (price !== undefined) updateData.price = price || null
+    // Pricing fields
+    if (pricing_model !== undefined) updateData.pricing_model = pricing_model
+    if (base_cost !== undefined) updateData.base_cost = base_cost || null
+    if (cost_per_person !== undefined) updateData.cost_per_person = cost_per_person || null
+    if (cost_per_hour !== undefined) updateData.cost_per_hour = cost_per_hour || null
+    if (tiered_base_students !== undefined) updateData.tiered_base_students = tiered_base_students || null
+    if (tiered_additional_cost !== undefined) updateData.tiered_additional_cost = tiered_additional_cost || null
     if (is_cancelled !== undefined) updateData.is_cancelled = is_cancelled
     if (cancellation_reason !== undefined) updateData.cancellation_reason = cancellation_reason || null
 
-    const { data: classData, error } = await supabase
+    // Build query - admins can update any class, instructors only their own
+    let query = supabase
       .from('classes')
       .update(updateData)
       .eq('id', id)
-      .eq('instructor_id', profile.id) // Ensure instructor can only update their own classes
+
+    // Instructors can only update their own classes
+    if (profile.role === 'instructor') {
+      query = query.eq('instructor_id', profile.id)
+    }
+
+    const { data: classData, error } = await query
       .select(`
         *,
         studio:studios(name, city, state)
@@ -144,18 +164,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor') {
-      return NextResponse.json({ error: 'Forbidden: Only instructors can delete classes' }, { status: 403 })
+    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Only instructors and admins can delete classes' }, { status: 403 })
     }
 
     const supabase = await createClient()
     const { id } = await params
 
-    const { error } = await supabase
+    // Build query - admins can delete any class, instructors only their own
+    let query = supabase
       .from('classes')
       .delete()
       .eq('id', id)
-      .eq('instructor_id', profile.id) // Ensure instructor can only delete their own classes
+
+    // Instructors can only delete their own classes
+    if (profile.role === 'instructor') {
+      query = query.eq('instructor_id', profile.id)
+    }
+
+    const { error } = await query
 
     if (error) {
       console.error('Error deleting class:', error)

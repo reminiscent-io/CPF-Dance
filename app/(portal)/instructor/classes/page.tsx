@@ -374,6 +374,18 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     return `${hours}hr ${mins}min`
   }
 
+  // Round datetime to nearest 5-minute interval
+  const roundToNearestFiveMinutes = (dateTimeString: string): string => {
+    if (!dateTimeString) return dateTimeString
+    const date = new Date(dateTimeString)
+    const minutes = date.getMinutes()
+    const roundedMinutes = Math.round(minutes / 5) * 5
+    date.setMinutes(roundedMinutes)
+    date.setSeconds(0)
+    date.setMilliseconds(0)
+    return date.toISOString().slice(0, 16)
+  }
+
   // Generate duration options in 5-minute increments
   const durationOptions = [
     15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
@@ -501,7 +513,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
               type="datetime-local"
               required
               value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -810,7 +822,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               type="datetime-local"
               required
               value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

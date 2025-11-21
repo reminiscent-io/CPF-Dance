@@ -61,11 +61,12 @@ export function Modal({
         className={`
           bg-white rounded-lg shadow-xl w-full ${sizes[size]}
           transform transition-all duration-200 animate-slideUp
+          max-h-[90vh] flex flex-col
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <h2 id="modal-title" className="text-2xl font-semibold text-gray-900">
               {title}
             </h2>
@@ -80,7 +81,7 @@ export function Modal({
             </button>
           </div>
         )}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {children}
         </div>
       </div>

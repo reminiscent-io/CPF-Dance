@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor') {
-      return NextResponse.json({ error: 'Forbidden: Only instructors can create classes' }, { status: 403 })
+    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Only instructors and admins can create classes' }, { status: 403 })
     }
 
     const supabase = await createClient()
@@ -82,7 +82,13 @@ export async function POST(request: NextRequest) {
       start_time,
       end_time,
       max_capacity,
-      price
+      price, // Legacy field
+      pricing_model,
+      base_cost,
+      cost_per_person,
+      cost_per_hour,
+      tiered_base_students,
+      tiered_additional_cost
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -104,7 +110,14 @@ export async function POST(request: NextRequest) {
       start_time: startTimeISO,
       end_time: endTimeISO,
       max_capacity: max_capacity || null,
-      price: price || null
+      // Pricing fields
+      pricing_model: pricing_model || 'per_person',
+      base_cost: base_cost || null,
+      cost_per_person: cost_per_person || null,
+      cost_per_hour: cost_per_hour || null,
+      tiered_base_students: tiered_base_students || null,
+      tiered_additional_cost: tiered_additional_cost || null,
+      price: price || null // Legacy field for backwards compatibility
     }
 
     console.log('Attempting to insert class:', insertData)

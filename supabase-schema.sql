@@ -248,6 +248,54 @@ CREATE POLICY "Instructors can manage their classes"
   USING (instructor_id = auth.uid())
   WITH CHECK (instructor_id = auth.uid());
 
+-- Admin policies for classes
+CREATE POLICY "Admins can view all classes"
+  ON classes FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admins can create classes"
+  ON classes FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admins can update all classes"
+  ON classes FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admins can delete classes"
+  ON classes FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+
 -- RLS Policies for enrollments
 CREATE POLICY "Students can view their enrollments"
   ON enrollments FOR SELECT
