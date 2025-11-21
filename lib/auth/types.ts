@@ -1,4 +1,4 @@
-export type UserRole = 'instructor' | 'dancer' | 'guardian' | 'studio' | 'admin'
+export type UserRole = 'instructor' | 'dancer' | 'guardian' | 'studio' | 'studio_admin' | 'admin'
 
 export interface Profile {
   id: string

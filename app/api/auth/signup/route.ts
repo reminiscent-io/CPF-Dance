@@ -43,16 +43,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Map frontend roles to database roles
-    const roleMapping: Record<string, string> = {
-      'admin': 'instructor', // Admin users get instructor role in DB
-      'studio': 'studio_admin', // Map 'studio' to 'studio_admin'
-      'instructor': 'instructor',
-      'dancer': 'dancer',
-      'guardian': 'guardian',
-    }
-    const dbRole = roleMapping[role] || role
-
     // Pass user data as metadata - the database trigger will create profile and student records
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -61,7 +51,7 @@ export async function POST(request: Request) {
         data: {
           full_name: fullName,
           phone: phone || null,
-          role: dbRole,
+          role: role,
           guardian_id: guardianId,
         }
       }
