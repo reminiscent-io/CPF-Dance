@@ -21,8 +21,7 @@ export async function GET(request: NextRequest) {
       .from('classes')
       .select(`
         *,
-        studio:studios(name, city, state),
-        enrollments(id, student_id)
+        studio:studios(name, city, state)
       `)
       .order('start_time', { ascending: true })
 
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
-      enrolled_count: cls.enrollments?.length || 0
+      enrolled_count: 0
     }))
 
     return NextResponse.json({ classes: classesWithCount })
