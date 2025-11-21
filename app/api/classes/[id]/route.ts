@@ -4,7 +4,7 @@ import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const profile = await getCurrentUserWithRole()
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const supabase = await createClient()
-    const { id } = params
+    const { id } = await params
 
     const { data: classData, error } = await supabase
       .from('classes')
@@ -44,7 +44,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const profile = await getCurrentUserWithRole()
@@ -58,7 +58,7 @@ export async function PATCH(
     }
 
     const supabase = await createClient()
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     const {
@@ -135,7 +135,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const profile = await getCurrentUserWithRole()
@@ -149,7 +149,7 @@ export async function DELETE(
     }
 
     const supabase = await createClient()
-    const { id } = params
+    const { id } = await params
 
     const { error } = await supabase
       .from('classes')

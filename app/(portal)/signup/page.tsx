@@ -291,7 +291,7 @@ export default function SignupPage() {
                 Guardian Email
               </label>
               <p className="text-xs text-gray-600 mb-3">
-                Since you are under 13, we need your guardian's email. A guardian account will be created and they'll receive a notification to provide consent.
+                Since you are under 13, we need your guardian&apos;s email. A guardian account will be created and they&apos;ll receive a notification to provide consent.
               </p>
               <input
                 id="guardianEmail"

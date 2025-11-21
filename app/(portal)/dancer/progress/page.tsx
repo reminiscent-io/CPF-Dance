@@ -139,14 +139,14 @@ export default function DancerProgressPage() {
           <div className="flex flex-wrap gap-2">
             <span className="text-sm font-medium text-gray-700 self-center">Filter by tag:</span>
             {allTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant={selectedTag === tag ? 'primary' : 'default'}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-              >
-                {tag}
-              </Badge>
+              <button key={tag} onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}>
+                <Badge
+                  variant={selectedTag === tag ? 'primary' : 'default'}
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  {tag}
+                </Badge>
+              </button>
             ))}
           </div>
         )}

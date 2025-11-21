@@ -410,7 +410,7 @@ export default function DancerClassesPage() {
                   {enrolledCls?.enrollment_notes && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-600 italic">
-                        "{enrolledCls.enrollment_notes}"
+                        &ldquo;{enrolledCls.enrollment_notes}&rdquo;
                       </p>
                     </div>
                   )}
@@ -418,7 +418,7 @@ export default function DancerClassesPage() {
                   {personalCls?.notes && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-600 italic">
-                        "{personalCls.notes}"
+                        &ldquo;{personalCls.notes}&rdquo;
                       </p>
                     </div>
                   )}

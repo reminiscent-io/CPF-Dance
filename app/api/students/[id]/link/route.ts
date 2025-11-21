@@ -4,7 +4,7 @@ import { requireInstructor } from '@/lib/auth/server-auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireInstructor()
@@ -17,11 +17,13 @@ export async function POST(
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
+    const { id } = await params
+
     // Find the student record
     const { data: student, error: studentError } = await supabase
       .from('students')
       .select('*, profile:profiles!students_profile_id_fkey(id, email)')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (studentError || !student) {
@@ -53,7 +55,7 @@ export async function POST(
       .from('students')
       .select('id, profile:profiles!students_profile_id_fkey(full_name)')
       .eq('profile_id', dancerProfile.id)
-      .neq('id', params.id)
+      .neq('id', id)
       .maybeSingle()
 
     if (existingError) {
@@ -72,7 +74,7 @@ export async function POST(
     const { data: updatedStudent, error: updateError } = await supabase
       .from('students')
       .update({ profile_id: dancerProfile.id })
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         *,
         profile:profiles!students_profile_id_fkey(full_name, email, phone, date_of_birth),

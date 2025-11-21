@@ -14,15 +14,15 @@ import { Spinner } from '@/components/ui/Spinner'
 interface ClassEvent {
   id: string
   title: string
-  description: string
-  location: string
+  description?: string
+  location?: string
   start_time: string
   end_time: string
   class_type: string
-  max_capacity: number
+  max_capacity?: number
   is_cancelled: boolean
   cancellation_reason?: string
-  enrolled_count: number
+  enrolled_count?: number
   studios?: {
     name: string
     address: string
