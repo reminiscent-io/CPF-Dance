@@ -386,26 +386,30 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   user_role TEXT;
+  guardian_uuid UUID;
 BEGIN
   -- Get role from metadata, default to 'dancer' if not provided
   user_role := COALESCE(NEW.raw_user_meta_data->>'role', 'dancer');
 
+  -- Get guardian_id from metadata if provided
+  guardian_uuid := (NEW.raw_user_meta_data->>'guardian_id')::UUID;
+
   -- Insert profile
-  INSERT INTO public.profiles (id, email, phone, full_name, role, date_of_birth, consent_given)
+  INSERT INTO public.profiles (id, email, phone, full_name, role, guardian_id, consent_given)
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'phone',
-    NEW.raw_user_meta_data->>'full_name',
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
     user_role::user_role,
-    (NEW.raw_user_meta_data->>'date_of_birth')::DATE,
+    guardian_uuid,
     false
   );
 
-  -- If role is dancer, also create student record
+  -- If role is dancer, also create student record with guardian_id
   IF user_role = 'dancer' THEN
-    INSERT INTO public.students (profile_id, is_active)
-    VALUES (NEW.id, true);
+    INSERT INTO public.students (profile_id, guardian_id, is_active)
+    VALUES (NEW.id, guardian_uuid, true);
   END IF;
 
   RETURN NEW;

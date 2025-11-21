@@ -155,7 +155,6 @@ export default function SignupPage() {
   return (
     <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4 py-8`}>
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <div className="text-6xl text-center mb-4">{config.icon}</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           {config.title}
         </h1>
