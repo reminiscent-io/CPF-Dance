@@ -69,6 +69,18 @@ export default function InstructorPaymentsPage() {
     notes: ''
   })
   const [submittingRequest, setSubmittingRequest] = useState(false)
+  const [students, setStudents] = useState<Array<{ id: string; profile: { full_name: string; email?: string } }>>([])
+  const [studios, setStudios] = useState<Array<{ id: string; name: string }>>([])
+  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [requestFormData2, setRequestFormData2] = useState({
+    recipient_type: 'student' as 'student' | 'studio',
+    recipient_id: '', // For existing
+    recipient_name: '',
+    recipient_email: '',
+    amount: '',
+    payment_method: 'cash' as string,
+    notes: ''
+  })
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -81,6 +93,29 @@ export default function InstructorPaymentsPage() {
       fetchPayments()
     }
   }, [loading, user, profile, filterStatus])
+
+  const fetchStudentsAndStudios = async () => {
+    if (loadingOptions) return
+    setLoadingOptions(true)
+    try {
+      const [studentsRes, studiosRes] = await Promise.all([
+        fetch('/api/students'),
+        fetch('/api/studios')
+      ])
+      if (studentsRes.ok) {
+        const data = await studentsRes.json()
+        setStudents(data.students || [])
+      }
+      if (studiosRes.ok) {
+        const data = await studiosRes.json()
+        setStudios(data.studios || [])
+      }
+    } catch (error) {
+      console.error('Error fetching options:', error)
+    } finally {
+      setLoadingOptions(false)
+    }
+  }
 
   const fetchPayments = async () => {
     setLoadingPayments(true)
@@ -113,12 +148,14 @@ export default function InstructorPaymentsPage() {
 
   const handleOpenRequestModal = () => {
     setShowRequestModal(true)
+    fetchStudentsAndStudios()
   }
 
   const handleCloseRequestModal = () => {
     setShowRequestModal(false)
-    setRequestFormData({
+    setRequestFormData2({
       recipient_type: 'student',
+      recipient_id: '',
       recipient_name: '',
       recipient_email: '',
       amount: '',
@@ -128,9 +165,19 @@ export default function InstructorPaymentsPage() {
   }
 
   const handleSubmitPaymentRequest = async () => {
-    if (!requestFormData.recipient_name.trim() || !requestFormData.amount) {
+    if (!requestFormData2.amount) {
       alert('Please fill in all required fields')
       return
+    }
+
+    const payload = {
+      recipient_type: requestFormData2.recipient_type,
+      recipient_id: requestFormData2.recipient_id || undefined,
+      recipient_name: requestFormData2.recipient_name,
+      recipient_email: requestFormData2.recipient_email,
+      amount: requestFormData2.amount,
+      payment_method: requestFormData2.payment_method,
+      notes: requestFormData2.notes
     }
 
     setSubmittingRequest(true)
@@ -138,7 +185,7 @@ export default function InstructorPaymentsPage() {
       const response = await fetch('/api/instructor/payment-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestFormData)
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
@@ -378,9 +425,12 @@ export default function InstructorPaymentsPage() {
             </label>
             <div className="flex gap-3">
               <button
-                onClick={() => setRequestFormData({ ...requestFormData, recipient_type: 'student' })}
+                onClick={() => {
+                  setRequestFormData2({ ...requestFormData2, recipient_type: 'student', recipient_id: '', recipient_name: '' })
+                  fetchStudentsAndStudios()
+                }}
                 className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  requestFormData.recipient_type === 'student'
+                  requestFormData2.recipient_type === 'student'
                     ? 'bg-rose-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -388,9 +438,12 @@ export default function InstructorPaymentsPage() {
                 Student
               </button>
               <button
-                onClick={() => setRequestFormData({ ...requestFormData, recipient_type: 'studio' })}
+                onClick={() => {
+                  setRequestFormData2({ ...requestFormData2, recipient_type: 'studio', recipient_id: '', recipient_name: '' })
+                  fetchStudentsAndStudios()
+                }}
                 className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  requestFormData.recipient_type === 'studio'
+                  requestFormData2.recipient_type === 'studio'
                     ? 'bg-rose-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -402,34 +455,83 @@ export default function InstructorPaymentsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {requestFormData.recipient_type === 'student' ? 'Student' : 'Studio'} Name *
+              {requestFormData2.recipient_type === 'student' ? 'Student' : 'Studio'} *
             </label>
-            <input
-              type="text"
-              value={requestFormData.recipient_name}
-              onChange={(e) => setRequestFormData({ ...requestFormData, recipient_name: e.target.value })}
-              placeholder={requestFormData.recipient_type === 'student' ? 'e.g., Sarah Johnson' : 'e.g., Downtown Dance Studio'}
+            <select
+              value={requestFormData2.recipient_id}
+              onChange={(e) => {
+                const selected = e.target.value
+                if (requestFormData2.recipient_type === 'student') {
+                  const student = students.find(s => s.id === selected)
+                  if (student) {
+                    setRequestFormData2({
+                      ...requestFormData2,
+                      recipient_id: selected,
+                      recipient_name: student.profile.full_name,
+                      recipient_email: student.profile.email || ''
+                    })
+                  }
+                } else {
+                  const studio = studios.find(s => s.id === selected)
+                  if (studio) {
+                    setRequestFormData2({
+                      ...requestFormData2,
+                      recipient_id: selected,
+                      recipient_name: studio.name,
+                      recipient_email: ''
+                    })
+                  }
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
+            >
+              <option value="">-- Select {requestFormData2.recipient_type} --</option>
+              {requestFormData2.recipient_type === 'student'
+                ? students.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.profile.full_name}
+                    </option>
+                  ))
+                : studios.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+            </select>
             <p className="text-xs text-gray-500 mt-1">
-              {requestFormData.recipient_type === 'student' 
-                ? 'Leave blank to select existing student'
-                : 'Leave blank to select existing studio'}
+              {requestFormData2.recipient_id ? 'Selected from existing records' : 'Or enter new details below'}
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={requestFormData.recipient_email}
-              onChange={(e) => setRequestFormData({ ...requestFormData, recipient_email: e.target.value })}
-              placeholder="e.g., sarah@example.com"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
-          </div>
+          {!requestFormData2.recipient_id && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New {requestFormData2.recipient_type === 'student' ? 'Student' : 'Studio'} Name
+                </label>
+                <input
+                  type="text"
+                  value={requestFormData2.recipient_name}
+                  onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_name: e.target.value })}
+                  placeholder={requestFormData2.recipient_type === 'student' ? 'e.g., Sarah Johnson' : 'e.g., Downtown Dance Studio'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={requestFormData2.recipient_email}
+                  onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_email: e.target.value })}
+                  placeholder="e.g., sarah@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -439,8 +541,8 @@ export default function InstructorPaymentsPage() {
               type="number"
               step="0.01"
               min="0"
-              value={requestFormData.amount}
-              onChange={(e) => setRequestFormData({ ...requestFormData, amount: e.target.value })}
+              value={requestFormData2.amount}
+              onChange={(e) => setRequestFormData2({ ...requestFormData2, amount: e.target.value })}
               placeholder="0.00"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
@@ -451,8 +553,8 @@ export default function InstructorPaymentsPage() {
               Payment Method *
             </label>
             <select
-              value={requestFormData.payment_method}
-              onChange={(e) => setRequestFormData({ ...requestFormData, payment_method: e.target.value })}
+              value={requestFormData2.payment_method}
+              onChange={(e) => setRequestFormData2({ ...requestFormData2, payment_method: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="cash">Cash</option>
@@ -467,8 +569,8 @@ export default function InstructorPaymentsPage() {
               Notes
             </label>
             <textarea
-              value={requestFormData.notes}
-              onChange={(e) => setRequestFormData({ ...requestFormData, notes: e.target.value })}
+              value={requestFormData2.notes}
+              onChange={(e) => setRequestFormData2({ ...requestFormData2, notes: e.target.value })}
               placeholder="Additional notes or description..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               rows={3}

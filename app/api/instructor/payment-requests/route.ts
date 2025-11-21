@@ -19,6 +19,14 @@ export async function POST(request: Request) {
       class_id
     } = body
 
+    // Validate: either recipient_id or recipient_name must be provided
+    if (!recipient_id && !recipient_name?.trim()) {
+      return NextResponse.json(
+        { error: 'Please select or enter a recipient' },
+        { status: 400 }
+      )
+    }
+
     if (!recipient_type || !recipient_name || !amount || !payment_method) {
       return NextResponse.json(
         { error: 'Missing required fields' },
