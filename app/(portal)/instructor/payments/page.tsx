@@ -59,6 +59,16 @@ export default function InstructorPaymentsPage() {
   const [loadingPayments, setLoadingPayments] = useState(true)
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
   const [selectedPayment, setSelectedPayment] = useState<PaymentData | null>(null)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [requestFormData, setRequestFormData] = useState({
+    recipient_type: 'student' as 'student' | 'studio',
+    recipient_name: '',
+    recipient_email: '',
+    amount: '',
+    payment_method: 'cash' as string,
+    notes: ''
+  })
+  const [submittingRequest, setSubmittingRequest] = useState(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -99,6 +109,53 @@ export default function InstructorPaymentsPage() {
 
   const handleCloseModal = () => {
     setSelectedPayment(null)
+  }
+
+  const handleOpenRequestModal = () => {
+    setShowRequestModal(true)
+  }
+
+  const handleCloseRequestModal = () => {
+    setShowRequestModal(false)
+    setRequestFormData({
+      recipient_type: 'student',
+      recipient_name: '',
+      recipient_email: '',
+      amount: '',
+      payment_method: 'cash',
+      notes: ''
+    })
+  }
+
+  const handleSubmitPaymentRequest = async () => {
+    if (!requestFormData.recipient_name.trim() || !requestFormData.amount) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    setSubmittingRequest(true)
+    try {
+      const response = await fetch('/api/instructor/payment-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestFormData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create payment request')
+      }
+
+      const data = await response.json()
+      alert(data.message)
+      handleCloseRequestModal()
+      await fetchPayments()
+    } catch (error) {
+      console.error('Error submitting payment request:', error)
+      alert(error instanceof Error ? error.message : 'Failed to create payment request')
+    } finally {
+      setSubmittingRequest(false)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -155,9 +212,14 @@ export default function InstructorPaymentsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
-        <p className="text-gray-600">View payments for your classes</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
+          <p className="text-gray-600">View payments for your classes</p>
+        </div>
+        <Button variant="primary" onClick={handleOpenRequestModal}>
+          + Request Payment
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -301,6 +363,138 @@ export default function InstructorPaymentsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Request Payment Modal */}
+      <Modal
+        isOpen={showRequestModal}
+        onClose={handleCloseRequestModal}
+        title="Request Payment"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Recipient Type *
+            </label>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRequestFormData({ ...requestFormData, recipient_type: 'student' })}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  requestFormData.recipient_type === 'student'
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Student
+              </button>
+              <button
+                onClick={() => setRequestFormData({ ...requestFormData, recipient_type: 'studio' })}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  requestFormData.recipient_type === 'studio'
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Studio
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {requestFormData.recipient_type === 'student' ? 'Student' : 'Studio'} Name *
+            </label>
+            <input
+              type="text"
+              value={requestFormData.recipient_name}
+              onChange={(e) => setRequestFormData({ ...requestFormData, recipient_name: e.target.value })}
+              placeholder={requestFormData.recipient_type === 'student' ? 'e.g., Sarah Johnson' : 'e.g., Downtown Dance Studio'}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {requestFormData.recipient_type === 'student' 
+                ? 'Leave blank to select existing student'
+                : 'Leave blank to select existing studio'}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={requestFormData.recipient_email}
+              onChange={(e) => setRequestFormData({ ...requestFormData, recipient_email: e.target.value })}
+              placeholder="e.g., sarah@example.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Amount * (USD)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={requestFormData.amount}
+              onChange={(e) => setRequestFormData({ ...requestFormData, amount: e.target.value })}
+              placeholder="0.00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Method *
+            </label>
+            <select
+              value={requestFormData.payment_method}
+              onChange={(e) => setRequestFormData({ ...requestFormData, payment_method: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="stripe">Stripe</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              value={requestFormData.notes}
+              onChange={(e) => setRequestFormData({ ...requestFormData, notes: e.target.value })}
+              placeholder="Additional notes or description..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseRequestModal}
+              disabled={submittingRequest}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitPaymentRequest}
+              disabled={submittingRequest}
+              className="flex-1"
+            >
+              {submittingRequest ? 'Submitting...' : 'Create Request'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Payment Detail Modal */}
       <Modal
