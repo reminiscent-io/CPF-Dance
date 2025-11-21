@@ -31,8 +31,6 @@ interface PaymentData {
     title: string
     start_time: string
     class_type: string
-    instructor_name: string
-    instructor_email: string | null
   } | null
   studio: {
     id: string
@@ -53,7 +51,7 @@ interface PaymentStats {
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 
-export default function StudioPaymentsPage() {
+export default function InstructorPaymentsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [payments, setPayments] = useState<PaymentData[]>([])
@@ -63,8 +61,8 @@ export default function StudioPaymentsPage() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentData | null>(null)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'studio' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'instructor' ? 'instructor' : 'dancer'}`)
+    if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
+      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
     }
   }, [loading, profile, router])
 
@@ -82,7 +80,7 @@ export default function StudioPaymentsPage() {
         params.append('status', filterStatus)
       }
 
-      const response = await fetch(`/api/studio/payments?${params}`)
+      const response = await fetch(`/api/instructor/payments?${params}`)
       if (response.ok) {
         const data = await response.json()
         setPayments(data.payments)
@@ -151,7 +149,7 @@ export default function StudioPaymentsPage() {
     )
   }
 
-  if (!user || !profile || profile.role !== 'studio' && profile.role !== 'admin') {
+  if (!user || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return null
   }
 
@@ -159,7 +157,7 @@ export default function StudioPaymentsPage() {
     <PortalLayout profile={profile}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
-        <p className="text-gray-600">View payment requests from instructors</p>
+        <p className="text-gray-600">View payments for your classes</p>
       </div>
 
       {/* Stats Cards */}
@@ -259,11 +257,6 @@ export default function StudioPaymentsPage() {
                           <span className="font-medium">Class:</span> {payment.class.title}
                         </div>
                       )}
-                      {payment.class && (
-                        <div>
-                          <span className="font-medium">Instructor:</span> {payment.class.instructor_name}
-                        </div>
-                      )}
                       <div>
                         <span className="font-medium">Method:</span> {getPaymentMethodLabel(payment.payment_method)}
                       </div>
@@ -282,9 +275,9 @@ export default function StudioPaymentsPage() {
                     <div className="text-2xl font-bold text-gray-900">
                       {formatCurrency(payment.amount)}
                     </div>
-                    {payment.confirmed_by_studio_at && (
+                    {payment.confirmed_by_instructor_at && (
                       <div className="text-xs text-green-600 mt-1">
-                        ✓ Studio confirmed
+                        ✓ Confirmed
                       </div>
                     )}
                   </div>
@@ -402,10 +395,6 @@ export default function StudioPaymentsPage() {
                   <div>
                     <label className="text-sm font-medium text-gray-700">Date</label>
                     <p className="text-gray-900">{formatDate(selectedPayment.class.start_time)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Instructor</label>
-                    <p className="text-gray-900">{selectedPayment.class.instructor_name}</p>
                   </div>
                 </div>
               </div>

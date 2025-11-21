@@ -35,17 +35,17 @@ export async function GET(request: NextRequest) {
 
     const formattedStudents = students.map(student => {
       // Handle profile - it might be an array, null, or object
-      let profile = student.profile
-      if (Array.isArray(profile)) {
-        profile = profile[0] || null
-      }
+      const rawProfile = student.profile
+      const profileData = Array.isArray(rawProfile)
+        ? (rawProfile[0] || null)
+        : rawProfile
 
       return {
         id: student.id,
         age_group: student.age_group,
         skill_level: student.skill_level,
         is_active: student.is_active,
-        profile: profile || { full_name: 'Unknown', email: null, phone: null },
+        profile: profileData || { full_name: 'Unknown', email: null, phone: null },
         total_classes: Array.isArray(student.enrollments) ? student.enrollments.length : 0
       }
     })

@@ -37,6 +37,7 @@ export function Navigation({ profile }: NavigationProps) {
             { href: '/instructor/students', label: 'Students' },
             { href: '/instructor/classes', label: 'Classes' },
             { href: '/instructor/studios', label: 'Studios' },
+            { href: '/instructor/payments', label: 'Payments' },
           ]
         case 'dancer':
           return [
@@ -52,6 +53,7 @@ export function Navigation({ profile }: NavigationProps) {
             { href: '/studio/schedule', label: 'Schedule' },
             { href: '/studio/classes', label: 'Classes' },
             { href: '/studio/students', label: 'Students' },
+            { href: '/studio/payments', label: 'Payments' },
           ]
       }
     }
@@ -64,6 +66,7 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/instructor/students', label: 'Students' },
           { href: '/instructor/classes', label: 'Classes' },
           { href: '/instructor/studios', label: 'Studios' },
+          { href: '/instructor/payments', label: 'Payments' },
         ]
       case 'dancer':
       case 'guardian':
@@ -80,6 +83,7 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/studio/schedule', label: 'Schedule' },
           { href: '/studio/classes', label: 'Classes' },
           { href: '/studio/students', label: 'Students' },
+          { href: '/studio/payments', label: 'Payments' },
         ]
       default:
         return []
