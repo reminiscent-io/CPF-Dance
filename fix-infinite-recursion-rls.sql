@@ -219,7 +219,7 @@ CREATE POLICY "Students can view their notes" ON notes
       SELECT 1 FROM students s
       WHERE s.id = notes.student_id
         AND (s.profile_id = auth.uid() OR s.guardian_id = auth.uid())
-        AND notes.visibility = ANY (ARRAY['shared_with_student'::text, 'shared_with_guardian'::text])
+        AND notes.visibility = ANY (ARRAY['shared_with_student'::note_visibility, 'shared_with_guardian'::note_visibility])
     )
   );
 
@@ -236,7 +236,7 @@ CREATE POLICY "Students can view their own notes" ON notes
 CREATE POLICY "Studio users can view notes shared with studio" ON notes
   FOR SELECT USING (
     (auth.jwt() -> 'user_metadata' ->> 'role') = 'studio'
-    AND notes.visibility = 'shared_with_studio'::text
+    AND notes.visibility = 'shared_with_studio'::note_visibility
   );
 
 -- ============================================================================
