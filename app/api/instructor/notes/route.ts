@@ -25,19 +25,21 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { student_id, title, content, tags, class_id, visibility } = body
 
-    if (!student_id || !content || content.trim() === '') {
+    if (!content || content.trim() === '') {
       return NextResponse.json(
-        { error: 'Student ID and content are required' },
+        { error: 'Content is required' },
         { status: 400 }
       )
     }
 
-    // Create the note
+    // student_id is now optional - allows notes for prospective students
+
+    // Create the note (student_id can be null for prospective students)
     const { data: note, error: noteError } = await supabase
       .from('notes')
       .insert({
         author_id: user.id,
-        student_id,
+        student_id: student_id || null,
         title: title || null,
         content: content.trim(),
         tags: tags || [],
