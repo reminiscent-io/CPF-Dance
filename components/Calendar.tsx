@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 interface CalendarEvent {
   id: string
   title: string
+  description?: string
   start_time: string
   end_time: string
   class_type: string
@@ -14,6 +15,15 @@ interface CalendarEvent {
   is_cancelled: boolean
   enrolled_count?: number
   max_capacity?: number
+  cancellation_reason?: string
+  studios?: {
+    name: string
+    address: string
+  }
+  instructor?: {
+    full_name: string
+    email: string
+  }
 }
 
 interface CalendarProps {

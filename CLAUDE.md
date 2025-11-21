@@ -44,7 +44,7 @@ The schema defines:
 
 **Multi-layered security approach:**
 
-1. **Middleware** (`middleware.ts`): Portal-level routing protection
+1. **Proxy** (`proxy.ts`): Portal-level routing protection
    - Redirects unauthenticated users to `/login`
    - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`)
    - Redirects users to their correct portal based on role
@@ -188,7 +188,7 @@ When adding new features:
 1. ✅ Add API route guard (`requireInstructor()`, `requireDancer()`, etc.)
 2. ✅ Filter queries by appropriate scope (student_id for dancers, instructor_id for instructors)
 3. ✅ Add RLS policy in `supabase-schema.sql` if adding new tables
-4. ✅ Update middleware if adding new portal routes
+4. ✅ Update proxy if adding new portal routes
 5. ✅ Never trust client-side data - always validate on server
 
 ## Common Patterns
@@ -309,7 +309,7 @@ See `README.md` section "⚠️ Critical Next Steps":
 ## Important Files
 
 - `supabase-schema.sql` - Complete database schema with RLS
-- `middleware.ts` - Route protection and role-based redirects
+- `proxy.ts` - Route protection and role-based redirects
 - `lib/auth/server-auth.ts` - Role guard utilities
 - `SECURITY_FIXES.md` - Detailed security documentation
 - `DATABASE_SETUP.md` - Database setup instructions

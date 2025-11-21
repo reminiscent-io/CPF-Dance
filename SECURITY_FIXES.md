@@ -79,11 +79,11 @@ getCurrentDancerStudent()
 
 ---
 
-## 3. Middleware Portal Protection
+## 3. Proxy Portal Protection
 
 ### Route Protection:
 
-The middleware (`middleware.ts`) now enforces role-based portal access:
+The proxy (`proxy.ts`) now enforces role-based portal access:
 
 - `/instructor/*` - Only users with `role='instructor'` can access
 - `/dancer/*` - Only users with `role='dancer'` can access

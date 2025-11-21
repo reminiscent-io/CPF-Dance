@@ -64,8 +64,9 @@ export async function POST(
     }
 
     if (existingStudent) {
+      const profile = Array.isArray(existingStudent.profile) ? existingStudent.profile[0] : existingStudent.profile
       return NextResponse.json(
-        { error: `This dancer account is already linked to another student: ${existingStudent.profile?.full_name || 'Unknown'}` },
+        { error: `This dancer account is already linked to another student: ${profile?.full_name || 'Unknown'}` },
         { status: 400 }
       )
     }

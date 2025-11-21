@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { response, user, profile } = await updateSession(request)
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/portal/login') ||
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   if (isPortalPage) {
     const cookies = request.cookies.getAll()
     const supabaseCookies = cookies.filter(c => c.name.includes('supabase'))
-    console.log('Middleware check:', {
+    console.log('Proxy check:', {
       path: request.nextUrl.pathname,
       hasUser: !!user,
       hasProfile: !!profile,

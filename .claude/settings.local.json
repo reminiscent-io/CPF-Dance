@@ -16,7 +16,9 @@
       "Bash(npm run build:*)",
       "Bash(ls:*)",
       "Bash(mv:*)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "WebSearch",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

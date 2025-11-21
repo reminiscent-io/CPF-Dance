@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
     let nextClass = null
     if (nextEnrolledClass?.classes && nextPersonalClass) {
       // Compare timestamps to find the soonest
-      const enrolledTime = new Date(nextEnrolledClass.classes.start_time).getTime()
+      const enrolledClass = Array.isArray(nextEnrolledClass.classes) ? nextEnrolledClass.classes[0] : nextEnrolledClass.classes
+      const enrolledTime = new Date(enrolledClass.start_time).getTime()
       const personalTime = new Date(nextPersonalClass.start_time).getTime()
       if (personalTime < enrolledTime) {
         nextClass = {
@@ -96,10 +97,11 @@ export async function GET(request: NextRequest) {
           studios: nextPersonalClass.instructor_name ? { name: nextPersonalClass.instructor_name } : null
         }
       } else {
-        nextClass = nextEnrolledClass.classes
+        nextClass = enrolledClass
       }
     } else if (nextEnrolledClass?.classes) {
-      nextClass = nextEnrolledClass.classes
+      const enrolledClass = Array.isArray(nextEnrolledClass.classes) ? nextEnrolledClass.classes[0] : nextEnrolledClass.classes
+      nextClass = enrolledClass
     } else if (nextPersonalClass) {
       nextClass = {
         id: nextPersonalClass.id,

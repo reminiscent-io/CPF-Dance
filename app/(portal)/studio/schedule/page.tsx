@@ -14,15 +14,15 @@ import { Spinner } from '@/components/ui/Spinner'
 interface ClassEvent {
   id: string
   title: string
-  description: string
-  location: string
+  description?: string
+  location?: string
   start_time: string
   end_time: string
   class_type: string
-  max_capacity: number
+  max_capacity?: number
   is_cancelled: boolean
   cancellation_reason?: string
-  enrolled_count: number
+  enrolled_count?: number
   studios?: {
     name: string
     address: string
@@ -125,18 +125,18 @@ export default function StudioSchedulePage() {
     }
   }
 
-  const getClassTypeColor = (type: string) => {
+  const getClassTypeColor = (type: string): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' => {
     switch (type) {
       case 'private':
-        return 'purple'
+        return 'secondary'
       case 'group':
-        return 'blue'
+        return 'primary'
       case 'workshop':
-        return 'green'
+        return 'success'
       case 'master_class':
-        return 'amber'
+        return 'warning'
       default:
-        return 'gray'
+        return 'default'
     }
   }
 
@@ -200,7 +200,7 @@ export default function StudioSchedulePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {selectedEvent.title}
               </h3>
-              <Badge color={getClassTypeColor(selectedEvent.class_type)}>
+              <Badge variant={getClassTypeColor(selectedEvent.class_type)}>
                 {getClassTypeLabel(selectedEvent.class_type)}
               </Badge>
             </div>

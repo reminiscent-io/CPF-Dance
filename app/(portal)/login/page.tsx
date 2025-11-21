@@ -36,7 +36,7 @@ const portalConfig = {
 
 function LoginForm() {
   const searchParams = useSearchParams()
-  const portal = (searchParams.get('portal') || 'dancer') as keyof typeof portalConfig
+  const portal = (searchParams?.get('portal') || 'dancer') as keyof typeof portalConfig
   const config = portalConfig[portal] || portalConfig.dancer
 
   const [email, setEmail] = useState('')
@@ -161,5 +161,9 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return <LoginForm />
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  )
 }

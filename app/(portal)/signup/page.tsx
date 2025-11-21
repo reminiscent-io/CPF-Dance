@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import type { UserRole } from '@/lib/auth/types'
@@ -38,9 +38,9 @@ const portalConfig = {
   },
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const searchParams = useSearchParams()
-  const portal = (searchParams.get('portal') || 'dancer') as keyof typeof portalConfig
+  const portal = (searchParams?.get('portal') || 'dancer') as keyof typeof portalConfig
   const config = portalConfig[portal] || portalConfig.dancer
 
   const [formData, setFormData] = useState({
@@ -367,5 +367,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
   )
 }

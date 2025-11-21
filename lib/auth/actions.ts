@@ -30,6 +30,7 @@ export async function signIn(data: SignInData) {
         instructor: '/instructor',
         dancer: '/dancer',
         studio: '/studio',
+        studio_admin: '/studio',
         guardian: '/dancer',
         admin: '/instructor',
       }
@@ -85,6 +86,7 @@ export async function signUp(data: SignUpData) {
     instructor: '/instructor',
     dancer: '/dancer',
     studio: '/studio',
+    studio_admin: '/studio',
     guardian: '/dancer',
     admin: '/instructor',
   }

@@ -19,18 +19,19 @@ export function useUser() {
 
       if (session?.user) {
         // Fetch profile data
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profileData }) => {
+        const fetchProfile = async () => {
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+
+          if (!error) {
             setProfile(profileData)
-            setLoading(false)
-          })
-          .catch(() => {
-            setLoading(false)
-          })
+          }
+          setLoading(false)
+        }
+        fetchProfile().catch(() => setLoading(false))
       } else {
         setLoading(false)
       }
