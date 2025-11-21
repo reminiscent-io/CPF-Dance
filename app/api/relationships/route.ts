@@ -82,14 +82,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Verify instructor exists and has instructor role
+    // Verify instructor exists and has instructor or admin role
     const { data: instructor } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', instructor_id)
       .single()
 
-    if (!instructor || instructor.role !== 'instructor') {
+    if (!instructor || !['instructor', 'admin'].includes(instructor.role)) {
       return NextResponse.json({ error: 'Invalid instructor ID' }, { status: 400 })
     }
 

@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Get all profiles with instructor role
+    // Get all profiles with instructor or admin role
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, role')
-      .eq('role', 'instructor')
+      .in('role', ['instructor', 'admin'])
       .order('full_name', { ascending: true })
 
     if (error) {
