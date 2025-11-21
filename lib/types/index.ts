@@ -76,6 +76,7 @@ export interface Class {
 
   is_cancelled: boolean
   cancellation_reason: string | null
+  actual_attendance_count: number | null // Manual override for actual attendance
   created_at: string
   updated_at: string
   studio?: Studio

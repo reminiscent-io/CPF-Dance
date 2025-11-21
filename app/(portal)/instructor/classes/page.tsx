@@ -291,8 +291,9 @@ export default function ClassesPage() {
 
               <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                 <span className="text-sm text-gray-600">
-                  {cls.enrolled_count || 0}
-                  {cls.max_capacity && ` / ${cls.max_capacity}`} enrolled
+                  {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
+                    ? `${cls.actual_attendance_count} attended`
+                    : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
                 </span>
                 <span className="text-sm font-semibold text-gray-900">
                   {getPricingModelDescription(cls)}
@@ -334,7 +335,7 @@ interface EditClassModalProps {
 }
 
 function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModalProps) {
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string }>({
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; actual_attendance_count?: number }>({
     studio_id: classData.studio_id || '',
     class_type: classData.class_type,
     title: classData.title,
@@ -343,6 +344,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     start_time: new Date(classData.start_time).toISOString().slice(0, 16),
     end_time: new Date(classData.end_time).toISOString().slice(0, 16),
     max_capacity: classData.max_capacity || undefined,
+    actual_attendance_count: classData.actual_attendance_count || undefined,
     pricing_model: classData.pricing_model || 'per_person',
     cost_per_person: classData.cost_per_person || undefined,
     base_cost: classData.base_cost || undefined,
@@ -428,6 +430,20 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <Input
+              label="Actual Attendance (Override)"
+              type="number"
+              min="0"
+              value={formData.actual_attendance_count || ''}
+              onChange={(e) => setFormData({ ...formData, actual_attendance_count: e.target.value ? parseInt(e.target.value) : undefined })}
+            />
+            <p className="text-xs text-gray-600 mt-1">
+              Use this to manually set the actual number of students who attended. Leave blank to use enrollment count.
+              Currently enrolled: {classData.enrolled_count || 0} students.
+            </p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

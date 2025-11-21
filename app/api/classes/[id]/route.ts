@@ -78,7 +78,8 @@ export async function PATCH(
       tiered_base_students,
       tiered_additional_cost,
       is_cancelled,
-      cancellation_reason
+      cancellation_reason,
+      actual_attendance_count
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -113,6 +114,7 @@ export async function PATCH(
     if (tiered_additional_cost !== undefined) updateData.tiered_additional_cost = tiered_additional_cost || null
     if (is_cancelled !== undefined) updateData.is_cancelled = is_cancelled
     if (cancellation_reason !== undefined) updateData.cancellation_reason = cancellation_reason || null
+    if (actual_attendance_count !== undefined) updateData.actual_attendance_count = actual_attendance_count || null
 
     // Build query - admins can update any class, instructors only their own
     let query = supabase

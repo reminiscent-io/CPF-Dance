@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
-import { Input } from '@/components/ui/Input'
 
 interface PaymentData {
   id: string
@@ -17,26 +16,51 @@ interface PaymentData {
   payment_method: string
   payment_status: string
   transaction_date: string
-  notes: string | null
-  student_name: string
-  class_title: string | null
   confirmed_by_instructor_at: string | null
   confirmed_by_studio_at: string | null
+  notes: string | null
+  receipt_url: string | null
+  student: {
+    id: string
+    full_name: string
+    email: string | null
+    phone: string | null
+  }
+  class: {
+    id: string
+    title: string
+    start_time: string
+    class_type: string
+    instructor_name: string
+    instructor_email: string | null
+  } | null
+  studio: {
+    id: string
+    name: string
+    city: string | null
+    state: string | null
+  } | null
 }
+
+interface PaymentStats {
+  total_payments: number
+  total_amount: number
+  pending: number
+  confirmed: number
+  disputed: number
+  cancelled: number
+}
+
+type FilterStatus = 'all' | 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 
 export default function StudioPaymentsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [payments, setPayments] = useState<PaymentData[]>([])
+  const [stats, setStats] = useState<PaymentStats | null>(null)
   const [loadingPayments, setLoadingPayments] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    student_id: '',
-    amount: '',
-    payment_method: 'cash',
-    notes: ''
-  })
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
+  const [selectedPayment, setSelectedPayment] = useState<PaymentData | null>(null)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'studio' && profile.role !== 'admin') {
@@ -48,14 +72,21 @@ export default function StudioPaymentsPage() {
     if (!loading && user && profile) {
       fetchPayments()
     }
-  }, [loading, user, profile])
+  }, [loading, user, profile, filterStatus])
 
   const fetchPayments = async () => {
+    setLoadingPayments(true)
     try {
-      const response = await fetch('/api/studio/payments')
+      const params = new URLSearchParams()
+      if (filterStatus !== 'all') {
+        params.append('status', filterStatus)
+      }
+
+      const response = await fetch(`/api/studio/payments?${params}`)
       if (response.ok) {
         const data = await response.json()
         setPayments(data.payments)
+        setStats(data.stats)
       }
     } catch (error) {
       console.error('Error fetching payments:', error)
@@ -64,41 +95,49 @@ export default function StudioPaymentsPage() {
     }
   }
 
-  const handleSubmitPayment = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+  const handleViewPayment = (payment: PaymentData) => {
+    setSelectedPayment(payment)
+  }
 
-    try {
-      const response = await fetch('/api/studio/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount)
-        }),
-      })
+  const handleCloseModal = () => {
+    setSelectedPayment(null)
+  }
 
-      if (response.ok) {
-        setShowModal(false)
-        setFormData({
-          student_id: '',
-          amount: '',
-          payment_method: 'cash',
-          notes: ''
-        })
-        fetchPayments()
-      } else {
-        const data = await response.json()
-        alert(data.error || 'Failed to submit payment')
-      }
-    } catch (error) {
-      console.error('Error submitting payment:', error)
-      alert('An error occurred while submitting payment')
-    } finally {
-      setSubmitting(false)
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, 'success' | 'danger' | 'warning' | 'secondary'> = {
+      confirmed: 'success',
+      pending: 'warning',
+      disputed: 'danger',
+      cancelled: 'secondary'
     }
+    return colors[status] || 'secondary'
+  }
+
+  const getPaymentMethodLabel = (method: string) => {
+    const labels: Record<string, string> = {
+      stripe: 'Stripe',
+      cash: 'Cash',
+      check: 'Check',
+      other: 'Other'
+    }
+    return labels[method] || method
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
   }
 
   if (loading) {

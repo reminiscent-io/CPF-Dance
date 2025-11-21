@@ -33,14 +33,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const formattedStudents = students.map(student => ({
-      id: student.id,
-      age_group: student.age_group,
-      skill_level: student.skill_level,
-      is_active: student.is_active,
-      profile: student.profile,
-      total_classes: Array.isArray(student.enrollments) ? student.enrollments.length : 0
-    }))
+    const formattedStudents = students.map(student => {
+      // Handle profile - it might be an array, null, or object
+      let profile = student.profile
+      if (Array.isArray(profile)) {
+        profile = profile[0] || null
+      }
+
+      return {
+        id: student.id,
+        age_group: student.age_group,
+        skill_level: student.skill_level,
+        is_active: student.is_active,
+        profile: profile || { full_name: 'Unknown', email: null, phone: null },
+        total_classes: Array.isArray(student.enrollments) ? student.enrollments.length : 0
+      }
+    })
 
     return NextResponse.json({ students: formattedStudents })
   } catch (error) {

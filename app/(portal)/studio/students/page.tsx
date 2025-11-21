@@ -209,9 +209,10 @@ export default function StudioStudentsPage() {
 
   const filteredStudents = students.filter((student) => {
     if (!searchQuery) return true
+    if (!student.profile) return false
     const query = searchQuery.toLowerCase()
     return (
-      student.profile.full_name.toLowerCase().includes(query) ||
+      student.profile.full_name?.toLowerCase().includes(query) ||
       student.profile.email?.toLowerCase().includes(query) ||
       student.profile.phone?.includes(query)
     )
@@ -267,7 +268,7 @@ export default function StudioStudentsPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {student.profile.full_name}
+                      {student.profile?.full_name || 'Unknown Student'}
                     </h3>
                   </div>
                   <Badge variant={student.is_active ? 'success' : 'secondary'} size="sm">
@@ -276,13 +277,13 @@ export default function StudioStudentsPage() {
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  {student.profile.email && (
+                  {student.profile?.email && (
                     <div className="flex items-center text-gray-700">
                       <span className="mr-2">✉️</span>
                       <span className="truncate">{student.profile.email}</span>
                     </div>
                   )}
-                  {student.profile.phone && (
+                  {student.profile?.phone && (
                     <div className="flex items-center text-gray-700">
                       <span className="mr-2">📞</span>
                       <span>{student.profile.phone}</span>
@@ -350,7 +351,7 @@ export default function StudioStudentsPage() {
       <Modal
         isOpen={selectedStudent !== null}
         onClose={handleCloseModal}
-        title={`Notes for ${selectedStudent?.profile.full_name}`}
+        title={`Notes for ${selectedStudent?.profile?.full_name || 'Student'}`}
         size="lg"
       >
         {loadingNotes ? (
