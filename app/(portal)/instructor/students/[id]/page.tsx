@@ -25,6 +25,7 @@ export default function StudentDetailPage() {
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [linkEmail, setLinkEmail] = useState('')
   const [linking, setLinking] = useState(false)
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [noteFormData, setNoteFormData] = useState({
     title: '',
     content: '',
@@ -85,7 +86,42 @@ export default function StudentDetailPage() {
     }
   }
 
-  const handleCreateNote = async () => {
+  const handleOpenNoteModal = (note?: any) => {
+    if (note) {
+      setEditingNote(note)
+      setNoteFormData({
+        title: note.title || '',
+        content: note.content,
+        tags: note.tags?.join(', ') || '',
+        class_id: note.class_id || '',
+        visibility: note.visibility || 'shared_with_student'
+      })
+    } else {
+      setEditingNote(null)
+      setNoteFormData({
+        title: '',
+        content: '',
+        tags: '',
+        class_id: '',
+        visibility: 'shared_with_student'
+      })
+    }
+    setShowNoteModal(true)
+  }
+
+  const handleCloseNoteModal = () => {
+    setShowNoteModal(false)
+    setEditingNote(null)
+    setNoteFormData({
+      title: '',
+      content: '',
+      tags: '',
+      class_id: '',
+      visibility: 'shared_with_student'
+    })
+  }
+
+  const handleSaveNote = async () => {
     if (!noteFormData.content.trim()) {
       addToast('Please enter note content', 'error')
       return
@@ -98,8 +134,7 @@ export default function StudentDetailPage() {
         .map((t) => t.trim())
         .filter((t) => t.length > 0)
 
-      const payload = {
-        student_id: student?.id,
+      const payload: any = {
         title: noteFormData.title.trim() || null,
         content: noteFormData.content.trim(),
         tags,
@@ -107,8 +142,17 @@ export default function StudentDetailPage() {
         visibility: noteFormData.visibility
       }
 
-      const response = await fetch('/api/instructor/notes', {
-        method: 'POST',
+      const url = '/api/instructor/notes'
+      const method = editingNote ? 'PUT' : 'POST'
+
+      if (editingNote) {
+        payload.id = editingNote.id
+      } else {
+        payload.student_id = student?.id
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
@@ -116,25 +160,42 @@ export default function StudentDetailPage() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('API Error:', errorData)
-        throw new Error(errorData.error || 'Failed to create note')
+        throw new Error(errorData.error || `Failed to ${editingNote ? 'update' : 'create'} note`)
       }
 
       await fetchStudentDetails()
-      setShowNoteModal(false)
-      setNoteFormData({
-        title: '',
-        content: '',
-        tags: '',
-        class_id: '',
-        visibility: 'shared_with_student'
-      })
-      addToast('Note created successfully', 'success')
+      handleCloseNoteModal()
+      addToast(`Note ${editingNote ? 'updated' : 'created'} successfully`, 'success')
     } catch (error) {
-      console.error('Error creating note:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create note'
+      console.error('Error saving note:', error)
+      const errorMessage = error instanceof Error ? error.message : `Failed to ${editingNote ? 'update' : 'create'} note`
       addToast(errorMessage, 'error')
     } finally {
       setSavingNote(false)
+    }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/instructor/notes?id=${noteId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete note')
+      }
+
+      await fetchStudentDetails()
+      addToast('Note deleted successfully', 'success')
+    } catch (error) {
+      console.error('Error deleting note:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete note'
+      addToast(errorMessage, 'error')
     }
   }
 
@@ -313,7 +374,7 @@ export default function StudentDetailPage() {
           <Card>
             <div className="flex justify-between items-center">
               <CardTitle>Notes Timeline ({notes.length})</CardTitle>
-              <Button variant="primary" size="sm" onClick={() => setShowNoteModal(true)}>
+              <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
                 + Add Note
               </Button>
             </div>
@@ -321,16 +382,20 @@ export default function StudentDetailPage() {
               {notes.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">No notes yet</p>
-                  <Button variant="outline" onClick={() => setShowNoteModal(true)}>
+                  <Button variant="outline" onClick={() => handleOpenNoteModal()}>
                     Create First Note
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {notes.map((note: any) => (
-                    <div key={note.id} className="border-l-4 border-rose-500 pl-4 py-2">
+                    <div
+                      key={note.id}
+                      className="border-l-4 border-rose-500 pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors cursor-pointer group relative"
+                      onClick={() => handleOpenNoteModal(note)}
+                    >
                       <div className="flex justify-between items-start mb-2">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant={note.author_id === profile?.id ? 'primary' : 'default'} size="sm">
@@ -339,11 +404,27 @@ export default function StudentDetailPage() {
                             {note.class_name && (
                               <span className="text-xs text-gray-600">{note.class_name}</span>
                             )}
+                            <Badge variant="secondary" size="sm">{note.visibility}</Badge>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          {new Date(note.created_at).toLocaleDateString()}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-gray-500">
+                            {new Date(note.created_at).toLocaleDateString()}
+                          </p>
+                          {note.author_id === profile?.id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteNote(note.id)
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
                       {note.tags && note.tags.length > 0 && (
@@ -353,6 +434,9 @@ export default function StudentDetailPage() {
                           ))}
                         </div>
                       )}
+                      <p className="text-xs text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Click to edit
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -469,8 +553,8 @@ export default function StudentDetailPage() {
       {showNoteModal && (
         <Modal
           isOpen={true}
-          onClose={() => setShowNoteModal(false)}
-          title="Add Note for Student"
+          onClose={handleCloseNoteModal}
+          title={editingNote ? 'Edit Note' : 'Add Note for Student'}
           size="lg"
         >
           <div className="space-y-4">
@@ -533,16 +617,16 @@ export default function StudentDetailPage() {
           <ModalFooter className="mt-6">
             <Button
               variant="outline"
-              onClick={() => setShowNoteModal(false)}
+              onClick={handleCloseNoteModal}
               disabled={savingNote}
             >
               Cancel
             </Button>
             <Button
-              onClick={handleCreateNote}
+              onClick={handleSaveNote}
               disabled={savingNote}
             >
-              {savingNote ? 'Saving...' : 'Save Note'}
+              {savingNote ? 'Saving...' : editingNote ? 'Update Note' : 'Save Note'}
             </Button>
           </ModalFooter>
         </Modal>
