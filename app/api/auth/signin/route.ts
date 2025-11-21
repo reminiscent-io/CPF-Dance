@@ -25,18 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No user returned' }, { status: 401 })
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', authData.user.id)
-      .single()
-
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
-      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
-    }
-
-    const userRole = profile.role as UserRole
+    // Get role from user metadata (set during signup)
+    const userRole = (authData.user.user_metadata?.role || 'dancer') as UserRole
 
     // Default role-based redirects
     const roleRedirects: Record<UserRole, string> = {
@@ -63,7 +53,7 @@ export async function POST(request: Request) {
       redirectUrl = roleRedirects[userRole] || '/dancer'
     }
 
-    console.log('Signin successful for:', authData.user.email, 'role:', profile.role, 'redirecting to:', redirectUrl)
+    console.log('Signin successful for:', authData.user.email, 'role:', userRole, 'redirecting to:', redirectUrl)
 
     return NextResponse.json({
       success: true,
