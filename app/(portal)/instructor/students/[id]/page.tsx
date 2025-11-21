@@ -223,7 +223,7 @@ export default function StudentDetailPage() {
                 <div className="pt-3 pb-3 border-b border-gray-200">
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-sm text-yellow-800 mb-2">
-                      This student doesn't have a linked dancer account yet.
+                      This student doesn&apos;t have a linked dancer account yet.
                     </p>
                     <Button
                       size="sm"

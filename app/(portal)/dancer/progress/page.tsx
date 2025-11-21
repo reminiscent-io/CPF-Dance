@@ -226,7 +226,7 @@ export default function DancerProgressPage() {
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
               {searchTerm || selectedTag
                 ? 'Try adjusting your search or filter to see more results.'
-                : "Your instructor will share feedback and notes about your progress here. Keep dancing, keep growing, and you'll see your journey unfold!"}
+                : "Your instructor will share feedback and notes about your progress here. Keep dancing, keep growing, and you&apos;ll see your journey unfold!"}
             </p>
             {(searchTerm || selectedTag) && (
               <Button

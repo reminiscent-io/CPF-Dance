@@ -459,10 +459,10 @@ export default function DancerClassesPage() {
             </h3>
             <p className="text-gray-600 mb-6">
               {filter === 'upcoming' &&
-                "You don't have any upcoming classes scheduled right now."}
-              {filter === 'past' && "You haven't attended any classes yet."}
+                "You don&apos;t have any upcoming classes scheduled right now."}
+              {filter === 'past' && "You haven&apos;t attended any classes yet."}
               {filter === 'all' &&
-                "You're not enrolled in any classes yet. Talk to your instructor to get started!"}
+                "You&apos;re not enrolled in any classes yet. Talk to your instructor to get started!"}
             </p>
             {filter !== 'all' && (
               <Button variant="outline" onClick={() => setFilter('all')}>

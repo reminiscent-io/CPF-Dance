@@ -281,8 +281,8 @@ export default function DancerPaymentsPage() {
             </h3>
             <p className="text-gray-600 mb-6">
               {filter === 'all'
-                ? "Your payment history will appear here once you've made payments for classes."
-                : `You don't have any ${filter} payments at the moment.`}
+                ? "Your payment history will appear here once you&apos;ve made payments for classes."
+                : `You don&apos;t have any ${filter} payments at the moment.`}
             </p>
             {filter !== 'all' && (
               <Button variant="outline" onClick={() => setFilter('all')}>
