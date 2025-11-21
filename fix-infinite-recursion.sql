@@ -74,6 +74,8 @@ CREATE POLICY "Students can update their own record"
 -- STEP 3: Fix PROFILES table policies
 -- ============================================================================
 
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 DROP POLICY IF EXISTS "Instructors can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Instructors can view related student profiles" ON profiles;
 DROP POLICY IF EXISTS "Instructors can view instructor profiles" ON profiles;
