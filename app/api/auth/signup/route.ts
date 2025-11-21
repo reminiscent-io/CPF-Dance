@@ -73,21 +73,24 @@ export async function POST(request: Request) {
       instructor: '/instructor',
       dancer: '/dancer',
       studio: '/studio',
+      studio_admin: '/studio',
       guardian: '/dancer',
       admin: '/instructor',
     }
 
-    // Use portal preference if provided and matches role, otherwise use role-based redirect
-    let redirectUrl = roleRedirects[role as UserRole] || '/dancer'
-
-    // For admin role, respect portal preference
-    if (role === 'admin' && portal) {
+    // For admin role, allow access to any portal
+    let redirectUrl: string
+    if (role === 'admin') {
+      // Admins can use any portal - dancer, instructor, or studio
       const portalRedirects: Record<string, string> = {
         dancer: '/dancer',
         instructor: '/instructor',
         studio: '/studio',
       }
       redirectUrl = portalRedirects[portal] || '/instructor'
+    } else {
+      // Use role-based redirect for non-admin users
+      redirectUrl = roleRedirects[role as UserRole] || '/dancer'
     }
 
     return NextResponse.json({
