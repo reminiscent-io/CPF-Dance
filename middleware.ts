@@ -4,11 +4,11 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { response, user, profile } = await updateSession(request)
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
-                     request.nextUrl.pathname.startsWith('/signup')
-  const isInstructorPage = request.nextUrl.pathname.startsWith('/instructor')
-  const isDancerPage = request.nextUrl.pathname.startsWith('/dancer')
-  const isStudioPage = request.nextUrl.pathname.startsWith('/studio')
+  const isAuthPage = request.nextUrl.pathname.startsWith('/portal/login') ||
+                     request.nextUrl.pathname.startsWith('/portal/signup')
+  const isInstructorPage = request.nextUrl.pathname.startsWith('/portal/instructor')
+  const isDancerPage = request.nextUrl.pathname.startsWith('/portal/dancer')
+  const isStudioPage = request.nextUrl.pathname.startsWith('/portal/studio')
   const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
 
   if (isPortalPage) {
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   if (!user && isPortalPage) {
     console.log('No user, redirecting to login')
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/portal/login'
     return NextResponse.redirect(url)
   }
 
@@ -39,19 +39,19 @@ export async function middleware(request: NextRequest) {
 
     if (isInstructorPage && profile.role !== 'instructor') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'dancer' ? '/dancer' : '/studio'
+      url.pathname = profile.role === 'dancer' ? '/portal/dancer' : '/portal/studio'
       return NextResponse.redirect(url)
     }
 
     if (isDancerPage && profile.role !== 'dancer') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/instructor' : '/studio'
+      url.pathname = profile.role === 'instructor' ? '/portal/instructor' : '/portal/studio'
       return NextResponse.redirect(url)
     }
 
     if (isStudioPage && profile.role !== 'studio') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
+      url.pathname = profile.role === 'instructor' ? '/portal/instructor' : '/portal/dancer'
       return NextResponse.redirect(url)
     }
   }

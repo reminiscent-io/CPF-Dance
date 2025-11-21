@@ -1,60 +1,120 @@
 @import "tailwindcss";
 
 @theme {
-  --color-rose-50: #fff1f2;
-  --color-rose-100: #ffe4e6;
-  --color-rose-200: #fecdd3;
-  --color-rose-300: #fda4af;
-  --color-rose-400: #fb7185;
-  --color-rose-500: #f43f5e;
-  --color-rose-600: #e11d48;
-  --color-rose-700: #be123c;
-  --color-rose-800: #9f1239;
-  --color-rose-900: #881337;
-  --color-rose-950: #4c0519;
+  /* Ballet Noir Color Palette - Sophisticated Dark + Blush */
 
-  --color-mauve-50: #faf8ff;
-  --color-mauve-100: #f3f0ff;
-  --color-mauve-200: #e9e3ff;
-  --color-mauve-300: #d4c5ff;
-  --color-mauve-400: #b794f6;
-  --color-mauve-500: #9b6dff;
-  --color-mauve-600: #8b4cf7;
-  --color-mauve-700: #7c3aed;
-  --color-mauve-800: #6b31c7;
-  --color-mauve-900: #5a28a3;
-  --color-mauve-950: #3b1770;
+  /* Charcoal - Primary text and headings */
+  --color-charcoal-50: #f8f8f8;
+  --color-charcoal-100: #e5e5e5;
+  --color-charcoal-200: #cccccc;
+  --color-charcoal-300: #999999;
+  --color-charcoal-400: #666666;
+  --color-charcoal-500: #4d4d4d;
+  --color-charcoal-600: #404040;
+  --color-charcoal-700: #333333;
+  --color-charcoal-800: #2d2d2d;
+  --color-charcoal-900: #1a1a1a;
+  --color-charcoal-950: #0a0a0a;
 
-  --color-cream-50: #fefdfb;
-  --color-cream-100: #fdf9f3;
-  --color-cream-200: #faf3e6;
-  --color-cream-300: #f5e9d3;
-  --color-cream-400: #edd9b8;
-  --color-cream-500: #e3c79d;
-  --color-cream-600: #d4ab6f;
-  --color-cream-700: #b88d52;
-  --color-cream-800: #946f44;
-  --color-cream-900: #785c3a;
-  --color-cream-950: #40311e;
+  /* Champagne - Backgrounds and subtle surfaces */
+  --color-champagne-50: #faf8f5;
+  --color-champagne-100: #f5f1ea;
+  --color-champagne-200: #ebe4d8;
+  --color-champagne-300: #dfd4c3;
+  --color-champagne-400: #d1c0a8;
+  --color-champagne-500: #c3ac8d;
+  --color-champagne-600: #a8906f;
+  --color-champagne-700: #87745a;
+  --color-champagne-800: #6b5d49;
+  --color-champagne-900: #584d3d;
+  --color-champagne-950: #2f2920;
 
-  --font-family-display: var(--font-playfair), 'Georgia', serif;
-  --font-family-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  /* Ballet Pink - Muted dusty rose accents */
+  --color-ballet-pink-50: #faf5f5;
+  --color-ballet-pink-100: #f5ebeb;
+  --color-ballet-pink-200: #ead9d9;
+  --color-ballet-pink-300: #dabcbc;
+  --color-ballet-pink-400: #d4a5a5;
+  --color-ballet-pink-500: #c89090;
+  --color-ballet-pink-600: #b67676;
+  --color-ballet-pink-700: #9d6f6f;
+  --color-ballet-pink-800: #7d5959;
+  --color-ballet-pink-900: #5f4545;
+  --color-ballet-pink-950: #3a2828;
+
+  /* Gold - Premium accents and CTAs */
+  --color-gold-50: #faf8f0;
+  --color-gold-100: #f3eedc;
+  --color-gold-200: #e8dbb8;
+  --color-gold-300: #dac38a;
+  --color-gold-400: #d0af67;
+  --color-gold-500: #c9a961;
+  --color-gold-600: #b89651;
+  --color-gold-700: #997a45;
+  --color-gold-800: #7d633d;
+  --color-gold-900: #685234;
+  --color-gold-950: #3b2d1c;
+
+  /* Legacy color aliases for backwards compatibility */
+  --color-rose-50: var(--color-ballet-pink-50);
+  --color-rose-100: var(--color-ballet-pink-100);
+  --color-rose-200: var(--color-ballet-pink-200);
+  --color-rose-300: var(--color-ballet-pink-300);
+  --color-rose-400: var(--color-ballet-pink-400);
+  --color-rose-500: var(--color-ballet-pink-500);
+  --color-rose-600: var(--color-ballet-pink-600);
+  --color-rose-700: var(--color-ballet-pink-700);
+  --color-rose-800: var(--color-ballet-pink-800);
+  --color-rose-900: var(--color-ballet-pink-900);
+  --color-rose-950: var(--color-ballet-pink-950);
+
+  --color-mauve-50: var(--color-ballet-pink-50);
+  --color-mauve-100: var(--color-ballet-pink-100);
+  --color-mauve-200: var(--color-ballet-pink-200);
+  --color-mauve-300: var(--color-ballet-pink-300);
+  --color-mauve-400: var(--color-ballet-pink-400);
+  --color-mauve-500: var(--color-ballet-pink-500);
+  --color-mauve-600: var(--color-ballet-pink-600);
+  --color-mauve-700: var(--color-ballet-pink-700);
+  --color-mauve-800: var(--color-ballet-pink-800);
+  --color-mauve-900: var(--color-ballet-pink-900);
+  --color-mauve-950: var(--color-ballet-pink-950);
+
+  --color-cream-50: var(--color-champagne-50);
+  --color-cream-100: var(--color-champagne-100);
+  --color-cream-200: var(--color-champagne-200);
+  --color-cream-300: var(--color-champagne-300);
+  --color-cream-400: var(--color-champagne-400);
+  --color-cream-500: var(--color-champagne-500);
+  --color-cream-600: var(--color-champagne-600);
+  --color-cream-700: var(--color-champagne-700);
+  --color-cream-800: var(--color-champagne-800);
+  --color-cream-900: var(--color-champagne-900);
+  --color-cream-950: var(--color-champagne-950);
+
+  /* Typography */
+  --font-family-display: var(--font-cormorant), 'Georgia', 'Garamond', serif;
+  --font-family-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 * {
-  border-color: rgb(229 231 235);
+  border-color: var(--color-champagne-200);
 }
 
 body {
-  background-color: white;
-  color: rgb(17 24 39);
+  background-color: var(--color-champagne-50);
+  color: var(--color-charcoal-800);
   font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-display);
+  color: var(--color-charcoal-900);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 @keyframes fadeIn {
