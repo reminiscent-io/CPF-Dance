@@ -40,15 +40,45 @@ export async function GET(
       .eq('student_id', id)
       .order('enrolled_at', { ascending: false })
 
-    const { data: notes } = await supabase
+    // Fetch notes - avoiding class join due to RLS recursion issue
+    const { data: notesRaw, error: notesError } = await supabase
       .from('notes')
-      .select(`
-        *,
-        author:profiles!notes_author_id_fkey(full_name),
-        class:classes(title, start_time)
-      `)
+      .select('*')
       .eq('student_id', id)
       .order('created_at', { ascending: false })
+
+    if (notesError) {
+      console.error('Error fetching notes:', notesError)
+    }
+
+    // Get unique author IDs and class IDs
+    const authorIds = [...new Set(notesRaw?.map(n => n.author_id).filter(Boolean) || [])]
+    const classIds = [...new Set(notesRaw?.map(n => n.class_id).filter(Boolean) || [])]
+
+    // Fetch authors separately
+    const { data: authors } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', authorIds)
+
+    // Fetch classes separately to avoid RLS recursion
+    const { data: classes } = await supabase
+      .from('classes')
+      .select('id, title, start_time')
+      .in('id', classIds)
+
+    // Create lookup maps
+    const authorMap = new Map(authors?.map(a => [a.id, a.full_name]) || [])
+    const classMap = new Map(classes?.map(c => [c.id, c.title]) || [])
+
+    // Flatten the data
+    const notes = notesRaw?.map(note => ({
+      ...note,
+      author_name: authorMap.get(note.author_id) || 'Unknown',
+      class_name: note.class_id ? classMap.get(note.class_id) : undefined
+    })) || []
+
+    console.log('Successfully fetched', notes.length, 'notes for student', id)
 
     const { data: payments } = await supabase
       .from('payments')
