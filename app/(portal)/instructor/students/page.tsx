@@ -17,6 +17,10 @@ export default function StudentsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [search, setSearch] = useState('')
   const [filterActive, setFilterActive] = useState<boolean | null>(null)
+  const [showTagModal, setShowTagModal] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [instructors, setInstructors] = useState<any[]>([])
+  const [relationships, setRelationships] = useState<any[]>([])
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -27,8 +31,12 @@ export default function StudentsPage() {
   useEffect(() => {
     if (user) {
       fetchStudents()
+      if (profile?.role === 'admin') {
+        fetchInstructors()
+        fetchRelationships()
+      }
     }
-  }, [user, filterActive])
+  }, [user, filterActive, profile])
 
   const fetchStudents = async () => {
     try {
@@ -36,10 +44,10 @@ export default function StudentsPage() {
       if (filterActive !== null) {
         params.append('is_active', filterActive.toString())
       }
-      
+
       const response = await fetch(`/api/students?${params}`)
       if (!response.ok) throw new Error('Failed to fetch students')
-      
+
       const data = await response.json()
       setStudents(data.students || [])
     } catch (error) {
@@ -48,6 +56,76 @@ export default function StudentsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await fetch('/api/instructors')
+      const data = await response.json()
+      setInstructors(data.instructors || [])
+    } catch (error) {
+      console.error('Error fetching instructors:', error)
+    }
+  }
+
+  const fetchRelationships = async () => {
+    try {
+      const response = await fetch('/api/relationships')
+      const data = await response.json()
+      setRelationships(data.data || [])
+    } catch (error) {
+      console.error('Error fetching relationships:', error)
+    }
+  }
+
+  const handleTagInstructor = async (instructorId: string) => {
+    if (!selectedStudent) return
+
+    try {
+      const response = await fetch('/api/relationships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instructor_id: instructorId,
+          student_id: selectedStudent.id
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to tag instructor')
+      }
+
+      addToast('Instructor tagged successfully', 'success')
+      setShowTagModal(false)
+      setSelectedStudent(null)
+      fetchRelationships()
+    } catch (error: any) {
+      console.error('Error tagging instructor:', error)
+      addToast(error.message || 'Failed to tag instructor', 'error')
+    }
+  }
+
+  const handleRemoveTag = async (relationshipId: string) => {
+    try {
+      const response = await fetch(`/api/relationships?id=${relationshipId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to remove tag')
+
+      addToast('Tag removed successfully', 'success')
+      fetchRelationships()
+    } catch (error) {
+      console.error('Error removing tag:', error)
+      addToast('Failed to remove tag', 'error')
+    }
+  }
+
+  const getStudentInstructors = (studentId: string) => {
+    return relationships
+      .filter(r => r.student_id === studentId && r.relationship_status === 'active')
+      .map(r => r.instructor)
   }
 
   const handleAddStudent = async (formData: CreateStudentData) => {
@@ -83,7 +161,7 @@ export default function StudentsPage() {
     return studentName.includes(search.toLowerCase())
   })
 
-  const columns = [
+  const baseColumns = [
     {
       key: 'name',
       header: 'Name',
@@ -122,6 +200,51 @@ export default function StudentsPage() {
       )
     }
   ]
+
+  const adminColumns = profile?.role === 'admin' ? [
+    ...baseColumns,
+    {
+      key: 'instructors',
+      header: 'Tagged Instructors',
+      render: (student: Student) => {
+        const taggedInstructors = getStudentInstructors(student.id)
+        return (
+          <div className="flex items-center gap-2">
+            {taggedInstructors.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {taggedInstructors.map((instructor: any) => (
+                  <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {instructor.full_name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-gray-400 text-sm">No instructors</span>
+            )}
+          </div>
+        )
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (student: Student) => (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation()
+            setSelectedStudent(student)
+            setShowTagModal(true)
+          }}
+        >
+          Tag Instructor
+        </Button>
+      )
+    }
+  ] : baseColumns
+
+  const columns = adminColumns
 
   return (
     <PortalLayout profile={profile}>
@@ -182,6 +305,21 @@ export default function StudentsPage() {
         <AddStudentModal
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddStudent}
+        />
+      )}
+
+      {showTagModal && selectedStudent && (
+        <TagInstructorModal
+          student={selectedStudent}
+          instructors={instructors}
+          currentRelationships={getStudentInstructors(selectedStudent.id)}
+          onClose={() => {
+            setShowTagModal(false)
+            setSelectedStudent(null)
+          }}
+          onTag={handleTagInstructor}
+          onRemove={handleRemoveTag}
+          relationships={relationships.filter(r => r.student_id === selectedStudent.id)}
         />
       )}
     </PortalLayout>
@@ -297,6 +435,124 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
           <Button type="submit">Add Student</Button>
         </ModalFooter>
       </form>
+    </Modal>
+  )
+}
+
+interface TagInstructorModalProps {
+  student: Student
+  instructors: any[]
+  currentRelationships: any[]
+  onClose: () => void
+  onTag: (instructorId: string) => void
+  onRemove: (relationshipId: string) => void
+  relationships: any[]
+}
+
+function TagInstructorModal({
+  student,
+  instructors,
+  currentRelationships,
+  onClose,
+  onTag,
+  onRemove,
+  relationships
+}: TagInstructorModalProps) {
+  const [selectedInstructorId, setSelectedInstructorId] = useState('')
+
+  // Filter out instructors who are already tagged
+  const availableInstructors = instructors.filter(
+    instructor => !currentRelationships.some(rel => rel.id === instructor.id)
+  )
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (selectedInstructorId) {
+      onTag(selectedInstructorId)
+      setSelectedInstructorId('')
+    }
+  }
+
+  return (
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={`Tag Instructors for ${student.full_name || student.profile?.full_name}`}
+      size="md"
+    >
+      <div className="space-y-4">
+        {/* Current Tagged Instructors */}
+        {currentRelationships.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Currently Tagged:</h3>
+            <div className="space-y-2">
+              {currentRelationships.map((instructor) => {
+                const relationship = relationships.find(r => r.instructor?.id === instructor.id)
+                return (
+                  <div
+                    key={instructor.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{instructor.full_name}</p>
+                      <p className="text-sm text-gray-600">{instructor.email}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => relationship && onRemove(relationship.id)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Add New Instructor */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Add New Instructor:</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Instructor
+              </label>
+              <select
+                value={selectedInstructorId}
+                onChange={(e) => setSelectedInstructorId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
+                required
+              >
+                <option value="">Choose an instructor...</option>
+                {availableInstructors.map((instructor) => (
+                  <option key={instructor.id} value={instructor.id}>
+                    {instructor.full_name} ({instructor.email})
+                  </option>
+                ))}
+              </select>
+              {availableInstructors.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  All available instructors are already tagged
+                </p>
+              )}
+            </div>
+
+            <ModalFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button
+                type="submit"
+                disabled={!selectedInstructorId || availableInstructors.length === 0}
+              >
+                Tag Instructor
+              </Button>
+            </ModalFooter>
+          </form>
+        </div>
+      </div>
     </Modal>
   )
 }
