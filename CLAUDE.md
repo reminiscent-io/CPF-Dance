@@ -33,7 +33,7 @@ npm lint
 3. This creates tables, RLS policies, and triggers - essential for security
 
 The schema defines:
-- User roles: `instructor`, `dancer`, `studio_admin`, `guardian`
+- User roles: `instructor`, `dancer`, `studio_admin`, `guardian', 'admin'
 - Core tables: profiles, students, classes, enrollments, notes, payments, studios
 - Row-level security (RLS) policies for data isolation
 - Automatic `updated_at` triggers
@@ -46,7 +46,7 @@ The schema defines:
 
 1. **Proxy** (`proxy.ts`): Portal-level routing protection
    - Redirects unauthenticated users to `/login`
-   - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`)
+   - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`, '/admin')
    - Redirects users to their correct portal based on role
 
 2. **API Route Guards** (`lib/auth/server-auth.ts`):
@@ -308,7 +308,7 @@ See `README.md` section "⚠️ Critical Next Steps":
 
 ## Important Files
 
-- `supabase-schema.sql` - Complete database schema with RLS
+- `supabase-RLS.md` - Complete database schema with RLS
 - `proxy.ts` - Route protection and role-based redirects
 - `lib/auth/server-auth.ts` - Role guard utilities
 - `SECURITY_FIXES.md` - Detailed security documentation
