@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       instructor: '/instructor',
       dancer: '/dancer',
       studio: '/studio',
+      studio_admin: '/studio',
       guardian: '/dancer',
       admin: '/instructor',
     }
