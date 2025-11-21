@@ -121,18 +121,18 @@ export default function InstructorSchedulePage() {
     }
   }
 
-  const getClassTypeColor = (type: string) => {
+  const getClassTypeClassName = (type: string) => {
     switch (type) {
       case 'private':
-        return 'purple'
+        return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'group':
-        return 'blue'
+        return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'workshop':
-        return 'green'
+        return 'bg-green-100 text-green-800 border-green-200'
       case 'master_class':
-        return 'amber'
+        return 'bg-amber-100 text-amber-800 border-amber-200'
       default:
-        return 'gray'
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
@@ -196,7 +196,7 @@ export default function InstructorSchedulePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {selectedEvent.title}
               </h3>
-              <Badge color={getClassTypeColor(selectedEvent.class_type)}>
+              <Badge className={getClassTypeClassName(selectedEvent.class_type)}>
                 {getClassTypeLabel(selectedEvent.class_type)}
               </Badge>
             </div>
