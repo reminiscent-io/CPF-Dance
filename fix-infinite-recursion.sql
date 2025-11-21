@@ -122,6 +122,7 @@ CREATE POLICY "Admins can view all profiles"
 -- Fix classes policies
 DROP POLICY IF EXISTS "Users can view relevant classes" ON classes;
 DROP POLICY IF EXISTS "Everyone can view active classes" ON classes;
+DROP POLICY IF EXISTS "Instructors can manage their classes" ON classes;
 
 CREATE POLICY "Users can view relevant classes"
   ON classes FOR SELECT
@@ -144,6 +145,8 @@ CREATE POLICY "Users can view relevant classes"
 -- Fix enrollments
 DROP POLICY IF EXISTS "Admins can view all enrollments" ON enrollments;
 DROP POLICY IF EXISTS "Instructors can view all enrollments" ON enrollments;
+DROP POLICY IF EXISTS "Students can view their enrollments" ON enrollments;
+DROP POLICY IF EXISTS "Instructors can manage enrollments" ON enrollments;
 
 CREATE POLICY "Instructors can view all enrollments"
   ON enrollments FOR SELECT
@@ -153,9 +156,19 @@ CREATE POLICY "Admins can view all enrollments"
   ON enrollments FOR SELECT
   USING (public.user_role() = 'admin');
 
--- Fix notes
+-- Fix notes - drop ALL existing note policies
 DROP POLICY IF EXISTS "Admins can view non-private notes" ON notes;
 DROP POLICY IF EXISTS "Instructors and Admins can manage all notes" ON notes;
+DROP POLICY IF EXISTS "Students can view shared notes about them" ON notes;
+DROP POLICY IF EXISTS "Students can create self notes" ON notes;
+DROP POLICY IF EXISTS "Students can manage own notes" ON notes;
+DROP POLICY IF EXISTS "Students can delete own notes" ON notes;
+DROP POLICY IF EXISTS "Instructors can view their student notes" ON notes;
+DROP POLICY IF EXISTS "Instructors can create notes for their students" ON notes;
+DROP POLICY IF EXISTS "Instructors can manage own notes" ON notes;
+DROP POLICY IF EXISTS "Instructors can delete own notes" ON notes;
+DROP POLICY IF EXISTS "Admins can view all notes" ON notes;
+DROP POLICY IF EXISTS "Instructors can view notes" ON notes;
 
 CREATE POLICY "Instructors can view notes"
   ON notes FOR SELECT
@@ -180,6 +193,10 @@ CREATE POLICY "Admins can view all notes"
 -- Fix private lesson requests
 DROP POLICY IF EXISTS "Admins can manage all requests" ON private_lesson_requests;
 DROP POLICY IF EXISTS "Admins can view all requests" ON private_lesson_requests;
+DROP POLICY IF EXISTS "Instructors can view their student requests" ON private_lesson_requests;
+DROP POLICY IF EXISTS "Instructors can respond to their student requests" ON private_lesson_requests;
+DROP POLICY IF EXISTS "Students can update own requests" ON private_lesson_requests;
+DROP POLICY IF EXISTS "Students can delete own requests" ON private_lesson_requests;
 
 CREATE POLICY "Admins can view all requests"
   ON private_lesson_requests FOR SELECT
