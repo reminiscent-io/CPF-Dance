@@ -404,7 +404,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-mauve-400 bg-clip-text text-transparent mb-4">
+              <h3 className="text-2xl font-bold text-white mb-4">
                 Dance Studio
               </h3>
               <p className="text-gray-200">
@@ -413,7 +413,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
+              <h4 className="font-semibold text-lg mb-4 text-white">Quick Links</h4>
               <ul className="space-y-2 text-gray-200">
                 <li>
                   <Link href="/login" className="hover:text-rose-400 transition-colors">
@@ -434,10 +434,9 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-lg mb-4">Contact</h4>
+              <h4 className="font-semibold text-lg mb-4 text-white">Contact</h4>
               <ul className="space-y-2 text-gray-200">
                 <li>Email: info@dancestudio.com</li>
-                <li>Phone: (555) 123-4567</li>
                 <li>
                   <a 
                     href="https://instagram.com/courtneyfiledance" 
