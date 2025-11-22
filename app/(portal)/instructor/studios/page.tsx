@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
+import { CommunicationsSection } from '@/components/CommunicationsSection'
 import type { Studio, CreateStudioData } from '@/lib/types'
 
 export default function StudiosPage() {
@@ -244,6 +245,8 @@ export default function StudiosPage() {
           onSubmit={(formData) => handleUpdateStudio(selectedStudio.id, formData)}
         />
       )}
+
+      <CommunicationsSection studios={studios} profile={profile} />
     </PortalLayout>
   )
 }
