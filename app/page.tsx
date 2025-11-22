@@ -11,7 +11,7 @@ export default function HomePage() {
   const [formData, setFormData] = useState({
     studio_name: '',
     contact_name: '',
-    email: '',
+    contact_email: '',
     phone: '',
     message: ''
   })
@@ -45,7 +45,7 @@ export default function HomePage() {
       setFormData({
         studio_name: '',
         contact_name: '',
-        email: '',
+        contact_email: '',
         phone: '',
         message: ''
       })
@@ -351,10 +351,10 @@ export default function HomePage() {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <Input
                     label="Email"
-                    name="email"
+                    name="contact_email"
                     type="email"
                     required
-                    value={formData.email}
+                    value={formData.contact_email}
                     onChange={handleInputChange}
                     placeholder="contact@studio.com"
                   />
