@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner } from '@/components/ui'
+import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 
@@ -517,10 +517,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             </select>
           </div>
 
-          <Input
+          <GooglePlacesInput
             label="Location"
             value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, location: value })}
+            placeholder="Search for class location..."
           />
 
           <div className="grid grid-cols-2 gap-4">
@@ -826,10 +827,11 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </select>
           </div>
 
-          <Input
+          <GooglePlacesInput
             label="Location"
             value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, location: value })}
+            placeholder="Search for class location..."
           />
 
           <div className="grid grid-cols-2 gap-4">

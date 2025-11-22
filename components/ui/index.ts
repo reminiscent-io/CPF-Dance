@@ -19,5 +19,8 @@ export type { SpinnerProps, LoadingOverlayProps } from './Spinner'
 export { Table } from './Table'
 export type { TableProps, Column } from './Table'
 
+export { GooglePlacesInput } from './GooglePlacesInput'
+export type { PlaceDetails } from './GooglePlacesInput'
+
 export { ToastProvider, useToast } from './Toast'
 export type { ToastType, Toast } from './Toast'

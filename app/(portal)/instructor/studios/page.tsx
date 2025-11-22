@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner } from '@/components/ui'
+import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Studio, CreateStudioData } from '@/lib/types'
 
 export default function StudiosPage() {
@@ -267,6 +267,16 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
     is_active: studio.is_active
   })
 
+  const handlePlaceSelect = (details: PlaceDetails) => {
+    setFormData({
+      ...formData,
+      address: details.address,
+      city: details.city,
+      state: details.state,
+      zip_code: details.zip_code
+    })
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name) {
@@ -286,29 +296,36 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
 
-          <Input
+          <GooglePlacesInput
             label="Address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            value={`${formData.address}${formData.city ? ', ' + formData.city : ''}${formData.state ? ', ' + formData.state : ''}${formData.zip_code ? ' ' + formData.zip_code : ''}`}
+            onChange={(value, details) => {
+              if (details) {
+                handlePlaceSelect(details)
+              } else {
+                setFormData({ ...formData, address: value })
+              }
+            }}
+            onPlaceSelect={handlePlaceSelect}
+            placeholder="Search for studio address..."
           />
 
-          <div className="grid grid-cols-3 gap-4">
-            <Input
-              label="City"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-            <Input
-              label="State"
-              value={formData.state}
-              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            />
-            <Input
-              label="Zip Code"
-              value={formData.zip_code}
-              onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-            />
-          </div>
+          {formData.address && (
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <p className="text-xs text-gray-600">Address</p>
+                <p className="text-sm font-medium text-gray-900">{formData.address}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">City</p>
+                <p className="text-sm font-medium text-gray-900">{formData.city || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">State, Zip</p>
+                <p className="text-sm font-medium text-gray-900">{formData.state} {formData.zip_code}</p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -376,6 +393,16 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
     notes: ''
   })
 
+  const handlePlaceSelect = (details: PlaceDetails) => {
+    setFormData({
+      ...formData,
+      address: details.address,
+      city: details.city,
+      state: details.state,
+      zip_code: details.zip_code
+    })
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name) {
@@ -395,29 +422,36 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
 
-          <Input
+          <GooglePlacesInput
             label="Address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            value={`${formData.address}${formData.city ? ', ' + formData.city : ''}${formData.state ? ', ' + formData.state : ''}${formData.zip_code ? ' ' + formData.zip_code : ''}`}
+            onChange={(value, details) => {
+              if (details) {
+                handlePlaceSelect(details)
+              } else {
+                setFormData({ ...formData, address: value })
+              }
+            }}
+            onPlaceSelect={handlePlaceSelect}
+            placeholder="Search for studio address..."
           />
 
-          <div className="grid grid-cols-3 gap-4">
-            <Input
-              label="City"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-            <Input
-              label="State"
-              value={formData.state}
-              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            />
-            <Input
-              label="Zip Code"
-              value={formData.zip_code}
-              onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-            />
-          </div>
+          {formData.address && (
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <p className="text-xs text-gray-600">Address</p>
+                <p className="text-sm font-medium text-gray-900">{formData.address}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">City</p>
+                <p className="text-sm font-medium text-gray-900">{formData.city || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">State, Zip</p>
+                <p className="text-sm font-medium text-gray-900">{formData.state} {formData.zip_code}</p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <Input
