@@ -407,14 +407,14 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-mauve-400 bg-clip-text text-transparent mb-4">
                 Dance Studio
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-200">
                 Professional dance instruction with precision and passion.
               </p>
             </div>
 
             <div>
               <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-gray-400">
+              <ul className="space-y-2 text-gray-200">
                 <li>
                   <Link href="/login" className="hover:text-rose-400 transition-colors">
                     Login
@@ -435,7 +435,7 @@ export default function HomePage() {
 
             <div>
               <h4 className="font-semibold text-lg mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400">
+              <ul className="space-y-2 text-gray-200">
                 <li>Email: info@dancestudio.com</li>
                 <li>Phone: (555) 123-4567</li>
                 <li>
@@ -452,7 +452,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-200">
             <p>&copy; {new Date().getFullYear()} Dance Studio Management. All rights reserved.</p>
           </div>
         </div>
