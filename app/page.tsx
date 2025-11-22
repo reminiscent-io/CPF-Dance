@@ -12,7 +12,7 @@ export default function HomePage() {
     studio_name: '',
     contact_name: '',
     contact_email: '',
-    phone: '',
+    contact_phone: '',
     message: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,7 +46,7 @@ export default function HomePage() {
         studio_name: '',
         contact_name: '',
         contact_email: '',
-        phone: '',
+        contact_phone: '',
         message: ''
       })
     } catch (error: any) {
@@ -361,10 +361,10 @@ export default function HomePage() {
 
                   <Input
                     label="Phone"
-                    name="phone"
+                    name="contact_phone"
                     type="tel"
                     required
-                    value={formData.phone}
+                    value={formData.contact_phone}
                     onChange={handleInputChange}
                     placeholder="(555) 123-4567"
                   />
