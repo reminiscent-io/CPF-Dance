@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
         message,
         status,
         studio_id,
+        is_responded,
+        contact_method,
+        response_notes,
+        responded_at,
         created_at
       `)
       .order('created_at', { ascending: false })

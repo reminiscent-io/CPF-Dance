@@ -26,11 +26,19 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { studio_id, status } = body
+    const { studio_id, status, is_responded, contact_method, response_notes } = body
 
     const updateData: any = {}
     if (studio_id !== undefined) updateData.studio_id = studio_id
     if (status !== undefined) updateData.status = status
+    if (is_responded !== undefined) {
+      updateData.is_responded = is_responded
+      if (is_responded) {
+        updateData.responded_at = new Date().toISOString()
+      }
+    }
+    if (contact_method !== undefined) updateData.contact_method = contact_method
+    if (response_notes !== undefined) updateData.response_notes = response_notes
 
     const { data: inquiry, error } = await supabase
       .from('studio_inquiries')
