@@ -1,14 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { response, user, profile } = await updateSession(request)
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/portal/login') ||
-                     request.nextUrl.pathname.startsWith('/portal/signup')
-  const isInstructorPage = request.nextUrl.pathname.startsWith('/portal/instructor')
-  const isDancerPage = request.nextUrl.pathname.startsWith('/portal/dancer')
-  const isStudioPage = request.nextUrl.pathname.startsWith('/portal/studio')
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
+                     request.nextUrl.pathname.startsWith('/signup')
+  const isInstructorPage = request.nextUrl.pathname.startsWith('/instructor')
+  const isDancerPage = request.nextUrl.pathname.startsWith('/dancer')
+  const isStudioPage = request.nextUrl.pathname.startsWith('/studio')
   const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
 
   if (isPortalPage) {
@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   if (!user && isPortalPage) {
     console.log('No user, redirecting to login')
     const url = request.nextUrl.clone()
-    url.pathname = '/portal/login'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
@@ -39,19 +39,19 @@ export async function proxy(request: NextRequest) {
 
     if (isInstructorPage && profile.role !== 'instructor') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'dancer' ? '/portal/dancer' : '/portal/studio'
+      url.pathname = profile.role === 'dancer' ? '/dancer' : '/studio'
       return NextResponse.redirect(url)
     }
 
     if (isDancerPage && profile.role !== 'dancer') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/portal/instructor' : '/portal/studio'
+      url.pathname = profile.role === 'instructor' ? '/instructor' : '/studio'
       return NextResponse.redirect(url)
     }
 
-    if (isStudioPage && profile.role !== 'studio') {
+    if (isStudioPage && profile.role !== 'studio' && profile.role !== 'studio_admin') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/portal/instructor' : '/portal/dancer'
+      url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
       return NextResponse.redirect(url)
     }
   }
@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     if (profile.role === 'instructor') {
       url.pathname = '/instructor'
-    } else if (profile.role === 'studio') {
+    } else if (profile.role === 'studio' || profile.role === 'studio_admin') {
       url.pathname = '/studio'
     } else if (profile.role === 'admin') {
       url.pathname = '/instructor' // Default admin landing page

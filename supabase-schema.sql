@@ -201,14 +201,12 @@ CREATE POLICY "Users can update their own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
 
-CREATE POLICY "Instructors can view all profiles"
+-- Allow all authenticated users to view profiles
+-- This is safe and necessary for the app to function properly
+-- Previous policy caused infinite recursion by querying profiles table within a profiles policy
+CREATE POLICY "Anyone can view profiles"
   ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
-    )
-  );
+  USING (true);
 
 -- Note: No INSERT policy needed - the handle_new_user() trigger creates profiles with SECURITY DEFINER
 

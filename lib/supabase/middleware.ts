@@ -38,11 +38,17 @@ export async function updateSession(request: NextRequest) {
       .select('id, role')
       .eq('id', user.id)
       .single()
-    
+
     if (error) {
       console.error('Middleware profile fetch error:', error)
+      // If profile doesn't exist, try to get role from user metadata as fallback
+      if (user.user_metadata?.role) {
+        console.log('Using role from user_metadata:', user.user_metadata.role)
+        profile = { id: user.id, role: user.user_metadata.role }
+      }
+    } else {
+      profile = data
     }
-    profile = data
   }
 
   return { response: supabaseResponse, user, profile }
