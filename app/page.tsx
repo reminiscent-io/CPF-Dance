@@ -18,7 +18,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const [scrollY, setScrollY] = useState(0)
+  const [heroHeight, setHeroHeight] = useState(100)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -61,25 +61,20 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY)
-    }
+    const timer = setTimeout(() => {
+      setHeroHeight(0)
+    }, 3000)
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => clearTimeout(timer)
   }, [])
-
-  const heroScale = Math.max(0.7, 1 - scrollY / 800)
-  const heroOpacity = Math.max(0, 1 - scrollY / 600)
 
   return (
     <main className="min-h-screen bg-white">
       <section 
-        className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
+        className="relative flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
         style={{
-          transform: `scale(${heroScale}) translateY(${scrollY * 0.3}px)`,
-          opacity: heroOpacity,
-          transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
+          height: `${heroHeight}vh`,
+          transition: 'height 2s ease-in-out'
         }}
       >
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
