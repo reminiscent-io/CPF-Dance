@@ -335,7 +335,10 @@ interface EditClassModalProps {
 }
 
 function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModalProps) {
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; actual_attendance_count?: number }>({
+  const { profile } = useUser()
+  const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
+
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; actual_attendance_count?: number; instructor_id?: string }>({
     studio_id: classData.studio_id || '',
     class_type: classData.class_type,
     title: classData.title,
@@ -352,9 +355,28 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     tiered_base_students: classData.tiered_base_students || undefined,
     tiered_additional_cost: classData.tiered_additional_cost || undefined,
     price: classData.price || undefined, // Legacy field
-    newStudioName: ''
+    newStudioName: '',
+    instructor_id: (classData as any).instructor_id || undefined
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
+
+  // Fetch instructors for admin users
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      fetchInstructors()
+    }
+  }, [profile])
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await fetch('/api/profiles?role=instructor')
+      if (!response.ok) throw new Error('Failed to fetch instructors')
+      const data = await response.json()
+      setInstructors(data.profiles || [])
+    } catch (error) {
+      console.error('Error fetching instructors:', error)
+    }
+  }
 
   // Calculate initial duration from existing start_time and end_time
   const calculateDuration = (start: string, end: string): number => {
@@ -423,6 +445,28 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
+
+          {/* Instructor selection - only for admins */}
+          {profile?.role === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Instructor *
+              </label>
+              <select
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={formData.instructor_id || ''}
+                onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
+              >
+                <option value="">Select an instructor</option>
+                {instructors.map(instructor => (
+                  <option key={instructor.id} value={instructor.id}>
+                    {instructor.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <Textarea
             label="Description"
@@ -670,7 +714,10 @@ interface CreateClassModalProps {
 }
 
 function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps) {
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string }>({
+  const { profile } = useUser()
+  const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
+
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string }>({
     studio_id: '',
     class_type: 'group',
     title: '',
@@ -686,10 +733,29 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     tiered_base_students: undefined,
     tiered_additional_cost: undefined,
     price: undefined, // Legacy field
-    newStudioName: ''
+    newStudioName: '',
+    instructor_id: undefined
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
+
+  // Fetch instructors for admin users
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      fetchInstructors()
+    }
+  }, [profile])
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await fetch('/api/profiles?role=instructor')
+      if (!response.ok) throw new Error('Failed to fetch instructors')
+      const data = await response.json()
+      setInstructors(data.profiles || [])
+    } catch (error) {
+      console.error('Error fetching instructors:', error)
+    }
+  }
 
   // Helper function to format duration for display
   const formatDuration = (minutes: number): string => {
@@ -747,6 +813,28 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
+
+          {/* Instructor selection - only for admins */}
+          {profile?.role === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Instructor *
+              </label>
+              <select
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={formData.instructor_id || ''}
+                onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
+              >
+                <option value="">Select an instructor</option>
+                {instructors.map(instructor => (
+                  <option key={instructor.id} value={instructor.id}>
+                    {instructor.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <Textarea
             label="Description"

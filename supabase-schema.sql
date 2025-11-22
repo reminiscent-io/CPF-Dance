@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
-CREATE TYPE user_role AS ENUM ('instructor', 'dancer', 'guardian', 'studio_admin');
+CREATE TYPE user_role AS ENUM ('instructor', 'dancer', 'guardian', 'studio_admin', 'admin');
 CREATE TYPE payment_status AS ENUM ('pending', 'confirmed', 'disputed', 'cancelled');
 CREATE TYPE payment_method AS ENUM ('stripe', 'cash', 'check', 'other');
 CREATE TYPE class_type AS ENUM ('group', 'private', 'workshop', 'master_class');

@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     const {
+      instructor_id, // Admins can specify this, instructors cannot
       studio_id,
       class_type,
       title,
@@ -91,6 +92,41 @@ export async function POST(request: NextRequest) {
       tiered_additional_cost
     } = body
 
+    // Determine instructor_id based on role
+    let finalInstructorId: string
+    if (profile.role === 'admin') {
+      // Admins can specify any instructor
+      if (!instructor_id) {
+        return NextResponse.json({
+          error: 'Admins must specify an instructor_id when creating a class'
+        }, { status: 400 })
+      }
+
+      // Validate that the instructor exists and is actually an instructor
+      const { data: instructorProfile, error: instructorError } = await supabase
+        .from('profiles')
+        .select('id, role')
+        .eq('id', instructor_id)
+        .single()
+
+      if (instructorError || !instructorProfile) {
+        return NextResponse.json({
+          error: 'Invalid instructor_id: Instructor not found'
+        }, { status: 400 })
+      }
+
+      if (instructorProfile.role !== 'instructor') {
+        return NextResponse.json({
+          error: 'Invalid instructor_id: User is not an instructor'
+        }, { status: 400 })
+      }
+
+      finalInstructorId = instructor_id
+    } else {
+      // Instructors can only create classes for themselves
+      finalInstructorId = profile.id
+    }
+
     // Convert datetime-local format to ISO 8601 if needed
     const startTimeISO = start_time.includes('T') && !start_time.includes('Z')
       ? new Date(start_time).toISOString()
@@ -101,7 +137,7 @@ export async function POST(request: NextRequest) {
       : end_time
 
     const insertData = {
-      instructor_id: profile.id,
+      instructor_id: finalInstructorId,
       studio_id: studio_id || null,
       class_type,
       title,
