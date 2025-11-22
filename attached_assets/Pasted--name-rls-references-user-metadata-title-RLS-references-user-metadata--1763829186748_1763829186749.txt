@@ -1,0 +1,848 @@
+[
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Admins can manage all private lesson requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Admins can manage all private lesson requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Admins can manage all requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Admins can manage all requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Admins can view all private lesson requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Admins can view all private lesson requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Admins can view all requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Admins can view all requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Instructors can manage requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Instructors can manage requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Instructors can view all requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Instructors can view all requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Instructors can create students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Instructors can create students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Instructors can delete students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Instructors can delete students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Instructors can update students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Instructors can update students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Instructors can view all students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Instructors can view all students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Instructors can create payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Instructors can create payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Studio admins can view studio payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Studio admins can view studio payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Admins can manage all inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Admins can manage all inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Admins can manage all studio inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Admins can manage all studio inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Admins can view all studio inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Admins can view all studio inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Instructors can view studio inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Instructors can view studio inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studios\\` has a row level security policy \\`Admins can manage all studios\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studios",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studios_Admins can manage all studios"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studios\\` has a row level security policy \\`Admins can view all studios\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studios",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studios_Admins can view all studios"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.profiles\\` has a row level security policy \\`Admins can update any profile\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "profiles",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_profiles_Admins can update any profile"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.profiles\\` has a row level security policy \\`Admins can view any profile\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "profiles",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_profiles_Admins can view any profile"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.enrollments\\` has a row level security policy \\`Admins can manage all enrollments\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "enrollments",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_enrollments_Admins can manage all enrollments"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.enrollments\\` has a row level security policy \\`Admins can view all enrollments\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "enrollments",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_enrollments_Admins can view all enrollments"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.enrollments\\` has a row level security policy \\`Instructors can view all enrollments\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "enrollments",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_enrollments_Instructors can view all enrollments"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.instructor_student_relationships\\` has a row level security policy \\`Admins and instructors can manage relationships\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "instructor_student_relationships",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_instructor_student_relationships_Admins and instructors can manage relationships"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.instructor_student_relationships\\` has a row level security policy \\`Admins can create relationships\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "instructor_student_relationships",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_instructor_student_relationships_Admins can create relationships"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.instructor_student_relationships\\` has a row level security policy \\`Instructors can create relationships\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "instructor_student_relationships",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_instructor_student_relationships_Instructors can create relationships"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Admins can manage all notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Admins can manage all notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Admins can view all notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Admins can view all notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Instructors and Admins can manage all notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Instructors and Admins can manage all notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Instructors can manage all notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Instructors can manage all notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Instructors can view all notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Instructors can view all notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Instructors can view notes\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Instructors can view notes"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.notes\\` has a row level security policy \\`Studio users can view notes shared with studio\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "notes",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_notes_Studio users can view notes shared with studio"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Admins can manage requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Admins can manage requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.private_lesson_requests\\` has a row level security policy \\`Instructors can view requests\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "private_lesson_requests",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_private_lesson_requests_Instructors can view requests"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Admins can manage all students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Admins can manage all students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Admins can view all students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Admins can view all students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`Instructors can view their students\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "students",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_students_Instructors can view their students"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Admins can create payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Admins can create payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Admins can manage payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Admins can manage payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Admins can view all payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Admins can view all payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.payment_events\\` has a row level security policy \\`Instructors can view payment events\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "payment_events",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_payment_events_Instructors can view payment events"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Admins can manage studio inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Admins can manage studio inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Admins can view studio inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Admins can view studio inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studio_inquiries\\` has a row level security policy \\`Studio can view their inquiries\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studio_inquiries",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studio_inquiries_Studio can view their inquiries"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.studios\\` has a row level security policy \\`Admins can manage studios\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "studios",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_studios_Admins can manage studios"
+  },
+  {
+    "name": "rls_references_user_metadata",
+    "title": "RLS references user metadata",
+    "level": "ERROR",
+    "facing": "EXTERNAL",
+    "categories": [
+      "SECURITY"
+    ],
+    "description": "Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.",
+    "detail": "Table \\`public.profiles\\` has a row level security policy \\`Admin users can update their profile\\` that references Supabase Auth \\`user_metadata\\`. \\`user_metadata\\` is editable by end users and should never be used in a security context.",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata",
+    "metadata": {
+      "name": "profiles",
+      "type": "table",
+      "schema": "public"
+    },
+    "cache_key": "rls_references_user_metadata_public_profiles_Admin users can update their profile"
+  }
+]
