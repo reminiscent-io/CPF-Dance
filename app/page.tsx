@@ -438,7 +438,16 @@ export default function HomePage() {
               <ul className="space-y-2 text-gray-400">
                 <li>Email: info@dancestudio.com</li>
                 <li>Phone: (555) 123-4567</li>
-                <li>Instagram: @courtneyfiledance</li>
+                <li>
+                  <a 
+                    href="https://instagram.com/courtneyfiledance" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-rose-400 transition-colors"
+                  >
+                    Instagram: @courtneyfiledance
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
