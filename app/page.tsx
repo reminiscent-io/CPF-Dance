@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
@@ -18,6 +18,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [scrollY, setScrollY] = useState(0)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -59,9 +60,28 @@ export default function HomePage() {
     document.getElementById('studio-inquiry')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const heroScale = Math.max(0.7, 1 - scrollY / 800)
+  const heroOpacity = Math.max(0, 1 - scrollY / 600)
+
   return (
     <main className="min-h-screen bg-white">
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden">
+      <section 
+        className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
+        style={{
+          transform: `scale(${heroScale}) translateY(${scrollY * 0.3}px)`,
+          opacity: heroOpacity,
+          transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
+        }}
+      >
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
