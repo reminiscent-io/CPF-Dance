@@ -5,6 +5,7 @@ modules = ["nodejs-22", "postgresql-16"]
 
 [nix]
 channel = "stable-24_11"
+packages = ["nix-output-monitor"]
 
 [env]
 NEXT_TELEMETRY_DISABLED = "1"
@@ -25,6 +26,10 @@ externalPort = 5000
 [[ports]]
 localPort = 33283
 externalPort = 3001
+
+[[ports]]
+localPort = 39739
+externalPort = 3002
 
 [[ports]]
 localPort = 39759
