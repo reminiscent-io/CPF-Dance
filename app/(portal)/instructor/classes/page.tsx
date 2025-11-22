@@ -519,7 +519,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
 
           <GooglePlacesInput
             label="Location"
-            value={formData.location}
+            value={formData.location || ''}
             onChange={(value) => setFormData({ ...formData, location: value })}
             placeholder="Search for class location..."
           />
@@ -829,7 +829,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
           <GooglePlacesInput
             label="Location"
-            value={formData.location}
+            value={formData.location || ''}
             onChange={(value) => setFormData({ ...formData, location: value })}
             placeholder="Search for class location..."
           />
