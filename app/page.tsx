@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
@@ -20,6 +20,8 @@ export default function HomePage() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [heroHeight, setHeroHeight] = useState(100)
+  const heroContentRef = useRef<HTMLDivElement>(null)
+  const [contentHeight, setContentHeight] = useState(0)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -62,8 +64,20 @@ export default function HomePage() {
   }
 
   useEffect(() => {
+    // Measure content height
+    if (heroContentRef.current) {
+      const height = heroContentRef.current.offsetHeight
+      setContentHeight(height)
+    }
+
     const timer = setTimeout(() => {
-      setHeroHeight(0)
+      // Convert pixel height to viewport height percentage
+      if (heroContentRef.current) {
+        const contentPixels = heroContentRef.current.offsetHeight
+        const viewportHeight = window.innerHeight
+        const contentVh = (contentPixels / viewportHeight) * 100
+        setHeroHeight(contentVh)
+      }
     }, 3000)
 
     return () => clearTimeout(timer)
@@ -113,14 +127,14 @@ export default function HomePage() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center" ref={heroContentRef}>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 animate-slideDown">
             Professional Precision
             <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
               Dance Instruction
             </span>
           </h1>
-          <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto animate-slideUp">
+          <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
             Track progress, manage schedules, and elevate your dance journey with expert guidance
           </p>
         </div>
