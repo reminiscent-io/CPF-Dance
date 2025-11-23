@@ -72,6 +72,11 @@ export default function DancerClassesPage() {
   })
   const [saving, setSaving] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
+  const [recurringDays, setRecurringDays] = useState<number[]>([]) // 0=Sun, 1=Mon, etc
+  const [recurringEndDate, setRecurringEndDate] = useState('')
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [tentativeClasses, setTentativeClasses] = useState<Array<{ start_time: string; end_time: string }>>([])
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -140,6 +145,8 @@ export default function DancerClassesPage() {
         is_recurring: false
       })
     }
+    setRecurringDays([])
+    setRecurringEndDate('')
     setShowModal(true)
   }
 
@@ -147,6 +154,10 @@ export default function DancerClassesPage() {
     setShowModal(false)
     setEditingClass(null)
     setDurationMinutes(60)
+    setRecurringDays([])
+    setRecurringEndDate('')
+    setShowConfirmation(false)
+    setTentativeClasses([])
     setFormData({
       title: '',
       instructor_name: '',
@@ -158,15 +169,77 @@ export default function DancerClassesPage() {
     })
   }
 
-  const handleSave = async () => {
+  const generateRecurringInstances = (startTime: string, duration: number, days: number[], endDate: string) => {
+    const instances: Array<{ start_time: string; end_time: string }> = []
+    const start = new Date(startTime)
+    const end = new Date(endDate)
+    end.setHours(23, 59, 59, 999)
+
+    // Start from the first matching day
+    const currentDate = new Date(start)
+    const dayOfWeek = currentDate.getDay()
+    const daysToAdd = days.length > 0 ? Math.min(...days.map(d => (d - dayOfWeek + 7) % 7 || 7)) : 0
+
+    if (daysToAdd > 0) {
+      currentDate.setDate(currentDate.getDate() + daysToAdd)
+    }
+
+    // Generate all instances
+    while (currentDate <= end) {
+      if (days.includes(currentDate.getDay())) {
+        const instanceStart = new Date(currentDate)
+        instanceStart.setHours(start.getHours(), start.getMinutes(), 0, 0)
+
+        const instanceEnd = new Date(instanceStart.getTime() + duration * 60000)
+
+        instances.push({
+          start_time: instanceStart.toISOString(),
+          end_time: instanceEnd.toISOString()
+        })
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    return instances
+  }
+
+  const handleSaveClick = async () => {
     if (!formData.title.trim() || !formData.start_time || !durationMinutes) {
       alert('Please enter a title, start time, and duration')
       return
     }
 
+    if (formData.is_recurring) {
+      if (recurringDays.length === 0) {
+        alert('Please select at least one day of the week')
+        return
+      }
+      if (!recurringEndDate) {
+        alert('Please select an end date for recurring classes')
+        return
+      }
+
+      // Generate instances and check if > 20
+      const instances = generateRecurringInstances(formData.start_time, durationMinutes, recurringDays, recurringEndDate)
+
+      if (instances.length > 20) {
+        setTentativeClasses(instances)
+        setShowConfirmation(true)
+        return
+      }
+
+      // Otherwise proceed with creation
+      await createRecurringClasses(instances)
+    } else {
+      // Single class - proceed normally
+      await createSingleClass()
+    }
+  }
+
+  const createSingleClass = async () => {
     setSaving(true)
     try {
-      // Calculate end_time from start_time + duration
       const startDate = new Date(formData.start_time)
       const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
       const endTimeISO = endDate.toISOString()
@@ -178,7 +251,8 @@ export default function DancerClassesPage() {
         location: formData.location.trim() || null,
         start_time: startDate.toISOString(),
         end_time: endTimeISO,
-        notes: formData.notes.trim() || null
+        notes: formData.notes.trim() || null,
+        is_recurring: false
       }
 
       const url = '/api/dancer/personal-classes'
@@ -201,6 +275,43 @@ export default function DancerClassesPage() {
     } catch (error) {
       console.error('Error saving class:', error)
       alert('Failed to save class')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const createRecurringClasses = async (instances: Array<{ start_time: string; end_time: string }>) => {
+    setSaving(true)
+    try {
+      const requests = instances.map(instance =>
+        fetch('/api/dancer/personal-classes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            instructor_name: formData.instructor_name.trim() || null,
+            location: formData.location.trim() || null,
+            start_time: instance.start_time,
+            end_time: instance.end_time,
+            notes: formData.notes.trim() || null,
+            is_recurring: false
+          })
+        })
+      )
+
+      const responses = await Promise.all(requests)
+      const allSuccessful = responses.every(r => r.ok)
+
+      if (allSuccessful) {
+        await fetchClasses()
+        handleCloseModal()
+        alert(`Successfully created ${instances.length} classes`)
+      } else {
+        alert('Some classes failed to create. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error creating recurring classes:', error)
+      alert('Failed to create recurring classes')
     } finally {
       setSaving(false)
     }
@@ -576,14 +687,120 @@ export default function DancerClassesPage() {
               This is a recurring class
             </label>
           </div>
+
+          {formData.is_recurring && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Days of Week *
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {daysOfWeek.map((day, index) => (
+                    <label key={index} className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={recurringDays.includes(index)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setRecurringDays([...recurringDays, index].sort((a, b) => a - b))
+                          } else {
+                            setRecurringDays(recurringDays.filter(d => d !== index))
+                          }
+                        }}
+                        className="mr-2 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                      />
+                      <span className="text-sm text-gray-700">{day.slice(0, 3)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date *
+                </label>
+                <input
+                  type="date"
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  required
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <ModalFooter className="mt-6">
           <Button variant="outline" onClick={handleCloseModal} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSaveClick} disabled={saving}>
             {saving ? 'Saving...' : editingClass ? 'Update Class' : 'Add Class'}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Confirmation Dialog for Large Batch */}
+      <Modal
+        isOpen={showConfirmation}
+        onClose={() => {
+          setShowConfirmation(false)
+          setTentativeClasses([])
+        }}
+        title="Confirm Recurring Classes"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            You are about to create <strong className="text-rose-600">{tentativeClasses.length} classes</strong>.
+          </p>
+          <p className="text-sm text-gray-600">
+            This is a large batch. Please confirm you want to proceed with creating all these classes.
+          </p>
+          <div className="bg-gray-50 p-4 rounded-lg max-h-48 overflow-y-auto">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Class Instances:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              {tentativeClasses.slice(0, 10).map((cls, idx) => (
+                <li key={idx}>
+                  {new Date(cls.start_time).toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </li>
+              ))}
+              {tentativeClasses.length > 10 && (
+                <li className="font-semibold text-gray-700 mt-2">
+                  ... and {tentativeClasses.length - 10} more
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowConfirmation(false)
+              setTentativeClasses([])
+            }}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={async () => {
+              setShowConfirmation(false)
+              await createRecurringClasses(tentativeClasses)
+              setTentativeClasses([])
+            }}
+            disabled={saving}
+          >
+            {saving ? 'Creating...' : `Create ${tentativeClasses.length} Classes`}
           </Button>
         </ModalFooter>
       </Modal>
