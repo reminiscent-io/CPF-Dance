@@ -87,7 +87,7 @@ export default function StudioCarousel() {
             {extendedStudios.map((studio, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 flex items-center justify-center"
+                className="flex-shrink-0 flex items-center justify-center group"
                 style={{
                   width: '200px',
                   height: '120px'
@@ -95,11 +95,16 @@ export default function StudioCarousel() {
               >
                 <div className="relative w-full h-full p-4 flex items-center justify-center">
                   {studio.image && (
-                    <img
-                      src={studio.image}
-                      alt={studio.name}
-                      className="max-w-full max-h-full object-contain"
-                    />
+                    <>
+                      <img
+                        src={studio.image}
+                        alt={studio.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-2 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                        {studio.name}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
