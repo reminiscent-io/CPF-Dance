@@ -93,7 +93,7 @@ export default function StudioCarousel() {
                   height: '120px'
                 }}
               >
-                <div className="relative w-full h-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 flex items-center justify-center">
+                <div className="relative w-full h-full p-4 flex items-center justify-center">
                   {studio.image && (
                     <img
                       src={studio.image}
