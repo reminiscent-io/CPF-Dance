@@ -122,14 +122,7 @@ export function Navigation({ profile }: NavigationProps) {
   }
 
   const handleSignOut = async () => {
-    try {
-      await signOut()
-      // Server action will redirect to /login
-    } catch (error) {
-      console.error('Unexpected sign out error:', error)
-      // If there's an error, manually redirect
-      router.push('/login')
-    }
+    await signOut()
   }
 
   return (
