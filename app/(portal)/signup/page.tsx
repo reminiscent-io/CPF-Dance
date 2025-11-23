@@ -225,27 +225,6 @@ function SignupForm() {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              I am a...
-            </label>
-            <select
-              id="role"
-              value={formData.role}
-              onChange={(e) => handleRoleChange(e.target.value as UserRole)}
-              required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
-              disabled={loading}
-            >
-              <option value="dancer">Dancer</option>
-              <option value="instructor">Instructor</option>
-              <option value="studio">Studio Admin</option>
-              <option value="admin">Admin (Development)</option>
-            </select>
-          </div>
 
           {formData.role === 'dancer' && (
             <div>
