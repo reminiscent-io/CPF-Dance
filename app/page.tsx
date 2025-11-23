@@ -137,7 +137,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
-            Track progress, manage schedules, and elevate your dance journey with expert guidance
+            A free, comprehensive platform built by dancers for dancers. One place to keep track of notes and feedback you receive — whether from our instructors or from any lesson you take.
           </p>
         </div>
       </section>
