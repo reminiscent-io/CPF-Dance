@@ -1,0 +1,187 @@
+Terms of Service
+Last updated: [Insert Date]
+
+These Terms of Service (“Terms”) govern your access to and use of the website, platform, and related services (collectively, the “Service”) provided by Reminiscent Technologies LLC (“Company,” “we,” or “us”). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the Service.
+
+1. Eligibility and Accounts
+1.1 Age Requirements; Children Under 13
+The Service is intended for individuals who are at least 13 years old or the age of digital consent in their jurisdiction. Individuals under 13 may not create an account or provide personal information directly through the Service. Instead, a parent or legal guardian must create and manage the account on the minor’s behalf and consent to the minor’s use of the Service. During signup, users will be asked to confirm that they are at least 13; if they indicate they are under 13, a parent or legal guardian must complete account creation and confirm access for the minor.
+
+1.2 Parental / Guardian Accounts for Minors
+Where a minor participates in classes or lessons, the parent or legal guardian is the “account holder” and is responsible for: (a) ensuring the minor’s compliance with these Terms; (b) any information provided about the minor; and (c) all bookings, payments, and communications related to the minor’s use of the Service. If it is discovered that a child under 13 has created an account or provided personal information without verifiable parental consent, the Company may suspend or delete the account and take reasonable steps to remove the related personal information from its systems.
+
+1.3 Account Registration
+To use certain features (including scheduling, payments, and messaging), you must create an account and provide accurate, current, and complete information, including your name, email address, phone number, and any other requested information. You agree to promptly update this information as needed so it remains accurate.
+
+1.4 Account Security
+You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to notify the Company promptly of any unauthorized access or use of your account or other security breaches. The Company is not liable for any loss or damage arising from unauthorized use of your account.
+
+2. Description of the Service
+2.1 Service Overview
+The Service is a dance‑oriented platform used to: (a) manage and view studio schedules, classes, and events; (b) book and manage private lessons and other services; (c) facilitate communication between instructors, studios, and students; and (d) process and manage payments related to such services.
+
+2.2 No Guarantee of Results
+The Service facilitates scheduling, communication, and payments, but does not guarantee particular training outcomes, skill improvements, performance results, or business outcomes for studios or instructors. All participation in lessons and activities is at your own discretion and risk.
+
+2.3 Service Modifications
+The Company may modify, suspend, or discontinue any part or all of the Service at any time, with or without notice, including for maintenance, upgrades, or other operational reasons. The Company will not be liable if any part of the Service is unavailable at any time or for any period.
+
+3. User Responsibilities and Acceptable Use
+3.1 General Responsibilities
+You agree to:
+
+Use the Service only for lawful purposes and in accordance with these Terms.
+
+Comply with all applicable laws and regulations, including those related to privacy, data protection, health and safety, and online conduct.
+
+Ensure you have all necessary consents (such as parental or guardian consents for minors) before providing personal information or enrolling anyone in lessons.
+
+3.2 Prohibited Conduct
+You agree not to:
+
+Use the Service in any way that could disable, interfere with, or damage the Service or any systems or networks.
+
+Harass, threaten, abuse, or otherwise harm instructors, students, studios, or other users.
+
+Post, transmit, or share content that is unlawful, defamatory, obscene, fraudulent, or otherwise objectionable.
+
+Attempt to gain unauthorized access to the Service, accounts, or related systems.
+
+Use the Service to send spam or other unsolicited communications.
+
+3.3 Enforcement
+The Company may, in its sole discretion, investigate violations of these Terms, and may suspend or terminate your access to the Service, remove content, or take other appropriate action if you violate these Terms or if continued access could create risk or liability.
+
+4. Communication Features
+4.1 Two‑Way Communications
+The Service may provide messaging or similar tools that allow communication between users, including instructors, studios, and students or their parents/guardians. You agree to use these tools only for appropriate, service‑related purposes, such as scheduling, lesson coordination, payment questions, or feedback.
+
+4.2 Monitoring and Limitations
+The Company may, but is not obligated to, monitor or review communications on the Service for security, abuse prevention, and compliance with these Terms. The messaging tools are not designed for emergency communications; for urgent matters, use direct contact methods such as phone.
+
+5. Payments, Cancellations, and Refunds
+5.1 Payments
+The Service may allow payments for private lessons, group classes, events, or related offerings through integrated payment providers. By submitting payment information, you authorize the Company and its third‑party payment processors to charge your chosen payment method for all applicable fees.
+
+5.2 Third‑Party Payment Processors
+Payments are processed by third‑party providers under their own terms and privacy policies. The Company does not control and is not responsible for the acts, errors, or omissions of such providers.
+
+5.3 Cancellations and Rescheduling
+Cancellation, rescheduling, and no‑show policies may be established by the Company, individual instructors, or studios. Specific policy terms (such as required notice periods and applicable fees) will be communicated through the Service or at the time of booking. By making a booking, you agree to the applicable policy.
+
+5.4 Refunds
+Eligibility for refunds depends on the cancellation or refund policy communicated at booking. Unless otherwise stated, fees are non‑refundable once the related lesson, class, or event has been delivered. Any approved refunds will be processed using the original payment method where practicable.
+
+6. Personal Information and Security
+6.1 Information Collected
+To operate the Service, the Company may collect personal information, including but not limited to:
+
+Name
+
+Email address
+
+Phone number
+
+Lesson, studio, and scheduling details
+
+Information you choose to add to your or your child’s profile
+
+This information is used to provide and improve the Service, process bookings and payments, and facilitate communication related to your use of the Service.
+
+6.2 Storage and Security
+User data is stored using third‑party infrastructure and database providers selected by the Company. The Company employs reasonable administrative, technical, and physical safeguards intended to protect personal information against unauthorized access, disclosure, alteration, or destruction. However, no method of transmission or storage is completely secure, and the Company cannot guarantee absolute security.
+
+6.3 Access Controls
+Access to user data within the Company’s systems is limited to personnel and contractors who require such access to operate, support, or improve the Service and who are subject to appropriate confidentiality obligations. The Company may access, preserve, or disclose information if it reasonably believes it is necessary to: (a) comply with legal obligations or process; (b) enforce these Terms; or (c) protect the rights, property, or safety of the Company, users, or others.
+
+6.4 Privacy Policy
+More detailed information about data collection and use may be provided in a separate Privacy Policy. In the event of any conflict between these Terms and the Privacy Policy with respect to the treatment of personal information, the Privacy Policy will govern.
+
+7. Cookies and Analytics
+7.1 Cookies and Similar Technologies
+At present, the Service may use limited or no tracking cookies. Over time, the Company may implement cookies or similar technologies to support core functionality, enhance user experience, or remember preferences.
+
+7.2 Analytics (Including Google Analytics)
+The Company may use analytics services (such as Google Analytics) to collect aggregated information about how the Service is used, including visited pages, time spent, and device/browser information. This information helps understand usage patterns and improve the Service.
+
+7.3 User Choices
+Depending on your location and applicable law, you may be able to manage cookie and tracking preferences through browser settings or consent tools provided on the Service once tracking technologies are implemented.
+
+8. Intellectual Property
+8.1 Ownership
+All content and materials included in or made available through the Service (excluding User Content as defined below), including text, graphics, logos, images, software, and design elements, are owned by or licensed to Reminiscent Technologies LLC and are protected by intellectual property and other laws.
+
+8.2 Limited License
+Subject to your compliance with these Terms, the Company grants you a limited, non‑exclusive, non‑transferable, revocable license to access and use the Service for personal use or for internal business use related to dance instruction and participation.
+
+8.3 Restrictions
+You may not:
+
+Copy, modify, distribute, sell, lease, or create derivative works from any part of the Service or its content, except as expressly permitted by the Company.
+
+Reverse engineer or otherwise attempt to extract the source code of any software used in the Service, except as allowed by law.
+
+Use the Company’s trademarks, service marks, or logos without prior written permission.
+
+8.4 User Content
+You may submit or upload content, including profile information, messages, feedback, and other materials (“User Content”). You retain any rights you hold in your User Content but grant the Company a non‑exclusive, worldwide, royalty‑free license to use, host, store, reproduce, modify, and display User Content as reasonably necessary to operate and improve the Service.
+
+9. Assumption of Risk; Health and Safety
+9.1 Physical Activity Risks
+Dance and related physical activities carry inherent risks, including the risk of injury. By participating in lessons, classes, or events scheduled or managed through the Service, you (or, for minors, you on their behalf) voluntarily assume all associated risks.
+
+9.2 Medical Clearance
+You are responsible for ensuring that you, or any minor for whom you are responsible, are physically able to participate safely in dance activities. Consultation with a physician is recommended before beginning a new exercise or dance program, especially if there are any existing health concerns.
+
+9.3 No Medical Advice
+Information provided through the Service by the Company, instructors, or studios is for general instruction and educational purposes and is not medical advice. For medical questions, consult a qualified healthcare professional.
+
+10. Disclaimers
+10.1 Service Provided “As Is”
+To the fullest extent permitted by law, the Service is provided “as is” and “as available,” without warranties of any kind, whether express, implied, or statutory. Without limiting the foregoing, the Company does not warrant that the Service will meet your requirements, be uninterrupted, timely, secure, or error‑free, or that any defects will be corrected.
+
+10.2 Third‑Party Services and Content
+The Service may integrate with or link to third‑party websites, services, or resources (including payment processors and analytics providers). The Company is not responsible for and does not endorse such third‑party services or content, and your use of them is at your own risk and subject to the applicable third‑party terms.
+
+11. Limitation of Liability
+To the maximum extent permitted by law:
+
+The Company and its owners, members, managers, employees, contractors, and agents will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, including lost profits, lost data, or loss of goodwill, arising out of or in connection with your use of or inability to use the Service.
+
+The Company’s total aggregate liability for all claims arising out of or relating to the Service or these Terms will not exceed the greater of: (a) the total amount you paid directly to the Company for use of the Service giving rise to the claim during the twelve (12) months prior to the event giving rise to liability; or (b) one hundred U.S. dollars (USD $100).
+
+Some jurisdictions do not allow certain exclusions or limitations of liability, so some of the above limitations may not apply to you.
+
+12. Indemnification
+You agree to indemnify, defend, and hold harmless Reminiscent Technologies LLC and its owners, members, managers, employees, contractors, and agents from and against any and all claims, demands, liabilities, damages, losses, and expenses (including reasonable attorneys’ fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms or any applicable law; or (c) your User Content or interactions with other users, instructors, or studios.
+
+13. Governing Law and Dispute Resolution
+13.1 Governing Law
+These Terms and any dispute arising out of or relating to them or the Service will be governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of laws principles, unless mandatory law in your jurisdiction requires otherwise.
+
+13.2 Informal Resolution
+Before initiating formal legal proceedings, you agree to first contact the Company to attempt to resolve the dispute informally. Most concerns can often be resolved quickly in this manner.
+
+13.3 Arbitration / Class Action Waiver (Optional)
+If you wish to include an arbitration clause and/or class action waiver, this section should be drafted or reviewed by a qualified attorney, as such provisions carry significant legal implications and must be tailored to applicable law.
+
+14. Term and Termination
+14.1 Your Termination Rights
+You may stop using the Service at any time. You may also request deletion of your account and associated personal information, subject to legal and operational requirements that may require retention of certain data.
+
+14.2 Company’s Termination Rights
+The Company may suspend or terminate your access to the Service at any time, with or without cause or notice, including if: (a) you violate these Terms or applicable law; (b) your conduct creates risk or potential legal exposure for the Company or others; or (c) providing the Service is no longer commercially or technically feasible.
+
+14.3 Effect of Termination
+Upon termination, your right to use the Service will immediately cease. Certain provisions of these Terms, including those related to intellectual property, disclaimers, limitation of liability, indemnification, and dispute resolution, will survive termination.
+
+15. Changes to These Terms
+The Company may update these Terms from time to time. When changes are made, the “Last updated” date at the top of this page will be revised, and additional notice may be provided where required by law. Your continued use of the Service after changes become effective constitutes your acceptance of the updated Terms.
+
+16. Contact Information
+If you have any questions about these Terms or the Service, please contact:
+
+Reminiscent Technologies LLC
+418 BROADWAY STE R
+ALBANY, NY 12207
+Email: support@reminiscent.io

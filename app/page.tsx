@@ -439,6 +439,11 @@ export default function HomePage() {
                       Studio Inquiry
                     </button>
                   </li>
+                  <li>
+                    <Link href="/terms-of-service" className="text-white hover:text-rose-400 transition-colors">
+                      Terms of Service
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
