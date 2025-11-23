@@ -137,7 +137,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
-            A free, comprehensive platform built by dancers for dancers. One place to keep track of notes and feedback you receive — whether from our instructors or from any lesson you take.
+            A free, comprehensive platform built by dancers for dancers
           </p>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default function HomePage() {
               Everything You Need to Succeed
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A comprehensive platform designed for dancers, instructors, and studios
+              Useful tools to keep track of notes, progress, classes, and payments for dancers, instructors, and studios
             </p>
           </div>
 
