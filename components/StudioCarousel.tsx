@@ -13,34 +13,66 @@ export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
 
-  const studioMappings = [
-    { display: 'Broadway Dance Center', filename: 'Broadway Dance Center Logo.png' },
-    { display: 'Broadway Dance Academy', filename: 'Broadway Dance Academy Logo.png' },
-    { display: 'Exactitude', filename: 'Exactitude Dance Logo.png' },
-    { display: 'Chorus Line Dance Studio', filename: 'Chorus Line Dance Studio Logo.png' }
-  ]
-
   useEffect(() => {
     const fetchLogos = async () => {
       try {
         const supabase = createClient()
         const studiosWithLogos: StudioLogo[] = []
 
-        for (const mapping of studioMappings) {
-          try {
-            const { data: { publicUrl } } = supabase.storage
-              .from('studio logos')
-              .getPublicUrl(mapping.filename)
+        // Try to list all files from the bucket
+        const { data: files, error: listError } = await supabase.storage
+          .from('studio logos')
+          .list()
 
-            if (publicUrl) {
-              console.log(`Generated URL for ${mapping.display}: ${publicUrl}`)
-              studiosWithLogos.push({
-                name: mapping.display,
-                image: publicUrl
-              })
+        if (listError) {
+          console.warn('Could not list bucket (RLS may restrict this), falling back to manual mappings:', listError)
+          // Fallback to manual mappings if list() is restricted
+          const fallbackMappings = [
+            { display: 'Broadway Dance Center', filename: 'Broadway Dance Center Logo.png' },
+            { display: 'Broadway Dance Academy', filename: 'Broadway Dance Academy Logo.png' },
+            { display: 'Exactitude', filename: 'Exactitude Dance Logo.png' },
+            { display: 'Chorus Line Dance Studio', filename: 'Chorus Line Dance Studio Logo.png' }
+          ]
+
+          for (const mapping of fallbackMappings) {
+            try {
+              const { data: { publicUrl } } = supabase.storage
+                .from('studio logos')
+                .getPublicUrl(mapping.filename)
+
+              if (publicUrl) {
+                console.log(`Generated URL for ${mapping.display}: ${publicUrl}`)
+                studiosWithLogos.push({
+                  name: mapping.display,
+                  image: publicUrl
+                })
+              }
+            } catch (error) {
+              console.error(`Error generating URL for ${mapping.display}:`, error)
             }
-          } catch (error) {
-            console.error(`Error generating URL for ${mapping.display}:`, error)
+          }
+        } else if (files && files.length > 0) {
+          // Successfully listed files, process each one
+          for (const file of files) {
+            if (file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.jpeg')) {
+              try {
+                const { data: { publicUrl } } = supabase.storage
+                  .from('studio logos')
+                  .getPublicUrl(file.name)
+
+                if (publicUrl) {
+                  // Create display name by removing file extension
+                  const displayName = file.name.replace(/\.(png|jpg|jpeg)$/i, '')
+                  console.log(`Generated URL for ${displayName}: ${publicUrl}`)
+                  studiosWithLogos.push({
+                    name: displayName,
+                    image: publicUrl
+                  })
+                }
+              } catch (error) {
+                console.error(`Error generating URL for ${file.name}:`, error)
+              }
+            }
           }
         }
 
