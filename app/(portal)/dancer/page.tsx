@@ -113,7 +113,7 @@ export default function DancerPortalPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Welcome back, {profile.full_name}! 🌟
         </h1>
-        <p className="text-gray-600">Keep dancing, keep growing, keep shining!</p>
+        <p className="text-gray-600">Keep dancing, keep growing, keep sparkling!</p>
       </div>
 
       {loadingData ? (

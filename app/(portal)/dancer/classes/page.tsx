@@ -71,6 +71,7 @@ export default function DancerClassesPage() {
     is_recurring: false
   })
   const [saving, setSaving] = useState(false)
+  const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -110,17 +111,25 @@ export default function DancerClassesPage() {
   const handleOpenModal = (personalClass?: PersonalClass) => {
     if (personalClass) {
       setEditingClass(personalClass)
+      const startDate = new Date(personalClass.start_time)
+      let duration = 60 // Default 1 hour
+      if (personalClass.end_time) {
+        const endDate = new Date(personalClass.end_time)
+        duration = Math.round((endDate.getTime() - startDate.getTime()) / 60000) // Convert to minutes
+      }
+      setDurationMinutes(duration)
       setFormData({
         title: personalClass.title,
         instructor_name: personalClass.instructor_name || '',
         location: personalClass.location || '',
-        start_time: new Date(personalClass.start_time).toISOString().slice(0, 16),
+        start_time: startDate.toISOString().slice(0, 16),
         end_time: personalClass.end_time ? new Date(personalClass.end_time).toISOString().slice(0, 16) : '',
         notes: personalClass.notes || '',
         is_recurring: personalClass.is_recurring
       })
     } else {
       setEditingClass(null)
+      setDurationMinutes(60)
       setFormData({
         title: '',
         instructor_name: '',
@@ -137,6 +146,7 @@ export default function DancerClassesPage() {
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingClass(null)
+    setDurationMinutes(60)
     setFormData({
       title: '',
       instructor_name: '',
@@ -149,20 +159,25 @@ export default function DancerClassesPage() {
   }
 
   const handleSave = async () => {
-    if (!formData.title.trim() || !formData.start_time) {
-      alert('Please enter a title and start time')
+    if (!formData.title.trim() || !formData.start_time || !durationMinutes) {
+      alert('Please enter a title, start time, and duration')
       return
     }
 
     setSaving(true)
     try {
+      // Calculate end_time from start_time + duration
+      const startDate = new Date(formData.start_time)
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+      const endTimeISO = endDate.toISOString()
+
       const payload = {
         ...formData,
         title: formData.title.trim(),
         instructor_name: formData.instructor_name.trim() || null,
         location: formData.location.trim() || null,
-        start_time: new Date(formData.start_time).toISOString(),
-        end_time: formData.end_time ? new Date(formData.end_time).toISOString() : null,
+        start_time: startDate.toISOString(),
+        end_time: endTimeISO,
         notes: formData.notes.trim() || null
       }
 
@@ -212,6 +227,22 @@ export default function DancerClassesPage() {
       alert('Failed to delete class')
     }
   }
+
+  // Helper function to format duration for display
+  const formatDuration = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours === 0) return `${mins}min`
+    if (mins === 0) return `${hours}hr`
+    return `${hours}hr ${mins}min`
+  }
+
+  // Generate duration options in 5-minute increments
+  const durationOptions = [
+    15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
+    75, 90, 105, 120, // 1.25hr, 1.5hr, 1.75hr, 2hr
+    150, 180, 210, 240 // 2.5hr, 3hr, 3.5hr, 4hr
+  ]
 
   if (loading) {
     return (
@@ -502,18 +533,29 @@ export default function DancerClassesPage() {
           />
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Start Date & Time"
+              label="Start Date & Time *"
               type="datetime-local"
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
               required
             />
-            <Input
-              label="End Date & Time (optional)"
-              type="datetime-local"
-              value={formData.end_time}
-              onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Duration *
+              </label>
+              <select
+                required
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              >
+                {durationOptions.map(minutes => (
+                  <option key={minutes} value={minutes}>
+                    {formatDuration(minutes)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <Textarea
             label="Notes (optional)"
