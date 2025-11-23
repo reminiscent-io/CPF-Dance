@@ -690,7 +690,7 @@ export default function DancerClassesPage() {
 
           {formData.is_recurring && (
             <>
-              <div className="border-t border-gray-200 pt-4"></div>
+              <div className="border-t border-rose-200 pt-4"></div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Days of Week *
