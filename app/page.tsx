@@ -20,8 +20,8 @@ export default function HomePage() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [heroHeight, setHeroHeight] = useState(100)
+  const [showNav, setShowNav] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
-  const [contentHeight, setContentHeight] = useState(0)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -64,13 +64,7 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    // Measure content height
-    if (heroContentRef.current) {
-      const height = heroContentRef.current.offsetHeight
-      setContentHeight(height)
-    }
-
-    const timer = setTimeout(() => {
+    const shrinkTimer = setTimeout(() => {
       // Convert pixel height to viewport height percentage
       if (heroContentRef.current) {
         const contentPixels = heroContentRef.current.offsetHeight
@@ -80,7 +74,15 @@ export default function HomePage() {
       }
     }, 3000)
 
-    return () => clearTimeout(timer)
+    // Show nav after hero finishes shrinking (3s + 2s animation = 5s total)
+    const navTimer = setTimeout(() => {
+      setShowNav(true)
+    }, 5000)
+
+    return () => {
+      clearTimeout(shrinkTimer)
+      clearTimeout(navTimer)
+    }
   }, [])
 
   return (
@@ -89,11 +91,10 @@ export default function HomePage() {
       <nav 
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
         style={{
-          opacity: heroHeight <= 10 ? 1 : 0,
-          transform: heroHeight <= 10 ? 'translateY(0)' : 'translateY(-100%)',
+          opacity: showNav ? 1 : 0,
+          transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
-          transitionDelay: '2s',
-          pointerEvents: heroHeight <= 10 ? 'auto' : 'none'
+          pointerEvents: showNav ? 'auto' : 'none'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
