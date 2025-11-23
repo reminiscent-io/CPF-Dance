@@ -444,9 +444,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-700 pt-8 text-center text-white">
-            <p>&copy; {new Date().getFullYear()} Dance Studio Management. All rights reserved.</p>
-          </div>
         </div>
       </footer>
     </main>
