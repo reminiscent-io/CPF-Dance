@@ -778,12 +778,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     return date.toISOString().slice(0, 16)
   }
 
-  // Generate duration options in 5-minute increments
-  const durationOptions = [
-    15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
-    75, 90, 105, 120, // 1.25hr, 1.5hr, 1.75hr, 2hr
-    150, 180, 210, 240 // 2.5hr, 3hr, 3.5hr, 4hr
-  ]
+  // Generate duration options in 5-minute increments (15 to 120 minutes)
+  const durationOptions = Array.from({ length: 25 }, (_, i) => (i + 3) * 5)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
