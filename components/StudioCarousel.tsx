@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface StudioLogo {
@@ -12,6 +12,11 @@ interface StudioLogo {
 export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [startX, setStartX] = useState(0)
+  const [currentX, setCurrentX] = useState(0)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchLogos = async () => {
@@ -89,6 +94,40 @@ export default function StudioCarousel() {
     fetchLogos()
   }, [])
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.clientX - dragOffset)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    const x = e.clientX - startX
+    setCurrentX(x)
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    setDragOffset(currentX)
+    setCurrentX(0)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].clientX - dragOffset)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return
+    const x = e.touches[0].clientX - startX
+    setCurrentX(x)
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    setDragOffset(currentX)
+    setCurrentX(0)
+  }
+
   // Double the array for seamless loop
   const studiosWithImages = studios.filter(studio => studio.image)
   const extendedStudios = [...studiosWithImages, ...studiosWithImages]
@@ -114,8 +153,24 @@ export default function StudioCarousel() {
           </p>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="flex gap-8 animate-scroll">
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
+          <div
+            ref={carouselRef}
+            className="flex gap-8"
+            style={{
+              transform: `translateX(calc(-50% + ${dragOffset + currentX}px))`,
+              animation: isDragging ? 'none' : 'scroll 30s linear infinite',
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+              userSelect: 'none'
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {extendedStudios.map((studio, index) => (
               <div
                 key={index}
@@ -153,14 +208,6 @@ export default function StudioCarousel() {
           100% {
             transform: translateX(-50%);
           }
-        }
-
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-
-        .animate-scroll:hover {
-          animation-play-state: paused;
         }
       `}</style>
     </section>
