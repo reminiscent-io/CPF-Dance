@@ -1,0 +1,194 @@
+# Dance Teaching Schedule Management Platform
+
+## Overview
+
+A Next.js-based web application for professional dance instruction management. The platform serves multiple user roles (instructors, dancers, studio admins, and system admins) with role-based access control, enabling comprehensive management of students, classes, schedules, payments, notes, and studio operations.
+
+**Primary Tech Stack:**
+- **Frontend:** Next.js 15 (App Router), React 19, TypeScript
+- **Styling:** Tailwind CSS v4 with custom design system (rose/mauve/champagne/charcoal palette)
+- **Backend:** Next.js API Routes (serverless functions)
+- **Database:** Supabase (PostgreSQL with Row-Level Security)
+- **Authentication:** Supabase Auth with role-based access control
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Authentication & Authorization
+
+**Multi-layered Security Model:**
+
+1. **Proxy Middleware** (`proxy.ts`): Portal-level routing and authentication enforcement
+   - Redirects unauthenticated users to `/login`
+   - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`)
+   - Automatically routes users to their appropriate portal based on role
+   - Admin role has universal access to all portals
+
+2. **Row-Level Security (RLS)**: Database-level access control via Supabase policies
+   - Uses JWT metadata for role checking to avoid infinite recursion
+   - Relationship-based access (instructors can only see their students' data)
+   - Instructor-student relationships tracked via `instructor_student_relationships` table
+   - Privacy permissions per relationship (notes, progress, payments)
+
+3. **Server-Side Authorization** (`lib/auth/server-auth.ts`): API route protection
+   - `requireRole()` and `requireInstructor()` helpers enforce role requirements
+   - All API routes validate user authentication and role permissions
+   - Admin role bypasses most restrictions (universal access)
+
+**User Roles:**
+- `instructor`: Full access to student/class/payment management
+- `dancer`: Access to personal classes, notes, payments, profile
+- `studio`/`studio_admin`: Studio-specific data access
+- `guardian`: Parent/guardian access for minor dancers
+- `admin`: System-wide access to all portals and data
+
+### Frontend Architecture
+
+**App Router Structure:**
+- `app/(portal)/`: Protected portal routes with role-based layouts
+  - `instructor/`: Instructor dashboard, students, classes, studios, payments
+  - `dancer/`: Dancer dashboard, classes, notes, payments, profile
+  - `studio/`: Studio admin dashboard and management
+- `app/api/`: Server-side API routes for data operations
+- Public routes: Landing page, login, signup, privacy policy, terms of service
+
+**Component System:**
+- Custom UI library in `components/ui/`: Button, Card, Input, Modal, Table, Toast, Spinner, Badge
+- Reusable portal components: Navigation, PortalLayout, Calendar, CommunicationsSection
+- Design system uses CSS variables via Tailwind's `@theme` directive
+
+**State Management:**
+- React hooks for local state and API data fetching
+- Custom `useUser()` hook for authentication state
+- Toast notifications via React Context (`ToastProvider`)
+
+### Database Schema
+
+**Core Tables:**
+- `profiles`: User accounts (extends Supabase auth.users)
+- `students`: Dancer profiles with emergency contacts, skill levels, goals
+- `studios`: Dance studio locations with contact information
+- `classes`: Class sessions with pricing models (per_person, per_class, per_hour, tiered)
+- `enrollments`: Student-class relationships with attendance tracking
+- `notes`: Instructor feedback with visibility controls (private/shared)
+- `payments`: Payment records with dual confirmation system
+- `instructor_student_relationships`: Relationship tracking with granular permissions
+- `private_lesson_requests`: Student requests for private lessons
+- `studio_inquiries`: Public form submissions from studios
+
+**Pricing System:**
+Four pricing models supported for classes:
+1. **Per Person**: Charge per student (e.g., $25/student)
+2. **Per Class**: Flat rate regardless of enrollment
+3. **Per Hour**: Based on class duration
+4. **Tiered**: Base cost for initial students + additional fee for extra students
+
+**Security Features:**
+- All tables have Row-Level Security (RLS) policies
+- Automatic `updated_at` timestamp triggers
+- Direct JWT metadata checks in policies (avoids recursive queries)
+- Relationship-based access control for instructor-student data
+
+### API Design
+
+**RESTful Conventions:**
+- GET: Fetch resources with query parameter filtering
+- POST: Create new resources
+- PUT/PATCH: Update existing resources
+- DELETE: Remove resources
+
+**Key API Routes:**
+- `/api/students`: Student CRUD operations
+- `/api/classes`: Class management with enrollment counts
+- `/api/notes`: Notes with visibility filtering
+- `/api/payments`: Payment tracking and confirmation
+- `/api/studios`: Studio management
+- `/api/dashboard`: Aggregated statistics for instructor portal
+- `/api/studio-inquiries`: Studio inquiry form submissions
+- `/api/relationships`: Instructor-student relationship management (admin only)
+
+**Error Handling:**
+- Consistent JSON error responses with appropriate HTTP status codes
+- Client-side toast notifications for user feedback
+- Server-side logging for debugging
+
+### Design System
+
+**Color Palette (Ballet Noir):**
+- Charcoal: Primary text and headings (#1a1a1a to #f8f8f8)
+- Champagne: Backgrounds and surfaces (#faf8f5 to #2f2920)
+- Ballet Pink: Muted dusty rose accents (#faf5f5 to #3a2828)
+- Gold: Premium accents and CTAs (#faf8f0 to #654b28)
+
+**Typography:**
+- Headings: Cormorant Garamond (serif, elegant)
+- Body: Manrope (sans-serif, readable)
+
+**Responsive Design:**
+- Mobile-first approach with Tailwind breakpoints
+- Adaptive navigation (hamburger menu on mobile)
+- Touch-friendly UI elements
+
+## External Dependencies
+
+### Third-Party Services
+
+1. **Supabase** (Primary Backend)
+   - PostgreSQL database hosting
+   - Authentication service (email/password, phone)
+   - Row-Level Security enforcement
+   - Storage buckets (studio logos)
+   - Real-time subscriptions (not currently used)
+
+2. **Google Places API** (Optional)
+   - Address autocomplete in studio forms
+   - Component: `GooglePlacesInput.tsx`
+   - Fallback to manual address entry if unavailable
+
+### Environment Variables Required
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+REPLIT_DEV_DOMAIN=your_replit_domain (for dev mode)
+```
+
+### Database Setup Dependencies
+
+**Critical Setup Step:**
+The `supabase-schema.sql` file must be executed in Supabase SQL Editor before first use. This creates:
+- All table schemas
+- Row-Level Security policies
+- Triggers for automatic timestamps
+- Required indexes
+
+**Migration Files:**
+- `migrations/01-create-instructor-student-relationships.sql`: Relationship tracking
+- `migrations/02-backfill-relationships.sql`: Populate existing relationships
+- `migrations/03-update-rls-policies.sql`: Update security policies
+- `migrations/04-add-missing-rls-policies.sql`: Additional RLS coverage
+
+### NPM Dependencies
+
+**Core:**
+- `next` v16.0.3: Framework
+- `react` v19.2.0: UI library
+- `typescript` v5.8.2: Type safety
+
+**Supabase:**
+- `@supabase/supabase-js` v2.84.0: JavaScript client
+- `@supabase/ssr` v0.7.0: Server-side rendering support
+
+**Styling:**
+- `tailwindcss` v4.0.15: Utility-first CSS
+- `@tailwindcss/postcss` v4.1.17: PostCSS integration
+- `autoprefixer` v10.4.22: CSS vendor prefixing
+
+### Development Tools
+
+- ESLint with `next/core-web-vitals` config
+- TypeScript strict mode enabled
+- Custom dev server on port 5000 for Replit compatibility
