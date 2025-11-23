@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
+import StudioCarousel from '@/components/StudioCarousel'
 
 export default function HomePage() {
   const [formData, setFormData] = useState({
@@ -298,6 +299,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <StudioCarousel />
 
       <section id="studio-inquiry" className="py-20 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
