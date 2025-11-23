@@ -92,23 +92,6 @@ export default function HomePage() {
           <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto animate-slideUp">
             Track progress, manage schedules, and elevate your dance journey with expert guidance
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slideUp">
-            <Button
-              size="lg"
-              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full sm:w-auto min-w-[200px]"
-            >
-              View Portals
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={scrollToInquiry}
-              className="w-full sm:w-auto min-w-[200px]"
-            >
-              Studio Inquiry
-            </Button>
-          </div>
         </div>
       </section>
 
