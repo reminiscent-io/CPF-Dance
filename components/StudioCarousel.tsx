@@ -1,6 +1,8 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface StudioLogo {
   name: string
@@ -8,27 +10,88 @@ interface StudioLogo {
 }
 
 export default function StudioCarousel() {
-  const studios: StudioLogo[] = [
-    {
-      name: 'Broadway Dance Center',
-      image: '/images/studio-logos/broadway-dance-center.jpg'
-    },
-    {
-      name: 'Broadway Dance Academy',
-      image: '/images/studio-logos/broadway-dance-academy.jpg'
-    },
-    {
-      name: 'Exactitude',
-      image: '/images/studio-logos/exactitude.jpg'
-    },
-    {
-      name: 'Chorus Line in Smithtown',
-      image: '/images/studio-logos/chorus-line-smithtown.jpg'
-    }
+  const [studios, setStudios] = useState<StudioLogo[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const studioNames = [
+    'Broadway Dance Center',
+    'Broadway Dance Academy',
+    'Exactitude',
+    'Chorus Line in Smithtown'
   ]
 
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        const supabase = createClient()
+        const { data: files, error: listError } = await supabase.storage
+          .from('studio logos')
+          .list()
+
+        if (listError) {
+          console.error('Error listing files from Supabase:', listError)
+          setLoading(false)
+          return
+        }
+
+        console.log('Files found in studio logos bucket:', files)
+
+        const studiosWithLogos: StudioLogo[] = []
+
+        for (const studioName of studioNames) {
+          const matchingFile = files?.find(file =>
+            file.name.toLowerCase().includes(studioName.toLowerCase().replace(/\s+/g, '-')) ||
+            file.name.toLowerCase().includes(studioName.toLowerCase().replace(/\s+/g, '')) ||
+            studioName.toLowerCase().includes(file.name.toLowerCase().replace(/[-_.]/g, ''))
+          )
+
+          if (matchingFile) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('studio logos')
+              .getPublicUrl(matchingFile.name)
+
+            console.log(`Matched ${studioName} to file: ${matchingFile.name}, URL: ${publicUrl}`)
+
+            studiosWithLogos.push({
+              name: studioName,
+              image: publicUrl
+            })
+          } else {
+            console.log(`No match found for ${studioName}`)
+          }
+        }
+
+        console.log('Studios with logos:', studiosWithLogos)
+        setStudios(studiosWithLogos.length > 0 ? studiosWithLogos : studioNames.map(name => ({
+          name,
+          image: ''
+        })))
+      } catch (error) {
+        console.error('Error fetching studio logos:', error)
+        setStudios(studioNames.map(name => ({
+          name,
+          image: ''
+        })))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLogos()
+  }, [])
+
   // Double the array for seamless loop
-  const extendedStudios = [...studios, ...studios]
+  const studiosWithImages = studios.filter(studio => studio.image)
+  const extendedStudios = [...studiosWithImages, ...studiosWithImages]
+
+  // Show nothing while loading, or show placeholder if no images found
+  if (loading) {
+    return null
+  }
+
+  if (studiosWithImages.length === 0) {
+    return null
+  }
 
   return (
     <section className="py-16 bg-white">
@@ -54,11 +117,13 @@ export default function StudioCarousel() {
                 }}
               >
                 <div className="relative w-full h-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 flex items-center justify-center">
-                  <img
-                    src={studio.image}
-                    alt={studio.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  {studio.image && (
+                    <img
+                      src={studio.image}
+                      alt={studio.name}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
                 </div>
               </div>
             ))}
