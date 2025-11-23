@@ -13,65 +13,42 @@ export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
 
-  const studioNames = [
-    'Broadway Dance Center',
-    'Broadway Dance Academy',
-    'Exactitude',
-    'Chorus Line in Smithtown'
+  const studioMappings = [
+    { display: 'Broadway Dance Center', filename: 'Broadway Dance Center Logo.png' },
+    { display: 'Broadway Dance Academy', filename: 'Broadway Dance Academy Logo.png' },
+    { display: 'Exactitude', filename: 'Exactitude Dance Logo.png' },
+    { display: 'Chorus Line Dance Studio', filename: 'Chorus Line Dance Studio Logo.png' }
   ]
 
   useEffect(() => {
     const fetchLogos = async () => {
       try {
         const supabase = createClient()
-        const { data: files, error: listError } = await supabase.storage
-          .from('studio logos')
-          .list()
-
-        if (listError) {
-          console.error('Error listing files from Supabase:', listError)
-          setLoading(false)
-          return
-        }
-
-        console.log('Files found in studio logos bucket:', files)
-
         const studiosWithLogos: StudioLogo[] = []
 
-        for (const studioName of studioNames) {
-          const matchingFile = files?.find(file =>
-            file.name.toLowerCase().includes(studioName.toLowerCase().replace(/\s+/g, '-')) ||
-            file.name.toLowerCase().includes(studioName.toLowerCase().replace(/\s+/g, '')) ||
-            studioName.toLowerCase().includes(file.name.toLowerCase().replace(/[-_.]/g, ''))
-          )
-
-          if (matchingFile) {
+        for (const mapping of studioMappings) {
+          try {
             const { data: { publicUrl } } = supabase.storage
               .from('studio logos')
-              .getPublicUrl(matchingFile.name)
+              .getPublicUrl(mapping.filename)
 
-            console.log(`Matched ${studioName} to file: ${matchingFile.name}, URL: ${publicUrl}`)
-
-            studiosWithLogos.push({
-              name: studioName,
-              image: publicUrl
-            })
-          } else {
-            console.log(`No match found for ${studioName}`)
+            if (publicUrl) {
+              console.log(`Generated URL for ${mapping.display}: ${publicUrl}`)
+              studiosWithLogos.push({
+                name: mapping.display,
+                image: publicUrl
+              })
+            }
+          } catch (error) {
+            console.error(`Error generating URL for ${mapping.display}:`, error)
           }
         }
 
         console.log('Studios with logos:', studiosWithLogos)
-        setStudios(studiosWithLogos.length > 0 ? studiosWithLogos : studioNames.map(name => ({
-          name,
-          image: ''
-        })))
+        setStudios(studiosWithLogos)
       } catch (error) {
         console.error('Error fetching studio logos:', error)
-        setStudios(studioNames.map(name => ({
-          name,
-          image: ''
-        })))
+        setStudios([])
       } finally {
         setLoading(false)
       }
