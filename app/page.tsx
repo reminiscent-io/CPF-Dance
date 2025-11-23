@@ -434,7 +434,7 @@ export default function HomePage() {
                       href="https://instagram.com/courtneyfiledance" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="hover:text-rose-400 transition-colors"
+                      className="text-white hover:text-rose-400 transition-colors"
                     >
                       Instagram: @courtneyfiledance
                     </a>
