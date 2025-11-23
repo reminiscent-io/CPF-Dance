@@ -462,7 +462,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-700 pt-8 text-center text-white">
-            <p>&copy; {new Date().getFullYear()} Dance Studio Management. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Reminsicent Technologies LLC. All rights reserved.</p>
           </div>
         </div>
       </footer>
