@@ -314,8 +314,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <StudioCarousel />
-
       <section id="studio-inquiry" className="py-20 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -416,6 +414,8 @@ export default function HomePage() {
           </Card>
         </div>
       </section>
+
+      <StudioCarousel />
 
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
