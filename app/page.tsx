@@ -71,6 +71,37 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* Navigation Bar */}
+      <nav 
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
+        style={{
+          opacity: heroHeight <= 10 ? 1 : 0,
+          transform: heroHeight <= 10 ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
+          pointerEvents: heroHeight <= 10 ? 'auto' : 'none'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent">
+            Dance Studio
+          </Link>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
+            >
+              Portals
+            </button>
+            <button 
+              onClick={scrollToInquiry}
+              className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
+            >
+              Inquiry
+            </button>
+          </div>
+        </div>
+      </nav>
+
       <section 
         className="relative flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
         style={{
