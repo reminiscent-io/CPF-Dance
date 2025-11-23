@@ -439,16 +439,6 @@ export default function HomePage() {
                       Studio Inquiry
                     </button>
                   </li>
-                  <li>
-                    <Link href="/terms-of-service" className="text-white hover:text-rose-400 transition-colors">
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/privacy-policy" className="text-white hover:text-rose-400 transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </li>
                 </ul>
               </div>
 
@@ -475,7 +465,16 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-700 pt-8 text-center text-white">
-            <p>&copy; {new Date().getFullYear()} Reminsicent Technologies LLC. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Reminiscent Technologies LLC. All rights reserved.</p>
+            <div className="mt-4 text-sm text-gray-400 space-x-4">
+              <Link href="/terms-of-service" className="hover:text-rose-400 transition-colors">
+                Terms of Service
+              </Link>
+              <span>•</span>
+              <Link href="/privacy-policy" className="hover:text-rose-400 transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
