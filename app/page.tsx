@@ -92,6 +92,7 @@ export default function HomePage() {
           opacity: heroHeight <= 10 ? 1 : 0,
           transform: heroHeight <= 10 ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
+          transitionDelay: '2s',
           pointerEvents: heroHeight <= 10 ? 'auto' : 'none'
         }}
       >
