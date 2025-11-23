@@ -78,7 +78,7 @@ export default function StudioCarousel() {
             Studios I&apos;ve Worked With
           </h2>
           <p className="text-lg text-gray-600">
-            Trusted by leading dance studios across the region
+            Trusted by leading dance studios in the NYC area
           </p>
         </div>
 
