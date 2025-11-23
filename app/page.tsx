@@ -444,6 +444,11 @@ export default function HomePage() {
                       Terms of Service
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/privacy-policy" className="text-white hover:text-rose-400 transition-colors">
+                      Privacy Policy
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
