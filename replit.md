@@ -57,8 +57,18 @@ Preferred communication style: Simple, everyday language.
 
 **Component System:**
 - Custom UI library in `components/ui/`: Button, Card, Input, Modal, Table, Toast, Spinner, Badge
-- Reusable portal components: Navigation, PortalLayout, Calendar, CommunicationsSection
+- Reusable portal components: Sidebar, PortalLayout, Calendar, CommunicationsSection, SignaturePad
 - Design system uses CSS variables via Tailwind's `@theme` directive
+
+**Navigation (Updated November 2025):**
+- Converted from horizontal top navbar to collapsible vertical sidebar for better scalability
+- Sidebar features:
+  - Rose-to-mauve gradient background with white text
+  - Collapsible menu for mobile (toggle button)
+  - Portal switcher for admin users (quick access to different portals)
+  - Profile & sign-out in footer section
+  - Icon-based menu items for visual clarity
+- Responsive design: Fixed sidebar on desktop, overlay/toggle on mobile
 
 **State Management:**
 - React hooks for local state and API data fetching
@@ -78,6 +88,8 @@ Preferred communication style: Simple, everyday language.
 - `instructor_student_relationships`: Relationship tracking with granular permissions
 - `private_lesson_requests`: Student requests for private lessons
 - `studio_inquiries`: Public form submissions from studios
+- `waivers`: Electronic waiver documents with signature tracking (NEW - November 2025)
+- `waiver_signatures`: Signature events with audit trail (NEW - November 2025)
 
 **Pricing System:**
 Four pricing models supported for classes:
@@ -109,6 +121,8 @@ Four pricing models supported for classes:
 - `/api/dashboard`: Aggregated statistics for instructor portal
 - `/api/studio-inquiries`: Studio inquiry form submissions
 - `/api/relationships`: Instructor-student relationship management (admin only)
+- `/api/waivers`: Waiver CRUD, fetching, and status management (NEW - November 2025)
+- `/api/waivers/[id]/sign`: Electronic signature submission with image capture (NEW - November 2025)
 
 **Error Handling:**
 - Consistent JSON error responses with appropriate HTTP status codes
@@ -170,6 +184,10 @@ The `supabase-schema.sql` file must be executed in Supabase SQL Editor before fi
 - `migrations/02-backfill-relationships.sql`: Populate existing relationships
 - `migrations/03-update-rls-policies.sql`: Update security policies
 - `migrations/04-add-missing-rls-policies.sql`: Additional RLS coverage
+- `migrations/07-add-waivers-table.sql`: Waiver system with electronic signatures (NEW - November 2025)
+  - Requires manual execution in Supabase SQL Editor
+  - Creates `waivers` and `waiver_signatures` tables with RLS policies
+  - Includes indexes for performance optimization
 
 ### NPM Dependencies
 
@@ -192,3 +210,40 @@ The `supabase-schema.sql` file must be executed in Supabase SQL Editor before fi
 - ESLint with `next/core-web-vitals` config
 - TypeScript strict mode enabled
 - Custom dev server on port 5000 for Replit compatibility
+
+## Waiver Management System (NEW - November 2025)
+
+**Overview:**
+Electronic waiver system for managing private lesson agreements with canvas-based signature capture.
+
+**Features:**
+1. **Waiver Creation**: Instructors/admins can create waivers with custom content
+2. **Electronic Signatures**: Canvas-based signature pad for capturing signatures
+3. **Status Tracking**: Pending → Signed → Acknowledged workflow
+4. **Audit Trail**: Records who signed, when, and from which device
+5. **Storage Integration**: Signatures stored in Supabase storage with public URLs
+
+**Workflow:**
+- Instructor creates waiver and assigns to dancer/studio
+- Recipient sees pending waiver in their portal
+- Recipient signs electronically with SignaturePad component
+- Signature saved to Supabase storage with metadata
+- Status updates to "signed" with timestamp
+
+**UI/Pages:**
+- `/instructor/waivers`: Dashboard for creating and managing waivers
+- `/dancer/waivers`: View and sign pending waivers
+- `/dancer/waivers/[id]/sign`: Signature capture page
+- `/studio/waivers`: Studio waiver management (future)
+
+**Components:**
+- `SignaturePad.tsx`: Canvas-based drawing component for signatures
+  - Clear/Save buttons
+  - Touch-friendly drawing with line smoothing
+  - Data URL export for storage
+- Waiver listing and detail views integrated into portals
+
+**Database:**
+- `waivers` table: Core waiver documents
+- `waiver_signatures` table: Signature audit trail with IP/user-agent tracking
+- Row-Level Security: Automatic visibility based on user roles
