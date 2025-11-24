@@ -13,9 +13,11 @@ export default function NotesPage() {
   const { addToast } = useToast()
   
   const [notes, setNotes] = useState<Note[]>([])
+  const [studentNotes, setStudentNotes] = useState<Note[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'my-notes' | 'student-notes'>('my-notes')
   const [filterStudent, setFilterStudent] = useState<string>('')
   const [filterVisibility, setFilterVisibility] = useState<NoteVisibility | ''>('')
   const [filterTag, setFilterTag] = useState<string>('')
@@ -29,9 +31,10 @@ export default function NotesPage() {
   useEffect(() => {
     if (user) {
       fetchNotes()
+      fetchStudentNotes()
       fetchStudents()
     }
-  }, [user, filterStudent, filterVisibility, filterTag])
+  }, [user, filterStudent, filterVisibility, filterTag, activeTab])
 
   const fetchNotes = async () => {
     try {
@@ -50,6 +53,21 @@ export default function NotesPage() {
       addToast('Failed to load notes', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchStudentNotes = async () => {
+    try {
+      const params = new URLSearchParams()
+      params.append('visibility', 'shared_with_instructor')
+      
+      const response = await fetch(`/api/notes?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch student notes')
+      
+      const data = await response.json()
+      setStudentNotes(data.notes || [])
+    } catch (error) {
+      console.error('Error fetching student notes:', error)
     }
   }
 
@@ -94,6 +112,8 @@ export default function NotesPage() {
   }
 
   const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
+  const displayNotes = activeTab === 'student-notes' ? studentNotes : notes
+  const studentNotesCount = studentNotes.length
 
   return (
     <PortalLayout profile={profile}>
@@ -103,63 +123,99 @@ export default function NotesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Notes</h1>
             <p className="text-gray-600 mt-1">Track student progress and observations</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)}>
-            Add Note
-          </Button>
+          {activeTab === 'my-notes' && (
+            <Button onClick={() => setShowAddModal(true)}>
+              Add Note
+            </Button>
+          )}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            value={filterStudent}
-            onChange={(e) => setFilterStudent(e.target.value)}
-          >
-            <option value="">All Students</option>
-            {students.map(student => (
-              <option key={student.id} value={student.id}>
-                {student.profile?.full_name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            value={filterVisibility}
-            onChange={(e) => setFilterVisibility(e.target.value as NoteVisibility | '')}
-          >
-            <option value="">All Visibility</option>
-            <option value="private">Private</option>
-            <option value="shared_with_student">Shared with Student</option>
-            <option value="shared_with_guardian">Shared with Guardian</option>
-            <option value="shared_with_studio">Shared with Studio</option>
-          </select>
-
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
-          >
-            <option value="">All Tags</option>
-            {availableTags.map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
+        {/* Tabs */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('my-notes')}
+              className={`
+                py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                ${activeTab === 'my-notes'
+                  ? 'border-rose-500 text-rose-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              My Notes
+            </button>
+            <button
+              onClick={() => setActiveTab('student-notes')}
+              className={`
+                py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                ${activeTab === 'student-notes'
+                  ? 'border-rose-500 text-rose-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Student Notes ({studentNotesCount})
+            </button>
+          </nav>
         </div>
+
+        {activeTab === 'my-notes' && (
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={filterStudent}
+              onChange={(e) => setFilterStudent(e.target.value)}
+            >
+              <option value="">All Students</option>
+              {students.map(student => (
+                <option key={student.id} value={student.id}>
+                  {student.profile?.full_name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={filterVisibility}
+              onChange={(e) => setFilterVisibility(e.target.value as NoteVisibility | '')}
+            >
+              <option value="">All Visibility</option>
+              <option value="private">Private</option>
+              <option value="shared_with_student">Shared with Student</option>
+              <option value="shared_with_guardian">Shared with Guardian</option>
+              <option value="shared_with_studio">Shared with Studio</option>
+            </select>
+
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={filterTag}
+              onChange={(e) => setFilterTag(e.target.value)}
+            >
+              <option value="">All Tags</option>
+              {availableTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
-      ) : notes.length === 0 ? (
+      ) : displayNotes.length === 0 ? (
         <Card>
           <div className="text-center py-12 text-gray-600">
-            No notes found
+            {activeTab === 'student-notes' 
+              ? 'No student notes shared with you yet' 
+              : 'No notes found'}
           </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          {notes.map((note: any) => (
+          {displayNotes.map((note: any) => (
             <Card key={note.id} hover>
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
