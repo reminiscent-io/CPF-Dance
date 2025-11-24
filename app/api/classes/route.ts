@@ -89,7 +89,9 @@ export async function POST(request: NextRequest) {
       cost_per_person,
       cost_per_hour,
       tiered_base_students,
-      tiered_additional_cost
+      tiered_additional_cost,
+      external_signup_url,
+      is_public
     } = body
 
     // Determine instructor_id based on role
@@ -153,7 +155,10 @@ export async function POST(request: NextRequest) {
       cost_per_hour: cost_per_hour || null,
       tiered_base_students: tiered_base_students || null,
       tiered_additional_cost: tiered_additional_cost || null,
-      price: price || null // Legacy field for backwards compatibility
+      price: price || null, // Legacy field for backwards compatibility
+      // Public features
+      external_signup_url: external_signup_url || null,
+      is_public: is_public || false
     }
 
     console.log('Attempting to insert class:', insertData)

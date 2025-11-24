@@ -42,6 +42,7 @@ export function Navigation({ profile }: NavigationProps) {
         case 'dancer':
           return [
             { href: '/dancer', label: 'Dashboard' },
+            { href: '/dancer/available-classes', label: 'Available Classes' },
             { href: '/dancer/classes', label: 'My Classes' },
             { href: '/dancer/notes', label: 'Notes' },
             { href: '/dancer/request-lesson', label: 'Request Lesson' },
@@ -72,6 +73,7 @@ export function Navigation({ profile }: NavigationProps) {
       case 'guardian':
         return [
           { href: '/dancer', label: 'Dashboard' },
+          { href: '/dancer/available-classes', label: 'Available Classes' },
           { href: '/dancer/classes', label: 'My Classes' },
           { href: '/dancer/notes', label: 'Notes' },
           { href: '/dancer/request-lesson', label: 'Request Lesson' },

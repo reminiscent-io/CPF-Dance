@@ -42,6 +42,7 @@ export function Sidebar({ profile }: SidebarProps) {
         case 'dancer':
           return [
             { href: '/dancer', label: 'Dashboard', icon: '📊' },
+            { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
             { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
             { href: '/dancer/notes', label: 'Notes', icon: '📝' },
             { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
@@ -75,6 +76,7 @@ export function Sidebar({ profile }: SidebarProps) {
       case 'guardian':
         return [
           { href: '/dancer', label: 'Dashboard', icon: '📊' },
+          { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
           { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
           { href: '/dancer/notes', label: 'Notes', icon: '📝' },
           { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },

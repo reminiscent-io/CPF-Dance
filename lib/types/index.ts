@@ -77,6 +77,8 @@ export interface Class {
   is_cancelled: boolean
   cancellation_reason: string | null
   actual_attendance_count: number | null // Manual override for actual attendance
+  external_signup_url: string | null // External URL for signup (e.g., Eventbrite)
+  is_public: boolean // Whether class is visible to dancers/guardians
   created_at: string
   updated_at: string
   studio?: Studio
@@ -214,6 +216,10 @@ export interface CreateClassData {
 
   // Legacy field (backward compatibility)
   price?: number
+
+  // Public features
+  external_signup_url?: string
+  is_public?: boolean
 }
 
 export interface CreateStudioData {

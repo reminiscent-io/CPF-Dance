@@ -355,6 +355,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     tiered_base_students: classData.tiered_base_students || undefined,
     tiered_additional_cost: classData.tiered_additional_cost || undefined,
     price: classData.price || undefined, // Legacy field
+    external_signup_url: classData.external_signup_url || '',
+    is_public: classData.is_public || false,
     newStudioName: '',
     instructor_id: (classData as any).instructor_id || undefined
   })
@@ -603,6 +605,30 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
           />
 
+          <Input
+            label="External Sign-up Link"
+            type="url"
+            placeholder="https://eventbrite.com/..."
+            value={formData.external_signup_url || ''}
+            onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
+          />
+          <p className="text-xs text-gray-600 -mt-2 mb-2">
+            Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
+          </p>
+
+          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="edit_is_public"
+              checked={formData.is_public || false}
+              onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+            />
+            <label htmlFor="edit_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Make class public for dancers and guardians to view and enroll
+            </label>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Pricing Model *
@@ -733,6 +759,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     tiered_base_students: undefined,
     tiered_additional_cost: undefined,
     price: undefined, // Legacy field
+    external_signup_url: '',
+    is_public: false,
     newStudioName: '',
     instructor_id: undefined
   })
@@ -956,6 +984,30 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             value={formData.max_capacity || ''}
             onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
           />
+
+          <Input
+            label="External Sign-up Link"
+            type="url"
+            placeholder="https://eventbrite.com/..."
+            value={formData.external_signup_url || ''}
+            onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
+          />
+          <p className="text-xs text-gray-600 -mt-2 mb-2">
+            Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
+          </p>
+
+          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="create_is_public"
+              checked={formData.is_public || false}
+              onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+            />
+            <label htmlFor="create_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Make class public for dancers and guardians to view and enroll
+            </label>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

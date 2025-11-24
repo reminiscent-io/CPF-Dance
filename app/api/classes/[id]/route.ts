@@ -79,7 +79,9 @@ export async function PATCH(
       tiered_additional_cost,
       is_cancelled,
       cancellation_reason,
-      actual_attendance_count
+      actual_attendance_count,
+      external_signup_url,
+      is_public
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -115,6 +117,9 @@ export async function PATCH(
     if (is_cancelled !== undefined) updateData.is_cancelled = is_cancelled
     if (cancellation_reason !== undefined) updateData.cancellation_reason = cancellation_reason || null
     if (actual_attendance_count !== undefined) updateData.actual_attendance_count = actual_attendance_count || null
+    // Public features
+    if (external_signup_url !== undefined) updateData.external_signup_url = external_signup_url || null
+    if (is_public !== undefined) updateData.is_public = is_public
 
     // Build query - admins can update any class, instructors only their own
     let query = supabase
