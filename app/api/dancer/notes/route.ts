@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { title, content, tags, class_id, personal_class_id } = body
+    const { title, content, tags, class_id, personal_class_id, visibility } = body
 
     if (!content) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         tags: tags || [],
         class_id: class_id || null,
         personal_class_id: personal_class_id || null,
-        visibility: 'private'
+        visibility: visibility || 'shared_with_instructor'
       })
       .select()
       .single()
@@ -118,7 +118,7 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { id, title, content, tags, class_id, personal_class_id } = body
+    const { id, title, content, tags, class_id, personal_class_id, visibility } = body
 
     if (!id || !content) {
       return NextResponse.json({ error: 'ID and content are required' }, { status: 400 })
@@ -131,7 +131,8 @@ export async function PUT(request: NextRequest) {
         content,
         tags: tags || [],
         class_id: class_id || null,
-        personal_class_id: personal_class_id || null
+        personal_class_id: personal_class_id || null,
+        visibility: visibility || 'shared_with_instructor'
       })
       .eq('id', id)
       .eq('author_id', profile.id)

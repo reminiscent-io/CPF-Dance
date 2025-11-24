@@ -433,9 +433,9 @@ export default function HomePage() {
 
       <StudioCarousel />
 
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8 mb-8">
+      <footer className="bg-mauve-700 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
+          <div className="space-y-4 mb-8">
             <div className="grid md:grid-cols-2 gap-12">
               <div>
                 <h4 className="text-xl font-semibold text-white mb-4">Quick Links</h4>

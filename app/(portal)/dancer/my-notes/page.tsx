@@ -172,7 +172,7 @@ export default function DancerMyNotesPage() {
     <PortalLayout profile={profile}>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Personal Notes 📝</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Notes 📝</h1>
           <p className="text-gray-600">
             Keep track of your thoughts, goals, and reflections on your dance journey
           </p>

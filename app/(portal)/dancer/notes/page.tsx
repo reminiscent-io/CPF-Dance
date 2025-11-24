@@ -62,7 +62,8 @@ export default function DancerNotesPage() {
     content: '',
     tags: '',
     class_id: '',
-    class_type: '' as 'enrolled' | 'personal' | ''
+    class_type: '' as 'enrolled' | 'personal' | '',
+    is_private: false
   })
   const [saving, setSaving] = useState(false)
   const [classes, setClasses] = useState<ClassOption[]>([])
@@ -145,11 +146,12 @@ export default function DancerNotesPage() {
         content: note.content,
         tags: note.tags?.join(', ') || '',
         class_id: classId,
-        class_type: classType as 'enrolled' | 'personal' | ''
+        class_type: classType as 'enrolled' | 'personal' | '',
+        is_private: note.visibility === 'private'
       })
     } else {
       setEditingNote(null)
-      setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '' })
+      setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '', is_private: false })
     }
     setIsModalOpen(true)
   }
@@ -157,7 +159,7 @@ export default function DancerNotesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingNote(null)
-    setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '' })
+    setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '', is_private: false })
   }
 
   const handleSave = async () => {
@@ -176,7 +178,8 @@ export default function DancerNotesPage() {
       const payload: any = {
         title: formData.title.trim() || null,
         content: formData.content.trim(),
-        tags
+        tags,
+        visibility: formData.is_private ? 'private' : 'shared_with_instructor'
       }
 
       // Add class reference based on type
@@ -313,7 +316,7 @@ export default function DancerNotesPage() {
           </p>
         </div>
         <Button variant="primary" onClick={() => handleOpenModal()}>
-          ✨ Add Personal Note
+          ✨ Add Note
         </Button>
       </div>
 
@@ -578,6 +581,25 @@ export default function DancerNotesPage() {
             onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
             helperText="Add tags to organize your notes"
           />
+          <div className="border-t border-rose-200 pt-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="is_private"
+                checked={formData.is_private}
+                onChange={(e) => setFormData({ ...formData, is_private: e.target.checked })}
+                className="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+              />
+              <label htmlFor="is_private" className="text-sm font-medium text-gray-700">
+                Keep this note private
+              </label>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              {formData.is_private
+                ? 'Only you will see this note'
+                : 'Your instructor can see this note'}
+            </p>
+          </div>
         </div>
 
         <ModalFooter>

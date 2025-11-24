@@ -111,7 +111,7 @@ export default function DancerPortalPage() {
     <PortalLayout profile={profile}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {profile.full_name}! 🌟
+          Welcome back, {profile.full_name}! 
         </h1>
         <p className="text-gray-600">Keep dancing, keep growing, keep sparkling!</p>
       </div>
@@ -228,7 +228,7 @@ export default function DancerPortalPage() {
                     className="w-full"
                     onClick={() => router.push('/dancer/my-notes')}
                   >
-                    📝 Add Personal Note
+                    📝 Add Note
                   </Button>
                   <Button
                     variant="outline"
