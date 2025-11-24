@@ -36,10 +36,6 @@ export async function GET(request: NextRequest) {
         message,
         status,
         studio_id,
-        is_responded,
-        contact_method,
-        response_notes,
-        responded_at,
         created_at
       `)
       .order('created_at', { ascending: false })
@@ -59,7 +55,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ inquiries })
+    // Add default values for optional columns that may not exist yet
+    const enrichedInquiries = (inquiries || []).map((inquiry: any) => ({
+      ...inquiry,
+      is_responded: inquiry.is_responded ?? false,
+      contact_method: inquiry.contact_method ?? null,
+      response_notes: inquiry.response_notes ?? null,
+      responded_at: inquiry.responded_at ?? null
+    }))
+
+    return NextResponse.json({ inquiries: enrichedInquiries })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
