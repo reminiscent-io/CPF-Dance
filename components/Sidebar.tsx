@@ -187,10 +187,10 @@ export function Sidebar({ profile }: SidebarProps) {
                   href={link.href}
                   onClick={() => setIsOpen(false)}
                   className={`
-                    block px-4 py-3 rounded-lg font-medium text-sm transition-all border-b-2
+                    block px-4 py-3 rounded-lg font-medium text-sm transition-all
                     ${isActive
-                      ? 'border-rose-300 text-white'
-                      : 'border-transparent text-rose-100 hover:bg-white hover:bg-opacity-10'
+                      ? 'bg-rose-400 text-white shadow-md'
+                      : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
                     }
                   `}
                 >
