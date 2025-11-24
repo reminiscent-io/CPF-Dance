@@ -8,6 +8,30 @@ import { Card } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
 import StudioCarousel from '@/components/StudioCarousel'
 
+const portals = [
+  {
+    id: 'dancer',
+    title: 'Dancer Portal',
+    description: 'Track your progress, view classes, and manage your dance journey',
+    image: 'https://images.unsplash.com/photo-1555656220-46e30749d330?',
+    link: '/login?portal=dancer'
+  },
+  {
+    id: 'instructor',
+    title: 'Instructor Portal',
+    description: 'Manage students, schedule classes, and track student progress',
+    image: 'https://images.unsplash.com/photo-1685339009948-d807094b1457?',
+    link: '/login?portal=instructor'
+  },
+  {
+    id: 'studio',
+    title: 'Studio Portal',
+    description: 'Oversee operations, manage locations, and coordinate schedules',
+    image: 'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?',
+    link: '/login?portal=studio'
+  }
+]
+
 export default function HomePage() {
   const [formData, setFormData] = useState({
     studio_name: '',
@@ -21,6 +45,7 @@ export default function HomePage() {
   const [submitError, setSubmitError] = useState('')
   const [heroHeight, setHeroHeight] = useState(100)
   const [showNav, setShowNav] = useState(false)
+  const [carouselIndex, setCarouselIndex] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -61,6 +86,14 @@ export default function HomePage() {
 
   const scrollToInquiry = () => {
     document.getElementById('studio-inquiry')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const nextPortal = () => {
+    setCarouselIndex((prev) => (prev + 1) % portals.length)
+  }
+
+  const prevPortal = () => {
+    setCarouselIndex((prev) => (prev - 1 + portals.length) % portals.length)
   }
 
   useEffect(() => {
@@ -153,69 +186,92 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-20">
-            <Card hover className="text-center overflow-hidden p-0">
-              <div className="relative w-full h-48 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1555656220-46e30749d330?"
-                  alt="Dancer"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Dancer Portal</h3>
-                <p className="text-gray-600 mb-6">
-                  Track your progress, view classes, and manage your dance journey
-                </p>
-                <Link href="/login?portal=dancer">
-                  <Button size="lg" className="w-full">
-                    Join or Log In
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+          {/* Desktop Grid - Hidden on mobile */}
+          <div className="hidden md:grid grid-cols-3 gap-8 mb-20">
+            {portals.map((portal) => (
+              <Card key={portal.id} hover className="text-center overflow-hidden p-0">
+                <div className="relative w-full h-48 overflow-hidden">
+                  <img
+                    src={portal.image}
+                    alt={portal.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                  <p className="text-gray-600 mb-6">
+                    {portal.description}
+                  </p>
+                  <Link href={portal.link}>
+                    <Button size="lg" className="w-full">
+                      Join or Log In
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            ))}
+          </div>
 
-            <Card hover className="text-center overflow-hidden p-0">
-              <div className="relative w-full h-48 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1685339009948-d807094b1457?"
-                  alt="Instructor"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Instructor Portal</h3>
-                <p className="text-gray-600 mb-6">
-                  Manage students, schedule classes, and track student progress
-                </p>
-                <Link href="/login?portal=instructor">
-                  <Button size="lg" className="w-full">
-                    Join or Log In
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+          {/* Mobile Carousel - Visible only on mobile */}
+          <div className="md:hidden mb-20">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={prevPortal}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Previous portal"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
 
-            <Card hover className="text-center overflow-hidden p-0">
-              <div className="relative w-full h-48 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?"
-                  alt="Studio"
-                  className="w-full h-full object-cover"
+              <div className="flex-1 overflow-hidden">
+                <Card hover className="text-center overflow-hidden p-0">
+                  <div className="relative w-full h-48 overflow-hidden">
+                    <img
+                      src={portals[carouselIndex].image}
+                      alt={portals[carouselIndex].title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
+                    <p className="text-gray-600 mb-6">
+                      {portals[carouselIndex].description}
+                    </p>
+                    <Link href={portals[carouselIndex].link}>
+                      <Button size="lg" className="w-full">
+                        Join or Log In
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              </div>
+
+              <button
+                onClick={nextPortal}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Next portal"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Carousel Indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {portals.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCarouselIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === carouselIndex ? 'bg-rose-600' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to portal ${index + 1}`}
                 />
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Studio Portal</h3>
-                <p className="text-gray-600 mb-6">
-                  Oversee operations, manage locations, and coordinate schedules
-                </p>
-                <Link href="/login?portal=studio">
-                  <Button size="lg" className="w-full">
-                    Join or Log In
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+              ))}
+            </div>
           </div>
 
           <div className="text-center mb-16">
