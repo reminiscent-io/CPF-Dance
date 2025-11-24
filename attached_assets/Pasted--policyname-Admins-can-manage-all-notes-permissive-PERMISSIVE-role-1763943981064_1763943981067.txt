@@ -1,0 +1,90 @@
+[
+  {
+    "policyname": "Admins can manage all notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Admins can view all notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Instructors can manage all notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'instructor'::user_role))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Instructors can view all notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'instructor'::user_role))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Studio users can view notes shared with studio",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'studio_admin'::user_role) AND (notes.visibility = 'shared_with_studio'::note_visibility))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Students can view shared notes about them",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "((EXISTS ( SELECT 1\n   FROM students\n  WHERE ((students.id = notes.student_id) AND ((students.profile_id = ( SELECT auth.uid() AS uid)) OR (students.guardian_id = ( SELECT auth.uid() AS uid))) AND (notes.visibility = ANY (ARRAY['shared_with_student'::note_visibility, 'shared_with_guardian'::note_visibility]))))) OR (author_id = ( SELECT auth.uid() AS uid)))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Instructors can manage notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "using_expression": "(author_id = auth.uid())",
+    "check_expression": null
+  },
+  {
+    "policyname": "Students can create self notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "using_expression": null,
+    "check_expression": "((author_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM students\n  WHERE ((students.id = notes.student_id) AND (students.profile_id = auth.uid())))))"
+  },
+  {
+    "policyname": "Instructors can create notes for their students",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "using_expression": null,
+    "check_expression": "((author_id = auth.uid()) AND ((student_id IS NULL) OR (EXISTS ( SELECT 1\n   FROM instructor_student_relationships\n  WHERE ((instructor_student_relationships.student_id = notes.student_id) AND (instructor_student_relationships.instructor_id = auth.uid()) AND (instructor_student_relationships.relationship_status = 'active'::text))))))"
+  },
+  {
+    "policyname": "Students can view their notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "((author_id = auth.uid()) OR ((student_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM students s\n  WHERE ((s.id = notes.student_id) AND ((s.profile_id = auth.uid()) OR (s.guardian_id = auth.uid())) AND (notes.visibility = ANY (ARRAY['shared_with_student'::note_visibility, 'shared_with_guardian'::note_visibility])))))))",
+    "check_expression": null
+  },
+  {
+    "policyname": "Students can view their own notes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "using_expression": "((author_id = auth.uid()) OR ((student_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM students s\n  WHERE ((s.id = notes.student_id) AND ((s.profile_id = auth.uid()) OR (s.guardian_id = auth.uid())))))))",
+    "check_expression": null
+  }
+]
