@@ -132,8 +132,8 @@ export function Sidebar({ profile }: SidebarProps) {
       <aside className={`
         fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        md:static md:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:static md:relative md:translate-x-0 md:h-screen
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}

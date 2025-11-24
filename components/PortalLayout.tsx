@@ -13,17 +13,17 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
   const currentYear = new Date().getFullYear()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       <Sidebar profile={profile} />
       
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </div>
         </main>
 
-        <footer className="bg-white border-t border-gray-200">
+        <footer className="bg-white border-t border-gray-200 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="text-center text-sm text-gray-600">
               <p>&copy; {currentYear} Reminiscent Technologies LLC. All rights reserved.</p>
