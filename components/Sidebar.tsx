@@ -217,7 +217,7 @@ export function Sidebar({ profile }: SidebarProps) {
             </Link>
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg font-medium text-sm text-white transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-rose-100 hover:bg-white hover:bg-opacity-10 transition-colors"
               aria-label="Sign Out"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
