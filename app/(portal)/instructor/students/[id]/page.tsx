@@ -371,15 +371,16 @@ export default function StudentDetailPage() {
             </CardContent>
           </Card>
 
+          {/* My Notes */}
           <Card>
             <div className="flex justify-between items-center">
-              <CardTitle>Notes Timeline ({notes.length})</CardTitle>
+              <CardTitle>My Notes ({notes.filter((n: any) => n.author_id === profile?.id).length})</CardTitle>
               <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
                 + Add Note
               </Button>
             </div>
             <CardContent className="mt-4">
-              {notes.length === 0 ? (
+              {notes.filter((n: any) => n.author_id === profile?.id).length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">No notes yet</p>
                   <Button variant="outline" onClick={() => handleOpenNoteModal()}>
@@ -388,7 +389,7 @@ export default function StudentDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {notes.map((note: any) => (
+                  {notes.filter((n: any) => n.author_id === profile?.id).map((note: any) => (
                     <div
                       key={note.id}
                       className="border-l-4 border-rose-500 pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors cursor-pointer group relative"
@@ -398,8 +399,8 @@ export default function StudentDetailPage() {
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={note.author_id === profile?.id ? 'primary' : 'default'} size="sm">
-                              {note.author_id === profile?.id ? 'You' : note.author_name || 'Student'}
+                            <Badge variant="primary" size="sm">
+                              You
                             </Badge>
                             {note.class_name && (
                               <span className="text-xs text-gray-600">{note.class_name}</span>
@@ -411,19 +412,17 @@ export default function StudentDetailPage() {
                           <p className="text-xs text-gray-500">
                             {new Date(note.created_at).toLocaleDateString()}
                           </p>
-                          {note.author_id === profile?.id && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDeleteNote(note.id)
-                              }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Delete
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteNote(note.id)
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </div>
                       <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
@@ -437,6 +436,53 @@ export default function StudentDetailPage() {
                       <p className="text-xs text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         Click to edit
                       </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Student Notes */}
+          <Card>
+            <CardTitle>Student Notes ({notes.filter((n: any) => n.visibility === 'shared_with_instructor').length})</CardTitle>
+            <CardContent className="mt-4">
+              {notes.filter((n: any) => n.visibility === 'shared_with_instructor').length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No notes shared with you yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {notes.filter((n: any) => n.visibility === 'shared_with_instructor').map((note: any) => (
+                    <div
+                      key={note.id}
+                      className="border-l-4 border-rose-300 pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors group relative"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="default" size="sm">
+                              {note.author_name || 'Student'}
+                            </Badge>
+                            {note.class_name && (
+                              <span className="text-xs text-gray-600">{note.class_name}</span>
+                            )}
+                            <Badge variant="secondary" size="sm">{note.visibility}</Badge>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {new Date(note.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {note.tags.map((tag: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
