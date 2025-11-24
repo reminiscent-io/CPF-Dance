@@ -189,7 +189,7 @@ export function Sidebar({ profile }: SidebarProps) {
                   className={`
                     block px-4 py-3 rounded-lg font-medium text-sm transition-all
                     ${isActive
-                      ? 'bg-white bg-opacity-20 text-white shadow-md'
+                      ? 'bg-rose-400 text-white shadow-md'
                       : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
                     }
                   `}
