@@ -180,7 +180,9 @@ export function Sidebar({ profile }: SidebarProps) {
           {/* Navigation Links */}
           <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || pathname?.startsWith(link.href + '/')
+              const isExactMatch = pathname === link.href
+              const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
+              const isActive = isExactMatch || isSubpage
               return (
                 <Link
                   key={link.href}
