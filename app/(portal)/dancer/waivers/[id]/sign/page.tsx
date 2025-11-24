@@ -33,12 +33,13 @@ export default function SignWaiverPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && params.id) {
+    if (!loading && user && params?.id) {
       fetchWaiver()
     }
-  }, [loading, user, params.id])
+  }, [loading, user, params?.id])
 
   const fetchWaiver = async () => {
+    if (!params?.id) return
     try {
       const response = await fetch(`/api/waivers/${params.id}`)
       if (response.ok) {
@@ -55,7 +56,7 @@ export default function SignWaiverPage() {
   }
 
   const handleSignWaiver = async () => {
-    if (!signature || !agreeToTerms || !waiver) {
+    if (!signature || !agreeToTerms || !waiver || !params?.id) {
       alert('Please sign the waiver and agree to the terms')
       return
     }
@@ -88,6 +89,7 @@ export default function SignWaiverPage() {
 
   const handleDecline = async () => {
     if (!confirm('Are you sure you want to decline this waiver?')) return
+    if (!params?.id) return
 
     try {
       const response = await fetch(`/api/waivers/${params.id}`, {

@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -27,7 +28,7 @@ export async function POST(
     const { data: waiver, error: fetchError } = await supabase
       .from('waivers')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !waiver) {
@@ -39,7 +40,7 @@ export async function POST(
     }
 
     // Save signature to Supabase storage
-    const fileName = `waiver-${params.id}-${Date.now()}.png`
+    const fileName = `waiver-${id}-${Date.now()}.png`
     const base64Data = signature_image.replace(/^data:image\/png;base64,/, '')
     const buffer = Buffer.from(base64Data, 'base64')
 
@@ -59,16 +60,32 @@ export async function POST(
       .from('waiver-signatures')
       .getPublicUrl(fileName)
 
+    // Replace signature_date template variable
+    const signatureDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    })
+
+    const updatedContent = waiver.content.replace(
+      /\{\{signature_date\}\}/g,
+      signatureDate
+    )
+
     // Update waiver with signature
     const { data: updatedWaiver, error: updateError } = await supabase
       .from('waivers')
       .update({
+        content: updatedContent,
         signature_image_url: publicUrl,
         signed_at: new Date().toISOString(),
         signed_by_id: user.id,
         status: 'signed'
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -80,7 +97,7 @@ export async function POST(
     const { error: signatureError } = await supabase
       .from('waiver_signatures')
       .insert({
-        waiver_id: params.id,
+        waiver_id: id,
         signed_by_id: user.id,
         signer_name,
         signer_email,

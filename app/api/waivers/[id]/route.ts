@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -13,10 +14,16 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // RLS policies will automatically filter based on:
+    // - Issuer can view
+    // - Recipient can view
+    // - Signer can view
+    // - Admins can view all
+    // - Guardians can view their student's waivers
     const { data: waiver, error } = await supabase
       .from('waivers')
       .select('*, waiver_signatures(*)')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error || !waiver) {
@@ -35,9 +42,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -48,18 +56,30 @@ export async function PATCH(
     const body = await request.json()
     const { status, declined_reason } = body
 
+    // Get user profile to check role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
     // Verify permission to update
     const { data: waiver, error: fetchError } = await supabase
       .from('waivers')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !waiver) {
       return NextResponse.json({ error: 'Waiver not found' }, { status: 404 })
     }
 
-    if (waiver.issued_by_id !== user.id && waiver.recipient_id !== user.id) {
+    // Check permissions: issuer, recipient, or admin
+    const isIssuer = waiver.issued_by_id === user.id
+    const isRecipient = waiver.recipient_id === user.id
+    const isAdmin = profile?.role === 'admin'
+
+    if (!isIssuer && !isRecipient && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -73,7 +93,7 @@ export async function PATCH(
     const { data: updatedWaiver, error: updateError } = await supabase
       .from('waivers')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
