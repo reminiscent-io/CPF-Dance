@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/Badge'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 import { LessonPackInfo } from '@/components/LessonPackInfo'
-import { LessonPackSelector } from '@/components/LessonPackSelector'
 
 interface LessonRequest {
   id: string
@@ -34,16 +33,9 @@ export default function RequestPrivateLessonPage() {
     preferred_dates: '',
     additional_notes: ''
   })
-  const [selectedPackId, setSelectedPackId] = useState<string>('')
-  const [selectedPackLessons, setSelectedPackLessons] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  const handlePackSelection = (packId: string, lessons: number) => {
-    setSelectedPackId(packId)
-    setSelectedPackLessons(lessons)
-  }
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -221,12 +213,6 @@ export default function RequestPrivateLessonPage() {
         </div>
       )}
 
-      <Card className="mb-8">
-        <CardTitle className="p-6 pb-4">📦 Browse & Buy Lesson Packs</CardTitle>
-        <CardContent className="px-6 pb-6">
-          <LessonPackSelector onSelectPack={() => {}} />
-        </CardContent>
-      </Card>
 
       {!showForm ? (
         <>
@@ -241,10 +227,7 @@ export default function RequestPrivateLessonPage() {
           <CardTitle className="p-6 pb-4">New Private Lesson Request</CardTitle>
           <CardContent className="px-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <LessonPackInfo 
-                selectedPackId={selectedPackId}
-                onPackSelect={handlePackSelection}
-              />
+              <LessonPackInfo />
               <Textarea
                 label="What would you like to focus on? *"
                 placeholder="Describe the skills, techniques, or areas you'd like to work on..."
@@ -279,8 +262,6 @@ export default function RequestPrivateLessonPage() {
                   variant="outline"
                   onClick={() => {
                     setShowForm(false)
-                    setSelectedPackId('')
-                    setSelectedPackLessons(0)
                   }}
                   disabled={submitting}
                 >
