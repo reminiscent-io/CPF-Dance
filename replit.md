@@ -265,6 +265,7 @@ Comprehensive lesson pack purchasing system allowing dancers to buy pre-packaged
 6. **Payment History**: Full audit trail of purchases and usage
 
 **Pricing Model:**
+- 1 Lesson: $125
 - 2 Lesson Pack: $250 ($125 per lesson)
 - 5 Lesson Pack: $550 ($110 per lesson)
 - 10 Lesson Pack: $1000 ($100 per lesson)
