@@ -29,7 +29,6 @@ export default function RequestPrivateLessonPage() {
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [showPackSelector, setShowPackSelector] = useState(false)
   const [formData, setFormData] = useState({
     requested_focus: '',
     preferred_dates: '',
@@ -217,27 +216,20 @@ export default function RequestPrivateLessonPage() {
         </div>
       )}
 
+      <Card className="mb-8">
+        <CardTitle className="p-6 pb-4">📦 Browse & Buy Lesson Packs</CardTitle>
+        <CardContent className="px-6 pb-6">
+          <LessonPackSelector onSelectPack={() => {}} />
+        </CardContent>
+      </Card>
+
       {!showForm ? (
         <>
-          <div className="mb-8 space-y-4">
+          <div className="mb-8">
             <Button variant="primary" size="lg" onClick={() => setShowForm(true)}>
               ✨ Request New Private Lesson
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => setShowPackSelector(!showPackSelector)}
-            >
-              {showPackSelector ? '📦 Hide Lesson Packs' : '📦 Browse Lesson Packs'}
-            </Button>
           </div>
-          {showPackSelector && (
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <LessonPackSelector onSelectPack={() => {}} />
-              </CardContent>
-            </Card>
-          )}
         </>
       ) : (
         <Card className="mb-8">
