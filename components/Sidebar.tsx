@@ -186,12 +186,14 @@ export function Sidebar({ profile }: SidebarProps) {
               const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
               const isActive = isExactMatch || isSubpage
               return (
-                <Link
+                <button
                   key={link.href}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false)
+                    router.push(link.href)
+                  }}
                   className={`
-                    block px-4 py-3 rounded-lg font-medium text-sm transition-all
+                    w-full text-left block px-4 py-3 rounded-lg font-medium text-sm transition-all
                     ${isActive
                       ? 'bg-rose-400 text-white shadow-md'
                       : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -200,23 +202,25 @@ export function Sidebar({ profile }: SidebarProps) {
                 >
                   <span className="mr-3">{link.icon}</span>
                   {link.label}
-                </Link>
+                </button>
               )
             })}
           </nav>
 
           {/* Footer */}
           <div className="border-t border-rose-500 p-6 space-y-4">
-            <Link
-              href={getProfileUrl()}
-              onClick={() => setIsOpen(false)}
-              className="block hover:opacity-90 transition-opacity"
+            <button
+              onClick={() => {
+                setIsOpen(false)
+                router.push(getProfileUrl())
+              }}
+              className="w-full text-left block hover:opacity-90 transition-opacity"
             >
               <p className="text-sm font-semibold text-white">{profile?.full_name}</p>
               <p className="text-xs text-rose-200 capitalize">
                 {profile?.role}
               </p>
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-rose-100 hover:bg-white hover:bg-opacity-10 transition-colors"
