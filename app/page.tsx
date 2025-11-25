@@ -215,7 +215,7 @@ export default function HomePage() {
           {/* Desktop Grid - Hidden on mobile */}
           <div className="hidden md:grid grid-cols-3 gap-8 mb-20">
             {portals.map((portal) => (
-              <Card key={portal.id} hover className="text-center overflow-hidden p-0">
+              <Card key={portal.id} hover className="text-center overflow-hidden p-0 flex flex-col">
                 <div className="relative w-full h-48 overflow-hidden">
                   <img
                     src={portal.image}
@@ -223,11 +223,13 @@ export default function HomePage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                  <p className="text-gray-600 mb-6">
-                    {portal.description}
-                  </p>
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                    <p className="text-gray-600 mb-6">
+                      {portal.description}
+                    </p>
+                  </div>
                   <Link href={portal.link}>
                     <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
                       <span>Log-in</span>
@@ -253,7 +255,7 @@ export default function HomePage() {
               </button>
 
               <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center overflow-hidden p-0">
+                <Card hover className="text-center overflow-hidden p-0 flex flex-col">
                   <div className="relative w-full h-48 overflow-hidden">
                     <img
                       src={portals[carouselIndex].image}
@@ -261,11 +263,13 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
-                    <p className="text-gray-600 mb-6">
-                      {portals[carouselIndex].description}
-                    </p>
+                  <div className="p-6 flex flex-col justify-between flex-1">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
+                      <p className="text-gray-600 mb-6">
+                        {portals[carouselIndex].description}
+                      </p>
+                    </div>
                     <Link href={portals[carouselIndex].link}>
                       <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
                         <span>Log-in</span>
