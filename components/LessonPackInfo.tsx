@@ -22,7 +22,7 @@ export function LessonPackInfo({ selectedPackId, onPackSelect }: LessonPackInfoP
       const response = await fetch('/api/dancer/lesson-packs')
       if (response.ok) {
         const data = await response.json()
-        setPurchases(data.purchases)
+        setPurchases(data.purchases || [])
       }
     } catch (err) {
       console.error('Error fetching purchases:', err)
