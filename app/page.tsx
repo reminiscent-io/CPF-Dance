@@ -46,7 +46,9 @@ export default function HomePage() {
   const [heroHeight, setHeroHeight] = useState(100)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -94,6 +96,30 @@ export default function HomePage() {
 
   const prevPortal = () => {
     setCarouselIndex((prev) => (prev - 1 + portals.length) % portals.length)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart) return
+    
+    const touchEnd = e.changedTouches[0].clientX
+    const distance = touchStart - touchEnd
+    const minSwipeDistance = 50 // minimum distance in pixels to trigger swipe
+    
+    if (Math.abs(distance) > minSwipeDistance) {
+      if (distance > 0) {
+        // Swiped left, go to next portal
+        nextPortal()
+      } else {
+        // Swiped right, go to previous portal
+        prevPortal()
+      }
+    }
+    
+    setTouchStart(0)
   }
 
   useEffect(() => {
@@ -226,7 +252,7 @@ export default function HomePage() {
                 </svg>
               </button>
 
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 <Card hover className="text-center overflow-hidden p-0">
                   <div className="relative w-full h-48 overflow-hidden">
                     <img
