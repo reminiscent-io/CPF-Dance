@@ -124,7 +124,7 @@ export default function DancerPortalPage() {
         <>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <Card hover className="bg-gradient-to-br from-rose-50 to-white">
-              <CardContent className="p-6">
+              <CardContent className="p-3 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Classes</p>
@@ -138,7 +138,7 @@ export default function DancerPortalPage() {
             </Card>
 
             <Card hover className="bg-gradient-to-br from-purple-50 to-white">
-              <CardContent className="p-6">
+              <CardContent className="p-3 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Classes Attended</p>
@@ -152,7 +152,7 @@ export default function DancerPortalPage() {
             </Card>
 
             <Card hover className="bg-gradient-to-br from-mauve-50 to-white">
-              <CardContent className="p-6">
+              <CardContent className="p-3 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Recent Notes</p>
