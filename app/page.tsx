@@ -203,8 +203,10 @@ export default function HomePage() {
                     {portal.description}
                   </p>
                   <Link href={portal.link}>
-                    <Button size="lg" className="w-full">
-                      Join or Log In
+                    <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                      <span>Log-in</span>
+                      <span className="text-xs font-normal">or</span>
+                      <span>Sign-up</span>
                     </Button>
                   </Link>
                 </div>
@@ -240,8 +242,10 @@ export default function HomePage() {
                       {portals[carouselIndex].description}
                     </p>
                     <Link href={portals[carouselIndex].link}>
-                      <Button size="lg" className="w-full">
-                        Join or Log In
+                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                        <span>Log-in</span>
+                        <span className="text-xs font-normal">or</span>
+                        <span>Sign-up</span>
                       </Button>
                     </Link>
                   </div>
