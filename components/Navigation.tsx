@@ -45,7 +45,7 @@ export function Navigation({ profile }: NavigationProps) {
             { href: '/dancer/available-classes', label: 'Available Classes' },
             { href: '/dancer/classes', label: 'My Classes' },
             { href: '/dancer/notes', label: 'Notes' },
-            { href: '/dancer/request-lesson', label: 'Request Lesson' },
+            { href: '/dancer/request-lesson', label: 'Private Lessons' },
             { href: '/dancer/payments', label: 'Payments' },
           ]
         case 'studio':
@@ -76,7 +76,7 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/dancer/available-classes', label: 'Available Classes' },
           { href: '/dancer/classes', label: 'My Classes' },
           { href: '/dancer/notes', label: 'Notes' },
-          { href: '/dancer/request-lesson', label: 'Request Lesson' },
+          { href: '/dancer/request-lesson', label: 'Private Lessons' },
           { href: '/dancer/payments', label: 'Payments' },
         ]
       case 'studio_admin':

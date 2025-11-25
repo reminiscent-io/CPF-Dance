@@ -79,7 +79,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               children: [
                 { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
                 { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-                { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
+                { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
               ]
             },
             { href: '/dancer/notes', label: 'Notes', icon: '📝' },
@@ -119,7 +119,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             children: [
               { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
               { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-              { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
+              { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
             ]
           },
           { href: '/dancer/notes', label: 'Notes', icon: '📝' },
