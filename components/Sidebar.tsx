@@ -260,7 +260,7 @@ export function Sidebar({ profile }: SidebarProps) {
       {/* Mobile Menu Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed bottom-6 right-6 z-40 p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg transition-colors"
+        className="md:hidden fixed top-6 left-6 z-40 p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg transition-colors"
         aria-label="Toggle menu"
       >
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
