@@ -71,13 +71,13 @@ export default function InstructorPortalPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-4 mb-8">
             <Card hover>
-              <CardContent className="text-center">
-                <div className="text-4xl font-bold text-rose-600 mb-2">
+              <CardContent className="text-center py-4">
+                <div className="text-3xl md:text-4xl font-bold text-rose-600 mb-1">
                   {stats?.total_students || 0}
                 </div>
-                <div className="text-sm text-gray-600 mb-1">Total Students</div>
+                <div className="text-xs md:text-sm text-gray-600 mb-1">Total Students</div>
                 <div className="text-xs text-gray-500">
                   {stats?.active_students || 0} active
                 </div>
@@ -85,29 +85,29 @@ export default function InstructorPortalPage() {
             </Card>
 
             <Card hover>
-              <CardContent className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">
+              <CardContent className="text-center py-4">
+                <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-1">
                   {stats?.upcoming_classes || 0}
                 </div>
-                <div className="text-sm text-gray-600">Upcoming Classes</div>
+                <div className="text-xs md:text-sm text-gray-600">Upcoming Classes</div>
               </CardContent>
             </Card>
 
             <Card hover>
-              <CardContent className="text-center">
-                <div className="text-4xl font-bold text-yellow-600 mb-2">
+              <CardContent className="text-center py-4">
+                <div className="text-3xl md:text-4xl font-bold text-yellow-600 mb-1">
                   {stats?.pending_requests || 0}
                 </div>
-                <div className="text-sm text-gray-600">Pending Requests</div>
+                <div className="text-xs md:text-sm text-gray-600">Pending Requests</div>
               </CardContent>
             </Card>
 
             <Card hover>
-              <CardContent className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">
+              <CardContent className="text-center py-4">
+                <div className="text-3xl md:text-4xl font-bold text-green-600 mb-1">
                   {stats?.unpaid_invoices || 0}
                 </div>
-                <div className="text-sm text-gray-600">Unpaid Invoices</div>
+                <div className="text-xs md:text-sm text-gray-600">Unpaid Invoices</div>
               </CardContent>
             </Card>
           </div>
