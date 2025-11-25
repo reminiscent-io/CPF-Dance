@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { LessonPackInfo } from '@/components/LessonPackInfo'
+import { LessonPackSelector } from '@/components/LessonPackSelector'
 
 interface LessonRequest {
   id: string
@@ -27,11 +29,14 @@ export default function RequestPrivateLessonPage() {
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [showPackSelector, setShowPackSelector] = useState(false)
   const [formData, setFormData] = useState({
     requested_focus: '',
     preferred_dates: '',
     additional_notes: ''
   })
+  const [selectedPackId, setSelectedPackId] = useState<string>('')
+  const [selectedPackLessons, setSelectedPackLessons] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -77,7 +82,8 @@ export default function RequestPrivateLessonPage() {
         .map((d) => d.trim())
         .filter((d) => d.length > 0)
 
-      const response = await fetch('/api/dancer/lesson-requests', {
+      // Step 1: Create the lesson request
+      const requestResponse = await fetch('/api/dancer/lesson-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,21 +93,43 @@ export default function RequestPrivateLessonPage() {
         })
       })
 
-      if (response.ok) {
-        setSuccessMessage('Your private lesson request has been submitted! 🎉')
-        setFormData({
-          requested_focus: '',
-          preferred_dates: '',
-          additional_notes: ''
-        })
-        setShowForm(false)
-        await fetchRequests()
-        
-        setTimeout(() => setSuccessMessage(''), 5000)
-      } else {
-        const error = await response.json()
+      if (!requestResponse.ok) {
+        const error = await requestResponse.json()
         alert(error.error || 'Failed to submit request')
+        return
       }
+
+      const requestData = await requestResponse.json()
+      const lessonRequestId = requestData.request.id
+
+      // Step 2: If a lesson pack is selected, spend one lesson
+      if (selectedPackId) {
+        const spendResponse = await fetch('/api/dancer/lesson-packs/spend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lesson_pack_purchase_id: selectedPackId,
+            private_lesson_request_id: lessonRequestId
+          })
+        })
+
+        if (!spendResponse.ok) {
+          console.error('Warning: Failed to spend lesson pack, but request was created')
+        }
+      }
+
+      setSuccessMessage('Your private lesson request has been submitted! 🎉')
+      setFormData({
+        requested_focus: '',
+        preferred_dates: '',
+        additional_notes: ''
+      })
+      setSelectedPackId('')
+      setSelectedPackLessons(0)
+      setShowForm(false)
+      await fetchRequests()
+      
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (error) {
       console.error('Error submitting request:', error)
       alert('Failed to submit request')
@@ -190,16 +218,39 @@ export default function RequestPrivateLessonPage() {
       )}
 
       {!showForm ? (
-        <div className="mb-8">
-          <Button variant="primary" size="lg" onClick={() => setShowForm(true)}>
-            ✨ Request New Private Lesson
-          </Button>
-        </div>
+        <>
+          <div className="mb-8 space-y-4">
+            <Button variant="primary" size="lg" onClick={() => setShowForm(true)}>
+              ✨ Request New Private Lesson
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => setShowPackSelector(!showPackSelector)}
+            >
+              {showPackSelector ? '📦 Hide Lesson Packs' : '📦 Browse Lesson Packs'}
+            </Button>
+          </div>
+          {showPackSelector && (
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <LessonPackSelector onSelectPack={() => {}} />
+              </CardContent>
+            </Card>
+          )}
+        </>
       ) : (
         <Card className="mb-8">
           <CardTitle className="p-6 pb-4">New Private Lesson Request</CardTitle>
           <CardContent className="px-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              <LessonPackInfo 
+                selectedPackId={selectedPackId}
+                onPackSelect={(packId, lessons) => {
+                  setSelectedPackId(packId)
+                  setSelectedPackLessons(lessons)
+                }}
+              />
               <Textarea
                 label="What would you like to focus on? *"
                 placeholder="Describe the skills, techniques, or areas you'd like to work on..."
@@ -232,7 +283,11 @@ export default function RequestPrivateLessonPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setShowForm(false)
+                    setSelectedPackId('')
+                    setSelectedPackLessons(0)
+                  }}
                   disabled={submitting}
                 >
                   Cancel
