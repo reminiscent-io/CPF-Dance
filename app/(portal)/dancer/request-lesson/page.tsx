@@ -34,6 +34,7 @@ export default function RequestPrivateLessonPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -106,6 +107,33 @@ export default function RequestPrivateLessonPage() {
       alert('Failed to submit request')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (requestId: string) => {
+    if (!confirm('Are you sure you want to delete this private lesson request?')) {
+      return
+    }
+
+    setDeletingId(requestId)
+    try {
+      const response = await fetch(`/api/dancer/lesson-requests?id=${requestId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setSuccessMessage('Private lesson request deleted successfully')
+        await fetchRequests()
+        setTimeout(() => setSuccessMessage(''), 5000)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete request')
+      }
+    } catch (error) {
+      console.error('Error deleting request:', error)
+      alert('Failed to delete request')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -238,13 +266,23 @@ export default function RequestPrivateLessonPage() {
                       {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                     </Badge>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {new Date(request.created_at).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">
+                      {new Date(request.created_at).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(request.id)}
+                      disabled={deletingId === request.id}
+                      className="text-sm text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Delete request"
+                    >
+                      {deletingId === request.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

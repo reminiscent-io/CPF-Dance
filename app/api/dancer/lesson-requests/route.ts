@@ -67,3 +67,59 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const student = await getCurrentDancerStudent()
+    const supabase = await createClient()
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Request ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the request belongs to the current student
+    const { data: lessonRequest, error: fetchError } = await supabase
+      .from('private_lesson_requests')
+      .select('student_id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !lessonRequest) {
+      return NextResponse.json(
+        { error: 'Request not found' },
+        { status: 404 }
+      )
+    }
+
+    if (lessonRequest.student_id !== student.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+
+    // Delete the request
+    const { error: deleteError } = await supabase
+      .from('private_lesson_requests')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) {
+      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting lesson request:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
