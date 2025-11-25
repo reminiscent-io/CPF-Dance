@@ -15,6 +15,7 @@ export interface SidebarProps {
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
   const pathname = usePathname()
   const router = useRouter()
   
@@ -72,10 +73,16 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         case 'dancer':
           return [
             { href: '/dancer', label: 'Dashboard', icon: '📊' },
-            { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-            { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+            {
+              label: 'Schedule',
+              icon: '📅',
+              children: [
+                { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+                { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
+                { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
+              ]
+            },
             { href: '/dancer/notes', label: 'Notes', icon: '📝' },
-            { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
             { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
             { href: '/dancer/payments', label: 'Payments', icon: '💳' },
           ]
@@ -106,10 +113,16 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       case 'guardian':
         return [
           { href: '/dancer', label: 'Dashboard', icon: '📊' },
-          { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-          { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+          {
+            label: 'Schedule',
+            icon: '📅',
+            children: [
+              { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+              { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
+              { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
+            ]
+          },
           { href: '/dancer/notes', label: 'Notes', icon: '📝' },
-          { href: '/dancer/request-lesson', label: 'Request Lesson', icon: '🎯' },
           { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
           { href: '/dancer/payments', label: 'Payments', icon: '💳' },
         ]
@@ -155,6 +168,21 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  const toggleParent = (label: string) => {
+    const newExpanded = new Set(expandedParents)
+    if (newExpanded.has(label)) {
+      newExpanded.delete(label)
+    } else {
+      newExpanded.add(label)
+    }
+    setExpandedParents(newExpanded)
+  }
+
+  const isChildActive = (children: any[] | undefined) => {
+    if (!children) return false
+    return children.some(child => pathname === child.href || pathname?.startsWith(child.href + '/'))
   }
 
   return (
@@ -211,10 +239,67 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
           {/* Navigation Links */}
           <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-            {navLinks.map((link) => {
+            {navLinks.map((link: any) => {
+              const hasChildren = link.children && link.children.length > 0
+              const isExpanded = expandedParents.has(link.label)
+              const childIsActive = isChildActive(link.children)
               const isExactMatch = pathname === link.href
               const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
               const isActive = isExactMatch || isSubpage
+
+              if (hasChildren) {
+                return (
+                  <div key={link.label}>
+                    <button
+                      onClick={() => toggleParent(link.label)}
+                      className={`
+                        w-full text-left flex items-center justify-between px-4 py-3 rounded-lg font-medium text-sm transition-all
+                        ${childIsActive
+                          ? 'bg-rose-400 text-white shadow-md'
+                          : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                        }
+                      `}
+                    >
+                      <span className="flex items-center">
+                        <span className="mr-3">{link.icon}</span>
+                        {link.label}
+                      </span>
+                      <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </button>
+                    {isExpanded && (
+                      <div className="space-y-1 pl-4 mt-1">
+                        {link.children.map((child: any) => {
+                          const childExactMatch = pathname === child.href
+                          const childSubpage = pathname?.startsWith(child.href + '/') && child.label !== 'Dashboard'
+                          const childIsActiveItem = childExactMatch || childSubpage
+                          return (
+                            <button
+                              key={child.href}
+                              onClick={() => {
+                                setIsOpen(false)
+                                router.push(child.href)
+                              }}
+                              className={`
+                                w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                                ${childIsActiveItem
+                                  ? 'bg-rose-400 text-white shadow-md'
+                                  : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                                }
+                              `}
+                            >
+                              <span className="mr-3">{child.icon}</span>
+                              {child.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
               return (
                 <button
                   key={link.href}
