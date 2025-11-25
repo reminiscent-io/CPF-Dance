@@ -124,7 +124,7 @@ export default function DancerPortalPage() {
         <>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <Card hover className="bg-gradient-to-br from-rose-50 to-white">
-              <CardContent className="p-3 md:p-6">
+              <CardContent className="p-1 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Classes</p>
@@ -138,7 +138,7 @@ export default function DancerPortalPage() {
             </Card>
 
             <Card hover className="bg-gradient-to-br from-purple-50 to-white">
-              <CardContent className="p-3 md:p-6">
+              <CardContent className="p-1 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Classes Attended</p>
@@ -152,7 +152,7 @@ export default function DancerPortalPage() {
             </Card>
 
             <Card hover className="bg-gradient-to-br from-mauve-50 to-white">
-              <CardContent className="p-3 md:p-6">
+              <CardContent className="p-1 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Recent Notes</p>
@@ -168,8 +168,8 @@ export default function DancerPortalPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <Card>
-              <CardTitle className="p-6 pb-4">Your Next Class</CardTitle>
-              <CardContent className="px-6 pb-6">
+              <CardTitle className="p-1 pb-4">Your Next Class</CardTitle>
+              <CardContent className="px-1 pb-6">
                 {nextClass ? (
                   <div className="bg-gradient-to-r from-rose-50 to-purple-50 rounded-lg p-4">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -213,8 +213,8 @@ export default function DancerPortalPage() {
             </Card>
 
             <Card>
-              <CardTitle className="p-6 pb-4">Quick Actions</CardTitle>
-              <CardContent className="px-6 pb-6">
+              <CardTitle className="p-1 pb-4">Quick Actions</CardTitle>
+              <CardContent className="px-1 pb-6">
                 <div className="space-y-3">
                   <Button
                     variant="primary"
@@ -250,8 +250,8 @@ export default function DancerPortalPage() {
           </div>
 
           <Card>
-            <CardTitle className="p-6 pb-4">Recent Instructor Notes</CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-1 pb-4">Recent Instructor Notes</CardTitle>
+            <CardContent className="px-1 pb-6">
               {recentNotes.length > 0 ? (
                 <div className="space-y-4">
                   {recentNotes.map((note) => (

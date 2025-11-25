@@ -193,7 +193,7 @@ export default function DancerPaymentsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="bg-gradient-to-br from-yellow-50 to-white">
-          <CardContent className="p-6">
+          <CardContent className="p-1">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Total Due</p>
@@ -209,7 +209,7 @@ export default function DancerPaymentsPage() {
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-white">
-          <CardContent className="p-6">
+          <CardContent className="p-1">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Confirmed</p>
@@ -225,7 +225,7 @@ export default function DancerPaymentsPage() {
         </Card>
 
         <Card className="bg-gradient-to-br from-yellow-50 to-white">
-          <CardContent className="p-6">
+          <CardContent className="p-1">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
@@ -281,8 +281,8 @@ export default function DancerPaymentsPage() {
             </h3>
             <p className="text-gray-600 mb-6">
               {filter === 'all'
-                ? "Your payment history will appear here once you&apos;ve made payments for classes."
-                : `You don&apos;t have any ${filter} payments at the moment.`}
+                ? "Your payment history will appear here once you've made payments for classes."
+                : `You don't have any ${filter} payments at the moment.`}
             </p>
             {filter !== 'all' && (
               <Button variant="outline" onClick={() => setFilter('all')}>

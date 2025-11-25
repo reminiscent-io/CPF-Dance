@@ -385,8 +385,8 @@ export default function HomePage() {
                   each dancer reaches their full potential while developing confidence and grace.
                 </p>
                 <p>
-                  Whether you&apos;re a beginner discovering your passion or an advanced dancer refining your skills, 
-                  you&apos;ll receive personalized instruction tailored to your goals.
+                  Whether you're a beginner discovering your passion or an advanced dancer refining your skills, 
+                  you'll receive personalized instruction tailored to your goals.
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -425,7 +425,7 @@ export default function HomePage() {
               Studio Partnership Inquiry
             </h2>
             <p className="text-xl text-gray-600">
-              Interested in bringing our expertise to your studio? Let&apos;s connect.
+              Interested in bringing our expertise to your studio? Let's connect.
             </p>
           </div>
 
@@ -439,7 +439,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Thank You!</h3>
                 <p className="text-gray-600 mb-6">
-                  We&apos;ve received your inquiry and will be in touch shortly.
+                  We've received your inquiry and will be in touch shortly.
                 </p>
                 <Button onClick={() => setSubmitSuccess(false)}>
                   Submit Another Inquiry

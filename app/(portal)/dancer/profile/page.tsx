@@ -264,7 +264,7 @@ export default function DancerProfilePage() {
                     setFormData({ ...formData, goals: e.target.value })
                   }
                   disabled={!editing}
-                  helperText="Share your aspirations and what you&apos;re working towards"
+                  helperText="Share your aspirations and what you're working towards"
                 />
               </CardContent>
             </Card>

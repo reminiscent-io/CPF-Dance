@@ -273,26 +273,26 @@ export default function InstructorPaymentsPage() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-1">
               <div className="text-sm font-medium text-gray-600 mb-1">Total Payments</div>
               <div className="text-2xl font-bold text-gray-900">{stats.total_payments}</div>
               <div className="text-sm text-gray-500 mt-1">{formatCurrency(stats.total_amount)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-1">
               <div className="text-sm font-medium text-gray-600 mb-1">Pending</div>
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-1">
               <div className="text-sm font-medium text-gray-600 mb-1">Confirmed</div>
               <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-1">
               <div className="text-sm font-medium text-gray-600 mb-1">Disputed</div>
               <div className="text-2xl font-bold text-red-600">{stats.disputed}</div>
             </CardContent>
