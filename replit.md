@@ -90,6 +90,9 @@ Preferred communication style: Simple, everyday language.
 - `studio_inquiries`: Public form submissions from studios
 - `waivers`: Electronic waiver documents with signature tracking (NEW - November 2025)
 - `waiver_signatures`: Signature events with audit trail (NEW - November 2025)
+- `lesson_packs`: Pre-packaged lesson quantities for discount pricing (NEW - November 2025)
+- `lesson_pack_purchases`: Student purchases of lesson packs (NEW - November 2025)
+- `lesson_pack_usage`: Tracking of lessons used from purchased packs (NEW - November 2025)
 
 **Pricing System:**
 Four pricing models supported for classes:
@@ -247,3 +250,56 @@ Electronic waiver system for managing private lesson agreements with canvas-base
 - `waivers` table: Core waiver documents
 - `waiver_signatures` table: Signature audit trail with IP/user-agent tracking
 - Row-Level Security: Automatic visibility based on user roles
+
+## Lesson Pack System (NEW - November 2025)
+
+**Overview:**
+Comprehensive lesson pack purchasing system allowing dancers to buy pre-packaged lessons at discounted rates and track usage across private lesson requests.
+
+**Features:**
+1. **Pre-packaged Offerings**: 2, 5, and 10 lesson packs with tiered pricing
+2. **Stripe Integration**: Secure payment processing with session management
+3. **Balance Tracking**: Real-time tracking of remaining lessons in purchased packs
+4. **Automatic Usage**: Lessons automatically deducted when requesting private lessons
+5. **Expiration Support**: Optional expiration dates for time-limited packs
+6. **Payment History**: Full audit trail of purchases and usage
+
+**Pricing Model:**
+- 2 Lesson Pack: $39.99 (saves $10/lessons vs. à la carte)
+- 5 Lesson Pack: $89.99 (saves $25/lessons vs. à la carte)
+- 10 Lesson Pack: $159.99 (saves $40/lessons vs. à la carte)
+
+**Workflow:**
+1. Dancer views "Request Lesson" page
+2. LessonPackInfo component displays available packs and current balance
+3. Student clicks "Buy Lesson Pack"
+4. LessonPackSelector opens modal with purchase options
+5. Stripe payment processed via Checkout session
+6. Upon successful payment, `lesson_pack_purchases` record created
+7. When requesting private lesson, system checks available packs first
+8. If packs available, lesson deducted from most recent pack
+9. If no packs, payment required as normal
+
+**UI Components:**
+- `LessonPackInfo.tsx`: Displays purchased packs and balance, initiates purchases
+- `LessonPackSelector.tsx`: Modal for selecting pack quantity and processing purchase
+- Integrated into `/dancer/request-lesson` form
+
+**API Routes:**
+- `GET /api/dancer/lesson-packs`: Fetch dancer's purchases and balance
+- `POST /api/dancer/lesson-packs/purchase`: Initiate Stripe checkout session
+- Webhook handling in Stripe integration for payment confirmation
+
+**Database Setup:**
+Execute `LESSON_PACKS_SETUP.sql` in Supabase SQL Editor to create:
+- `lesson_packs` table: Available packs and pricing
+- `lesson_pack_purchases` table: Student purchases with remaining count
+- `lesson_pack_usage` table: Audit trail of lesson usage
+- RLS policies for student/instructor access
+- Indexes for performance optimization
+
+**Integration Points:**
+- Request Lesson form automatically uses packs before requiring payment
+- Lesson pack usage tracked in `lesson_pack_usage` for analytics
+- Payment workflow enhanced to check pack balance first
+- Dancer portal displays pack balance and purchase history
