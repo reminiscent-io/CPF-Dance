@@ -8,34 +8,42 @@ import type { Profile } from '@/lib/auth/types'
 
 export interface SidebarProps {
   profile: Profile | null
+  isOpen?: boolean
+  setIsOpen?: (isOpen: boolean) => void
 }
 
-export function Sidebar({ profile }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  
+  // Use controlled or internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
+  const setIsOpen = controlledSetIsOpen || setInternalIsOpen
 
-  // Initialize sidebar state from localStorage and screen size
+  // Initialize sidebar state from localStorage and screen size (only for uncontrolled mode)
   useEffect(() => {
-    const isMobile = window.innerWidth < 768
-    const savedState = localStorage.getItem('sidebar-open')
-    
-    // On mobile, default to closed. On desktop, default to open (unless user saved preference)
-    if (savedState !== null) {
-      setIsOpen(JSON.parse(savedState))
-    } else {
-      setIsOpen(!isMobile)
+    if (controlledIsOpen === undefined) {
+      const isMobile = window.innerWidth < 768
+      const savedState = localStorage.getItem('sidebar-open')
+      
+      // On mobile, default to closed. On desktop, default to open (unless user saved preference)
+      if (savedState !== null) {
+        setIsOpen(JSON.parse(savedState))
+      } else {
+        setIsOpen(!isMobile)
+      }
     }
     setMounted(true)
-  }, [])
+  }, [controlledIsOpen, setIsOpen])
 
-  // Persist sidebar state to localStorage
+  // Persist sidebar state to localStorage (only for uncontrolled mode)
   useEffect(() => {
-    if (mounted) {
+    if (mounted && controlledIsOpen === undefined) {
       localStorage.setItem('sidebar-open', JSON.stringify(isOpen))
     }
-  }, [isOpen, mounted])
+  }, [isOpen, mounted, controlledIsOpen])
 
   const getCurrentPortal = () => {
     if (!pathname) return 'instructor'
@@ -257,16 +265,6 @@ export function Sidebar({ profile }: SidebarProps) {
         </div>
       </aside>
 
-      {/* Mobile Menu Toggle */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed top-6 left-6 z-40 p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg transition-colors"
-        aria-label="Toggle menu"
-      >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
     </>
   )
 }
