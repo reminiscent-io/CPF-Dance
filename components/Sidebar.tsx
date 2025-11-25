@@ -15,7 +15,7 @@ export interface SidebarProps {
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
   const pathname = usePathname()
   const router = useRouter()
   
