@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
@@ -11,9 +11,31 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ profile }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+
+  // Initialize sidebar state from localStorage and screen size
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768
+    const savedState = localStorage.getItem('sidebar-open')
+    
+    // On mobile, default to closed. On desktop, default to open (unless user saved preference)
+    if (savedState !== null) {
+      setIsOpen(JSON.parse(savedState))
+    } else {
+      setIsOpen(!isMobile)
+    }
+    setMounted(true)
+  }, [])
+
+  // Persist sidebar state to localStorage
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('sidebar-open', JSON.stringify(isOpen))
+    }
+  }, [isOpen, mounted])
 
   const getCurrentPortal = () => {
     if (!pathname) return 'instructor'
