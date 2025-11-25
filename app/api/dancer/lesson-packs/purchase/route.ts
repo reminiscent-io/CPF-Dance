@@ -36,8 +36,7 @@ export async function POST(request: NextRequest) {
       .insert({
         student_id: student.id,
         lesson_pack_id: lesson_pack_id,
-        remaining_lessons: pack.lesson_count,
-        stripe_price_id: pack.stripe_price_id
+        remaining_lessons: pack.lesson_count
       })
       .select()
       .single()

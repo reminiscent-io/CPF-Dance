@@ -40,6 +40,11 @@ export default function RequestPrivateLessonPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const handlePackSelection = (packId: string, lessons: number) => {
+    setSelectedPackId(packId)
+    setSelectedPackLessons(lessons)
+  }
+
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
@@ -238,10 +243,7 @@ export default function RequestPrivateLessonPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <LessonPackInfo 
                 selectedPackId={selectedPackId}
-                onPackSelect={(packId, lessons) => {
-                  setSelectedPackId(packId)
-                  setSelectedPackLessons(lessons)
-                }}
+                onPackSelect={handlePackSelection}
               />
               <Textarea
                 label="What would you like to focus on? *"
