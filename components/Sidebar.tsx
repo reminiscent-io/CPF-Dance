@@ -169,8 +169,8 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-rose-500">
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between">
+          <div className="px-6 py-4 md:p-6 border-b border-rose-500 h-16 md:h-auto flex items-center md:block">
+            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 Dance Studio
               </span>
