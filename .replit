@@ -1,7 +1,7 @@
 run = "npm run dev"
 entrypoint = "index.js"
 hidden = [".config", "package-lock.json", ".next", ".swc"]
-modules = ["nodejs-22", "postgresql-16"]
+modules = ["nodejs-22", "postgresql-16", "python-3.11"]
 
 [nix]
 channel = "stable-24_11"
@@ -45,6 +45,7 @@ externalPort = 4200
 
 [agent]
 expertMode = true
+integrations = ["stripe:1.0.0"]
 
 [workflows]
 runButton = "Project"

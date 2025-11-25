@@ -232,3 +232,38 @@ export interface CreateStudioData {
   contact_phone?: string
   notes?: string
 }
+
+export interface LessonPack {
+  id: string
+  name: string
+  lesson_count: number
+  price: number
+  stripe_price_id: string | null
+  stripe_product_id: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface LessonPackPurchase {
+  id: string
+  student_id: string
+  lesson_pack_id: string
+  payment_id: string | null
+  stripe_checkout_session_id: string | null
+  remaining_lessons: number
+  purchased_at: string
+  expires_at: string | null
+  created_at: string
+  updated_at: string
+  lesson_pack?: LessonPack
+}
+
+export interface LessonPackUsage {
+  id: string
+  lesson_pack_purchase_id: string
+  private_lesson_request_id: string | null
+  lessons_used: number
+  used_at: string
+  created_at: string
+}
