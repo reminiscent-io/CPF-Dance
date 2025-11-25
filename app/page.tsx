@@ -19,7 +19,7 @@ const portals = [
   {
     id: 'instructor',
     title: 'Instructor Portal',
-    description: 'Manage students, schedule classes, and track student progress',
+    description: 'Manage students, schedule classes, and provide notes to dancers',
     image: 'https://images.unsplash.com/photo-1685339009948-d807094b1457?',
     link: '/login?portal=instructor'
   },
