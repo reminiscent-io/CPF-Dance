@@ -14,11 +14,6 @@ const nextConfig: NextConfig = {
       ],
     },
   },
-  
-  // Reduce console verbosity
-  logging: {
-    level: 'error',
-  },
 };
 
 export default nextConfig;
