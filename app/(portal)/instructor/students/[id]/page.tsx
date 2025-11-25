@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { Card, CardTitle, CardContent, Button, Badge, useToast, Spinner, Input, Textarea, Modal, ModalFooter } from '@/components/ui'
 import type { Student, Note, Enrollment, Payment, PrivateLessonRequest, UpdateStudentData } from '@/lib/types'
 
@@ -425,7 +426,7 @@ export default function StudentDetailPage() {
                           </Button>
                         </div>
                       </div>
-                      <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
+                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: note.content }} />
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.map((tag: string, idx: number) => (
@@ -475,7 +476,7 @@ export default function StudentDetailPage() {
                           {new Date(note.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <p className="text-gray-700 mb-2 whitespace-pre-wrap">{note.content}</p>
+                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: note.content }} />
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.map((tag: string, idx: number) => (
@@ -610,13 +611,16 @@ export default function StudentDetailPage() {
               value={noteFormData.title}
               onChange={(e) => setNoteFormData({ ...noteFormData, title: e.target.value })}
             />
-            <Textarea
-              label="Content"
-              placeholder="Share your feedback, observations, or progress notes..."
-              rows={6}
-              value={noteFormData.content}
-              onChange={(e) => setNoteFormData({ ...noteFormData, content: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Content
+              </label>
+              <RichTextEditor
+                content={noteFormData.content}
+                onChange={(html) => setNoteFormData({ ...noteFormData, content: html })}
+                placeholder="Share your feedback, observations, or progress notes..."
+              />
+            </div>
             <Input
               label="Tags (optional)"
               placeholder="technique, improvement, strength (comma-separated)"
