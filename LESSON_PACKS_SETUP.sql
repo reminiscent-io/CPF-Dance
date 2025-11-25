@@ -147,7 +147,7 @@ CREATE TRIGGER update_lesson_pack_purchases_updated_at BEFORE UPDATE ON lesson_p
 
 -- Seed initial lesson packs
 INSERT INTO lesson_packs (name, lesson_count, price, is_active) VALUES 
-  ('2 Lesson Pack', 2, 39.99, true),
-  ('5 Lesson Pack', 5, 89.99, true),
-  ('10 Lesson Pack', 10, 159.99, true)
+  ('2 Lesson Pack', 2, 250.00, true),
+  ('5 Lesson Pack', 5, 550.00, true),
+  ('10 Lesson Pack', 10, 1000.00, true)
 ON CONFLICT DO NOTHING;
