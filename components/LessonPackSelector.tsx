@@ -40,6 +40,15 @@ export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackS
     }
   }
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(price)
+  }
+
   const handlePurchase = async (packId: string) => {
     try {
       const response = await fetch('/api/dancer/lesson-packs/purchase', {
@@ -89,8 +98,8 @@ export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackS
             <CardContent className="p-4">
               <div className="text-center">
                 <h4 className="text-lg font-bold text-gray-900 mb-1">{pack.lesson_count} Lessons</h4>
-                <p className="text-2xl font-bold text-rose-600 mb-3">${pack.price.toFixed(2)}</p>
-                <p className="text-sm text-gray-600 mb-4">${(pack.price / pack.lesson_count).toFixed(2)}/lesson</p>
+                <p className="text-2xl font-bold text-rose-600 mb-3">{formatPrice(pack.price)}</p>
+                <p className="text-sm text-gray-600 mb-4">{formatPrice(pack.price / pack.lesson_count)}/lesson</p>
                 <Button
                   variant="primary"
                   size="sm"
