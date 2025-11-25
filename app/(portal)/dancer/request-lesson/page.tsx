@@ -27,7 +27,6 @@ export default function RequestPrivateLessonPage() {
   const router = useRouter()
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
-  const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     requested_focus: '',
     preferred_dates: '',
@@ -101,7 +100,6 @@ export default function RequestPrivateLessonPage() {
         preferred_dates: '',
         additional_notes: ''
       })
-      setShowForm(false)
       await fetchRequests()
       
       setTimeout(() => setSuccessMessage(''), 5000)
@@ -192,68 +190,45 @@ export default function RequestPrivateLessonPage() {
         </div>
       )}
 
-
-      {!showForm ? (
-        <>
-          <div className="mb-8">
-            <Button variant="primary" size="lg" onClick={() => setShowForm(true)}>
-              ✨ Request New Private Lesson
+      <Card className="mb-8">
+        <CardTitle className="p-6 pb-4">Request a Private Lesson</CardTitle>
+        <CardContent className="px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <LessonPackInfo />
+            <Textarea
+              label="What would you like to focus on? *"
+              placeholder="Describe the skills, techniques, or areas you'd like to work on..."
+              rows={4}
+              value={formData.requested_focus}
+              onChange={(e) =>
+                setFormData({ ...formData, requested_focus: e.target.value })
+              }
+              required
+            />
+            <Input
+              label="Preferred Dates"
+              placeholder="e.g., Next Tuesday, December 20th, Weekday afternoons"
+              value={formData.preferred_dates}
+              onChange={(e) =>
+                setFormData({ ...formData, preferred_dates: e.target.value })
+              }
+              helperText="Separate multiple dates with commas"
+            />
+            <Textarea
+              label="Additional Notes"
+              placeholder="Any other information that would be helpful..."
+              rows={3}
+              value={formData.additional_notes}
+              onChange={(e) =>
+                setFormData({ ...formData, additional_notes: e.target.value })
+              }
+            />
+            <Button type="submit" variant="primary" disabled={submitting}>
+              {submitting ? 'Submitting...' : 'Submit Request'}
             </Button>
-          </div>
-        </>
-      ) : (
-        <Card className="mb-8">
-          <CardTitle className="p-6 pb-4">New Private Lesson Request</CardTitle>
-          <CardContent className="px-6 pb-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <LessonPackInfo />
-              <Textarea
-                label="What would you like to focus on? *"
-                placeholder="Describe the skills, techniques, or areas you'd like to work on..."
-                rows={4}
-                value={formData.requested_focus}
-                onChange={(e) =>
-                  setFormData({ ...formData, requested_focus: e.target.value })
-                }
-                required
-              />
-              <Input
-                label="Preferred Dates"
-                placeholder="e.g., Next Tuesday, December 20th, Weekday afternoons"
-                value={formData.preferred_dates}
-                onChange={(e) =>
-                  setFormData({ ...formData, preferred_dates: e.target.value })
-                }
-                helperText="Separate multiple dates with commas"
-              />
-              <Textarea
-                label="Additional Notes"
-                placeholder="Any other information that would be helpful..."
-                rows={3}
-                value={formData.additional_notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, additional_notes: e.target.value })
-                }
-              />
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false)
-                  }}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Submit Request'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Your Requests</h2>
