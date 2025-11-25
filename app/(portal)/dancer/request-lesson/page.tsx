@@ -95,33 +95,12 @@ export default function RequestPrivateLessonPage() {
         return
       }
 
-      const requestData = await requestResponse.json()
-      const lessonRequestId = requestData.request.id
-
-      // Step 2: If a lesson pack is selected, spend one lesson
-      if (selectedPackId) {
-        const spendResponse = await fetch('/api/dancer/lesson-packs/spend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            lesson_pack_purchase_id: selectedPackId,
-            private_lesson_request_id: lessonRequestId
-          })
-        })
-
-        if (!spendResponse.ok) {
-          console.error('Warning: Failed to spend lesson pack, but request was created')
-        }
-      }
-
       setSuccessMessage('Your private lesson request has been submitted! 🎉')
       setFormData({
         requested_focus: '',
         preferred_dates: '',
         additional_notes: ''
       })
-      setSelectedPackId('')
-      setSelectedPackLessons(0)
       setShowForm(false)
       await fetchRequests()
       
