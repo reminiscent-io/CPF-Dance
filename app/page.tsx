@@ -26,7 +26,7 @@ const portals = [
   {
     id: 'studio',
     title: 'Studio Portal',
-    description: 'Oversee operations, manage locations, and coordinate schedules',
+    description: 'Connect with instructors and track payments',
     image: 'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?',
     link: '/login?portal=studio'
   }
