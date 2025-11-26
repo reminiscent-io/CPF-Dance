@@ -384,11 +384,6 @@ export default function RequestPrivateLessonPage() {
               Ready to take your dancing to the next level? Request a private lesson
               to get personalized attention and focus on your goals!
             </p>
-            {!showForm && (
-              <Button variant="primary" onClick={() => setShowForm(true)}>
-                Request Your First Private Lesson
-              </Button>
-            )}
           </CardContent>
         </Card>
       )}
