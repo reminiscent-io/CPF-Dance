@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/Button'
 interface LessonPackInfoProps {
   selectedPackId?: string
   onPackSelect?: (packId: string, lessons: number) => void
+  instructorId?: string | null
 }
 
-export function LessonPackInfo({ }: LessonPackInfoProps) {
+export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
   const [totalRemaining, setTotalRemaining] = useState(0)
   const [loading, setLoading] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -54,11 +55,12 @@ export function LessonPackInfo({ }: LessonPackInfoProps) {
             Purchase a pack to use when requesting private lessons
           </p>
         </div>
-        <LessonPackSelector 
+        <LessonPackSelector
           onSelectPack={() => {
             setShowPurchaseOptions(false)
             fetchTotalLessons()
-          }} 
+          }}
+          instructorId={instructorId}
         />
       </div>
     )

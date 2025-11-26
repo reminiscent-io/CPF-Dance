@@ -45,6 +45,8 @@ export default function RequestPrivateLessonPage() {
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [paymentCanceled, setPaymentCanceled] = useState(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -58,6 +60,37 @@ export default function RequestPrivateLessonPage() {
       fetchInstructors()
     }
   }, [loading, user, profile])
+
+  useEffect(() => {
+    // Check for payment success/canceled in URL (client-side only)
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const success = params.get('success')
+    const canceled = params.get('canceled')
+
+    if (success === 'true') {
+      setPaymentSuccess(true)
+      setPaymentCanceled(false)
+      setSuccessMessage('Payment successful! Your lesson pack has been added to your account. 🎉')
+      setTimeout(() => {
+        setPaymentSuccess(false)
+        setSuccessMessage('')
+        // Clear URL parameters
+        router.replace('/dancer/request-lesson')
+      }, 5000)
+    } else if (canceled === 'true') {
+      setPaymentCanceled(true)
+      setPaymentSuccess(false)
+      setSuccessMessage('Payment was canceled. You can try again anytime.')
+      setTimeout(() => {
+        setPaymentCanceled(false)
+        setSuccessMessage('')
+        // Clear URL parameters
+        router.replace('/dancer/request-lesson')
+      }, 5000)
+    }
+  }, [router])
 
   const fetchRequests = async () => {
     try {
@@ -217,7 +250,13 @@ export default function RequestPrivateLessonPage() {
       </div>
 
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+        <div className={`mb-6 p-4 rounded-lg ${
+          paymentSuccess
+            ? 'bg-green-50 border border-green-200 text-green-800'
+            : paymentCanceled
+            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
+            : 'bg-green-50 border border-green-200 text-green-800'
+        }`}>
           {successMessage}
         </div>
       )}
@@ -226,7 +265,7 @@ export default function RequestPrivateLessonPage() {
         <CardTitle className="p-6 pb-4">Request a Private Lesson</CardTitle>
         <CardContent className="px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <LessonPackInfo />
+            <LessonPackInfo instructorId={formData.instructor_id || null} />
             
             {loadingInstructors ? (
               <div className="p-3 bg-gray-50 border border-gray-200 rounded text-gray-600">

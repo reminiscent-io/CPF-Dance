@@ -5,18 +5,22 @@ import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import { StripePaymentDialog } from '@/components/StripePaymentDialog'
 import type { LessonPack, LessonPackPurchase } from '@/lib/types'
 
 interface LessonPackSelectorProps {
   onSelectPack: (packId: string, packName: string, lessons: number) => void
   selectedPackId?: string
+  instructorId?: string | null
 }
 
-export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackSelectorProps) {
+export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId }: LessonPackSelectorProps) {
   const [packs, setPacks] = useState<LessonPack[]>([])
   const [purchases, setPurchases] = useState<LessonPackPurchase[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [selectedPack, setSelectedPack] = useState<LessonPack | null>(null)
 
   useEffect(() => {
     fetchPacks()
@@ -49,23 +53,31 @@ export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackS
     }).format(price)
   }
 
-  const handlePurchase = async (packId: string) => {
-    try {
-      const response = await fetch('/api/dancer/lesson-packs/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lesson_pack_id: packId })
-      })
+  const handlePurchase = (packId: string) => {
+    // Validate instructor is selected
+    if (!instructorId) {
+      alert('Please select an instructor before purchasing a lesson pack')
+      return
+    }
 
-      if (response.ok) {
-        await fetchPacks()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to purchase lesson pack')
-      }
-    } catch (err) {
-      console.error('Error purchasing pack:', err)
-      alert('Failed to purchase lesson pack')
+    // Find the selected pack
+    const pack = packs.find(p => p.id === packId)
+    if (!pack) {
+      alert('Lesson pack not found')
+      return
+    }
+
+    // Open payment dialog
+    setSelectedPack(pack)
+    setPaymentDialogOpen(true)
+  }
+
+  const handlePaymentSuccess = async () => {
+    setPaymentDialogOpen(false)
+    setSelectedPack(null)
+    await fetchPacks()
+    if (selectedPack) {
+      onSelectPack(selectedPack.id, selectedPack.name || `${selectedPack.lesson_count} Lessons`, selectedPack.lesson_count)
     }
   }
 
@@ -140,6 +152,17 @@ export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackS
           </div>
         </div>
       )}
+
+      <StripePaymentDialog
+        isOpen={paymentDialogOpen}
+        onClose={() => {
+          setPaymentDialogOpen(false)
+          setSelectedPack(null)
+        }}
+        lessonPack={selectedPack}
+        instructorId={instructorId || null}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   )
 }
