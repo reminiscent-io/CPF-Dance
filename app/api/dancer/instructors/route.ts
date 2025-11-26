@@ -19,23 +19,25 @@ export async function GET(request: NextRequest) {
 
     const instructorIds = relationships?.map(r => r.instructor_id) || []
 
-    if (instructorIds.length === 0) {
-      return NextResponse.json({ instructors: [] })
-    }
-
-    // Get the instructor profiles
+    // Get instructors from relationships and all admin/instructor profiles
     const { data: instructors, error: instructorsError } = await supabase
       .from('profiles')
       .select('id, full_name, email')
-      .in('id', instructorIds)
-      .eq('role', 'instructor')
+      .or(`and(id.in.(${instructorIds.length > 0 ? instructorIds.join(',') : 'null'}),role.eq.instructor),role.eq.admin,and(full_name.ilike.%Courtney%,role.eq.instructor)`)
       .order('full_name', { ascending: true })
 
     if (instructorsError) {
       return NextResponse.json({ error: instructorsError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ instructors: instructors || [] })
+    // Deduplicate and filter instructors and admins
+    const uniqueInstructors = Array.from(
+      new Map(
+        (instructors || []).map((inst) => [inst.id, inst])
+      ).values()
+    )
+
+    return NextResponse.json({ instructors: uniqueInstructors })
   } catch (error) {
     console.error('Error fetching instructors:', error)
     return NextResponse.json(
