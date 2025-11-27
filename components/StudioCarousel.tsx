@@ -159,7 +159,7 @@ export default function StudioCarousel() {
             className="flex gap-8"
             style={{
               transform: `translateX(calc(-50% + ${dragOffset + currentX}px))`,
-              animation: isDragging ? 'none' : 'scroll 30s linear infinite',
+              animation: isDragging ? 'none' : 'scroll 20s linear infinite',
               transition: isDragging ? 'none' : 'transform 0.3s ease-out',
               userSelect: 'none'
             }}
