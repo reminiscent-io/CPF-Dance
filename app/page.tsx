@@ -218,12 +218,12 @@ export default function HomePage() {
             Dance Studio
           </Link>
           <div className="flex gap-4">
-            <button 
-              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+            <Link 
+              href="/login?portal=dancer"
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
             >
-              Portals
-            </button>
+              Login
+            </Link>
             <button 
               onClick={scrollToInquiry}
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
