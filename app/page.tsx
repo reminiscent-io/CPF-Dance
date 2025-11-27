@@ -32,6 +32,53 @@ const portals = [
   }
 ]
 
+const features = [
+  {
+    id: 'progress',
+    title: 'Progress Tracking',
+    description: 'Detailed instructor notes and progress reports to monitor your development',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    bgGradient: 'from-rose-500 to-rose-600'
+  },
+  {
+    id: 'scheduling',
+    title: 'Easy Scheduling',
+    description: 'Intuitive calendar system for managing classes and private lessons',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    bgGradient: 'from-mauve-500 to-mauve-600'
+  },
+  {
+    id: 'payments',
+    title: 'Secure Payments',
+    description: 'Safe and convenient payment processing for lessons and classes',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    bgGradient: 'from-rose-500 to-mauve-600'
+  },
+  {
+    id: 'lessons',
+    title: 'Private Lessons',
+    description: 'Request and schedule one-on-one instruction at your convenience',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+    bgGradient: 'from-mauve-500 to-rose-600'
+  }
+]
+
 export default function HomePage() {
   const [formData, setFormData] = useState({
     studio_name: '',
@@ -46,9 +93,11 @@ export default function HomePage() {
   const [heroHeight, setHeroHeight] = useState(100)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [featuresCarouselIndex, setFeaturesCarouselIndex] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const featuresCarouselRef = useRef<HTMLDivElement>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -96,6 +145,14 @@ export default function HomePage() {
 
   const prevPortal = () => {
     setCarouselIndex((prev) => (prev - 1 + portals.length) % portals.length)
+  }
+
+  const nextFeature = () => {
+    setFeaturesCarouselIndex((prev) => (prev + 1) % features.length)
+  }
+
+  const prevFeature = () => {
+    setFeaturesCarouselIndex((prev) => (prev - 1 + features.length) % features.length)
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -315,54 +372,70 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Progress Tracking</h3>
-              <p className="text-gray-600">
-                Detailed instructor notes and progress reports to monitor your development
-              </p>
-            </Card>
+          {/* Desktop Grid - Hidden on mobile */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+            {features.map((feature) => (
+              <Card key={feature.id} hover className="text-center">
+                <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">
+                  {feature.description}
+                </p>
+              </Card>
+            ))}
+          </div>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-mauve-500 to-mauve-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          {/* Mobile Carousel - Visible only on mobile */}
+          <div className="md:hidden mb-20">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={prevFeature}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Previous feature"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Easy Scheduling</h3>
-              <p className="text-gray-600">
-                Intuitive calendar system for managing classes and private lessons
-              </p>
-            </Card>
+              </button>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-mauve-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+              <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                <Card hover className="text-center">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    {features[featuresCarouselIndex].icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{features[featuresCarouselIndex].title}</h3>
+                  <p className="text-gray-600">
+                    {features[featuresCarouselIndex].description}
+                  </p>
+                </Card>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Secure Payments</h3>
-              <p className="text-gray-600">
-                Safe and convenient payment processing for lessons and classes
-              </p>
-            </Card>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-mauve-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <button
+                onClick={nextFeature}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Next feature"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Private Lessons</h3>
-              <p className="text-gray-600">
-                Request and schedule one-on-one instruction at your convenience
-              </p>
-            </Card>
+              </button>
+            </div>
+
+            {/* Carousel Indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {features.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setFeaturesCarouselIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === featuresCarouselIndex ? 'bg-rose-600' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to feature ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
