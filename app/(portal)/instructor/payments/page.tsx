@@ -49,7 +49,29 @@ interface PaymentStats {
   cancelled: number
 }
 
+interface ClassEarning {
+  id: string
+  title: string
+  class_type: string
+  start_time: string
+  end_time: string
+  pricing_model: string
+  enrollment_count: number
+  calculated_value: number
+  collected_amount: number
+  studio?: { id: string; name: string } | null
+}
+
+interface EarningsSummary {
+  total_classes: number
+  total_value: number
+  total_collected: number
+  total_outstanding: number
+  by_class_type: Record<string, { count: number; value: number; collected: number }>
+}
+
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'disputed' | 'cancelled'
+type EarningsDateRange = 'all' | 'this_month' | 'last_month' | 'this_year'
 
 export default function InstructorPaymentsPage() {
   const { user, profile, loading } = useUser()
@@ -82,6 +104,12 @@ export default function InstructorPaymentsPage() {
     notes: ''
   })
 
+  const [classEarnings, setClassEarnings] = useState<ClassEarning[]>([])
+  const [earningsSummary, setEarningsSummary] = useState<EarningsSummary | null>(null)
+  const [loadingEarnings, setLoadingEarnings] = useState(true)
+  const [earningsDateRange, setEarningsDateRange] = useState<EarningsDateRange>('all')
+  const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
+
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
       router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
@@ -93,6 +121,54 @@ export default function InstructorPaymentsPage() {
       fetchPayments()
     }
   }, [loading, user, profile, filterStatus])
+
+  useEffect(() => {
+    if (!loading && user && profile) {
+      fetchClassEarnings()
+    }
+  }, [loading, user, profile, earningsDateRange])
+
+  const fetchClassEarnings = async () => {
+    setLoadingEarnings(true)
+    try {
+      const params = new URLSearchParams()
+      
+      if (earningsDateRange !== 'all') {
+        const now = new Date()
+        let startDate: Date
+        let endDate: Date = now
+        
+        switch (earningsDateRange) {
+          case 'this_month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+            break
+          case 'last_month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0)
+            break
+          case 'this_year':
+            startDate = new Date(now.getFullYear(), 0, 1)
+            break
+          default:
+            startDate = new Date(0)
+        }
+        
+        params.append('start_date', startDate.toISOString())
+        params.append('end_date', endDate.toISOString())
+      }
+
+      const response = await fetch(`/api/instructor/class-earnings?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        setClassEarnings(data.classes)
+        setEarningsSummary(data.summary)
+      }
+    } catch (error) {
+      console.error('Error fetching class earnings:', error)
+    } finally {
+      setLoadingEarnings(false)
+    }
+  }
 
   const fetchStudentsAndStudios = async () => {
     if (loadingOptions) return
@@ -299,6 +375,154 @@ export default function InstructorPaymentsPage() {
           </Card>
         </div>
       )}
+
+      {/* Class Earnings Dashboard */}
+      <div className="mb-10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Class Earnings</h2>
+          <div className="flex gap-2">
+            <select
+              value={earningsDateRange}
+              onChange={(e) => setEarningsDateRange(e.target.value as EarningsDateRange)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="all">All Time</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_year">This Year</option>
+            </select>
+          </div>
+        </div>
+
+        {loadingEarnings ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        ) : earningsSummary && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="text-sm font-medium text-blue-600 mb-1">Total Class Value</div>
+                  <div className="text-3xl font-bold text-blue-900">{formatCurrency(earningsSummary.total_value)}</div>
+                  <div className="text-sm text-blue-600 mt-1">{earningsSummary.total_classes} classes</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-4">
+                  <div className="text-sm font-medium text-green-600 mb-1">Collected</div>
+                  <div className="text-3xl font-bold text-green-900">{formatCurrency(earningsSummary.total_collected)}</div>
+                  <div className="text-sm text-green-600 mt-1">
+                    {earningsSummary.total_value > 0 
+                      ? `${Math.round((earningsSummary.total_collected / earningsSummary.total_value) * 100)}% of total`
+                      : '0%'}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+                <CardContent className="p-4">
+                  <div className="text-sm font-medium text-amber-600 mb-1">Outstanding</div>
+                  <div className="text-3xl font-bold text-amber-900">{formatCurrency(earningsSummary.total_outstanding)}</div>
+                  <div className="text-sm text-amber-600 mt-1">
+                    {earningsSummary.total_value > 0
+                      ? `${Math.round((earningsSummary.total_outstanding / earningsSummary.total_value) * 100)}% pending`
+                      : '0%'}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Class Type Breakdown */}
+            {Object.keys(earningsSummary.by_class_type).length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setShowEarningsBreakdown(!showEarningsBreakdown)}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-3"
+                >
+                  <span>{showEarningsBreakdown ? '▼' : '▶'}</span>
+                  Breakdown by Class Type
+                </button>
+                
+                {showEarningsBreakdown && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Object.entries(earningsSummary.by_class_type).map(([type, data]) => (
+                      <Card key={type} className="bg-gray-50">
+                        <CardContent className="p-4">
+                          <div className="text-sm font-medium text-gray-500 capitalize mb-2">
+                            {type.replace('_', ' ')}
+                          </div>
+                          <div className="text-lg font-bold text-gray-900">{formatCurrency(data.value)}</div>
+                          <div className="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>{data.count} classes</span>
+                            <span className="text-green-600">{formatCurrency(data.collected)} collected</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Top Classes by Value */}
+            {classEarnings.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 mb-3">Recent Classes by Value</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left px-4 py-2 font-medium text-gray-600">Class</th>
+                        <th className="text-left px-4 py-2 font-medium text-gray-600">Type</th>
+                        <th className="text-left px-4 py-2 font-medium text-gray-600">Date</th>
+                        <th className="text-center px-4 py-2 font-medium text-gray-600">Students</th>
+                        <th className="text-right px-4 py-2 font-medium text-gray-600">Value</th>
+                        <th className="text-right px-4 py-2 font-medium text-gray-600">Collected</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {classEarnings.slice(0, 10).map((cls) => (
+                        <tr key={cls.id} className="border-t border-gray-100 hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-gray-900">{cls.title}</div>
+                            {cls.studio && (
+                              <div className="text-xs text-gray-500">{cls.studio.name}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant="secondary" size="sm">
+                              {cls.class_type.replace('_', ' ')}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">
+                            {new Date(cls.start_time).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">{cls.enrollment_count}</td>
+                          <td className="px-4 py-3 text-right font-medium text-gray-900">
+                            {formatCurrency(cls.calculated_value)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className={cls.collected_amount >= cls.calculated_value ? 'text-green-600' : 'text-amber-600'}>
+                              {formatCurrency(cls.collected_amount)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <hr className="my-8 border-gray-200" />
+
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment History</h2>
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-2">
