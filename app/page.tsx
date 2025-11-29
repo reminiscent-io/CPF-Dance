@@ -188,12 +188,12 @@ export default function HomePage() {
         const contentVh = (contentPixels / viewportHeight) * 100
         setHeroHeight(contentVh)
       }
-    }, 3000)
+    }, 2000)
 
-    // Show nav after hero finishes shrinking (3s + 2s animation = 5s total)
+    // Show nav after hero finishes shrinking (2s + 2s animation = 4s total)
     const navTimer = setTimeout(() => {
       setShowNav(true)
-    }, 5000)
+    }, 4000)
 
     return () => {
       clearTimeout(shrinkTimer)
