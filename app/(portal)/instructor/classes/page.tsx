@@ -68,7 +68,7 @@ export default function ClassesPage() {
     }
   }
 
-  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string }) => {
+  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string; recurringClasses?: any[] }) => {
     try {
       let studioId = formData.studio_id
 
@@ -96,9 +96,38 @@ export default function ClassesPage() {
         addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
       }
 
-      // Create the class with the studio_id (either selected or newly created)
+      // Check if this is a recurring class submission
+      if (formData.recurringClasses && formData.recurringClasses.length > 0) {
+        // Create multiple classes
+        const classesToCreate = formData.recurringClasses.map(classItem => ({
+          ...classItem,
+          studio_id: studioId
+        }))
+
+        // Use bulk creation endpoint
+        const response = await fetch('/api/classes/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ classes: classesToCreate })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('API Error:', errorData)
+          throw new Error(errorData.error || 'Failed to create classes')
+        }
+
+        const { classes: newClasses } = await response.json()
+        setClasses(prev => [...newClasses, ...prev])
+        setShowCreateModal(false)
+        addToast(`${newClasses.length} classes created successfully`, 'success')
+        return
+      }
+
+      // Create a single class
       const classData = { ...formData, studio_id: studioId }
       delete (classData as any).newStudioName // Remove the temporary field
+      delete (classData as any).recurringClasses // Remove the recurring field
 
       const response = await fetch('/api/classes', {
         method: 'POST',
@@ -766,6 +795,50 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
 
+  // Recurring class state
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [selectedDays, setSelectedDays] = useState<number[]>([]) // 0=Sunday, 1=Monday, etc.
+  const [recurringEndDate, setRecurringEndDate] = useState('')
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingClassDates, setPendingClassDates] = useState<Date[]>([])
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  // Calculate recurring class dates
+  const calculateRecurringDates = (): Date[] => {
+    if (!formData.start_time || !recurringEndDate || selectedDays.length === 0) {
+      return []
+    }
+
+    const dates: Date[] = []
+    const startDate = new Date(formData.start_time)
+    const endDate = new Date(recurringEndDate)
+    endDate.setHours(23, 59, 59, 999) // Include the entire end date
+
+    // Get time components from start_time
+    const hours = startDate.getHours()
+    const minutes = startDate.getMinutes()
+
+    // Start from the day after the first class (first class is always included)
+    dates.push(new Date(startDate))
+
+    const currentDate = new Date(startDate)
+    currentDate.setDate(currentDate.getDate() + 1) // Move to next day
+
+    while (currentDate <= endDate) {
+      if (selectedDays.includes(currentDate.getDay())) {
+        const classDate = new Date(currentDate)
+        classDate.setHours(hours, minutes, 0, 0)
+        dates.push(classDate)
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    return dates
+  }
+
+  const recurringDates = isRecurring ? calculateRecurringDates() : []
+
   // Fetch instructors for admin users
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -818,6 +891,32 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       return
     }
 
+    // For recurring classes, validate and check count
+    if (isRecurring) {
+      if (selectedDays.length === 0) {
+        return // Need at least one day selected
+      }
+      if (!recurringEndDate) {
+        return // Need an end date
+      }
+
+      const dates = calculateRecurringDates()
+      if (dates.length === 0) {
+        return
+      }
+
+      // Show confirmation dialog if more than 20 classes
+      if (dates.length > 20) {
+        setPendingClassDates(dates)
+        setShowConfirmDialog(true)
+        return
+      }
+
+      // Proceed with creating multiple classes
+      submitRecurringClasses(dates)
+      return
+    }
+
     // Calculate end_time from start_time + duration
     const startDate = new Date(formData.start_time)
     const endDate = new Date(startDate.getTime() + durationMinutes * 60000) // Add duration in milliseconds
@@ -828,6 +927,32 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       ...formData,
       end_time: endTimeISO
     })
+  }
+
+  const submitRecurringClasses = (dates: Date[]) => {
+    // Submit each class individually by calling onSubmit multiple times
+    // The parent component will handle the actual API calls
+    const classesToCreate = dates.map(date => {
+      const startDate = new Date(date)
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+      return {
+        ...formData,
+        start_time: startDate.toISOString().slice(0, 16),
+        end_time: endDate.toISOString().slice(0, 16)
+      }
+    })
+
+    // Pass all classes to parent via a special property
+    onSubmit({
+      ...formData,
+      end_time: new Date(new Date(formData.start_time).getTime() + durationMinutes * 60000).toISOString().slice(0, 16),
+      recurringClasses: classesToCreate
+    } as any)
+  }
+
+  const handleConfirmRecurring = () => {
+    setShowConfirmDialog(false)
+    submitRecurringClasses(pendingClassDates)
   }
 
   return (
@@ -994,6 +1119,78 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
           </p>
 
+          {/* Recurring Class Options */}
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="recurring_toggle"
+                checked={isRecurring}
+                onChange={(e) => {
+                  setIsRecurring(e.target.checked)
+                  if (!e.target.checked) {
+                    setSelectedDays([])
+                    setRecurringEndDate('')
+                  }
+                }}
+                className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              />
+              <label htmlFor="recurring_toggle" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Make this a recurring class
+              </label>
+            </div>
+
+            {isRecurring && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Repeat on these days *
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {dayNames.map((day, index) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (selectedDays.includes(index)) {
+                            setSelectedDays(selectedDays.filter(d => d !== index))
+                          } else {
+                            setSelectedDays([...selectedDays, index])
+                          }
+                        }}
+                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                          selectedDays.includes(index)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Input
+                  label="Repeat until (end date) *"
+                  type="date"
+                  required={isRecurring}
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                  min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
+                />
+
+                {recurringDates.length > 0 && (
+                  <div className="text-sm text-purple-700 bg-purple-100 px-3 py-2 rounded">
+                    This will create <strong>{recurringDates.length}</strong> classes
+                    {recurringDates.length > 20 && (
+                      <span className="text-purple-800"> (confirmation required)</span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
             <input
               type="checkbox"
@@ -1104,9 +1301,50 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Create Class</Button>
+          <Button type="submit">
+            {isRecurring && recurringDates.length > 1 
+              ? `Create ${recurringDates.length} Classes` 
+              : 'Create Class'}
+          </Button>
         </ModalFooter>
       </form>
+
+      {/* Confirmation Dialog for Many Classes */}
+      {showConfirmDialog && (
+        <Modal isOpen={true} onClose={() => setShowConfirmDialog(false)} title="Confirm Bulk Creation" size="md">
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              You are about to create <strong className="text-purple-700">{pendingClassDates.length}</strong> classes.
+            </p>
+            <p className="text-sm text-gray-600">
+              This will create individual classes for each scheduled date. Are you sure you want to proceed?
+            </p>
+            <div className="max-h-40 overflow-y-auto bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500 mb-2">Scheduled dates:</p>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {pendingClassDates.slice(0, 10).map((date, i) => (
+                  <li key={i}>
+                    {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    {' at '}
+                    {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </li>
+                ))}
+                {pendingClassDates.length > 10 && (
+                  <li className="text-gray-500 italic">...and {pendingClassDates.length - 10} more</li>
+                )}
+              </ul>
+            </div>
+          </div>
+          <ModalFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirmRecurring}>
+              Yes, Create {pendingClassDates.length} Classes
+            </Button>
+          </ModalFooter>
+        </Modal>
+      )}
     </Modal>
   )
 }
