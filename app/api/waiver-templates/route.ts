@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges } from '@/lib/auth/privileges'
 
 // GET - Fetch all templates for the current user
 export async function GET(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json(
         { error: 'Only instructors and admins can access templates' },
         { status: 403 }
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json(
         { error: 'Only instructors and admins can create templates' },
         { status: 403 }

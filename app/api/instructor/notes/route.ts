@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { hasInstructorPrivileges } from '@/lib/auth/privileges'
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
+    if (profileError || !hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Unauthorized - Instructors and Admins only' }, { status: 403 })
     }
 
@@ -98,7 +99,7 @@ export async function PUT(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
+    if (profileError || !hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Unauthorized - Instructors and Admins only' }, { status: 403 })
     }
 
@@ -167,7 +168,7 @@ export async function DELETE(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
+    if (profileError || !hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Unauthorized - Instructors and Admins only' }, { status: 403 })
     }
 

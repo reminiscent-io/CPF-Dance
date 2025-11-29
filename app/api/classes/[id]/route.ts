@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 
 export async function GET(
   request: NextRequest,
@@ -53,7 +54,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can update classes' }, { status: 403 })
     }
 
@@ -127,8 +128,8 @@ export async function PATCH(
       .update(updateData)
       .eq('id', id)
 
-    // Instructors can only update their own classes
-    if (profile.role === 'instructor') {
+    // Non-admin instructors can only update their own classes
+    if (profile.role !== 'admin') {
       query = query.eq('instructor_id', profile.id)
     }
 
@@ -171,7 +172,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can delete classes' }, { status: 403 })
     }
 
@@ -184,8 +185,8 @@ export async function DELETE(
       .delete()
       .eq('id', id)
 
-    // Instructors can only delete their own classes
-    if (profile.role === 'instructor') {
+    // Non-admin instructors can only delete their own classes
+    if (profile.role !== 'admin') {
       query = query.eq('instructor_id', profile.id)
     }
 

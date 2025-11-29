@@ -38,6 +38,14 @@ Preferred communication style: Simple, everyday language.
    - All API routes validate user authentication and role permissions
    - Admin role bypasses most restrictions (universal access)
 
+4. **Privilege Helper System** (`lib/auth/privileges.ts`) - NEW November 2025
+   - Centralized role-checking functions for consistent authorization across codebase
+   - `hasInstructorPrivileges(profile)`: Check if user can perform instructor actions (instructor or admin)
+   - `hasStudioPrivileges(profile)`: Check if user can perform studio actions (studio, studio_admin, or admin)
+   - `hasDancerPrivileges(profile)`: Check if user can perform dancer actions (dancer or admin)
+   - `isInstructorOrAdmin(role)`: Simple role string check for instructor/admin
+   - Design choice: Keep existing role enum rather than switching to binary admin flag to avoid risky database migrations
+
 **User Roles:**
 - `instructor`: Full access to student/class/payment management
 - `dancer`: Access to personal classes, notes, payments, profile

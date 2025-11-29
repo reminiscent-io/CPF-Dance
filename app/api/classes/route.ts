@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can create classes' }, { status: 403 })
     }
 
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
           }, { status: 400 })
         }
 
-        if (instructorProfile.role !== 'instructor' && instructorProfile.role !== 'admin') {
+        if (!isInstructorOrAdmin(instructorProfile.role)) {
           return NextResponse.json({
             error: 'Invalid instructor_id: User must be an instructor or admin'
           }, { status: 400 })
