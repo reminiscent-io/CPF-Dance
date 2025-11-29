@@ -97,33 +97,32 @@ export async function POST(request: NextRequest) {
     // Determine instructor_id based on role
     let finalInstructorId: string
     if (profile.role === 'admin') {
-      // Admins can specify any instructor
-      if (!instructor_id) {
-        return NextResponse.json({
-          error: 'Admins must specify an instructor_id when creating a class'
-        }, { status: 400 })
+      // Admins can create classes for themselves or specify another instructor/admin
+      if (instructor_id) {
+        // Validate that the specified user exists and is an instructor or admin
+        const { data: instructorProfile, error: instructorError } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', instructor_id)
+          .single()
+
+        if (instructorError || !instructorProfile) {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User not found'
+          }, { status: 400 })
+        }
+
+        if (instructorProfile.role !== 'instructor' && instructorProfile.role !== 'admin') {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User must be an instructor or admin'
+          }, { status: 400 })
+        }
+
+        finalInstructorId = instructor_id
+      } else {
+        // If no instructor_id specified, use the admin's own ID
+        finalInstructorId = profile.id
       }
-
-      // Validate that the instructor exists and is actually an instructor
-      const { data: instructorProfile, error: instructorError } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('id', instructor_id)
-        .single()
-
-      if (instructorError || !instructorProfile) {
-        return NextResponse.json({
-          error: 'Invalid instructor_id: Instructor not found'
-        }, { status: 400 })
-      }
-
-      if (instructorProfile.role !== 'instructor') {
-        return NextResponse.json({
-          error: 'Invalid instructor_id: User is not an instructor'
-        }, { status: 400 })
-      }
-
-      finalInstructorId = instructor_id
     } else {
       // Instructors can only create classes for themselves
       finalInstructorId = profile.id

@@ -452,15 +452,14 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
           {profile?.role === 'admin' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructor *
+                Instructor (leave blank to use yourself)
               </label>
               <select
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
-                <option value="">Select an instructor</option>
+                <option value="">Use me as the instructor</option>
                 {instructors.map(instructor => (
                   <option key={instructor.id} value={instructor.id}>
                     {instructor.full_name}
@@ -846,15 +845,14 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           {profile?.role === 'admin' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructor *
+                Instructor (leave blank to use yourself)
               </label>
               <select
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
-                <option value="">Select an instructor</option>
+                <option value="">Use me as the instructor</option>
                 {instructors.map(instructor => (
                   <option key={instructor.id} value={instructor.id}>
                     {instructor.full_name}
