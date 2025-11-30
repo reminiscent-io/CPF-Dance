@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 
 interface ClassEvent {
   id: string
@@ -37,6 +38,7 @@ export default function InstructorSchedulePage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
+  const [showCalendarMenu, setShowCalendarMenu] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -133,6 +135,27 @@ export default function InstructorSchedulePage() {
         return 'bg-amber-100 text-amber-800 border-amber-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const handleAddToAppleCalendar = () => {
+    if (selectedEvent) {
+      downloadICS(selectedEvent)
+      setShowCalendarMenu(false)
+    }
+  }
+
+  const handleAddToGoogleCalendar = () => {
+    if (selectedEvent) {
+      window.open(generateGoogleCalendarLink(selectedEvent), '_blank')
+      setShowCalendarMenu(false)
+    }
+  }
+
+  const handleAddToOutlook = () => {
+    if (selectedEvent) {
+      window.open(generateOutlookLink(selectedEvent), '_blank')
+      setShowCalendarMenu(false)
     }
   }
 
@@ -280,22 +303,57 @@ export default function InstructorSchedulePage() {
               </div>
             )}
 
-            <div className="flex gap-2 pt-4">
-              <Button
-                onClick={() => {
-                  window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
-                }}
-                className="flex-1"
-              >
-                View Class Details
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowEventModal(false)}
-                className="flex-1"
-              >
-                Close
-              </Button>
+            <div className="space-y-3">
+              <div className="relative">
+                <Button
+                  onClick={() => setShowCalendarMenu(!showCalendarMenu)}
+                  className="w-full"
+                >
+                  + Add to Calendar
+                </Button>
+                {showCalendarMenu && (
+                  <div className="absolute bottom-full mb-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                    <button
+                      onClick={handleAddToAppleCalendar}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                    >
+                      📱 Apple Calendar / Outlook (download)
+                    </button>
+                    <button
+                      onClick={handleAddToGoogleCalendar}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                    >
+                      📅 Google Calendar
+                    </button>
+                    <button
+                      onClick={handleAddToOutlook}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                    >
+                      📧 Microsoft Outlook
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
+                  }}
+                  className="flex-1"
+                >
+                  View Class Details
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEventModal(false)
+                    setShowCalendarMenu(false)
+                  }}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
         )}
