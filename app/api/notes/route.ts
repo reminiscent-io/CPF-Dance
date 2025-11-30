@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges } from '@/lib/auth/privileges'
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    if (profile.role !== 'instructor') {
-      return NextResponse.json({ error: 'Forbidden: Only instructors can create notes for students' }, { status: 403 })
+    if (!hasInstructorPrivileges(profile)) {
+      return NextResponse.json({ error: 'Forbidden: Only instructors and admins can create notes for students' }, { status: 403 })
     }
     
     const supabase = await createClient()

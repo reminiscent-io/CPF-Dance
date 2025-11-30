@@ -25,13 +25,18 @@ export async function GET(request: NextRequest) {
         is_cancelled,
         cancellation_reason,
         studio_id,
+        instructor_id,
         studios (
           name,
           address
         )
       `)
-      .eq('instructor_id', profile.id)
       .order('start_time', { ascending: true })
+
+    // Non-admin instructors can only see their own classes
+    if (profile.role !== 'admin') {
+      query = query.eq('instructor_id', profile.id)
+    }
 
     // Filter by date range if provided
     if (startDate) {

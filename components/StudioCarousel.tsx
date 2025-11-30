@@ -146,7 +146,7 @@ export default function StudioCarousel() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Studios I&apos;ve Worked With
+            Studios I've Worked With
           </h2>
           <p className="text-lg text-gray-600">
             Trusted by leading dance studios in the NYC area
@@ -159,7 +159,7 @@ export default function StudioCarousel() {
             className="flex gap-8"
             style={{
               transform: `translateX(calc(-50% + ${dragOffset + currentX}px))`,
-              animation: isDragging ? 'none' : 'scroll 30s linear infinite',
+              animation: isDragging ? 'none' : 'scroll 20s linear infinite',
               transition: isDragging ? 'none' : 'transform 0.3s ease-out',
               userSelect: 'none'
             }}

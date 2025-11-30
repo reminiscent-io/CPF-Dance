@@ -18,7 +18,9 @@
       "Bash(mv:*)",
       "Bash(xargs kill -9)",
       "WebSearch",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(npm install:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

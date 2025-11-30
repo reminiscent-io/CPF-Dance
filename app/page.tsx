@@ -19,16 +19,63 @@ const portals = [
   {
     id: 'instructor',
     title: 'Instructor Portal',
-    description: 'Manage students, schedule classes, and track student progress',
+    description: 'Manage students, schedule classes, and provide notes to dancers',
     image: 'https://images.unsplash.com/photo-1685339009948-d807094b1457?',
     link: '/login?portal=instructor'
   },
   {
     id: 'studio',
     title: 'Studio Portal',
-    description: 'Oversee operations, manage locations, and coordinate schedules',
+    description: 'Connect with instructors and track payments',
     image: 'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?',
     link: '/login?portal=studio'
+  }
+]
+
+const features = [
+  {
+    id: 'progress',
+    title: 'Progress Tracking',
+    description: 'Detailed instructor notes and progress reports to monitor your development',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    bgGradient: 'from-rose-500 to-rose-600'
+  },
+  {
+    id: 'scheduling',
+    title: 'Easy Scheduling',
+    description: 'Intuitive calendar system for managing classes and private lessons',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    bgGradient: 'from-mauve-500 to-mauve-600'
+  },
+  {
+    id: 'payments',
+    title: 'Secure Payments',
+    description: 'Safe and convenient payment processing for lessons and classes',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    bgGradient: 'from-rose-500 to-mauve-600'
+  },
+  {
+    id: 'lessons',
+    title: 'Private Lessons',
+    description: 'Request and schedule one-on-one instruction at your convenience',
+    icon: (
+      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+    bgGradient: 'from-mauve-500 to-rose-600'
   }
 ]
 
@@ -46,7 +93,11 @@ export default function HomePage() {
   const [heroHeight, setHeroHeight] = useState(100)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [featuresCarouselIndex, setFeaturesCarouselIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const featuresCarouselRef = useRef<HTMLDivElement>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -96,6 +147,38 @@ export default function HomePage() {
     setCarouselIndex((prev) => (prev - 1 + portals.length) % portals.length)
   }
 
+  const nextFeature = () => {
+    setFeaturesCarouselIndex((prev) => (prev + 1) % features.length)
+  }
+
+  const prevFeature = () => {
+    setFeaturesCarouselIndex((prev) => (prev - 1 + features.length) % features.length)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart) return
+    
+    const touchEnd = e.changedTouches[0].clientX
+    const distance = touchStart - touchEnd
+    const minSwipeDistance = 50 // minimum distance in pixels to trigger swipe
+    
+    if (Math.abs(distance) > minSwipeDistance) {
+      if (distance > 0) {
+        // Swiped left, go to next portal
+        nextPortal()
+      } else {
+        // Swiped right, go to previous portal
+        prevPortal()
+      }
+    }
+    
+    setTouchStart(0)
+  }
+
   useEffect(() => {
     const shrinkTimer = setTimeout(() => {
       // Convert pixel height to viewport height percentage
@@ -105,12 +188,12 @@ export default function HomePage() {
         const contentVh = (contentPixels / viewportHeight) * 100
         setHeroHeight(contentVh)
       }
-    }, 3000)
+    }, 2000)
 
-    // Show nav after hero finishes shrinking (3s + 2s animation = 5s total)
+    // Show nav after hero finishes shrinking (2s + 2s animation = 4s total)
     const navTimer = setTimeout(() => {
       setShowNav(true)
-    }, 5000)
+    }, 4000)
 
     return () => {
       clearTimeout(shrinkTimer)
@@ -132,15 +215,15 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent">
-            Dance Studio
+            CPF Dance
           </Link>
           <div className="flex gap-4">
-            <button 
-              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+            <Link 
+              href="/login?portal=dancer"
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
             >
-              Portals
-            </button>
+              Login
+            </Link>
             <button 
               onClick={scrollToInquiry}
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
@@ -189,7 +272,7 @@ export default function HomePage() {
           {/* Desktop Grid - Hidden on mobile */}
           <div className="hidden md:grid grid-cols-3 gap-8 mb-20">
             {portals.map((portal) => (
-              <Card key={portal.id} hover className="text-center overflow-hidden p-0">
+              <Card key={portal.id} hover className="text-center overflow-hidden p-0 flex flex-col">
                 <div className="relative w-full h-48 overflow-hidden">
                   <img
                     src={portal.image}
@@ -197,14 +280,17 @@ export default function HomePage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                  <p className="text-gray-600 mb-6">
-                    {portal.description}
-                  </p>
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                    <p className="text-gray-600 mb-6">
+                      {portal.description}
+                    </p>
+                  </div>
                   <Link href={portal.link}>
-                    <Button size="lg" className="w-full">
-                      Join or Log In
+                    <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                      <span>Log-in</span>
+                      <span className="text-xs italic font-normal">or sign-up</span>
                     </Button>
                   </Link>
                 </div>
@@ -225,8 +311,8 @@ export default function HomePage() {
                 </svg>
               </button>
 
-              <div className="flex-1 overflow-hidden">
-                <Card hover className="text-center overflow-hidden p-0">
+              <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                <Card hover className="text-center overflow-hidden p-0 flex flex-col">
                   <div className="relative w-full h-48 overflow-hidden">
                     <img
                       src={portals[carouselIndex].image}
@@ -234,14 +320,17 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
-                    <p className="text-gray-600 mb-6">
-                      {portals[carouselIndex].description}
-                    </p>
+                  <div className="p-6 flex flex-col justify-between flex-1">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
+                      <p className="text-gray-600 mb-6">
+                        {portals[carouselIndex].description}
+                      </p>
+                    </div>
                     <Link href={portals[carouselIndex].link}>
-                      <Button size="lg" className="w-full">
-                        Join or Log In
+                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                        <span>Log-in</span>
+                        <span className="text-xs italic font-normal">or sign-up</span>
                       </Button>
                     </Link>
                   </div>
@@ -283,54 +372,70 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Progress Tracking</h3>
-              <p className="text-gray-600">
-                Detailed instructor notes and progress reports to monitor your development
-              </p>
-            </Card>
+          {/* Desktop Grid - Hidden on mobile */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+            {features.map((feature) => (
+              <Card key={feature.id} hover className="text-center">
+                <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">
+                  {feature.description}
+                </p>
+              </Card>
+            ))}
+          </div>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-mauve-500 to-mauve-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          {/* Mobile Carousel - Visible only on mobile */}
+          <div className="md:hidden mb-20">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={prevFeature}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Previous feature"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Easy Scheduling</h3>
-              <p className="text-gray-600">
-                Intuitive calendar system for managing classes and private lessons
-              </p>
-            </Card>
+              </button>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-mauve-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+              <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                <Card hover className="text-center">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    {features[featuresCarouselIndex].icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{features[featuresCarouselIndex].title}</h3>
+                  <p className="text-gray-600">
+                    {features[featuresCarouselIndex].description}
+                  </p>
+                </Card>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Secure Payments</h3>
-              <p className="text-gray-600">
-                Safe and convenient payment processing for lessons and classes
-              </p>
-            </Card>
 
-            <Card hover className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-mauve-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <button
+                onClick={nextFeature}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Next feature"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Private Lessons</h3>
-              <p className="text-gray-600">
-                Request and schedule one-on-one instruction at your convenience
-              </p>
-            </Card>
+              </button>
+            </div>
+
+            {/* Carousel Indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {features.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setFeaturesCarouselIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === featuresCarouselIndex ? 'bg-rose-600' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to feature ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -353,8 +458,8 @@ export default function HomePage() {
                   each dancer reaches their full potential while developing confidence and grace.
                 </p>
                 <p>
-                  Whether you&apos;re a beginner discovering your passion or an advanced dancer refining your skills, 
-                  you&apos;ll receive personalized instruction tailored to your goals.
+                  Whether you're a beginner discovering your passion or an advanced dancer refining your skills, 
+                  you'll receive personalized instruction tailored to your goals.
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -393,7 +498,7 @@ export default function HomePage() {
               Studio Partnership Inquiry
             </h2>
             <p className="text-xl text-gray-600">
-              Interested in bringing our expertise to your studio? Let&apos;s connect.
+              Interested in bringing our expertise to your studio? Let's connect.
             </p>
           </div>
 
@@ -407,7 +512,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Thank You!</h3>
                 <p className="text-gray-600 mb-6">
-                  We&apos;ve received your inquiry and will be in touch shortly.
+                  We've received your inquiry and will be in touch shortly.
                 </p>
                 <Button onClick={() => setSubmitSuccess(false)}>
                   Submit Another Inquiry
@@ -422,7 +527,7 @@ export default function HomePage() {
                   required
                   value={formData.studio_name}
                   onChange={handleInputChange}
-                  placeholder="Your Dance Studio"
+                  placeholder="Your CPF Dance"
                 />
 
                 <Input

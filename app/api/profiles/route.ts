@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges } from '@/lib/auth/privileges'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only admins and instructors can fetch profiles
-    if (profile.role !== 'admin' && profile.role !== 'instructor') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

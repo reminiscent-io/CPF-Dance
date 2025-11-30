@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 
 export async function GET(
   request: NextRequest,
@@ -53,7 +54,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can update classes' }, { status: 403 })
     }
 
@@ -79,7 +80,9 @@ export async function PATCH(
       tiered_additional_cost,
       is_cancelled,
       cancellation_reason,
-      actual_attendance_count
+      actual_attendance_count,
+      external_signup_url,
+      is_public
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -115,6 +118,9 @@ export async function PATCH(
     if (is_cancelled !== undefined) updateData.is_cancelled = is_cancelled
     if (cancellation_reason !== undefined) updateData.cancellation_reason = cancellation_reason || null
     if (actual_attendance_count !== undefined) updateData.actual_attendance_count = actual_attendance_count || null
+    // Public features
+    if (external_signup_url !== undefined) updateData.external_signup_url = external_signup_url || null
+    if (is_public !== undefined) updateData.is_public = is_public
 
     // Build query - admins can update any class, instructors only their own
     let query = supabase
@@ -122,8 +128,8 @@ export async function PATCH(
       .update(updateData)
       .eq('id', id)
 
-    // Instructors can only update their own classes
-    if (profile.role === 'instructor') {
+    // Non-admin instructors can only update their own classes
+    if (profile.role !== 'admin') {
       query = query.eq('instructor_id', profile.id)
     }
 
@@ -166,7 +172,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can delete classes' }, { status: 403 })
     }
 
@@ -179,8 +185,8 @@ export async function DELETE(
       .delete()
       .eq('id', id)
 
-    // Instructors can only delete their own classes
-    if (profile.role === 'instructor') {
+    // Non-admin instructors can only delete their own classes
+    if (profile.role !== 'admin') {
       query = query.eq('instructor_id', profile.id)
     }
 

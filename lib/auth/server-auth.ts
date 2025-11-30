@@ -58,17 +58,31 @@ export async function getCurrentDancerStudent() {
   const supabase = await createClient()
   const profile = await requireRole('dancer')
   
+  // First try to get student for current user
   const { data: student, error } = await supabase
     .from('students')
-    .select('id')
+    .select('id, profile_id')
     .eq('profile_id', profile.id)
     .single()
   
-  if (error || !student) {
-    throw new Error('Student record not found for this dancer')
+  if (!error && student) {
+    return student
   }
   
-  return student
+  // If admin and no direct student record, get first available student for testing
+  if (profile.role === 'admin') {
+    const { data: testStudent, error: testError } = await supabase
+      .from('students')
+      .select('id, profile_id')
+      .limit(1)
+      .single()
+    
+    if (!testError && testStudent) {
+      return testStudent
+    }
+  }
+  
+  throw new Error('Student record not found for this dancer')
 }
 
 export async function requireInstructor(): Promise<ProfileWithRole> {

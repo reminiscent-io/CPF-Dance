@@ -62,10 +62,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter to only include payments for this instructor's classes
-    const instructorPayments = payments?.filter(payment => {
-      const classData = payment.class as any
-      return classData && classData.instructor_id === profile.id
-    }) || []
+    // Admins can see all payments
+    const instructorPayments = profile.role === 'admin'
+      ? (payments || [])
+      : (payments?.filter(payment => {
+          const classData = payment.class as any
+          return classData && classData.instructor_id === profile.id
+        }) || [])
 
     // Format the payments data
     const formattedPayments = instructorPayments.map(payment => {

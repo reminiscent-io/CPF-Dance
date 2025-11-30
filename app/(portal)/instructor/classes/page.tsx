@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
+import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -68,7 +69,7 @@ export default function ClassesPage() {
     }
   }
 
-  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string }) => {
+  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string; recurringClasses?: any[] }) => {
     try {
       let studioId = formData.studio_id
 
@@ -96,9 +97,38 @@ export default function ClassesPage() {
         addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
       }
 
-      // Create the class with the studio_id (either selected or newly created)
+      // Check if this is a recurring class submission
+      if (formData.recurringClasses && formData.recurringClasses.length > 0) {
+        // Create multiple classes
+        const classesToCreate = formData.recurringClasses.map(classItem => ({
+          ...classItem,
+          studio_id: studioId
+        }))
+
+        // Use bulk creation endpoint
+        const response = await fetch('/api/classes/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ classes: classesToCreate })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('API Error:', errorData)
+          throw new Error(errorData.error || 'Failed to create classes')
+        }
+
+        const { classes: newClasses } = await response.json()
+        setClasses(prev => [...newClasses, ...prev])
+        setShowCreateModal(false)
+        addToast(`${newClasses.length} classes created successfully`, 'success')
+        return
+      }
+
+      // Create a single class
       const classData = { ...formData, studio_id: studioId }
       delete (classData as any).newStudioName // Remove the temporary field
+      delete (classData as any).recurringClasses // Remove the recurring field
 
       const response = await fetch('/api/classes', {
         method: 'POST',
@@ -175,6 +205,32 @@ export default function ClassesPage() {
     } catch (error) {
       console.error('Error updating class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to update class'
+      addToast(errorMessage, 'error')
+    }
+  }
+
+  const handleDeleteClass = async (classId: string) => {
+    if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/classes/${classId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete class')
+      }
+
+      setClasses(prev => prev.filter(cls => cls.id !== classId))
+      setShowEditModal(false)
+      setSelectedClass(null)
+      addToast('Class deleted successfully', 'success')
+    } catch (error) {
+      console.error('Error deleting class:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete class'
       addToast(errorMessage, 'error')
     }
   }
@@ -268,6 +324,12 @@ export default function ClassesPage() {
                 )}
               </div>
 
+              {cls.instructor_name && (
+                <p className="text-sm text-gray-700 font-medium mb-2">
+                  👤 {cls.instructor_name}
+                </p>
+              )}
+
               {cls.studio && (
                 <p className="text-sm text-gray-600 mb-2">
                   📍 {cls.studio.name}
@@ -277,12 +339,13 @@ export default function ClassesPage() {
 
               <p className="text-sm text-gray-600 mb-3">
                 📅 {new Date(cls.start_time).toLocaleString('en-US', {
+                  timeZone: 'America/New_York',
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',
                   hour: 'numeric',
                   minute: '2-digit'
-                })}
+                })} ET
               </p>
 
               {cls.description && (
@@ -321,6 +384,7 @@ export default function ClassesPage() {
             setSelectedClass(null)
           }}
           onSubmit={(formData) => handleUpdateClass(selectedClass.id, formData)}
+          onDelete={() => handleDeleteClass(selectedClass.id)}
         />
       )}
     </PortalLayout>
@@ -332,9 +396,10 @@ interface EditClassModalProps {
   studios: Studio[]
   onClose: () => void
   onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
+  onDelete: () => void
 }
 
-function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModalProps) {
+function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: EditClassModalProps) {
   const { profile } = useUser()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
 
@@ -344,8 +409,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     title: classData.title,
     description: classData.description || '',
     location: classData.location || '',
-    start_time: new Date(classData.start_time).toISOString().slice(0, 16),
-    end_time: new Date(classData.end_time).toISOString().slice(0, 16),
+    start_time: convertUTCToET(classData.start_time),
+    end_time: convertUTCToET(classData.end_time),
     max_capacity: classData.max_capacity || undefined,
     actual_attendance_count: classData.actual_attendance_count || undefined,
     pricing_model: classData.pricing_model || 'per_person',
@@ -355,6 +420,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     tiered_base_students: classData.tiered_base_students || undefined,
     tiered_additional_cost: classData.tiered_additional_cost || undefined,
     price: classData.price || undefined, // Legacy field
+    external_signup_url: classData.external_signup_url || '',
+    is_public: classData.is_public || false,
     newStudioName: '',
     instructor_id: (classData as any).instructor_id || undefined
   })
@@ -398,16 +465,17 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     return `${hours}hr ${mins}min`
   }
 
-  // Round datetime to nearest 5-minute interval
+  // Round datetime to nearest 5-minute interval (Eastern Time)
   const roundToNearestFiveMinutes = (dateTimeString: string): string => {
     if (!dateTimeString) return dateTimeString
-    const date = new Date(dateTimeString)
-    const minutes = date.getMinutes()
-    const roundedMinutes = Math.round(minutes / 5) * 5
-    date.setMinutes(roundedMinutes)
-    date.setSeconds(0)
-    date.setMilliseconds(0)
-    return date.toISOString().slice(0, 16)
+    // dateTimeString is in datetime-local format (Eastern Time)
+    const [datePart, timePart] = dateTimeString.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const minuteNum = parseInt(minutes)
+    const roundedMinutes = Math.round(minuteNum / 5) * 5
+    const newMinutes = String(roundedMinutes % 60).padStart(2, '0')
+    const newHours = String(Math.floor(roundedMinutes / 60) + parseInt(hours)).padStart(2, '0')
+    return `${datePart}T${newHours}:${newMinutes}`
   }
 
   // Generate duration options in 5-minute increments
@@ -423,15 +491,19 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
       return
     }
 
-    // Calculate end_time from start_time + duration
-    const startDate = new Date(formData.start_time)
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
-    const endTimeISO = endDate.toISOString().slice(0, 16)
+    // Calculate end_time from start_time + duration (in Eastern Time format)
+    const [datePart, timePart] = formData.start_time.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const totalMinutes = parseInt(hours) * 60 + parseInt(minutes) + durationMinutes
+    const endHours = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+    const endMinutes = String(totalMinutes % 60).padStart(2, '0')
+    const endTimeET = `${datePart}T${endHours}:${endMinutes}`
 
-    // Submit with calculated end_time
+    // Submit with UTC conversion
     onSubmit({
       ...formData,
-      end_time: endTimeISO
+      start_time: convertETToUTC(formData.start_time),
+      end_time: convertETToUTC(endTimeET)
     })
   }
 
@@ -450,15 +522,14 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
           {profile?.role === 'admin' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructor *
+                Instructor (leave blank to use yourself)
               </label>
               <select
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
-                <option value="">Select an instructor</option>
+                <option value="">Use me as the instructor</option>
                 {instructors.map(instructor => (
                   <option key={instructor.id} value={instructor.id}>
                     {instructor.full_name}
@@ -568,13 +639,14 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             placeholder="Search for class location..."
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Start Time *"
+              label="Start Time (ET) *"
               type="datetime-local"
+              step="300"
               required
               value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -602,6 +674,30 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             value={formData.max_capacity || ''}
             onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
           />
+
+          <Input
+            label="External Sign-up Link"
+            type="url"
+            placeholder="https://eventbrite.com/..."
+            value={formData.external_signup_url || ''}
+            onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
+          />
+          <p className="text-xs text-gray-600 -mt-2 mb-2">
+            Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
+          </p>
+
+          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="edit_is_public"
+              checked={formData.is_public || false}
+              onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+            />
+            <label htmlFor="edit_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Make class public for dancers and guardians to view and enroll
+            </label>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -697,6 +793,15 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
         </div>
 
         <ModalFooter className="mt-6">
+          <button type="button" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-colors" title="Delete class">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+          <div className="flex-1"></div>
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -733,11 +838,57 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     tiered_base_students: undefined,
     tiered_additional_cost: undefined,
     price: undefined, // Legacy field
+    external_signup_url: '',
+    is_public: false,
     newStudioName: '',
     instructor_id: undefined
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
+
+  // Recurring class state
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [selectedDays, setSelectedDays] = useState<number[]>([]) // 0=Sunday, 1=Monday, etc.
+  const [recurringEndDate, setRecurringEndDate] = useState('')
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingClassDates, setPendingClassDates] = useState<Date[]>([])
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  // Calculate recurring class dates
+  const calculateRecurringDates = (): Date[] => {
+    if (!formData.start_time || !recurringEndDate || selectedDays.length === 0) {
+      return []
+    }
+
+    const dates: Date[] = []
+    const startDate = new Date(formData.start_time)
+    const endDate = new Date(recurringEndDate)
+    endDate.setHours(23, 59, 59, 999) // Include the entire end date
+
+    // Get time components from start_time
+    const hours = startDate.getHours()
+    const minutes = startDate.getMinutes()
+
+    // Start from the day after the first class (first class is always included)
+    dates.push(new Date(startDate))
+
+    const currentDate = new Date(startDate)
+    currentDate.setDate(currentDate.getDate() + 1) // Move to next day
+
+    while (currentDate <= endDate) {
+      if (selectedDays.includes(currentDate.getDay())) {
+        const classDate = new Date(currentDate)
+        classDate.setHours(hours, minutes, 0, 0)
+        dates.push(classDate)
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    return dates
+  }
+
+  const recurringDates = isRecurring ? calculateRecurringDates() : []
 
   // Fetch instructors for admin users
   useEffect(() => {
@@ -766,16 +917,17 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     return `${hours}hr ${mins}min`
   }
 
-  // Round datetime to nearest 5-minute interval
+  // Round datetime to nearest 5-minute interval (Eastern Time)
   const roundToNearestFiveMinutes = (dateTimeString: string): string => {
     if (!dateTimeString) return dateTimeString
-    const date = new Date(dateTimeString)
-    const minutes = date.getMinutes()
-    const roundedMinutes = Math.round(minutes / 5) * 5
-    date.setMinutes(roundedMinutes)
-    date.setSeconds(0)
-    date.setMilliseconds(0)
-    return date.toISOString().slice(0, 16)
+    // dateTimeString is in datetime-local format (Eastern Time)
+    const [datePart, timePart] = dateTimeString.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const minuteNum = parseInt(minutes)
+    const roundedMinutes = Math.round(minuteNum / 5) * 5
+    const newMinutes = String(roundedMinutes % 60).padStart(2, '0')
+    const newHours = String(Math.floor(roundedMinutes / 60) + parseInt(hours)).padStart(2, '0')
+    return `${datePart}T${newHours}:${newMinutes}`
   }
 
   // Generate duration options in 5-minute increments
@@ -791,16 +943,75 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       return
     }
 
-    // Calculate end_time from start_time + duration
-    const startDate = new Date(formData.start_time)
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000) // Add duration in milliseconds
-    const endTimeISO = endDate.toISOString().slice(0, 16) // Format as datetime-local
+    // Convert ET times to UTC
+    const startUTC = convertETToUTC(formData.start_time)
+    const startDate = new Date(startUTC)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+    const endUTC = endDate.toISOString()
 
-    // Submit with calculated end_time
+    // For recurring classes, validate and check count
+    if (isRecurring) {
+      if (selectedDays.length === 0) {
+        return // Need at least one day selected
+      }
+      if (!recurringEndDate) {
+        return // Need an end date
+      }
+
+      const dates = calculateRecurringDates()
+      if (dates.length === 0) {
+        return
+      }
+
+      // Show confirmation dialog if more than 20 classes
+      if (dates.length > 20) {
+        setPendingClassDates(dates)
+        setShowConfirmDialog(true)
+        return
+      }
+
+      // Proceed with creating multiple classes
+      submitRecurringClasses(dates, startUTC, endUTC)
+      return
+    }
+
+    // Submit with UTC times
     onSubmit({
       ...formData,
-      end_time: endTimeISO
+      start_time: startUTC,
+      end_time: endUTC
     })
+  }
+
+  const submitRecurringClasses = (dates: Date[], startUTC: string, endUTC: string) => {
+    // Submit each class individually by calling onSubmit multiple times
+    // The parent component will handle the actual API calls
+    const classesToCreate = dates.map(date => {
+      const startDate = new Date(date)
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+      return {
+        ...formData,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString()
+      }
+    })
+
+    // Pass all classes to parent via a special property
+    onSubmit({
+      ...formData,
+      start_time: startUTC,
+      end_time: endUTC,
+      recurringClasses: classesToCreate
+    } as any)
+  }
+
+  const handleConfirmRecurring = () => {
+    setShowConfirmDialog(false)
+    const startUTC = convertETToUTC(formData.start_time)
+    const startDate = new Date(startUTC)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+    const endUTC = endDate.toISOString()
+    submitRecurringClasses(pendingClassDates, startUTC, endUTC)
   }
 
   return (
@@ -818,15 +1029,14 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           {profile?.role === 'admin' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructor *
+                Instructor (leave blank to use yourself)
               </label>
               <select
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
-                <option value="">Select an instructor</option>
+                <option value="">Use me as the instructor</option>
                 {instructors.map(instructor => (
                   <option key={instructor.id} value={instructor.id}>
                     {instructor.full_name}
@@ -922,13 +1132,14 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             placeholder="Search for class location..."
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Start Time *"
+              label="Start Time (ET) *"
               type="datetime-local"
+              step="300"
               required
               value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -956,6 +1167,102 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             value={formData.max_capacity || ''}
             onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
           />
+
+          <Input
+            label="External Sign-up Link"
+            type="url"
+            placeholder="https://eventbrite.com/..."
+            value={formData.external_signup_url || ''}
+            onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
+          />
+          <p className="text-xs text-gray-600 -mt-2 mb-2">
+            Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
+          </p>
+
+          {/* Recurring Class Options */}
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="recurring_toggle"
+                checked={isRecurring}
+                onChange={(e) => {
+                  setIsRecurring(e.target.checked)
+                  if (!e.target.checked) {
+                    setSelectedDays([])
+                    setRecurringEndDate('')
+                  }
+                }}
+                className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              />
+              <label htmlFor="recurring_toggle" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Make this a recurring class
+              </label>
+            </div>
+
+            {isRecurring && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Repeat on these days *
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {dayNames.map((day, index) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (selectedDays.includes(index)) {
+                            setSelectedDays(selectedDays.filter(d => d !== index))
+                          } else {
+                            setSelectedDays([...selectedDays, index])
+                          }
+                        }}
+                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                          selectedDays.includes(index)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Input
+                  label="Repeat until (end date) *"
+                  type="date"
+                  required={isRecurring}
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                  min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
+                />
+
+                {recurringDates.length > 0 && (
+                  <div className="text-sm text-purple-700 bg-purple-100 px-3 py-2 rounded">
+                    This will create <strong>{recurringDates.length}</strong> classes
+                    {recurringDates.length > 20 && (
+                      <span className="text-purple-800"> (confirmation required)</span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="create_is_public"
+              checked={formData.is_public || false}
+              onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+            />
+            <label htmlFor="create_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Make class public for dancers and guardians to view and enroll
+            </label>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1054,9 +1361,50 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Create Class</Button>
+          <Button type="submit">
+            {isRecurring && recurringDates.length > 1 
+              ? `Create ${recurringDates.length} Classes` 
+              : 'Create Class'}
+          </Button>
         </ModalFooter>
       </form>
+
+      {/* Confirmation Dialog for Many Classes */}
+      {showConfirmDialog && (
+        <Modal isOpen={true} onClose={() => setShowConfirmDialog(false)} title="Confirm Bulk Creation" size="md">
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              You are about to create <strong className="text-purple-700">{pendingClassDates.length}</strong> classes.
+            </p>
+            <p className="text-sm text-gray-600">
+              This will create individual classes for each scheduled date. Are you sure you want to proceed?
+            </p>
+            <div className="max-h-40 overflow-y-auto bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500 mb-2">Scheduled dates:</p>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {pendingClassDates.slice(0, 10).map((date, i) => (
+                  <li key={i}>
+                    {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    {' at '}
+                    {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </li>
+                ))}
+                {pendingClassDates.length > 10 && (
+                  <li className="text-gray-500 italic">...and {pendingClassDates.length - 10} more</li>
+                )}
+              </ul>
+            </div>
+          </div>
+          <ModalFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirmRecurring}>
+              Yes, Create {pendingClassDates.length} Classes
+            </Button>
+          </ModalFooter>
+        </Modal>
+      )}
     </Modal>
   )
 }

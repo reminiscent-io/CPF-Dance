@@ -1,7 +1,7 @@
 run = "npm run dev"
 entrypoint = "index.js"
 hidden = [".config", "package-lock.json", ".next", ".swc"]
-modules = ["nodejs-22", "postgresql-16"]
+modules = ["nodejs-22", "python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_11"
@@ -28,20 +28,40 @@ localPort = 33283
 externalPort = 3001
 
 [[ports]]
+localPort = 35429
+externalPort = 6800
+
+[[ports]]
 localPort = 36441
 externalPort = 3003
+
+[[ports]]
+localPort = 37245
+externalPort = 6000
+
+[[ports]]
+localPort = 37297
+externalPort = 8008
+
+[[ports]]
+localPort = 38205
+externalPort = 8080
 
 [[ports]]
 localPort = 39759
 externalPort = 3000
 
 [[ports]]
-localPort = 39771
-externalPort = 5173
+localPort = 41305
+externalPort = 8000
 
 [[ports]]
 localPort = 42761
 externalPort = 3002
+
+[[ports]]
+localPort = 44487
+externalPort = 5173
 
 [[ports]]
 localPort = 45985
@@ -49,6 +69,7 @@ externalPort = 4200
 
 [agent]
 expertMode = true
+integrations = ["stripe:1.0.0"]
 
 [workflows]
 runButton = "Project"

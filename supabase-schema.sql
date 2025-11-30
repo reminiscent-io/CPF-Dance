@@ -156,6 +156,43 @@ CREATE TABLE private_lesson_requests (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Lesson packs table
+CREATE TABLE lesson_packs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  lesson_count INTEGER NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  stripe_price_id TEXT,
+  stripe_product_id TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lesson pack purchases table
+CREATE TABLE lesson_pack_purchases (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  lesson_pack_id UUID NOT NULL REFERENCES lesson_packs(id) ON DELETE RESTRICT,
+  payment_id UUID REFERENCES payments(id) ON DELETE SET NULL,
+  stripe_checkout_session_id TEXT,
+  remaining_lessons INTEGER NOT NULL,
+  purchased_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lesson pack usage tracking table
+CREATE TABLE lesson_pack_usage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  lesson_pack_purchase_id UUID NOT NULL REFERENCES lesson_pack_purchases(id) ON DELETE CASCADE,
+  private_lesson_request_id UUID REFERENCES private_lesson_requests(id) ON DELETE SET NULL,
+  lessons_used INTEGER NOT NULL DEFAULT 1,
+  used_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Studio inquiries table (for public form)
 CREATE TABLE studio_inquiries (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -179,6 +216,8 @@ CREATE INDEX idx_notes_student ON notes(student_id);
 CREATE INDEX idx_notes_author ON notes(author_id);
 CREATE INDEX idx_payments_student ON payments(student_id);
 CREATE INDEX idx_payments_status ON payments(payment_status);
+CREATE INDEX idx_lesson_pack_purchases_student ON lesson_pack_purchases(student_id);
+CREATE INDEX idx_lesson_pack_usage_purchase ON lesson_pack_usage(lesson_pack_purchase_id);
 
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -190,6 +229,9 @@ ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_lesson_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_packs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_pack_purchases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_pack_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE studio_inquiries ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles
@@ -413,6 +455,98 @@ CREATE POLICY "Instructors can manage all requests"
     )
   );
 
+-- RLS Policies for lesson packs
+CREATE POLICY "Everyone can view active lesson packs"
+  ON lesson_packs FOR SELECT
+  USING (is_active = true);
+
+CREATE POLICY "Admins can manage lesson packs"
+  ON lesson_packs FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
+-- RLS Policies for lesson pack purchases
+CREATE POLICY "Students can view their own purchases"
+  ON lesson_pack_purchases FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM students
+      WHERE students.id = lesson_pack_purchases.student_id
+      AND (students.profile_id = auth.uid() OR students.guardian_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Students can create purchases"
+  ON lesson_pack_purchases FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM students
+      WHERE students.id = lesson_pack_purchases.student_id
+      AND (students.profile_id = auth.uid() OR students.guardian_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Students can update their purchases"
+  ON lesson_pack_purchases FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM students
+      WHERE students.id = lesson_pack_purchases.student_id
+      AND (students.profile_id = auth.uid() OR students.guardian_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Instructors can view all purchases"
+  ON lesson_pack_purchases FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
+    )
+  );
+
+-- RLS Policies for lesson pack usage
+CREATE POLICY "Students can view their usage"
+  ON lesson_pack_usage FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM lesson_pack_purchases
+      WHERE lesson_pack_purchases.id = lesson_pack_usage.lesson_pack_purchase_id
+      AND EXISTS (
+        SELECT 1 FROM students
+        WHERE students.id = lesson_pack_purchases.student_id
+        AND (students.profile_id = auth.uid() OR students.guardian_id = auth.uid())
+      )
+    )
+  );
+
+CREATE POLICY "Students can create usage records"
+  ON lesson_pack_usage FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM lesson_pack_purchases
+      WHERE lesson_pack_purchases.id = lesson_pack_usage.lesson_pack_purchase_id
+      AND EXISTS (
+        SELECT 1 FROM students
+        WHERE students.id = lesson_pack_purchases.student_id
+        AND (students.profile_id = auth.uid() OR students.guardian_id = auth.uid())
+      )
+    )
+  );
+
+CREATE POLICY "Instructors can manage usage"
+  ON lesson_pack_usage FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
+    )
+  );
+
 -- RLS Policies for studio inquiries (public insert, instructor view)
 CREATE POLICY "Anyone can create studio inquiries"
   ON studio_inquiries FOR INSERT
@@ -497,4 +631,10 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_private_lesson_requests_updated_at BEFORE UPDATE ON private_lesson_requests
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_lesson_packs_updated_at BEFORE UPDATE ON lesson_packs
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_lesson_pack_purchases_updated_at BEFORE UPDATE ON lesson_pack_purchases
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

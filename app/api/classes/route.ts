@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +22,8 @@ export async function GET(request: NextRequest) {
       .from('classes')
       .select(`
         *,
-        studio:studios(name, city, state)
+        studio:studios(name, city, state),
+        instructor:profiles(full_name)
       `)
       .order('start_time', { ascending: true })
 
@@ -47,7 +49,8 @@ export async function GET(request: NextRequest) {
 
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
-      enrolled_count: 0
+      enrolled_count: 0,
+      instructor_name: cls.instructor?.full_name || 'Unknown'
     }))
 
     return NextResponse.json({ classes: classesWithCount })
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (profile.role !== 'instructor' && profile.role !== 'admin') {
+    if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can create classes' }, { status: 403 })
     }
 
@@ -89,39 +92,40 @@ export async function POST(request: NextRequest) {
       cost_per_person,
       cost_per_hour,
       tiered_base_students,
-      tiered_additional_cost
+      tiered_additional_cost,
+      external_signup_url,
+      is_public
     } = body
 
     // Determine instructor_id based on role
     let finalInstructorId: string
     if (profile.role === 'admin') {
-      // Admins can specify any instructor
-      if (!instructor_id) {
-        return NextResponse.json({
-          error: 'Admins must specify an instructor_id when creating a class'
-        }, { status: 400 })
+      // Admins can create classes for themselves or specify another instructor/admin
+      if (instructor_id) {
+        // Validate that the specified user exists and is an instructor or admin
+        const { data: instructorProfile, error: instructorError } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', instructor_id)
+          .single()
+
+        if (instructorError || !instructorProfile) {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User not found'
+          }, { status: 400 })
+        }
+
+        if (!isInstructorOrAdmin(instructorProfile.role)) {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User must be an instructor or admin'
+          }, { status: 400 })
+        }
+
+        finalInstructorId = instructor_id
+      } else {
+        // If no instructor_id specified, use the admin's own ID
+        finalInstructorId = profile.id
       }
-
-      // Validate that the instructor exists and is actually an instructor
-      const { data: instructorProfile, error: instructorError } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('id', instructor_id)
-        .single()
-
-      if (instructorError || !instructorProfile) {
-        return NextResponse.json({
-          error: 'Invalid instructor_id: Instructor not found'
-        }, { status: 400 })
-      }
-
-      if (instructorProfile.role !== 'instructor') {
-        return NextResponse.json({
-          error: 'Invalid instructor_id: User is not an instructor'
-        }, { status: 400 })
-      }
-
-      finalInstructorId = instructor_id
     } else {
       // Instructors can only create classes for themselves
       finalInstructorId = profile.id
@@ -153,7 +157,10 @@ export async function POST(request: NextRequest) {
       cost_per_hour: cost_per_hour || null,
       tiered_base_students: tiered_base_students || null,
       tiered_additional_cost: tiered_additional_cost || null,
-      price: price || null // Legacy field for backwards compatibility
+      price: price || null, // Legacy field for backwards compatibility
+      // Public features
+      external_signup_url: external_signup_url || null,
+      is_public: is_public || false
     }
 
     console.log('Attempting to insert class:', insertData)
