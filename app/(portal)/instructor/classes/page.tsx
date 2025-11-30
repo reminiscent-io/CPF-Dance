@@ -323,6 +323,12 @@ export default function ClassesPage() {
                 )}
               </div>
 
+              {cls.instructor_name && (
+                <p className="text-sm text-gray-700 font-medium mb-2">
+                  👤 {cls.instructor_name}
+                </p>
+              )}
+
               {cls.studio && (
                 <p className="text-sm text-gray-600 mb-2">
                   📍 {cls.studio.name}
