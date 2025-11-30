@@ -408,7 +408,7 @@ export default function TermsOfServicePage() {
               <p className="font-semibold">Reminiscent Technologies LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
-              <p>Email: support@reminiscent.io</p>
+              <p>Email: info@cpfdance.com</p>
             </div>
           </div>
         </div>

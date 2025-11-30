@@ -622,7 +622,7 @@ export default function HomePage() {
               <div>
                 <h4 className="text-xl font-semibold text-white mb-4">Contact</h4>
                 <ul className="space-y-2 text-white">
-                  <li>Email: info@dancestudio.com</li>
+                  <li>Email: info@cpfdance.com</li>
                   <li>
                     <a 
                       href="https://instagram.com/courtneyfiledance" 
