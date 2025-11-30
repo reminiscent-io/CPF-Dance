@@ -648,9 +648,6 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
-            <div className="flex items-end">
-              <p className="text-xs text-gray-500 pb-2">Times in 5-min increments</p>
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Length *
@@ -1144,9 +1141,6 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
-            <div className="flex items-end">
-              <p className="text-xs text-gray-500 pb-2">Times in 5-min increments</p>
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Length *
