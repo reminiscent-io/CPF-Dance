@@ -95,9 +95,13 @@ export default function HomePage() {
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [featuresCarouselIndex, setFeaturesCarouselIndex] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
+  const [taglineIndex, setTaglineIndex] = useState(0)
+  const [taglineKey, setTaglineKey] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
+
+  const taglines = ['Dancers', 'Instructors', 'Studios']
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -201,6 +205,16 @@ export default function HomePage() {
     }
   }, [])
 
+  // Tagline rotation effect
+  useEffect(() => {
+    const taglineTimer = setInterval(() => {
+      setTaglineIndex((prev) => (prev + 1) % taglines.length)
+      setTaglineKey((prev) => prev + 1)
+    }, 4000)
+
+    return () => clearInterval(taglineTimer)
+  }, [])
+
   return (
     <main className="min-h-screen bg-white">
       {/* Navigation Bar */}
@@ -253,7 +267,13 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
-            A free, comprehensive platform built by dancers for dancers
+            A free, comprehensive platform built by{' '}
+            <span className="typewriter" key={taglineKey}>
+              <span className="typewriter-fade text-rose-600 font-semibold">
+                {taglines[taglineIndex]}
+              </span>
+            </span>
+            {' '}for all
           </p>
         </div>
       </section>
