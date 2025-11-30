@@ -602,6 +602,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
             <Input
               label="Start Time *"
               type="datetime-local"
+              step="300"
               required
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
@@ -1077,6 +1078,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             <Input
               label="Start Time *"
               type="datetime-local"
+              step="300"
               required
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
