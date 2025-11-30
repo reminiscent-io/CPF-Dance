@@ -7,7 +7,7 @@ export interface MobileHeaderProps {
   onMenuToggle: () => void
 }
 
-export function MobileHeader({ title = 'Dance Studio', onMenuToggle }: MobileHeaderProps) {
+export function MobileHeader({ title = 'CPF Dance', onMenuToggle }: MobileHeaderProps) {
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-16 flex items-center px-4">
       <button

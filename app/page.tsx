@@ -215,7 +215,7 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent">
-            Dance Studio
+            CPF Dance
           </Link>
           <div className="flex gap-4">
             <Link 
@@ -527,7 +527,7 @@ export default function HomePage() {
                   required
                   value={formData.studio_name}
                   onChange={handleInputChange}
-                  placeholder="Your Dance Studio"
+                  placeholder="Your CPF Dance"
                 />
 
                 <Input

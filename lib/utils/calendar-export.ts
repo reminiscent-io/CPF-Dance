@@ -24,7 +24,7 @@ export function generateICSContent(event: ClassEvent): string {
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Dance Studio//Calendar Export//EN',
+    'PRODID:-//CPF Dance//Calendar Export//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VTIMEZONE',
@@ -45,7 +45,7 @@ export function generateICSContent(event: ClassEvent): string {
     'END:DAYLIGHT',
     'END:VTIMEZONE',
     'BEGIN:VEVENT',
-    `UID:${event.id}@dancestudio.local`,
+    `UID:${event.id}@cpfdance.local`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace('.000', '')}`,
     `DTSTART;TZID=America/New_York:${formatDate(startDate).slice(0, -1)}`,
     `DTEND;TZID=America/New_York:${formatDate(endDate).slice(0, -1)}`,
