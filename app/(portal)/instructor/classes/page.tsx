@@ -784,9 +784,9 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onDelete} className="text-red-600 border-red-300 hover:bg-red-50">
-            Delete Class
-          </Button>
+          <button type="button" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-colors" title="Delete class">
+            🗑️
+          </button>
           <div className="flex-1"></div>
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
