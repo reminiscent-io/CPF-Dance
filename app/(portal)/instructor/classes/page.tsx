@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
+import { utcToEastern, easternToUtc } from '@/lib/utils/timezone'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -373,8 +374,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     title: classData.title,
     description: classData.description || '',
     location: classData.location || '',
-    start_time: new Date(classData.start_time).toISOString().slice(0, 16),
-    end_time: new Date(classData.end_time).toISOString().slice(0, 16),
+    start_time: utcToEastern(classData.start_time),
+    end_time: utcToEastern(classData.end_time),
     max_capacity: classData.max_capacity || undefined,
     actual_attendance_count: classData.actual_attendance_count || undefined,
     pricing_model: classData.pricing_model || 'per_person',
@@ -429,16 +430,17 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     return `${hours}hr ${mins}min`
   }
 
-  // Round datetime to nearest 5-minute interval
+  // Round datetime to nearest 5-minute interval (Eastern Time)
   const roundToNearestFiveMinutes = (dateTimeString: string): string => {
     if (!dateTimeString) return dateTimeString
-    const date = new Date(dateTimeString)
-    const minutes = date.getMinutes()
-    const roundedMinutes = Math.round(minutes / 5) * 5
-    date.setMinutes(roundedMinutes)
-    date.setSeconds(0)
-    date.setMilliseconds(0)
-    return date.toISOString().slice(0, 16)
+    // dateTimeString is in datetime-local format (Eastern Time)
+    const [datePart, timePart] = dateTimeString.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const minuteNum = parseInt(minutes)
+    const roundedMinutes = Math.round(minuteNum / 5) * 5
+    const newMinutes = String(roundedMinutes % 60).padStart(2, '0')
+    const newHours = String(Math.floor(roundedMinutes / 60) + parseInt(hours)).padStart(2, '0')
+    return `${datePart}T${newHours}:${newMinutes}`
   }
 
   // Generate duration options in 5-minute increments
@@ -454,15 +456,19 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
       return
     }
 
-    // Calculate end_time from start_time + duration
-    const startDate = new Date(formData.start_time)
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
-    const endTimeISO = endDate.toISOString().slice(0, 16)
+    // Calculate end_time from start_time + duration (in Eastern Time format)
+    const [datePart, timePart] = formData.start_time.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const totalMinutes = parseInt(hours) * 60 + parseInt(minutes) + durationMinutes
+    const endHours = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+    const endMinutes = String(totalMinutes % 60).padStart(2, '0')
+    const endTimeET = `${datePart}T${endHours}:${endMinutes}`
 
-    // Submit with calculated end_time
+    // Convert both times to UTC before submitting
     onSubmit({
       ...formData,
-      end_time: endTimeISO
+      start_time: easternToUtc(formData.start_time),
+      end_time: easternToUtc(endTimeET)
     })
   }
 
@@ -867,16 +873,17 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     return `${hours}hr ${mins}min`
   }
 
-  // Round datetime to nearest 5-minute interval
+  // Round datetime to nearest 5-minute interval (Eastern Time)
   const roundToNearestFiveMinutes = (dateTimeString: string): string => {
     if (!dateTimeString) return dateTimeString
-    const date = new Date(dateTimeString)
-    const minutes = date.getMinutes()
-    const roundedMinutes = Math.round(minutes / 5) * 5
-    date.setMinutes(roundedMinutes)
-    date.setSeconds(0)
-    date.setMilliseconds(0)
-    return date.toISOString().slice(0, 16)
+    // dateTimeString is in datetime-local format (Eastern Time)
+    const [datePart, timePart] = dateTimeString.split('T')
+    const [hours, minutes] = timePart.split(':')
+    const minuteNum = parseInt(minutes)
+    const roundedMinutes = Math.round(minuteNum / 5) * 5
+    const newMinutes = String(roundedMinutes % 60).padStart(2, '0')
+    const newHours = String(Math.floor(roundedMinutes / 60) + parseInt(hours)).padStart(2, '0')
+    return `${datePart}T${newHours}:${newMinutes}`
   }
 
   // Generate duration options in 5-minute increments
