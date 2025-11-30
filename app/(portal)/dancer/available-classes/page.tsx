@@ -11,6 +11,8 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 
+const PENDING_EXTERNAL_SIGNUP_KEY = 'pending_external_signup'
+
 interface PublicClass {
   id: string
   title: string
@@ -44,6 +46,8 @@ export default function AvailableClassesPage() {
   const [enrollingClassId, setEnrollingClassId] = useState<string | null>(null)
   const [showEnrollModal, setShowEnrollModal] = useState(false)
   const [selectedClass, setSelectedClass] = useState<PublicClass | null>(null)
+  const [showExternalSignupModal, setShowExternalSignupModal] = useState(false)
+  const [pendingExternalClass, setPendingExternalClass] = useState<PublicClass | null>(null)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -54,8 +58,26 @@ export default function AvailableClassesPage() {
   useEffect(() => {
     if (!loading && user && profile) {
       fetchPublicClasses()
+      // Check for pending external signup when page loads or regains focus
+      checkForPendingExternalSignup()
+      window.addEventListener('focus', checkForPendingExternalSignup)
+      return () => window.removeEventListener('focus', checkForPendingExternalSignup)
     }
   }, [loading, user, profile])
+
+  const checkForPendingExternalSignup = () => {
+    try {
+      const pendingSignup = sessionStorage.getItem(PENDING_EXTERNAL_SIGNUP_KEY)
+      if (pendingSignup) {
+        const classData = JSON.parse(pendingSignup) as PublicClass
+        setPendingExternalClass(classData)
+        setShowExternalSignupModal(true)
+        // Don't remove from sessionStorage yet - only remove after user confirms/cancels
+      }
+    } catch (error) {
+      console.error('Error checking for pending signup:', error)
+    }
+  }
 
   const fetchPublicClasses = async () => {
     try {
@@ -78,7 +100,8 @@ export default function AvailableClassesPage() {
 
   const handleEnrollClick = (cls: PublicClass) => {
     if (cls.external_signup_url) {
-      // Open external URL in new tab
+      // Store class info and open external URL
+      sessionStorage.setItem(PENDING_EXTERNAL_SIGNUP_KEY, JSON.stringify(cls))
       window.open(cls.external_signup_url, '_blank', 'noopener,noreferrer')
     } else {
       // Show internal enrollment modal
@@ -113,6 +136,41 @@ export default function AvailableClassesPage() {
     } finally {
       setEnrollingClassId(null)
     }
+  }
+
+  const handleAddExternalClassToCalendar = async () => {
+    if (!pendingExternalClass) return
+
+    try {
+      setEnrollingClassId(pendingExternalClass.id)
+      const response = await fetch('/api/dancer/enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: pendingExternalClass.id })
+      })
+
+      if (response.ok) {
+        addToast('Class added to your calendar!', 'success')
+        setShowExternalSignupModal(false)
+        sessionStorage.removeItem(PENDING_EXTERNAL_SIGNUP_KEY)
+        setPendingExternalClass(null)
+        fetchPublicClasses() // Refresh the list
+      } else {
+        const data = await response.json()
+        addToast(data.error || 'Failed to add class to calendar', 'error')
+      }
+    } catch (error) {
+      console.error('Error adding to calendar:', error)
+      addToast('Error adding class to calendar', 'error')
+    } finally {
+      setEnrollingClassId(null)
+    }
+  }
+
+  const handleCancelExternalSignup = () => {
+    setShowExternalSignupModal(false)
+    sessionStorage.removeItem(PENDING_EXTERNAL_SIGNUP_KEY)
+    setPendingExternalClass(null)
   }
 
   const formatDate = (dateString: string) => {
@@ -319,6 +377,61 @@ export default function AvailableClassesPage() {
             disabled={enrollingClassId !== null}
           >
             {enrollingClassId ? 'Enrolling...' : 'Confirm Enrollment'}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* External Signup Confirmation Modal */}
+      <Modal
+        isOpen={showExternalSignupModal}
+        onClose={handleCancelExternalSignup}
+        title="Add Class to Calendar"
+        size="md"
+      >
+        {pendingExternalClass && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-900 font-medium">
+                ✓ Great! Did you complete the signup for <strong>{pendingExternalClass.title}</strong>?
+              </p>
+            </div>
+
+            <p className="text-gray-700">
+              If you've signed up through the external portal, click "Add to Calendar" to track this class in your schedule.
+            </p>
+
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Date:</span>
+                <span className="font-medium">{formatDate(pendingExternalClass.start_time)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Time:</span>
+                <span className="font-medium">
+                  {formatTime(pendingExternalClass.start_time)} - {formatTime(pendingExternalClass.end_time)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Instructor:</span>
+                <span className="font-medium">{pendingExternalClass.instructor.full_name}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ModalFooter className="mt-6">
+          <Button
+            variant="outline"
+            onClick={handleCancelExternalSignup}
+            disabled={enrollingClassId !== null}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddExternalClassToCalendar}
+            disabled={enrollingClassId !== null}
+          >
+            {enrollingClassId ? 'Adding...' : 'Add to Calendar'}
           </Button>
         </ModalFooter>
       </Modal>
