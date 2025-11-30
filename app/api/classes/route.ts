@@ -50,16 +50,10 @@ export async function GET(request: NextRequest) {
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
       enrolled_count: 0,
-      instructor_name: cls.instructor?.full_name || 'Unknown',
-      start_time_utc: cls.start_time,
-      end_time_utc: cls.end_time,
-      timezone_note: 'All times are in UTC. Use user timezone preference to convert.'
+      instructor_name: cls.instructor?.full_name || 'Unknown'
     }))
 
-    return NextResponse.json({ 
-      classes: classesWithCount,
-      note: 'Times are stored in UTC. Client should use user timezone preference for display.'
-    })
+    return NextResponse.json({ classes: classesWithCount })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -89,8 +83,8 @@ export async function POST(request: NextRequest) {
       title,
       description,
       location,
-      start_time, // Expected in UTC ISO format
-      end_time, // Expected in UTC ISO format
+      start_time,
+      end_time,
       max_capacity,
       price, // Legacy field
       pricing_model,
@@ -102,22 +96,6 @@ export async function POST(request: NextRequest) {
       external_signup_url,
       is_public
     } = body
-    
-    // Validate times are ISO strings (UTC)
-    if (!start_time || !end_time) {
-      return NextResponse.json({ 
-        error: 'start_time and end_time are required in UTC ISO format' 
-      }, { status: 400 })
-    }
-    
-    try {
-      new Date(start_time).toISOString()
-      new Date(end_time).toISOString()
-    } catch {
-      return NextResponse.json({ 
-        error: 'start_time and end_time must be valid ISO format timestamps (UTC)' 
-      }, { status: 400 })
-    }
 
     // Determine instructor_id based on role
     let finalInstructorId: string
