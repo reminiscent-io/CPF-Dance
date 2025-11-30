@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -102,6 +103,24 @@ export default function HomePage() {
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
 
   const taglineRoles = ['Dancers', 'Instructors', 'Studios']
+
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  }
+
+  const cardHoverVariants = {
+    hover: { y: -8, transition: { duration: 0.3 } }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -260,20 +279,20 @@ export default function HomePage() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 text-center" ref={heroContentRef}>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 animate-slideDown">
+          <motion.h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
             Professional Precision
             <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
               Dance Instruction
             </span>
-          </h1>
-          <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
+          </motion.h1>
+          <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}>
             A comprehensive platform built by dancers for{' '}
             <span className="typewriter" key={taglineKey}>
               <span className="typewriter-fade text-rose-600 font-semibold">
                 {taglineRoles[taglineIndex]}
               </span>
             </span>
-          </p>
+          </motion.p>
         </div>
       </section>
 
@@ -289,33 +308,35 @@ export default function HomePage() {
           </div>
 
           {/* Desktop Grid - Hidden on mobile */}
-          <div className="hidden md:grid grid-cols-3 gap-8 mb-20">
+          <motion.div className="hidden md:grid grid-cols-3 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {portals.map((portal) => (
-              <Card key={portal.id} hover className="text-center overflow-hidden p-0 flex flex-col">
-                <div className="relative w-full h-48 overflow-hidden">
-                  <img
-                    src={portal.image}
-                    alt={portal.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 flex flex-col justify-between flex-1">
-                  <div>
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                    <p className="text-gray-600 mb-6">
-                      {portal.description}
-                    </p>
+              <motion.div key={portal.id} variants={itemVariants} whileHover="hover">
+                <Card hover className="text-center overflow-hidden p-0 flex flex-col h-full" style={{ cursor: 'pointer' }}>
+                  <motion.div className="relative w-full h-48 overflow-hidden">
+                    <img
+                      src={portal.image}
+                      alt={portal.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                  <div className="p-6 flex flex-col justify-between flex-1">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                      <p className="text-gray-600 mb-6">
+                        {portal.description}
+                      </p>
+                    </div>
+                    <Link href={portal.link}>
+                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                        <span>Log-in</span>
+                        <span className="text-xs italic font-normal">or sign-up</span>
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href={portal.link}>
-                    <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
-                      <span>Log-in</span>
-                      <span className="text-xs italic font-normal">or sign-up</span>
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Mobile Carousel - Visible only on mobile */}
           <div className="md:hidden mb-20">
@@ -392,19 +413,21 @@ export default function HomePage() {
           </div>
 
           {/* Desktop Grid - Hidden on mobile */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+          <motion.div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {features.map((feature) => (
-              <Card key={feature.id} hover className="text-center">
-                <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">
-                  {feature.description}
-                </p>
-              </Card>
+              <motion.div key={feature.id} variants={itemVariants} whileHover={{ y: -5 }}>
+                <Card hover className="text-center h-full">
+                  <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    {feature.icon}
+                  </motion.div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">
+                    {feature.description}
+                  </p>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Mobile Carousel - Visible only on mobile */}
           <div className="md:hidden mb-20">
