@@ -347,44 +347,44 @@ export default function InstructorPaymentsPage() {
 
       {/* Hero Summary Section */}
       {stats && (
-        <div className="mb-8">
+        <div className="mb-6">
           {/* Hero Card - Total Payments */}
-          <Card className="bg-gradient-to-br from-pink-100 to-pink-50 border-pink-300 border-2 mb-4">
-            <CardContent className="p-8">
-              <div className="text-sm font-medium text-pink-700 mb-2 tracking-wide">Total Payments Collected</div>
-              <div className="text-5xl font-bold text-pink-900 mb-1">{formatCurrency(stats.total_amount)}</div>
-              <div className="text-pink-700">{stats.total_payments} payments recorded</div>
+          <Card className="bg-gradient-to-br from-pink-100 to-pink-50 border-pink-300 border-2 mb-3">
+            <CardContent className="p-4">
+              <div className="text-xs font-medium text-pink-700 mb-1 tracking-wide">Total Payments Collected</div>
+              <div className="text-3xl font-bold text-pink-900">{formatCurrency(stats.total_amount)}</div>
+              <div className="text-xs text-pink-700">{stats.total_payments} payments recorded</div>
             </CardContent>
           </Card>
           
-          {/* Status Grid - Compact 2x2 */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {/* Status Grid - Compact */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Card className="bg-gradient-to-br from-amber-50 to-amber-50 border-amber-200">
-              <CardContent className="p-4">
-                <div className="text-xs font-medium text-amber-700 uppercase mb-1">Pending</div>
-                <div className="text-2xl font-bold text-amber-700">{stats.pending}</div>
-                <div className="text-xs text-amber-600 mt-1">Action required</div>
+              <CardContent className="p-3">
+                <div className="text-xs font-medium text-amber-700 uppercase mb-0.5">Pending</div>
+                <div className="text-xl font-bold text-amber-700">{stats.pending}</div>
+                <div className="text-xs text-amber-600">Action required</div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-br from-green-50 to-green-50 border-green-200">
-              <CardContent className="p-4">
-                <div className="text-xs font-medium text-green-700 uppercase mb-1">Confirmed</div>
-                <div className="text-2xl font-bold text-green-700">{stats.confirmed}</div>
-                <div className="text-xs text-green-600 mt-1">Collected</div>
+              <CardContent className="p-3">
+                <div className="text-xs font-medium text-green-700 uppercase mb-0.5">Confirmed</div>
+                <div className="text-xl font-bold text-green-700">{stats.confirmed}</div>
+                <div className="text-xs text-green-600">Collected</div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-br from-red-50 to-red-50 border-red-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center gap-1">
-                  <span className="text-lg">⚠️</span>
+                  <span className="text-sm">⚠️</span>
                   <div className="flex-1">
                     <div className="text-xs font-medium text-red-700 uppercase">Disputed</div>
-                    <div className="text-2xl font-bold text-red-700">{stats.disputed}</div>
+                    <div className="text-xl font-bold text-red-700">{stats.disputed}</div>
                   </div>
                 </div>
-                <div className="text-xs text-red-600 mt-1">Needs attention</div>
+                <div className="text-xs text-red-600">Needs attention</div>
               </CardContent>
             </Card>
           </div>
