@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
+import { convertETToUTC } from '@/lib/utils/et-timezone'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -638,13 +639,16 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Start Time *"
+              label="Start Time (ET) *"
               type="datetime-local"
               step="300"
               required
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
             />
+            <div className="flex items-end">
+              <p className="text-xs text-gray-500 pb-2">Times entered in Eastern Time</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Length *
@@ -940,6 +944,12 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       return
     }
 
+    // Convert ET times to UTC
+    const startUTC = convertETToUTC(formData.start_time)
+    const startDate = new Date(startUTC)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+    const endUTC = endDate.toISOString()
+
     // For recurring classes, validate and check count
     if (isRecurring) {
       if (selectedDays.length === 0) {
@@ -962,23 +972,19 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       }
 
       // Proceed with creating multiple classes
-      submitRecurringClasses(dates)
+      submitRecurringClasses(dates, startUTC, endUTC)
       return
     }
 
-    // Calculate end_time from start_time + duration
-    const startDate = new Date(formData.start_time)
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000) // Add duration in milliseconds
-    const endTimeISO = endDate.toISOString().slice(0, 16) // Format as datetime-local
-
-    // Submit with calculated end_time
+    // Submit with UTC times
     onSubmit({
       ...formData,
-      end_time: endTimeISO
+      start_time: startUTC,
+      end_time: endUTC
     })
   }
 
-  const submitRecurringClasses = (dates: Date[]) => {
+  const submitRecurringClasses = (dates: Date[], startUTC: string, endUTC: string) => {
     // Submit each class individually by calling onSubmit multiple times
     // The parent component will handle the actual API calls
     const classesToCreate = dates.map(date => {
@@ -986,22 +992,27 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
       return {
         ...formData,
-        start_time: startDate.toISOString().slice(0, 16),
-        end_time: endDate.toISOString().slice(0, 16)
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString()
       }
     })
 
     // Pass all classes to parent via a special property
     onSubmit({
       ...formData,
-      end_time: new Date(new Date(formData.start_time).getTime() + durationMinutes * 60000).toISOString().slice(0, 16),
+      start_time: startUTC,
+      end_time: endUTC,
       recurringClasses: classesToCreate
     } as any)
   }
 
   const handleConfirmRecurring = () => {
     setShowConfirmDialog(false)
-    submitRecurringClasses(pendingClassDates)
+    const startUTC = convertETToUTC(formData.start_time)
+    const startDate = new Date(startUTC)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+    const endUTC = endDate.toISOString()
+    submitRecurringClasses(pendingClassDates, startUTC, endUTC)
   }
 
   return (
@@ -1124,13 +1135,16 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Start Time *"
+              label="Start Time (ET) *"
               type="datetime-local"
               step="300"
               required
               value={formData.start_time}
               onChange={(e) => setFormData({ ...formData, start_time: roundToNearestFiveMinutes(e.target.value) })}
             />
+            <div className="flex items-end">
+              <p className="text-xs text-gray-500 pb-2">Times entered in Eastern Time</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Length *
