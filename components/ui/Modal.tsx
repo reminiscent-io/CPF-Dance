@@ -43,15 +43,15 @@ export function Modal({
   if (!isOpen) return null
   
   const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    sm: 'sm:max-w-md max-w-sm',
+    md: 'sm:max-w-lg max-w-sm',
+    lg: 'sm:max-w-2xl max-w-sm',
+    xl: 'sm:max-w-4xl max-w-sm'
   }
   
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -66,7 +66,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
             <h2 id="modal-title" className="text-2xl font-semibold text-gray-900">
               {title}
             </h2>
@@ -81,7 +81,7 @@ export function Modal({
             </button>
           </div>
         )}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           {children}
         </div>
       </div>
