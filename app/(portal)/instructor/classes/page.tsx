@@ -7,7 +7,6 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
-import { utcToEastern, easternToUtc } from '@/lib/utils/timezone'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -374,8 +373,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     title: classData.title,
     description: classData.description || '',
     location: classData.location || '',
-    start_time: utcToEastern(classData.start_time),
-    end_time: utcToEastern(classData.end_time),
+    start_time: classData.start_time.slice(0, 16),
+    end_time: classData.end_time.slice(0, 16),
     max_capacity: classData.max_capacity || undefined,
     actual_attendance_count: classData.actual_attendance_count || undefined,
     pricing_model: classData.pricing_model || 'per_person',
@@ -464,11 +463,10 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
     const endMinutes = String(totalMinutes % 60).padStart(2, '0')
     const endTimeET = `${datePart}T${endHours}:${endMinutes}`
 
-    // Convert both times to UTC before submitting
+    // Submit with Eastern Time (no conversion)
     onSubmit({
       ...formData,
-      start_time: easternToUtc(formData.start_time),
-      end_time: easternToUtc(endTimeET)
+      end_time: endTimeET
     })
   }
 
