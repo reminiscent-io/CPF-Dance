@@ -7,7 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
-import { convertETToUTC } from '@/lib/utils/et-timezone'
+import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 
 export default function ClassesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -339,12 +339,13 @@ export default function ClassesPage() {
 
               <p className="text-sm text-gray-600 mb-3">
                 📅 {new Date(cls.start_time).toLocaleString('en-US', {
+                  timeZone: 'America/New_York',
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',
                   hour: 'numeric',
                   minute: '2-digit'
-                })}
+                })} ET
               </p>
 
               {cls.description && (
@@ -408,8 +409,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     title: classData.title,
     description: classData.description || '',
     location: classData.location || '',
-    start_time: classData.start_time.slice(0, 16),
-    end_time: classData.end_time.slice(0, 16),
+    start_time: convertUTCToET(classData.start_time),
+    end_time: convertUTCToET(classData.end_time),
     max_capacity: classData.max_capacity || undefined,
     actual_attendance_count: classData.actual_attendance_count || undefined,
     pricing_model: classData.pricing_model || 'per_person',
@@ -498,10 +499,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     const endMinutes = String(totalMinutes % 60).padStart(2, '0')
     const endTimeET = `${datePart}T${endHours}:${endMinutes}`
 
-    // Submit with Eastern Time (no conversion)
+    // Submit with UTC conversion
     onSubmit({
       ...formData,
-      end_time: endTimeET
+      start_time: convertETToUTC(formData.start_time),
+      end_time: convertETToUTC(endTimeET)
     })
   }
 

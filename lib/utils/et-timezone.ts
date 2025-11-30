@@ -44,6 +44,33 @@ export function convertETToUTC(etDateTimeString: string): string {
   return new Date(dateAsUTC.getTime() + offset).toISOString()
 }
 
+export function convertUTCToET(utcDateString: string): string {
+  if (!utcDateString) return utcDateString
+  
+  const date = new Date(utcDateString)
+  
+  // Format the UTC time as ET
+  const etFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+  
+  const etParts = etFormatter.formatToParts(date)
+  const etObj: Record<string, string> = {}
+  etParts.forEach(part => {
+    etObj[part.type] = part.value
+  })
+  
+  // Format as datetime-local input format
+  return `${etObj.year}-${etObj.month}-${etObj.day}T${etObj.hour}:${etObj.minute}`
+}
+
 export function displayETLabel(): string {
   return 'Eastern Time (ET)'
 }
