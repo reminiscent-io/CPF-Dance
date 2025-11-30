@@ -208,6 +208,32 @@ export default function ClassesPage() {
     }
   }
 
+  const handleDeleteClass = async (classId: string) => {
+    if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/classes/${classId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete class')
+      }
+
+      setClasses(prev => prev.filter(cls => cls.id !== classId))
+      setShowEditModal(false)
+      setSelectedClass(null)
+      addToast('Class deleted successfully', 'success')
+    } catch (error) {
+      console.error('Error deleting class:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete class'
+      addToast(errorMessage, 'error')
+    }
+  }
+
   const handleClassClick = (cls: Class) => {
     setSelectedClass(cls)
     setShowEditModal(true)
@@ -350,6 +376,7 @@ export default function ClassesPage() {
             setSelectedClass(null)
           }}
           onSubmit={(formData) => handleUpdateClass(selectedClass.id, formData)}
+          onDelete={() => handleDeleteClass(selectedClass.id)}
         />
       )}
     </PortalLayout>
@@ -361,9 +388,10 @@ interface EditClassModalProps {
   studios: Studio[]
   onClose: () => void
   onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
+  onDelete: () => void
 }
 
-function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModalProps) {
+function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: EditClassModalProps) {
   const { profile } = useUser()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
 
@@ -756,6 +784,10 @@ function EditClassModal({ classData, studios, onClose, onSubmit }: EditClassModa
         </div>
 
         <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onDelete} className="text-red-600 border-red-300 hover:bg-red-50">
+            Delete Class
+          </Button>
+          <div className="flex-1"></div>
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
