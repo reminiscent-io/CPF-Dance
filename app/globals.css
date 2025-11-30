@@ -197,9 +197,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .typewriter {
   position: relative;
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
+  display: inline;
+  overflow: visible;
 }
 
 .typewriter-text {
@@ -207,5 +206,5 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .typewriter-fade {
-  animation: typewriter 2.5s steps(20, end) forwards, fadeOut 3.5s ease-in-out forwards;
+  animation: typewriter 3.5s steps(60, end) forwards, fadeOut 5s ease-in-out forwards;
 }

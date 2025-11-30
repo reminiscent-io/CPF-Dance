@@ -91,7 +91,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const [heroHeight, setHeroHeight] = useState(100)
+  const [heroHeight] = useState(100)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [featuresCarouselIndex, setFeaturesCarouselIndex] = useState(0)
@@ -203,23 +203,12 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    const shrinkTimer = setTimeout(() => {
-      // Convert pixel height to viewport height percentage
-      if (heroContentRef.current) {
-        const contentPixels = heroContentRef.current.offsetHeight
-        const viewportHeight = window.innerHeight
-        const contentVh = (contentPixels / viewportHeight) * 100
-        setHeroHeight(contentVh)
-      }
-    }, 2000)
-
-    // Show nav after hero finishes shrinking (2s + 2s animation = 4s total)
+    // Show nav after short delay
     const navTimer = setTimeout(() => {
       setShowNav(true)
-    }, 4000)
+    }, 1000)
 
     return () => {
-      clearTimeout(shrinkTimer)
       clearTimeout(navTimer)
     }
   }, [])
@@ -268,7 +257,7 @@ export default function HomePage() {
       </nav>
 
       <section 
-        className="relative flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
+        className="relative flex items-start justify-start bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
         style={{
           height: `${heroHeight}vh`,
           transition: 'height 2s ease-in-out'
@@ -278,18 +267,17 @@ export default function HomePage() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 text-center" ref={heroContentRef}>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 text-left" ref={heroContentRef}>
           <motion.h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
             Professional Precision
             <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
               Dance Instruction
             </span>
           </motion.h1>
-          <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}>
-            A comprehensive platform built by dancers for{' '}
+          <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-4xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }}>
             <span className="typewriter" key={taglineKey}>
-              <span className="typewriter-fade text-rose-600 font-semibold">
-                {taglineRoles[taglineIndex]}
+              <span className="typewriter-fade">
+                A comprehensive platform built by dancers for <span className="text-rose-600 font-semibold">{taglineRoles[taglineIndex]}</span>
               </span>
             </span>
           </motion.p>
