@@ -345,34 +345,49 @@ export default function InstructorPaymentsPage() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Hero Summary Section */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-1">
-              <div className="text-sm font-medium text-gray-600 mb-1">Total Payments</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.total_payments}</div>
-              <div className="text-sm text-gray-500 mt-1">{formatCurrency(stats.total_amount)}</div>
+        <div className="mb-8">
+          {/* Hero Card - Total Payments */}
+          <Card className="bg-gradient-to-br from-pink-100 to-pink-50 border-pink-300 border-2 mb-4">
+            <CardContent className="p-8">
+              <div className="text-sm font-medium text-pink-700 mb-2 tracking-wide">Total Payments Collected</div>
+              <div className="text-5xl font-bold text-pink-900 mb-1">{formatCurrency(stats.total_amount)}</div>
+              <div className="text-pink-700">{stats.total_payments} payments recorded</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-1">
-              <div className="text-sm font-medium text-gray-600 mb-1">Pending</div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-1">
-              <div className="text-sm font-medium text-gray-600 mb-1">Confirmed</div>
-              <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-1">
-              <div className="text-sm font-medium text-gray-600 mb-1">Disputed</div>
-              <div className="text-2xl font-bold text-red-600">{stats.disputed}</div>
-            </CardContent>
-          </Card>
+          
+          {/* Status Grid - Compact 2x2 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <Card className="bg-gradient-to-br from-amber-50 to-amber-50 border-amber-200">
+              <CardContent className="p-4">
+                <div className="text-xs font-medium text-amber-700 uppercase mb-1">Pending</div>
+                <div className="text-2xl font-bold text-amber-700">{stats.pending}</div>
+                <div className="text-xs text-amber-600 mt-1">Action required</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-green-50 border-green-200">
+              <CardContent className="p-4">
+                <div className="text-xs font-medium text-green-700 uppercase mb-1">Confirmed</div>
+                <div className="text-2xl font-bold text-green-700">{stats.confirmed}</div>
+                <div className="text-xs text-green-600 mt-1">Collected</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-red-50 to-red-50 border-red-200">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-1">
+                  <span className="text-lg">⚠️</span>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium text-red-700 uppercase">Disputed</div>
+                    <div className="text-2xl font-bold text-red-700">{stats.disputed}</div>
+                  </div>
+                </div>
+                <div className="text-xs text-red-600 mt-1">Needs attention</div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
