@@ -286,10 +286,10 @@ export default function HomePage() {
         preloadImage(learnFromTheBestImages[nextNextIndex])
         return nextIndex
       })
-    }, prefersReducedMotion ? TOTAL_DURATION : TOTAL_DURATION)
+    }, TOTAL_DURATION)
 
     return () => clearInterval(imageTimer)
-  }, [prefersReducedMotion, preloadedImages])
+  }, [])
 
   // Scroll listener for parallax effect
   useEffect(() => {
