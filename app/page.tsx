@@ -106,6 +106,7 @@ export default function HomePage() {
   const [taglineIndex, setTaglineIndex] = useState(0)
   const [taglineKey, setTaglineKey] = useState(0)
   const [imageIndex, setImageIndex] = useState(0)
+  const [imagesLoaded, setImagesLoaded] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
@@ -130,29 +131,33 @@ export default function HomePage() {
     hover: { y: -8, transition: { duration: 0.3 } }
   }
 
-  // Modern Ken Burns effect with smooth crossfade
+  // Optimized Ken Burns effect - GPU-accelerated (transform + opacity only)
   const imageVariants = {
     enter: {
       opacity: 0,
-      scale: 1.1,
-      filter: 'blur(4px)'
+      scale: 1.08,
+      x: 0,
+      y: 0
     },
     center: {
       opacity: 1,
       scale: 1,
-      filter: 'blur(0px)',
+      x: 0,
+      y: 0,
       transition: {
-        duration: 1.2,
-        ease: [0.43, 0.13, 0.23, 0.96] // custom easing for smoothness
+        duration: 1.5,
+        ease: [0.25, 0.1, 0.25, 1], // smooth easeInOut
+        opacity: { duration: 1.2 }
       }
     },
     exit: {
       opacity: 0,
-      scale: 0.95,
-      filter: 'blur(4px)',
+      scale: 0.92,
+      x: 0,
+      y: 0,
       transition: {
-        duration: 0.8,
-        ease: [0.43, 0.13, 0.23, 0.96]
+        duration: 1.2,
+        ease: [0.25, 0.1, 0.25, 1]
       }
     }
   }
@@ -236,6 +241,30 @@ export default function HomePage() {
     
     setTouchStart(0)
   }
+
+  // Preload images for smooth transitions
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = learnFromTheBestImages.map((src) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.src = src
+          img.onload = resolve
+          img.onerror = reject
+        })
+      })
+
+      try {
+        await Promise.all(imagePromises)
+        setImagesLoaded(true)
+      } catch (error) {
+        console.error('Failed to preload images:', error)
+        setImagesLoaded(true) // Still set to true to show images
+      }
+    }
+
+    preloadImages()
+  }, [])
 
   useEffect(() => {
     // Show nav after short delay
@@ -725,10 +754,18 @@ export default function HomePage() {
                       src={learnFromTheBestImages[imageIndex]}
                       alt="Courtney - Professional Dancer and Instructor"
                       className="w-full h-full object-cover absolute inset-0"
+                      style={{
+                        willChange: 'transform, opacity',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'translate3d(0, 0, 0)',
+                        WebkitTransform: 'translate3d(0, 0, 0)'
+                      }}
                       variants={imageVariants}
                       initial="enter"
                       animate="center"
                       exit="exit"
+                      loading="eager"
                     />
                   </AnimatePresence>
                 </div>
