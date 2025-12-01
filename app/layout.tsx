@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui'
@@ -50,6 +51,13 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Dance Schedule" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JYEPWDHDW0" />
+        <Script id="google-analytics">
+          {`window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JYEPWDHDW0');`}
+        </Script>
       </head>
       <body>
         <ToastProvider>
