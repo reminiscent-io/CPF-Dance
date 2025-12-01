@@ -33,6 +33,13 @@ const portals = [
   }
 ]
 
+const learnFromTheBestImages = [
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579.jpeg',
+]
+
 const features = [
   {
     id: 'progress',
@@ -98,6 +105,7 @@ export default function HomePage() {
   const [touchStart, setTouchStart] = useState(0)
   const [taglineIndex, setTaglineIndex] = useState(0)
   const [taglineKey, setTaglineKey] = useState(0)
+  const [imageIndex, setImageIndex] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
@@ -120,6 +128,12 @@ export default function HomePage() {
 
   const cardHoverVariants = {
     hover: { y: -8, transition: { duration: 0.3 } }
+  }
+
+  const imageVariants = {
+    enter: { opacity: 0 },
+    center: { opacity: 1, transition: { duration: 1 } },
+    exit: { opacity: 0, transition: { duration: 1 } }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -221,6 +235,15 @@ export default function HomePage() {
     }, 4000)
 
     return () => clearInterval(taglineTimer)
+  }, [])
+
+  // Image cycling effect
+  useEffect(() => {
+    const imageTimer = setInterval(() => {
+      setImageIndex((prev) => (prev + 1) % learnFromTheBestImages.length)
+    }, 5000)
+
+    return () => clearInterval(imageTimer)
   }, [])
 
   return (
@@ -507,10 +530,15 @@ export default function HomePage() {
             <div className="order-1 lg:order-2">
               <div className="relative">
                 <div className="aspect-[3/4] bg-gradient-to-br from-rose-200 to-mauve-200 rounded-2xl shadow-2xl overflow-hidden">
-                  <img
-                    src="/images/courtney-rockettes.png"
+                  <motion.img
+                    key={imageIndex}
+                    src={learnFromTheBestImages[imageIndex]}
                     alt="Courtney - Professional Dancer and Instructor"
                     className="w-full h-full object-cover"
+                    variants={imageVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
                   />
                 </div>
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-rose-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
