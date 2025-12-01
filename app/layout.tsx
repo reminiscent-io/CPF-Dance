@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import './globals.css'
@@ -33,7 +33,13 @@ export const metadata: Metadata = {
     { rel: 'apple-touch-icon', url: '/icon-192.png' },
   ],
   themeColor: '#c75a6d',
-  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#c75a6d',
 }
 
 export default function RootLayout({
