@@ -378,7 +378,7 @@ export default function HomePage() {
             {portals.map((portal) => (
               <motion.div key={portal.id} variants={itemVariants} whileHover="hover">
                 <Card hover className="text-center overflow-hidden p-0 flex flex-col h-full bg-gradient-to-br from-gray-50 to-rose-50" style={{ cursor: 'pointer' }}>
-                  <motion.div className="relative w-full h-48 overflow-hidden">
+                  <motion.div className="relative w-full h-48 overflow-hidden rounded-t-lg">
                     <img
                       src={portal.image}
                       alt={portal.title}
@@ -419,7 +419,7 @@ export default function HomePage() {
 
               <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 <Card hover className="text-center overflow-hidden p-0 flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
-                  <div className="relative w-full h-48 overflow-hidden">
+                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
                     <img
                       src={portals[carouselIndex].image}
                       alt={portals[carouselIndex].title}
