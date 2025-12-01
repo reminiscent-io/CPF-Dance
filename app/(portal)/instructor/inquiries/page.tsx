@@ -54,7 +54,7 @@ export default function InquiriesPage() {
       case 'responded':
         return 'success'
       case 'contacted':
-        return 'info'
+        return 'secondary'
       default:
         return 'default'
     }
