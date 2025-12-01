@@ -12,21 +12,21 @@ import StudioCarousel from '@/components/StudioCarousel'
 const portals = [
   {
     id: 'dancer',
-    title: 'Dancer Portal',
+    title: 'Dancers',
     description: 'Track your progress, view classes, and manage your dance journey',
     image: 'https://images.unsplash.com/photo-1555656220-46e30749d330?',
     link: '/login?portal=dancer'
   },
   {
     id: 'instructor',
-    title: 'Instructor Portal',
+    title: 'Instructors',
     description: 'Manage students, schedule classes, and provide notes to dancers',
     image: 'https://images.unsplash.com/photo-1685339009948-d807094b1457?',
     link: '/login?portal=instructor'
   },
   {
     id: 'studio',
-    title: 'Studio Portal',
+    title: 'Studios',
     description: 'Connect with instructors and track payments',
     image: 'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?',
     link: '/login?portal=studio'
@@ -142,8 +142,7 @@ export default function HomePage() {
       scale: 1,
       filter: 'blur(0px)',
       transition: {
-        duration: 1.2,
-        ease: [0.43, 0.13, 0.23, 0.96] // custom easing for smoothness
+        duration: 1.2
       }
     },
     exit: {
@@ -151,8 +150,7 @@ export default function HomePage() {
       scale: 0.95,
       filter: 'blur(4px)',
       transition: {
-        duration: 0.8,
-        ease: [0.43, 0.13, 0.23, 0.96]
+        duration: 0.8
       }
     }
   }
@@ -392,7 +390,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-6 flex flex-col justify-between flex-1">
+                  <div className="p-6 flex flex-col justify-between flex-1 ">
                     <div>
                       <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
                       <p className="text-gray-600 mb-6">
@@ -448,7 +446,7 @@ export default function HomePage() {
           <motion.div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {features.map((feature) => (
               <motion.div key={feature.id} variants={itemVariants} whileHover={{ y: -5 }}>
-                <Card hover className="text-center h-full">
+                <Card hover className="text-center h-full bg-gradient-to-br from-gray-50 to-rose-50">
                   <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
                     {feature.icon}
                   </motion.div>
@@ -475,7 +473,7 @@ export default function HomePage() {
               </button>
 
               <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center">
+                <Card hover className="text-center bg-gradient-to-br from-gray-50 to-rose-50">
                   <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
                     {features[featuresCarouselIndex].icon}
                   </div>
@@ -561,6 +559,7 @@ export default function HomePage() {
                       initial="enter"
                       animate="center"
                       exit="exit"
+                      transition={{ duration: 1 }}
                     />
                   </AnimatePresence>
                 </div>
