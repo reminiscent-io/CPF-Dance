@@ -98,6 +98,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [formStep, setFormStep] = useState(0)
   const [heroHeight] = useState(55)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
@@ -191,10 +192,76 @@ export default function HomePage() {
         contact_phone: '',
         message: ''
       })
+      setFormStep(0)
     } catch (error: any) {
       setSubmitError(error.message || 'Failed to submit inquiry. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleFormStepNext = () => {
+    if (formStep < 4) {
+      setFormStep(formStep + 1)
+    }
+  }
+
+  const handleFormStepPrev = () => {
+    if (formStep > 0) {
+      setFormStep(formStep - 1)
+    }
+  }
+
+  const handleFormStepSubmit = (e: React.FormEvent) => {
+    if (formStep < 4) {
+      handleFormStepNext()
+    } else {
+      handleSubmit(e)
+    }
+  }
+
+  const getStepContent = () => {
+    switch (formStep) {
+      case 0:
+        return {
+          label: "I am representing",
+          inputName: "studio_name",
+          placeholder: "Your Studio Name",
+          value: formData.studio_name
+        }
+      case 1:
+        return {
+          label: "My name is",
+          inputName: "contact_name",
+          placeholder: "Your Name",
+          value: formData.contact_name
+        }
+      case 2:
+        return {
+          label: "You can reach me at",
+          inputName: "contact_email",
+          placeholder: "your@email.com",
+          type: "email",
+          value: formData.contact_email
+        }
+      case 3:
+        return {
+          label: "My phone number is",
+          inputName: "contact_phone",
+          placeholder: "(555) 123-4567",
+          type: "tel",
+          value: formData.contact_phone
+        }
+      case 4:
+        return {
+          label: "Tell us more",
+          inputName: "message",
+          placeholder: "How can we work together...",
+          isTextarea: true,
+          value: formData.message
+        }
+      default:
+        return null
     }
   }
 
@@ -612,12 +679,12 @@ export default function HomePage() {
       </section>
 
       <section id="studio-inquiry" className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Studio Partnership Inquiry
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-charcoal-800 leading-relaxed">
               Interested in bringing our expertise to your studio? Let's connect.
             </p>
           </div>
@@ -630,82 +697,84 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Thank You!</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</h3>
+                <p className="text-charcoal-800 mb-6 leading-relaxed">
                   We've received your inquiry and will be in touch shortly.
                 </p>
-                <Button onClick={() => setSubmitSuccess(false)}>
+                <Button onClick={() => { setSubmitSuccess(false); setFormStep(0); }}>
                   Submit Another Inquiry
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <Input
-                  label="Studio Name"
-                  name="studio_name"
-                  type="text"
-                  required
-                  value={formData.studio_name}
-                  onChange={handleInputChange}
-                  placeholder="Your CPF Dance"
-                />
-
-                <Input
-                  label="Contact Name"
-                  name="contact_name"
-                  type="text"
-                  required
-                  value={formData.contact_name}
-                  onChange={handleInputChange}
-                  placeholder="John Smith"
-                />
-
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <Input
-                    label="Email"
-                    name="contact_email"
-                    type="email"
-                    required
-                    value={formData.contact_email}
-                    onChange={handleInputChange}
-                    placeholder="contact@studio.com"
-                  />
-
-                  <Input
-                    label="Phone"
-                    name="contact_phone"
-                    type="tel"
-                    required
-                    value={formData.contact_phone}
-                    onChange={handleInputChange}
-                    placeholder="(555) 123-4567"
-                  />
+              <form onSubmit={handleFormStepSubmit} className="space-y-8">
+                {/* Progress Indicator */}
+                <div className="flex gap-2 justify-center">
+                  {[0, 1, 2, 3, 4].map((step) => (
+                    <div
+                      key={step}
+                      className={`h-2 w-12 rounded-full transition-all ${
+                        step <= formStep ? 'bg-rose-600' : 'bg-charcoal-200'
+                      }`}
+                    />
+                  ))}
                 </div>
 
-                <Textarea
-                  label="Message"
-                  name="message"
-                  required
-                  rows={5}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Tell us about your studio and how we can work together..."
-                />
-
-                {submitError && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700">{submitError}</p>
+                {/* Conversational Form Step */}
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-lg text-charcoal-800 mb-4">
+                      <span className="font-semibold">{getStepContent()?.label}</span>
+                    </p>
+                    {getStepContent()?.isTextarea ? (
+                      <Textarea
+                        name={getStepContent()?.inputName || ''}
+                        rows={4}
+                        required
+                        value={getStepContent()?.value || ''}
+                        onChange={handleInputChange}
+                        placeholder={getStepContent()?.placeholder}
+                        className="w-full text-center"
+                      />
+                    ) : (
+                      <Input
+                        name={getStepContent()?.inputName || ''}
+                        type={getStepContent()?.type || 'text'}
+                        required
+                        value={getStepContent()?.value || ''}
+                        onChange={handleInputChange}
+                        placeholder={getStepContent()?.placeholder}
+                        className="w-full text-center"
+                      />
+                    )}
                   </div>
-                )}
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
-                </Button>
+                  {submitError && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-700 text-center">{submitError}</p>
+                    </div>
+                  )}
+
+                  {/* Navigation Buttons */}
+                  <div className="flex gap-3 justify-center">
+                    {formStep > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleFormStepPrev}
+                      >
+                        ← Back
+                      </Button>
+                    )}
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={isSubmitting || !getStepContent()?.value}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      {isSubmitting ? 'Submitting...' : formStep === 4 ? 'Send Inquiry' : 'Next'}
+                    </Button>
+                  </div>
+                </div>
               </form>
             )}
           </Card>
