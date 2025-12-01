@@ -213,6 +213,7 @@ export default function HomePage() {
   }
 
   const handleFormStepSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
     if (formStep < 4) {
       handleFormStepNext()
     } else {
@@ -765,14 +766,26 @@ export default function HomePage() {
                         ← Back
                       </Button>
                     )}
-                    <Button
-                      type="submit"
-                      size="lg"
-                      disabled={isSubmitting || !getStepContent()?.value}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      {isSubmitting ? 'Submitting...' : formStep === 4 ? 'Send Inquiry' : 'Next'}
-                    </Button>
+                    {formStep === 4 ? (
+                      <Button
+                        type="submit"
+                        size="lg"
+                        disabled={isSubmitting || !getStepContent()?.value}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="lg"
+                        onClick={handleFormStepNext}
+                        disabled={!getStepContent()?.value}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        Next
+                      </Button>
+                    )}
                   </div>
                 </div>
               </form>
