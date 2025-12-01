@@ -365,10 +365,10 @@ export default function HomePage() {
       <section id="portals" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Select Your Portal
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
               Access your personalized dashboard based on your role
             </p>
           </div>
@@ -387,8 +387,8 @@ export default function HomePage() {
                   </motion.div>
                   <div className="p-6 flex flex-col justify-between flex-1">
                     <div>
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                      <p className="text-gray-600 mb-6">
+                      <h3 className="text-2xl font-semibold text-charcoal-950 mb-3">{portal.title}</h3>
+                      <p className="text-charcoal-800 mb-6 leading-relaxed">
                         {portal.description}
                       </p>
                     </div>
@@ -469,10 +469,10 @@ export default function HomePage() {
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Everything You Need to Succeed
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
               Useful tools to keep track of notes, progress, classes, and payments for dancers, instructors, and studios
             </p>
           </div>
@@ -485,8 +485,8 @@ export default function HomePage() {
                   <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
                     {feature.icon}
                   </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-semibold text-charcoal-950 mb-3">{feature.title}</h3>
+                  <p className="text-charcoal-800 leading-relaxed">
                     {feature.description}
                   </p>
                 </Card>
@@ -520,8 +520,8 @@ export default function HomePage() {
                     <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
                       {feature.icon}
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-semibold text-charcoal-950 mb-3">{feature.title}</h3>
+                    <p className="text-charcoal-800 leading-relaxed">
                       {feature.description}
                     </p>
                   </Card>
@@ -550,10 +550,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-charcoal-950 mb-8 leading-tight" style={{ letterSpacing: '-0.04em' }}>
                 Learn from the Best
               </h2>
-              <div className="space-y-4 text-lg text-gray-700">
+              <div className="space-y-4 text-lg text-charcoal-800 leading-relaxed">
                 <p>
                   With over a decade of professional experience, including performances with the world-renowned 
                   <span className="font-semibold text-rose-700"> Radio City Rockettes</span>, Courtney brings 
@@ -570,13 +570,13 @@ export default function HomePage() {
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Radio City Rockettes</span>
+                  <span className="text-sm font-medium text-charcoal-900">Radio City Rockettes</span>
                 </div>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Professional Performer</span>
+                  <span className="text-sm font-medium text-charcoal-900">Professional Performer</span>
                 </div>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Precision Technique</span>
+                  <span className="text-sm font-medium text-charcoal-900">Precision Technique</span>
                 </div>
               </div>
             </div>

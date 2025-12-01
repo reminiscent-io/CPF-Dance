@@ -103,18 +103,27 @@
 
 body {
   background-color: var(--color-champagne-50);
-  color: var(--color-charcoal-800);
+  color: var(--color-charcoal-900);
   font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.01em;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-display);
-  color: var(--color-charcoal-900);
+  color: var(--color-charcoal-950);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  line-height: 1.2;
+}
+
+h2 {
+  line-height: 1.25;
 }
 
 @keyframes fadeIn {
