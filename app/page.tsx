@@ -106,11 +106,17 @@ export default function HomePage() {
   const [taglineIndex, setTaglineIndex] = useState(0)
   const [taglineKey, setTaglineKey] = useState(0)
   const [imageIndex, setImageIndex] = useState(0)
+  const [scrollY, setScrollY] = useState(0)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
 
   const taglineRoles = ['Dancers', 'Instructors', 'Studios']
+  const FADE_MS = 2000
+  const SLIDE_MS = 4500
+  const TOTAL_DURATION = FADE_MS + SLIDE_MS
 
   // Framer Motion variants
   const containerVariants = {
@@ -134,25 +140,26 @@ export default function HomePage() {
   const imageVariants = {
     enter: {
       opacity: 0,
-      scale: 1.1,
-      filter: 'blur(4px)'
+      scale: 1.02
     },
     center: {
       opacity: 1,
-      scale: 1,
-      filter: 'blur(0px)',
-      transition: {
-        duration: 1.2
-      }
+      scale: 1.08
     },
     exit: {
-      opacity: 0,
-      scale: 0.95,
-      filter: 'blur(4px)',
-      transition: {
-        duration: 0.8
-      }
+      opacity: 0
     }
+  }
+
+  // Image preloading
+  const preloadImage = (imageUrl: string) => {
+    if (preloadedImages.has(imageUrl)) return
+    
+    const img = new Image()
+    img.onload = () => {
+      setPreloadedImages((prev) => new Set([...prev, imageUrl]))
+    }
+    img.src = imageUrl
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -236,6 +243,19 @@ export default function HomePage() {
   }
 
   useEffect(() => {
+    // Check for prefers-reduced-motion
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches)
+    }
+    
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  useEffect(() => {
     // Show nav after short delay
     const navTimer = setTimeout(() => {
       setShowNav(true)
@@ -256,13 +276,29 @@ export default function HomePage() {
     return () => clearInterval(taglineTimer)
   }, [])
 
-  // Image cycling effect
+  // Image cycling effect with preloading
   useEffect(() => {
     const imageTimer = setInterval(() => {
-      setImageIndex((prev) => (prev + 1) % learnFromTheBestImages.length)
-    }, 5000)
+      setImageIndex((prev) => {
+        const nextIndex = (prev + 1) % learnFromTheBestImages.length
+        // Preload the next image after current one
+        const nextNextIndex = (nextIndex + 1) % learnFromTheBestImages.length
+        preloadImage(learnFromTheBestImages[nextNextIndex])
+        return nextIndex
+      })
+    }, prefersReducedMotion ? TOTAL_DURATION : TOTAL_DURATION)
 
     return () => clearInterval(imageTimer)
+  }, [prefersReducedMotion, preloadedImages])
+
+  // Scroll listener for parallax effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   return (
@@ -549,7 +585,7 @@ export default function HomePage() {
             <div className="order-1 lg:order-2">
               <div className="relative">
                 <div className="aspect-[3/4] bg-gradient-to-br from-rose-200 to-mauve-200 rounded-2xl shadow-2xl overflow-hidden relative">
-                  <AnimatePresence initial={false}>
+                  <AnimatePresence initial={false} mode="wait">
                     <motion.img
                       key={imageIndex}
                       src={learnFromTheBestImages[imageIndex]}
@@ -559,7 +595,13 @@ export default function HomePage() {
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ duration: 1 }}
+                      style={{
+                        transform: !prefersReducedMotion ? `translateY(${scrollY * 0.5}px)` : 'translateY(0px)'
+                      }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {
+                        opacity: { duration: FADE_MS / 1000 },
+                        scale: { duration: SLIDE_MS / 1000 }
+                      }}
                     />
                   </AnimatePresence>
                 </div>
