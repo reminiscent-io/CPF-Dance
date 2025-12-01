@@ -444,21 +444,183 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Desktop Grid - Hidden on mobile */}
-          <motion.div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            {features.map((feature) => (
-              <motion.div key={feature.id} variants={itemVariants} whileHover={{ y: -5 }}>
-                <Card hover className="text-center h-full">
-                  <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                    {feature.icon}
+          {/* Desktop Bento Grid - Hidden on mobile */}
+          <motion.div
+            className="hidden md:grid md:grid-cols-4 md:grid-rows-4 gap-4 mb-20 h-[600px]"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            {/* Progress Tracking - Large Card (2x2) */}
+            <motion.div
+              variants={itemVariants}
+              className="md:col-span-2 md:row-span-2 group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={`relative h-full bg-gradient-to-br ${features[0].bgGradient} rounded-3xl p-8 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300`}>
+                {/* Animated background elements */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl animate-pulse"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-2xl animate-pulse delay-1000"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <motion.div
+                      className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                    >
+                      {features[0].icon}
+                    </motion.div>
+                    <h3 className="text-3xl font-bold text-white mb-4">{features[0].title}</h3>
+                    <p className="text-white/90 text-lg leading-relaxed">
+                      {features[0].description}
+                    </p>
+                  </div>
+
+                  {/* Decorative chart visualization */}
+                  <div className="flex gap-2 items-end h-24 mt-6">
+                    {[40, 65, 45, 80, 60, 90, 70].map((height, i) => (
+                      <motion.div
+                        key={i}
+                        className="flex-1 bg-white/30 backdrop-blur-sm rounded-t-lg"
+                        initial={{ height: 0 }}
+                        whileInView={{ height: `${height}%` }}
+                        transition={{ duration: 0.5, delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Easy Scheduling - Tall Card (1x2) */}
+            <motion.div
+              variants={itemVariants}
+              className="md:col-span-1 md:row-span-2 group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={`relative h-full bg-gradient-to-br ${features[1].bgGradient} rounded-3xl p-6 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300`}>
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col">
+                  <motion.div
+                    className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                  >
+                    {features[1].icon}
                   </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600">
-                    {feature.description}
+                  <h3 className="text-2xl font-bold text-white mb-3">{features[1].title}</h3>
+                  <p className="text-white/90 leading-relaxed">
+                    {features[1].description}
                   </p>
-                </Card>
-              </motion.div>
-            ))}
+
+                  {/* Mini calendar grid */}
+                  <div className="mt-auto grid grid-cols-7 gap-1">
+                    {Array.from({ length: 28 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className={`aspect-square rounded-sm ${
+                          [5, 8, 12, 19, 23].includes(i)
+                            ? 'bg-white/40'
+                            : 'bg-white/10'
+                        }`}
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: i * 0.01 }}
+                        viewport={{ once: true }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Secure Payments - Wide Card (2x2) */}
+            <motion.div
+              variants={itemVariants}
+              className="md:col-span-1 md:row-span-2 group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={`relative h-full bg-gradient-to-br ${features[2].bgGradient} rounded-3xl p-6 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300`}>
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl animate-pulse delay-500"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col">
+                  <motion.div
+                    className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                  >
+                    {features[2].icon}
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-white mb-3">{features[2].title}</h3>
+                  <p className="text-white/90 leading-relaxed mb-6">
+                    {features[2].description}
+                  </p>
+
+                  {/* Credit card mockup */}
+                  <div className="mt-auto">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="w-10 h-8 bg-yellow-400/80 rounded"></div>
+                        <div className="text-white/60 text-xs">•••• 4242</div>
+                      </div>
+                      <div className="text-white/90 text-sm font-semibold">Secure Payment</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Private Lessons - Wide Card (2x1) */}
+            <motion.div
+              variants={itemVariants}
+              className="md:col-span-2 md:row-span-2 group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={`relative h-full bg-gradient-to-br ${features[3].bgGradient} rounded-3xl p-6 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300`}>
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-white rounded-full blur-3xl animate-pulse delay-700"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex items-center gap-6">
+                  <motion.div
+                    className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
+                  >
+                    {features[3].icon}
+                  </motion.div>
+
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white mb-3">{features[3].title}</h3>
+                    <p className="text-white/90 leading-relaxed">
+                      {features[3].description}
+                    </p>
+                  </div>
+
+                  {/* User avatars */}
+                  <div className="hidden lg:flex flex-col gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/40"
+                        initial={{ x: 20, opacity: 0 }}
+                        whileInView={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.4, delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                      >
+                        <div className="w-8 h-8 bg-white/50 rounded-full"></div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Mobile Carousel - Visible only on mobile */}
@@ -475,15 +637,21 @@ export default function HomePage() {
               </button>
 
               <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                    {features[featuresCarouselIndex].icon}
+                <div className={`relative bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-3xl p-6 overflow-hidden shadow-lg min-h-[280px]`}>
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse"></div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{features[featuresCarouselIndex].title}</h3>
-                  <p className="text-gray-600">
-                    {features[featuresCarouselIndex].description}
-                  </p>
-                </Card>
+
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                      {features[featuresCarouselIndex].icon}
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">{features[featuresCarouselIndex].title}</h3>
+                    <p className="text-white/90 leading-relaxed">
+                      {features[featuresCarouselIndex].description}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <button
