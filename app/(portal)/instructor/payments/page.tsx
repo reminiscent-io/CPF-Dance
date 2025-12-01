@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
+import { EarningsProgressWidget } from '@/components/EarningsProgressWidget'
 
 interface PaymentData {
   id: string
@@ -415,36 +416,13 @@ export default function InstructorPaymentsPage() {
           </div>
         ) : earningsSummary && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-blue-600 mb-1">Total Class Value</div>
-                  <div className="text-3xl font-bold text-blue-900">{formatCurrency(earningsSummary.total_value)}</div>
-                  <div className="text-sm text-blue-600 mt-1">{earningsSummary.total_classes} classes</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-green-600 mb-1">Collected</div>
-                  <div className="text-3xl font-bold text-green-900">{formatCurrency(earningsSummary.total_collected)}</div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {earningsSummary.total_value > 0 
-                      ? `${Math.round((earningsSummary.total_collected / earningsSummary.total_value) * 100)}% of total`
-                      : '0%'}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-amber-600 mb-1">Outstanding</div>
-                  <div className="text-3xl font-bold text-amber-900">{formatCurrency(earningsSummary.total_outstanding)}</div>
-                  <div className="text-sm text-amber-600 mt-1">
-                    {earningsSummary.total_value > 0
-                      ? `${Math.round((earningsSummary.total_outstanding / earningsSummary.total_value) * 100)}% pending`
-                      : '0%'}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="mb-8">
+              <EarningsProgressWidget
+                total={earningsSummary.total_value}
+                collected={earningsSummary.total_collected}
+                outstanding={earningsSummary.total_outstanding}
+                classes={earningsSummary.total_classes}
+              />
             </div>
 
             {/* Class Type Breakdown */}
