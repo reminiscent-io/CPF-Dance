@@ -404,54 +404,53 @@ export default function HomePage() {
             ))}
           </motion.div>
 
-          {/* Mobile Carousel - Visible only on mobile */}
+          {/* Mobile Swipeable Cards - Visible only on mobile */}
           <div className="md:hidden mb-20">
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={prevPortal}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Previous portal"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center overflow-hidden p-0 flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
-                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={portals[carouselIndex].image}
-                      alt={portals[carouselIndex].title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-6 flex flex-col justify-between flex-1 ">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
-                      <p className="text-gray-600 mb-6">
-                        {portals[carouselIndex].description}
-                      </p>
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 -mx-4 pb-2"
+              ref={carouselRef}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                scrollBehavior: 'smooth',
+                scrollSnapType: 'x mandatory'
+              }}
+            >
+              {portals.map((portal, index) => (
+                <div
+                  key={portal.id}
+                  className="flex-shrink-0 w-full"
+                  style={{
+                    maxWidth: 'calc(85% - 8px)',
+                    scrollSnapAlign: 'center',
+                    scrollSnapStop: 'always'
+                  }}
+                >
+                  <Card hover className="text-center overflow-hidden p-0 flex flex-col h-full bg-gradient-to-br from-gray-50 to-rose-50">
+                    <div className="relative w-full h-48 overflow-hidden">
+                      <img
+                        src={portal.image}
+                        alt={portal.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <Link href={portals[carouselIndex].link}>
-                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
-                        <span>Log-in</span>
-                        <span className="text-xs italic font-normal">or sign-up</span>
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              </div>
-
-              <button
-                onClick={nextPortal}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Next portal"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+                    <div className="p-6 flex flex-col justify-between flex-1">
+                      <div>
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                        <p className="text-gray-600 mb-6">
+                          {portal.description}
+                        </p>
+                      </div>
+                      <Link href={portal.link}>
+                        <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                          <span>Log-in</span>
+                          <span className="text-xs italic font-normal">or sign-up</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                </div>
+              ))}
             </div>
 
             {/* Carousel Indicators */}
@@ -495,40 +494,39 @@ export default function HomePage() {
             ))}
           </motion.div>
 
-          {/* Mobile Carousel - Visible only on mobile */}
+          {/* Mobile Swipeable Cards - Visible only on mobile */}
           <div className="md:hidden mb-20">
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={prevFeature}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Previous feature"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center bg-gradient-to-br from-gray-50 to-rose-50">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                    {features[featuresCarouselIndex].icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{features[featuresCarouselIndex].title}</h3>
-                  <p className="text-gray-600">
-                    {features[featuresCarouselIndex].description}
-                  </p>
-                </Card>
-              </div>
-
-              <button
-                onClick={nextFeature}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Next feature"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 -mx-4 pb-2"
+              ref={featuresCarouselRef}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                scrollBehavior: 'smooth',
+                scrollSnapType: 'x mandatory'
+              }}
+            >
+              {features.map((feature) => (
+                <div
+                  key={feature.id}
+                  className="flex-shrink-0 w-full"
+                  style={{
+                    maxWidth: 'calc(85% - 8px)',
+                    scrollSnapAlign: 'center',
+                    scrollSnapStop: 'always'
+                  }}
+                >
+                  <Card hover className="text-center h-full bg-gradient-to-br from-gray-50 to-rose-50">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600">
+                      {feature.description}
+                    </p>
+                  </Card>
+                </div>
+              ))}
             </div>
 
             {/* Carousel Indicators */}
