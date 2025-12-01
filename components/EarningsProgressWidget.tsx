@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
 
 interface UnpaidClass {
   id: string
@@ -110,12 +109,11 @@ export function EarningsProgressWidget({
                 <div className="text-xs font-semibold text-amber-700 uppercase">
                   Outstanding
                 </div>
-                <ChevronDown
-                  size={16}
-                  className={`text-amber-700 transition-transform duration-300 ${
+                <span className={`text-amber-700 transition-transform duration-300 inline-block ${
                     expandedOutstanding ? 'rotate-180' : ''
-                  }`}
-                />
+                  }`}>
+                  ▼
+                </span>
               </div>
               <div className="text-2xl font-bold text-amber-900">
                 {new Intl.NumberFormat('en-US', {
