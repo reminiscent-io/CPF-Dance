@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
-import StudioCarousel from '@/components/StudioCarousel'
+import dynamic from 'next/dynamic'
+
+const StudioCarousel = dynamic(() => import('@/components/StudioCarousel'), {
+  loading: () => null,
+  ssr: false
+})
 
 const portals = [
   {
@@ -324,14 +329,8 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    // Show nav after short delay
-    const navTimer = setTimeout(() => {
-      setShowNav(true)
-    }, 1000)
-
-    return () => {
-      clearTimeout(navTimer)
-    }
+    // Show nav immediately for faster perceived load
+    setShowNav(true)
   }, [])
 
   // Tagline rotation effect
@@ -657,6 +656,7 @@ export default function HomePage() {
                       src={learnFromTheBestImages[imageIndex]}
                       alt="Courtney - Professional Dancer and Instructor"
                       className="w-full h-full object-cover absolute inset-0"
+                      loading="lazy"
                       variants={imageVariants}
                       initial="enter"
                       animate="center"
