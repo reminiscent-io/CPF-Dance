@@ -317,7 +317,7 @@ export default function HomePage() {
           <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-cormorant)' }}>
             CPF Dance
           </Link>
-          <div className="flex gap-4">
+          <div className="flex gap-4" style={{ fontFamily: 'var(--font-cormorant)' }}>
             <Link 
               href="/login?portal=dancer"
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
