@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -30,6 +31,13 @@ const portals = [
     image: 'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?',
     link: '/login?portal=studio'
   }
+]
+
+const learnFromTheBestImages = [
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579.jpeg',
 ]
 
 const features = [
@@ -90,14 +98,64 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const [heroHeight, setHeroHeight] = useState(100)
+  const [heroHeight] = useState(55)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [featuresCarouselIndex, setFeaturesCarouselIndex] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
+  const [taglineIndex, setTaglineIndex] = useState(0)
+  const [taglineKey, setTaglineKey] = useState(0)
+  const [imageIndex, setImageIndex] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
+
+  const taglineRoles = ['Dancers', 'Instructors', 'Studios']
+
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  }
+
+  const cardHoverVariants = {
+    hover: { y: -8, transition: { duration: 0.3 } }
+  }
+
+  // Modern Ken Burns effect with smooth crossfade
+  const imageVariants = {
+    enter: {
+      opacity: 0,
+      scale: 1.1,
+      filter: 'blur(4px)'
+    },
+    center: {
+      opacity: 1,
+      scale: 1,
+      filter: 'blur(0px)',
+      transition: {
+        duration: 1.2,
+        ease: [0.43, 0.13, 0.23, 0.96] // custom easing for smoothness
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      filter: 'blur(4px)',
+      transition: {
+        duration: 0.8,
+        ease: [0.43, 0.13, 0.23, 0.96]
+      }
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -180,25 +238,33 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    const shrinkTimer = setTimeout(() => {
-      // Convert pixel height to viewport height percentage
-      if (heroContentRef.current) {
-        const contentPixels = heroContentRef.current.offsetHeight
-        const viewportHeight = window.innerHeight
-        const contentVh = (contentPixels / viewportHeight) * 100
-        setHeroHeight(contentVh)
-      }
-    }, 2000)
-
-    // Show nav after hero finishes shrinking (2s + 2s animation = 4s total)
+    // Show nav after short delay
     const navTimer = setTimeout(() => {
       setShowNav(true)
-    }, 4000)
+    }, 1000)
 
     return () => {
-      clearTimeout(shrinkTimer)
       clearTimeout(navTimer)
     }
+  }, [])
+
+  // Tagline rotation effect
+  useEffect(() => {
+    const taglineTimer = setInterval(() => {
+      setTaglineIndex((prev) => (prev + 1) % taglineRoles.length)
+      setTaglineKey((prev) => prev + 1)
+    }, 4000)
+
+    return () => clearInterval(taglineTimer)
+  }, [])
+
+  // Image cycling effect
+  useEffect(() => {
+    const imageTimer = setInterval(() => {
+      setImageIndex((prev) => (prev + 1) % learnFromTheBestImages.length)
+    }, 5000)
+
+    return () => clearInterval(imageTimer)
   }, [])
 
   return (
@@ -235,7 +301,7 @@ export default function HomePage() {
       </nav>
 
       <section 
-        className="relative flex items-center justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
+        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden"
         style={{
           height: `${heroHeight}vh`,
           transition: 'height 2s ease-in-out'
@@ -245,16 +311,20 @@ export default function HomePage() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 text-center" ref={heroContentRef}>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 animate-slideDown">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 text-left" ref={heroContentRef}>
+          <motion.h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
             Professional Precision
             <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
               Dance Instruction
             </span>
-          </h1>
-          <p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto animate-slideUp">
-            A free, comprehensive platform built by dancers for dancers
-          </p>
+          </motion.h1>
+          <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-4xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }}>
+            <span className="typewriter" key={taglineKey}>
+              <span className="typewriter-fade">
+                A comprehensive platform built by dancers for <span className="text-rose-600 font-semibold">{taglineRoles[taglineIndex]}</span>
+              </span>
+            </span>
+          </motion.p>
         </div>
       </section>
 
@@ -270,33 +340,35 @@ export default function HomePage() {
           </div>
 
           {/* Desktop Grid - Hidden on mobile */}
-          <div className="hidden md:grid grid-cols-3 gap-8 mb-20">
+          <motion.div className="hidden md:grid grid-cols-3 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {portals.map((portal) => (
-              <Card key={portal.id} hover className="text-center overflow-hidden p-0 flex flex-col">
-                <div className="relative w-full h-48 overflow-hidden">
-                  <img
-                    src={portal.image}
-                    alt={portal.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 flex flex-col justify-between flex-1">
-                  <div>
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                    <p className="text-gray-600 mb-6">
-                      {portal.description}
-                    </p>
+              <motion.div key={portal.id} variants={itemVariants} whileHover="hover">
+                <Card hover className="text-center overflow-hidden p-0 flex flex-col h-full" style={{ cursor: 'pointer' }}>
+                  <motion.div className="relative w-full h-48 overflow-hidden">
+                    <img
+                      src={portal.image}
+                      alt={portal.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                  <div className="p-6 flex flex-col justify-between flex-1">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                      <p className="text-gray-600 mb-6">
+                        {portal.description}
+                      </p>
+                    </div>
+                    <Link href={portal.link}>
+                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                        <span>Log-in</span>
+                        <span className="text-xs italic font-normal">or sign-up</span>
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href={portal.link}>
-                    <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
-                      <span>Log-in</span>
-                      <span className="text-xs italic font-normal">or sign-up</span>
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Mobile Carousel - Visible only on mobile */}
           <div className="md:hidden mb-20">
@@ -373,19 +445,21 @@ export default function HomePage() {
           </div>
 
           {/* Desktop Grid - Hidden on mobile */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+          <motion.div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {features.map((feature) => (
-              <Card key={feature.id} hover className="text-center">
-                <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">
-                  {feature.description}
-                </p>
-              </Card>
+              <motion.div key={feature.id} variants={itemVariants} whileHover={{ y: -5 }}>
+                <Card hover className="text-center h-full">
+                  <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    {feature.icon}
+                  </motion.div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">
+                    {feature.description}
+                  </p>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Mobile Carousel - Visible only on mobile */}
           <div className="md:hidden mb-20">
@@ -476,12 +550,19 @@ export default function HomePage() {
             </div>
             <div className="order-1 lg:order-2">
               <div className="relative">
-                <div className="aspect-[3/4] bg-gradient-to-br from-rose-200 to-mauve-200 rounded-2xl shadow-2xl overflow-hidden">
-                  <img
-                    src="/images/courtney-rockettes.png"
-                    alt="Courtney - Professional Dancer and Instructor"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="aspect-[3/4] bg-gradient-to-br from-rose-200 to-mauve-200 rounded-2xl shadow-2xl overflow-hidden relative">
+                  <AnimatePresence initial={false}>
+                    <motion.img
+                      key={imageIndex}
+                      src={learnFromTheBestImages[imageIndex]}
+                      alt="Courtney - Professional Dancer and Instructor"
+                      className="w-full h-full object-cover absolute inset-0"
+                      variants={imageVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                    />
+                  </AnimatePresence>
                 </div>
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-rose-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
                 <div className="absolute -top-6 -left-6 w-32 h-32 bg-mauve-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
@@ -622,7 +703,7 @@ export default function HomePage() {
               <div>
                 <h4 className="text-xl font-semibold text-white mb-4">Contact</h4>
                 <ul className="space-y-2 text-white">
-                  <li>Email: info@dancestudio.com</li>
+                  <li>Email: info@cpfdance.com</li>
                   <li>
                     <a 
                       href="https://instagram.com/courtneyfiledance" 

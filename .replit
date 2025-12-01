@@ -60,8 +60,16 @@ localPort = 42761
 externalPort = 3002
 
 [[ports]]
+localPort = 42765
+externalPort = 8081
+
+[[ports]]
 localPort = 44487
 externalPort = 5173
+
+[[ports]]
+localPort = 45979
+externalPort = 8099
 
 [[ports]]
 localPort = 45985
@@ -87,10 +95,10 @@ args = "dev"
 name = "dev"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev -- --port 5000"
+waitForPort = 5000

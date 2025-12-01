@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
               <p className="font-semibold">Reminiscent Technologies LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
-              <p>Email: support@reminiscent.io</p>
+              <p>Email: info@cpfdance.com</p>
             </div>
             <p className="mt-4">
               If you have questions about this Policy or your personal information, you may contact us using the details above.
@@ -326,7 +326,7 @@ export default function PrivacyPolicyPage() {
             </ul>
 
             <p className="mt-4">
-              To exercise these rights, contact us at support@reminiscent.io. We may need to verify your identity before responding to certain requests, and some rights may be limited by applicable law.
+              To exercise these rights, contact us at info@cpfdance.com. We may need to verify your identity before responding to certain requests, and some rights may be limited by applicable law.
             </p>
 
             <p className="mt-4">
@@ -388,7 +388,7 @@ export default function PrivacyPolicyPage() {
               <p className="font-semibold">Reminiscent Technologies LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
-              <p>Email: support@reminiscent.io</p>
+              <p>Email: info@cpfdance.com</p>
             </div>
           </div>
         </div>
