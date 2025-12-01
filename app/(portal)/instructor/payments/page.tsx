@@ -110,6 +110,8 @@ export default function InstructorPaymentsPage() {
   const [loadingEarnings, setLoadingEarnings] = useState(true)
   const [earningsDateRange, setEarningsDateRange] = useState<EarningsDateRange>('all')
   const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
+  const [remindingClassId, setRemindingClassId] = useState<string | null>(null)
+  const [remindMessage, setRemindMessage] = useState('')
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -319,6 +321,36 @@ export default function InstructorPaymentsPage() {
     })
   }
 
+  const handleRemindClick = async (classId: string, className: string) => {
+    setRemindingClassId(classId)
+    try {
+      const response = await fetch('/api/instructor/send-payment-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: classId })
+      })
+
+      if (response.ok) {
+        setRemindMessage(`Reminder sent for "${className}"`)
+        setTimeout(() => setRemindMessage(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error sending reminder:', error)
+    } finally {
+      setRemindingClassId(null)
+    }
+  }
+
+  const unpaidClasses = classEarnings
+    .filter(cls => cls.collected_amount < cls.calculated_value)
+    .map(cls => ({
+      id: cls.id,
+      title: cls.title,
+      start_time: cls.start_time,
+      studio: cls.studio,
+      outstanding: cls.calculated_value - cls.collected_amount
+    }))
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -416,12 +448,20 @@ export default function InstructorPaymentsPage() {
           </div>
         ) : earningsSummary && (
           <>
+            {remindMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+                {remindMessage}
+              </div>
+            )}
             <div className="mb-8">
               <EarningsProgressWidget
                 total={earningsSummary.total_value}
                 collected={earningsSummary.total_collected}
                 outstanding={earningsSummary.total_outstanding}
                 classes={earningsSummary.total_classes}
+                unpaidClasses={unpaidClasses}
+                onRemindClick={handleRemindClick}
+                isReminding={remindingClassId !== null}
               />
             </div>
 
