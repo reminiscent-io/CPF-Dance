@@ -40,6 +40,13 @@ const learnFromTheBestImages = [
   'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579.jpeg',
 ]
 
+const heroImages = [
+  'https://images.unsplash.com/photo-1555656220-46e30749d330?w=500&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1685339009948-d807094b1457?w=500&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1677603142181-6e49eb1a3c10?w=500&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&h=600&fit=crop',
+]
+
 const features = [
   {
     id: 'progress',
@@ -107,6 +114,7 @@ export default function HomePage() {
   const [taglineKey, setTaglineKey] = useState(0)
   const [imageIndex, setImageIndex] = useState(0)
   const [imagesLoaded, setImagesLoaded] = useState(false)
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const featuresCarouselRef = useRef<HTMLDivElement>(null)
@@ -146,7 +154,6 @@ export default function HomePage() {
       y: 0,
       transition: {
         duration: 1.5,
-        ease: [0.25, 0.1, 0.25, 1], // smooth easeInOut
         opacity: { duration: 1.2 }
       }
     },
@@ -156,8 +163,7 @@ export default function HomePage() {
       x: 0,
       y: 0,
       transition: {
-        duration: 1.2,
-        ease: [0.25, 0.1, 0.25, 1]
+        duration: 1.2
       }
     }
   }
@@ -296,6 +302,15 @@ export default function HomePage() {
     return () => clearInterval(imageTimer)
   }, [])
 
+  // Hero image cycling effect
+  useEffect(() => {
+    const heroImageTimer = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 6000)
+
+    return () => clearInterval(heroImageTimer)
+  }, [])
+
   return (
     <main className="min-h-screen bg-white">
       {/* Navigation Bar */}
@@ -340,20 +355,39 @@ export default function HomePage() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 text-left" ref={heroContentRef}>
-          <motion.h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-            Professional Precision
-            <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
-              Dance Instruction
-            </span>
-          </motion.h1>
-          <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-4xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }}>
-            <span className="typewriter" key={taglineKey}>
-              <span className="typewriter-fade">
-                A comprehensive platform built by dancers for <span className="text-rose-600 font-semibold">{taglineRoles[taglineIndex]}</span>
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 text-left grid lg:grid-cols-2 gap-12 items-center" ref={heroContentRef}>
+          <div>
+            <motion.h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
+              Professional Precision
+              <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
+                Dance Instruction
               </span>
-            </span>
-          </motion.p>
+            </motion.h1>
+            <motion.p className="text-xl sm:text-2xl text-gray-700 mb-4 max-w-4xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }}>
+              <span className="typewriter" key={taglineKey}>
+                <span className="typewriter-fade">
+                  A comprehensive platform built by dancers for <span className="text-rose-600 font-semibold">{taglineRoles[taglineIndex]}</span>
+                </span>
+              </span>
+            </motion.p>
+          </div>
+          <div className="hidden lg:grid grid-cols-2 gap-4">
+            {heroImages.map((image, idx) => (
+              <motion.div
+                key={idx}
+                className="aspect-square rounded-lg overflow-hidden shadow-lg"
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: idx === heroImageIndex ? 1 : 0.5 }}
+                transition={{ duration: 0.6 }}
+              >
+                <img
+                  src={image}
+                  alt={`Hero image ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
