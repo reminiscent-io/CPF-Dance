@@ -186,7 +186,7 @@ export default function StudioCarousel() {
                       <img
                         src={studio.image}
                         alt={studio.name}
-                        className="max-w-full max-h-full object-contain"
+                        className="max-w-full max-h-full object-contain rounded-lg"
                       />
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-2 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
                         {studio.name}

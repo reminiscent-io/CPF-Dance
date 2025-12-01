@@ -319,7 +319,7 @@ export default function WaiverDetailPage() {
                       <img
                         src={waiver.signature_image_url}
                         alt="Signature"
-                        className="max-w-xs h-auto"
+                        className="max-w-xs h-auto rounded-lg"
                       />
                     </div>
                   </div>
