@@ -16,68 +16,8 @@ run = ["npm", "run", "start"]
 deploymentTarget = "autoscale"
 
 [[ports]]
-localPort = 3000
-externalPort = 3001
-
-[[ports]]
-localPort = 5000
+localPort = 34113
 externalPort = 80
-
-[[ports]]
-localPort = 35429
-externalPort = 6800
-
-[[ports]]
-localPort = 36441
-externalPort = 3003
-
-[[ports]]
-localPort = 37245
-externalPort = 6000
-
-[[ports]]
-localPort = 37297
-externalPort = 8008
-
-[[ports]]
-localPort = 38205
-externalPort = 8080
-
-[[ports]]
-localPort = 39309
-externalPort = 9000
-
-[[ports]]
-localPort = 39759
-externalPort = 3000
-
-[[ports]]
-localPort = 41305
-externalPort = 8000
-
-[[ports]]
-localPort = 42389
-externalPort = 5000
-
-[[ports]]
-localPort = 42761
-externalPort = 3002
-
-[[ports]]
-localPort = 42765
-externalPort = 8081
-
-[[ports]]
-localPort = 44487
-externalPort = 5173
-
-[[ports]]
-localPort = 45979
-externalPort = 8099
-
-[[ports]]
-localPort = 45985
-externalPort = 4200
 
 [agent]
 expertMode = true
