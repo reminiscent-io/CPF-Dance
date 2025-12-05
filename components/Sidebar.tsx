@@ -5,19 +5,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
 import type { Profile } from '@/lib/auth/types'
-import {
-  ChartBarIcon,
-  CalendarIcon,
-  UsersIcon,
-  AcademicCapIcon,
-  BuildingOfficeIcon,
-  DocumentCheckIcon,
-  CreditCardIcon,
-  MagnifyingGlassIcon,
-  DocumentTextIcon,
-  StarIcon,
-  ArrowRightStartOnRectangleIcon,
-} from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
   profile: Profile | null
@@ -67,23 +54,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     return 'instructor'
   }
 
-  const getIconComponent = (iconName: string) => {
-    const iconProps = 'w-5 h-5 text-white'
-    const iconMap: Record<string, React.ReactNode> = {
-      'dashboard': <ChartBarIcon className={iconProps} />,
-      'schedule': <CalendarIcon className={iconProps} />,
-      'students': <UsersIcon className={iconProps} />,
-      'classes': <AcademicCapIcon className={iconProps} />,
-      'studios': <BuildingOfficeIcon className={iconProps} />,
-      'waivers': <DocumentCheckIcon className={iconProps} />,
-      'payments': <CreditCardIcon className={iconProps} />,
-      'available': <MagnifyingGlassIcon className={iconProps} />,
-      'lessons': <StarIcon className={iconProps} />,
-      'notes': <DocumentTextIcon className={iconProps} />,
-    }
-    return iconMap[iconName] || null
-  }
-
   const getNavigationLinks = () => {
     if (!profile) return []
 
@@ -92,38 +62,38 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       switch (portal) {
         case 'instructor':
           return [
-            { href: '/instructor', label: 'Dashboard', icon: 'dashboard' },
-            { href: '/instructor/schedule', label: 'Schedule', icon: 'schedule' },
-            { href: '/instructor/students', label: 'Students', icon: 'students' },
-            { href: '/instructor/classes', label: 'Classes', icon: 'classes' },
-            { href: '/instructor/studios', label: 'Studios', icon: 'studios' },
-            { href: '/instructor/waivers', label: 'Waivers', icon: 'waivers' },
-            { href: '/instructor/payments', label: 'Payments', icon: 'payments' },
+            { href: '/instructor', label: 'Dashboard', icon: '📊' },
+            { href: '/instructor/schedule', label: 'Schedule', icon: '📅' },
+            { href: '/instructor/students', label: 'Students', icon: '👥' },
+            { href: '/instructor/classes', label: 'Classes', icon: '🎓' },
+            { href: '/instructor/studios', label: 'Studios', icon: '🏢' },
+            { href: '/instructor/waivers', label: 'Waivers', icon: '📋' },
+            { href: '/instructor/payments', label: 'Payments', icon: '💳' },
           ]
         case 'dancer':
           return [
-            { href: '/dancer', label: 'Dashboard', icon: 'dashboard' },
+            { href: '/dancer', label: 'Dashboard', icon: '📊' },
             {
               label: 'Schedule',
-              icon: 'schedule',
+              icon: '📅',
               children: [
-                { href: '/dancer/classes', label: 'My Classes', icon: 'classes' },
-                { href: '/dancer/available-classes', label: 'Available Classes', icon: 'available' },
-                { href: '/dancer/request-lesson', label: 'Private Lessons', icon: 'lessons' },
+                { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+                { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
+                { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
               ]
             },
-            { href: '/dancer/notes', label: 'Notes', icon: 'notes' },
-            { href: '/dancer/waivers', label: 'Waivers', icon: 'waivers' },
-            { href: '/dancer/payments', label: 'Payments', icon: 'payments' },
+            { href: '/dancer/notes', label: 'Notes', icon: '📝' },
+            { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
+            { href: '/dancer/payments', label: 'Payments', icon: '💳' },
           ]
         case 'studio':
           return [
-            { href: '/studio', label: 'Dashboard', icon: 'dashboard' },
-            { href: '/studio/schedule', label: 'Schedule', icon: 'schedule' },
-            { href: '/studio/classes', label: 'Classes', icon: 'classes' },
-            { href: '/studio/students', label: 'Students', icon: 'students' },
-            { href: '/studio/waivers', label: 'Waivers', icon: 'waivers' },
-            { href: '/studio/payments', label: 'Payments', icon: 'payments' },
+            { href: '/studio', label: 'Dashboard', icon: '📊' },
+            { href: '/studio/schedule', label: 'Schedule', icon: '📅' },
+            { href: '/studio/classes', label: 'Classes', icon: '🎓' },
+            { href: '/studio/students', label: 'Students', icon: '👥' },
+            { href: '/studio/waivers', label: 'Waivers', icon: '📋' },
+            { href: '/studio/payments', label: 'Payments', icon: '💳' },
           ]
       }
     }
@@ -131,39 +101,39 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     switch (profile.role) {
       case 'instructor':
         return [
-          { href: '/instructor', label: 'Dashboard', icon: 'dashboard' },
-          { href: '/instructor/schedule', label: 'Schedule', icon: 'schedule' },
-          { href: '/instructor/students', label: 'Students', icon: 'students' },
-          { href: '/instructor/classes', label: 'Classes', icon: 'classes' },
-          { href: '/instructor/studios', label: 'Studios', icon: 'studios' },
-          { href: '/instructor/waivers', label: 'Waivers', icon: 'waivers' },
-          { href: '/instructor/payments', label: 'Payments', icon: 'payments' },
+          { href: '/instructor', label: 'Dashboard', icon: '📊' },
+          { href: '/instructor/schedule', label: 'Schedule', icon: '📅' },
+          { href: '/instructor/students', label: 'Students', icon: '👥' },
+          { href: '/instructor/classes', label: 'Classes', icon: '🎓' },
+          { href: '/instructor/studios', label: 'Studios', icon: '🏢' },
+          { href: '/instructor/waivers', label: 'Waivers', icon: '📋' },
+          { href: '/instructor/payments', label: 'Payments', icon: '💳' },
         ]
       case 'dancer':
       case 'guardian':
         return [
-          { href: '/dancer', label: 'Dashboard', icon: 'dashboard' },
+          { href: '/dancer', label: 'Dashboard', icon: '📊' },
           {
             label: 'Schedule',
-            icon: 'schedule',
+            icon: '📅',
             children: [
-              { href: '/dancer/classes', label: 'My Classes', icon: 'classes' },
-              { href: '/dancer/available-classes', label: 'Available Classes', icon: 'available' },
-              { href: '/dancer/request-lesson', label: 'Private Lessons', icon: 'lessons' },
+              { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
+              { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
+              { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
             ]
           },
-          { href: '/dancer/notes', label: 'Notes', icon: 'notes' },
-          { href: '/dancer/waivers', label: 'Waivers', icon: 'waivers' },
-          { href: '/dancer/payments', label: 'Payments', icon: 'payments' },
+          { href: '/dancer/notes', label: 'Notes', icon: '📝' },
+          { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
+          { href: '/dancer/payments', label: 'Payments', icon: '💳' },
         ]
       case 'studio_admin':
         return [
-          { href: '/studio', label: 'Dashboard', icon: 'dashboard' },
-          { href: '/studio/schedule', label: 'Schedule', icon: 'schedule' },
-          { href: '/studio/classes', label: 'Classes', icon: 'classes' },
-          { href: '/studio/students', label: 'Students', icon: 'students' },
-          { href: '/studio/waivers', label: 'Waivers', icon: 'waivers' },
-          { href: '/studio/payments', label: 'Payments', icon: 'payments' },
+          { href: '/studio', label: 'Dashboard', icon: '📊' },
+          { href: '/studio/schedule', label: 'Schedule', icon: '📅' },
+          { href: '/studio/classes', label: 'Classes', icon: '🎓' },
+          { href: '/studio/students', label: 'Students', icon: '👥' },
+          { href: '/studio/waivers', label: 'Waivers', icon: '📋' },
+          { href: '/studio/payments', label: 'Payments', icon: '💳' },
         ]
       default:
         return []
@@ -291,7 +261,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                       `}
                     >
                       <span className="flex items-center">
-                        <span className="mr-3">{getIconComponent(link.icon)}</span>
+                        <span className="mr-3">{link.icon}</span>
                         {link.label}
                       </span>
                       <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,7 +289,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                                 }
                               `}
                             >
-                              <span className="mr-3">{getIconComponent(child.icon)}</span>
+                              <span className="mr-3">{child.icon}</span>
                               {child.label}
                             </button>
                           )
@@ -338,14 +308,14 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                     router.push(link.href)
                   }}
                   className={`
-                    w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                    w-full text-left block px-4 py-3 rounded-lg font-medium text-sm transition-all
                     ${isActive
                       ? 'bg-rose-400 text-white shadow-md'
                       : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
                     }
                   `}
                 >
-                  <span className="mr-3">{getIconComponent(link.icon)}</span>
+                  <span className="mr-3">{link.icon}</span>
                   {link.label}
                 </button>
               )
@@ -371,7 +341,9 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-rose-100 hover:bg-white hover:bg-opacity-10 transition-colors"
               aria-label="Sign Out"
             >
-              <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
               Sign Out
             </button>
           </div>
