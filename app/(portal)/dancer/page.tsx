@@ -8,6 +8,15 @@ import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import {
+  CalendarIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  ClockIcon,
+  MapPinIcon,
+  ChartBarIcon,
+  CreditCardIcon
+} from '@heroicons/react/24/outline'
 
 interface DancerStats {
   upcoming_classes: number
@@ -131,7 +140,7 @@ export default function DancerPortalPage() {
                     <p className="text-3xl font-bold text-rose-600">{stats?.upcoming_classes || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">📅</span>
+                    <CalendarIcon className="w-7 h-7 text-rose-600" />
                   </div>
                 </div>
               </CardContent>
@@ -145,7 +154,7 @@ export default function DancerPortalPage() {
                     <p className="text-3xl font-bold text-purple-600">{stats?.total_classes_attended || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">✨</span>
+                    <SparklesIcon className="w-7 h-7 text-purple-600" />
                   </div>
                 </div>
               </CardContent>
@@ -159,7 +168,7 @@ export default function DancerPortalPage() {
                     <p className="text-3xl font-bold text-mauve-600">{stats?.recent_notes || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-mauve-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">📝</span>
+                    <DocumentTextIcon className="w-7 h-7 text-mauve-600" />
                   </div>
                 </div>
               </CardContent>
@@ -180,16 +189,16 @@ export default function DancerPortalPage() {
                     )}
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center text-gray-700">
-                        <span className="mr-2">📅</span>
+                        <CalendarIcon className="w-5 h-5 mr-2 text-rose-600" />
                         <span className="font-medium">{formatDateTime(nextClass.start_time).date}</span>
                       </div>
                       <div className="flex items-center text-gray-700">
-                        <span className="mr-2">⏰</span>
+                        <ClockIcon className="w-5 h-5 mr-2 text-rose-600" />
                         <span>{formatDateTime(nextClass.start_time).time}</span>
                       </div>
                       {nextClass.location && (
                         <div className="flex items-center text-gray-700">
-                          <span className="mr-2">📍</span>
+                          <MapPinIcon className="w-5 h-5 mr-2 text-rose-600" />
                           <span>{nextClass.studios?.name || nextClass.location}</span>
                         </div>
                       )}
@@ -218,31 +227,35 @@ export default function DancerPortalPage() {
                 <div className="space-y-3">
                   <Button
                     variant="primary"
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                     onClick={() => router.push('/dancer/request-lesson')}
                   >
-                    💫 Request Private Lesson
+                    <SparklesIcon className="w-5 h-5" />
+                    Request Private Lesson
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                     onClick={() => router.push('/dancer/my-notes')}
                   >
-                    📝 Add Note
+                    <DocumentTextIcon className="w-5 h-5" />
+                    Add Note
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                     onClick={() => router.push('/dancer/progress')}
                   >
-                    📈 View Progress
+                    <ChartBarIcon className="w-5 h-5" />
+                    View Progress
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                     onClick={() => router.push('/dancer/payments')}
                   >
-                    💳 Payment History
+                    <CreditCardIcon className="w-5 h-5" />
+                    Payment History
                   </Button>
                 </div>
               </CardContent>

@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
-import StudioCarousel from '@/components/StudioCarousel'
+import dynamic from 'next/dynamic'
+
+const StudioCarousel = dynamic(() => import('@/components/StudioCarousel'), {
+  loading: () => null,
+  ssr: false
+})
 
 const portals = [
   {
@@ -98,6 +103,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [formStep, setFormStep] = useState(0)
   const [heroHeight] = useState(55)
   const [showNav, setShowNav] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
@@ -191,10 +197,77 @@ export default function HomePage() {
         contact_phone: '',
         message: ''
       })
+      setFormStep(0)
     } catch (error: any) {
       setSubmitError(error.message || 'Failed to submit inquiry. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleFormStepNext = () => {
+    if (formStep < 4) {
+      setFormStep(formStep + 1)
+    }
+  }
+
+  const handleFormStepPrev = () => {
+    if (formStep > 0) {
+      setFormStep(formStep - 1)
+    }
+  }
+
+  const handleFormStepSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formStep < 4) {
+      handleFormStepNext()
+    } else {
+      handleSubmit(e)
+    }
+  }
+
+  const getStepContent = () => {
+    switch (formStep) {
+      case 0:
+        return {
+          label: "I am representing",
+          inputName: "studio_name",
+          placeholder: "Your Studio Name",
+          value: formData.studio_name
+        }
+      case 1:
+        return {
+          label: "My name is",
+          inputName: "contact_name",
+          placeholder: "Your Name",
+          value: formData.contact_name
+        }
+      case 2:
+        return {
+          label: "You can reach me at",
+          inputName: "contact_email",
+          placeholder: "your@email.com",
+          type: "email",
+          value: formData.contact_email
+        }
+      case 3:
+        return {
+          label: "My phone number is",
+          inputName: "contact_phone",
+          placeholder: "(555) 123-4567",
+          type: "tel",
+          value: formData.contact_phone
+        }
+      case 4:
+        return {
+          label: "Tell us more",
+          inputName: "message",
+          placeholder: "How can we work together...",
+          isTextarea: true,
+          value: formData.message
+        }
+      default:
+        return null
     }
   }
 
@@ -256,14 +329,8 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    // Show nav after short delay
-    const navTimer = setTimeout(() => {
-      setShowNav(true)
-    }, 1000)
-
-    return () => {
-      clearTimeout(navTimer)
-    }
+    // Show nav immediately for faster perceived load
+    setShowNav(true)
   }, [])
 
   // Tagline rotation effect
@@ -365,10 +432,10 @@ export default function HomePage() {
       <section id="portals" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Select Your Portal
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
               Access your personalized dashboard based on your role
             </p>
           </div>
@@ -387,8 +454,8 @@ export default function HomePage() {
                   </motion.div>
                   <div className="p-6 flex flex-col justify-between flex-1">
                     <div>
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
-                      <p className="text-gray-600 mb-6">
+                      <h3 className="text-2xl font-semibold text-charcoal-950 mb-3">{portal.title}</h3>
+                      <p className="text-charcoal-800 mb-6 leading-relaxed">
                         {portal.description}
                       </p>
                     </div>
@@ -404,54 +471,53 @@ export default function HomePage() {
             ))}
           </motion.div>
 
-          {/* Mobile Carousel - Visible only on mobile */}
+          {/* Mobile Swipeable Cards - Visible only on mobile */}
           <div className="md:hidden mb-20">
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={prevPortal}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Previous portal"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div className="flex-1 overflow-hidden" ref={carouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center overflow-hidden p-0 flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
-                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={portals[carouselIndex].image}
-                      alt={portals[carouselIndex].title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-6 flex flex-col justify-between flex-1 ">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portals[carouselIndex].title}</h3>
-                      <p className="text-gray-600 mb-6">
-                        {portals[carouselIndex].description}
-                      </p>
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 -mx-4 pb-2"
+              ref={carouselRef}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                scrollBehavior: 'smooth',
+                scrollSnapType: 'x mandatory'
+              }}
+            >
+              {portals.map((portal, index) => (
+                <div
+                  key={portal.id}
+                  className="flex-shrink-0 w-full"
+                  style={{
+                    maxWidth: 'calc(85% - 8px)',
+                    scrollSnapAlign: 'center',
+                    scrollSnapStop: 'always'
+                  }}
+                >
+                  <Card hover className="text-center overflow-hidden p-0 flex flex-col h-full bg-gradient-to-br from-gray-50 to-rose-50">
+                    <div className="relative w-full h-48 overflow-hidden">
+                      <img
+                        src={portal.image}
+                        alt={portal.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <Link href={portals[carouselIndex].link}>
-                      <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
-                        <span>Log-in</span>
-                        <span className="text-xs italic font-normal">or sign-up</span>
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              </div>
-
-              <button
-                onClick={nextPortal}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Next portal"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+                    <div className="p-6 flex flex-col justify-between flex-1">
+                      <div>
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-3">{portal.title}</h3>
+                        <p className="text-gray-600 mb-6">
+                          {portal.description}
+                        </p>
+                      </div>
+                      <Link href={portal.link}>
+                        <Button size="lg" className="w-full flex flex-col items-center justify-center gap-1">
+                          <span>Log-in</span>
+                          <span className="text-xs italic font-normal">or sign-up</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                </div>
+              ))}
             </div>
 
             {/* Carousel Indicators */}
@@ -470,10 +536,10 @@ export default function HomePage() {
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Everything You Need to Succeed
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
               Useful tools to keep track of notes, progress, classes, and payments for dancers, instructors, and studios
             </p>
           </div>
@@ -486,8 +552,8 @@ export default function HomePage() {
                   <motion.div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
                     {feature.icon}
                   </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-semibold text-charcoal-950 mb-3">{feature.title}</h3>
+                  <p className="text-charcoal-800 leading-relaxed">
                     {feature.description}
                   </p>
                 </Card>
@@ -495,40 +561,39 @@ export default function HomePage() {
             ))}
           </motion.div>
 
-          {/* Mobile Carousel - Visible only on mobile */}
+          {/* Mobile Swipeable Cards - Visible only on mobile */}
           <div className="md:hidden mb-20">
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={prevFeature}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Previous feature"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div className="flex-1 overflow-hidden" ref={featuresCarouselRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                <Card hover className="text-center bg-gradient-to-br from-gray-50 to-rose-50">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${features[featuresCarouselIndex].bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                    {features[featuresCarouselIndex].icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{features[featuresCarouselIndex].title}</h3>
-                  <p className="text-gray-600">
-                    {features[featuresCarouselIndex].description}
-                  </p>
-                </Card>
-              </div>
-
-              <button
-                onClick={nextFeature}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Next feature"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 -mx-4 pb-2"
+              ref={featuresCarouselRef}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                scrollBehavior: 'smooth',
+                scrollSnapType: 'x mandatory'
+              }}
+            >
+              {features.map((feature) => (
+                <div
+                  key={feature.id}
+                  className="flex-shrink-0 w-full"
+                  style={{
+                    maxWidth: 'calc(85% - 8px)',
+                    scrollSnapAlign: 'center',
+                    scrollSnapStop: 'always'
+                  }}
+                >
+                  <Card hover className="text-center h-full bg-gradient-to-br from-gray-50 to-rose-50">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.bgGradient} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold text-charcoal-950 mb-3">{feature.title}</h3>
+                    <p className="text-charcoal-800 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </Card>
+                </div>
+              ))}
             </div>
 
             {/* Carousel Indicators */}
@@ -552,10 +617,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-charcoal-950 mb-8 leading-tight" style={{ letterSpacing: '-0.04em' }}>
                 Learn from the Best
               </h2>
-              <div className="space-y-4 text-lg text-gray-700">
+              <div className="space-y-4 text-lg text-charcoal-800 leading-relaxed">
                 <p>
                   With over a decade of professional experience, including performances with the world-renowned 
                   <span className="font-semibold text-rose-700"> Radio City Rockettes</span>, Courtney brings 
@@ -572,13 +637,13 @@ export default function HomePage() {
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Radio City Rockettes</span>
+                  <span className="text-sm font-medium text-charcoal-900">Radio City Rockettes</span>
                 </div>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Professional Performer</span>
+                  <span className="text-sm font-medium text-charcoal-900">Professional Performer</span>
                 </div>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-gray-700">Precision Technique</span>
+                  <span className="text-sm font-medium text-charcoal-900">Precision Technique</span>
                 </div>
               </div>
             </div>
@@ -591,6 +656,7 @@ export default function HomePage() {
                       src={learnFromTheBestImages[imageIndex]}
                       alt="Courtney - Professional Dancer and Instructor"
                       className="w-full h-full object-cover absolute inset-0"
+                      loading="lazy"
                       variants={imageVariants}
                       initial="enter"
                       animate="center"
@@ -614,12 +680,12 @@ export default function HomePage() {
       </section>
 
       <section id="studio-inquiry" className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
               Studio Partnership Inquiry
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-charcoal-800 leading-relaxed">
               Interested in bringing our expertise to your studio? Let's connect.
             </p>
           </div>
@@ -632,82 +698,96 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Thank You!</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</h3>
+                <p className="text-charcoal-800 mb-6 leading-relaxed">
                   We've received your inquiry and will be in touch shortly.
                 </p>
-                <Button onClick={() => setSubmitSuccess(false)}>
+                <Button onClick={() => { setSubmitSuccess(false); setFormStep(0); }}>
                   Submit Another Inquiry
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <Input
-                  label="Studio Name"
-                  name="studio_name"
-                  type="text"
-                  required
-                  value={formData.studio_name}
-                  onChange={handleInputChange}
-                  placeholder="Your CPF Dance"
-                />
-
-                <Input
-                  label="Contact Name"
-                  name="contact_name"
-                  type="text"
-                  required
-                  value={formData.contact_name}
-                  onChange={handleInputChange}
-                  placeholder="John Smith"
-                />
-
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <Input
-                    label="Email"
-                    name="contact_email"
-                    type="email"
-                    required
-                    value={formData.contact_email}
-                    onChange={handleInputChange}
-                    placeholder="contact@studio.com"
-                  />
-
-                  <Input
-                    label="Phone"
-                    name="contact_phone"
-                    type="tel"
-                    required
-                    value={formData.contact_phone}
-                    onChange={handleInputChange}
-                    placeholder="(555) 123-4567"
-                  />
+              <form onSubmit={handleFormStepSubmit} className="space-y-8">
+                {/* Progress Indicator */}
+                <div className="flex gap-2 justify-center">
+                  {[0, 1, 2, 3, 4].map((step) => (
+                    <div
+                      key={step}
+                      className={`h-2 w-12 rounded-full transition-all ${
+                        step <= formStep ? 'bg-rose-600' : 'bg-charcoal-200'
+                      }`}
+                    />
+                  ))}
                 </div>
 
-                <Textarea
-                  label="Message"
-                  name="message"
-                  required
-                  rows={5}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Tell us about your studio and how we can work together..."
-                />
-
-                {submitError && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700">{submitError}</p>
+                {/* Conversational Form Step */}
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-lg text-charcoal-800 mb-4">
+                      <span className="font-semibold">{getStepContent()?.label}</span>
+                    </p>
+                    {getStepContent()?.isTextarea ? (
+                      <Textarea
+                        name={getStepContent()?.inputName || ''}
+                        rows={4}
+                        required
+                        value={getStepContent()?.value || ''}
+                        onChange={handleInputChange}
+                        placeholder={getStepContent()?.placeholder}
+                        className="w-full text-center"
+                      />
+                    ) : (
+                      <Input
+                        name={getStepContent()?.inputName || ''}
+                        type={getStepContent()?.type || 'text'}
+                        required
+                        value={getStepContent()?.value || ''}
+                        onChange={handleInputChange}
+                        placeholder={getStepContent()?.placeholder}
+                        className="w-full text-center"
+                      />
+                    )}
                   </div>
-                )}
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
-                </Button>
+                  {submitError && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-700 text-center">{submitError}</p>
+                    </div>
+                  )}
+
+                  {/* Navigation Buttons */}
+                  <div className="flex gap-3 justify-center">
+                    {formStep > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleFormStepPrev}
+                      >
+                        ← Back
+                      </Button>
+                    )}
+                    {formStep === 4 ? (
+                      <Button
+                        type="submit"
+                        size="lg"
+                        disabled={isSubmitting || !getStepContent()?.value}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="lg"
+                        onClick={handleFormStepNext}
+                        disabled={!getStepContent()?.value}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        Next
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </form>
             )}
           </Card>

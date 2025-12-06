@@ -8,6 +8,11 @@ import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import {
+  CalendarIcon,
+  UserGroupIcon,
+  CreditCardIcon
+} from '@heroicons/react/24/outline'
 
 interface StudioStats {
   total_classes: number
@@ -159,7 +164,7 @@ export default function StudioPortalPage() {
                   onClick={() => router.push('/studio/classes')}
                   className="justify-start"
                 >
-                  <span className="mr-2">📅</span>
+                  <CalendarIcon className="w-5 h-5 mr-2" />
                   View Classes
                 </Button>
                 <Button
@@ -167,7 +172,7 @@ export default function StudioPortalPage() {
                   onClick={() => router.push('/studio/students')}
                   className="justify-start"
                 >
-                  <span className="mr-2">👥</span>
+                  <UserGroupIcon className="w-5 h-5 mr-2" />
                   View Students
                 </Button>
                 <Button
@@ -175,7 +180,7 @@ export default function StudioPortalPage() {
                   onClick={() => router.push('/studio/payments')}
                   className="justify-start"
                 >
-                  <span className="mr-2">💳</span>
+                  <CreditCardIcon className="w-5 h-5 mr-2" />
                   Submit Payment
                 </Button>
               </div>

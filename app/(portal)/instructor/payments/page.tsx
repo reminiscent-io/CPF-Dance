@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
+import { EarningsProgressWidget } from '@/components/EarningsProgressWidget'
 
 interface PaymentData {
   id: string
@@ -109,6 +110,8 @@ export default function InstructorPaymentsPage() {
   const [loadingEarnings, setLoadingEarnings] = useState(true)
   const [earningsDateRange, setEarningsDateRange] = useState<EarningsDateRange>('all')
   const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
+  const [remindingClassId, setRemindingClassId] = useState<string | null>(null)
+  const [remindMessage, setRemindMessage] = useState('')
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -318,6 +321,36 @@ export default function InstructorPaymentsPage() {
     })
   }
 
+  const handleRemindClick = async (classId: string, className: string) => {
+    setRemindingClassId(classId)
+    try {
+      const response = await fetch('/api/instructor/send-payment-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: classId })
+      })
+
+      if (response.ok) {
+        setRemindMessage(`Reminder sent for "${className}"`)
+        setTimeout(() => setRemindMessage(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error sending reminder:', error)
+    } finally {
+      setRemindingClassId(null)
+    }
+  }
+
+  const unpaidClasses = classEarnings
+    .filter(cls => cls.collected_amount < cls.calculated_value)
+    .map(cls => ({
+      id: cls.id,
+      title: cls.title,
+      start_time: cls.start_time,
+      studio: cls.studio,
+      outstanding: cls.calculated_value - cls.collected_amount
+    }))
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -345,52 +378,6 @@ export default function InstructorPaymentsPage() {
         </Button>
       </div>
 
-      {/* Hero Summary Section */}
-      {stats && (
-        <div className="mb-6">
-          {/* Hero Card - Total Payments */}
-          <Card className="bg-gradient-to-br from-pink-100 to-pink-50 border-pink-300 border-2 mb-3">
-            <CardContent className="p-4">
-              <div className="text-xs font-medium text-pink-700 mb-1 tracking-wide">Total Payments Collected</div>
-              <div className="text-3xl font-bold text-pink-900">{formatCurrency(stats.total_amount)}</div>
-              <div className="text-xs text-pink-700">{stats.total_payments} payments recorded</div>
-            </CardContent>
-          </Card>
-          
-          {/* Status Grid - Compact */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <Card className="bg-gradient-to-br from-amber-50 to-amber-50 border-amber-200">
-              <CardContent className="p-3">
-                <div className="text-xs font-medium text-amber-700 uppercase mb-0.5">Pending</div>
-                <div className="text-xl font-bold text-amber-700">{stats.pending}</div>
-                <div className="text-xs text-amber-600">Action required</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-green-50 to-green-50 border-green-200">
-              <CardContent className="p-3">
-                <div className="text-xs font-medium text-green-700 uppercase mb-0.5">Confirmed</div>
-                <div className="text-xl font-bold text-green-700">{stats.confirmed}</div>
-                <div className="text-xs text-green-600">Collected</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-red-50 to-red-50 border-red-200">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-1">
-                  <span className="text-sm">⚠️</span>
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-red-700 uppercase">Disputed</div>
-                    <div className="text-xl font-bold text-red-700">{stats.disputed}</div>
-                  </div>
-                </div>
-                <div className="text-xs text-red-600">Needs attention</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
       {/* Class Earnings Dashboard */}
       <div className="mb-10">
         <div className="flex justify-between items-center mb-4">
@@ -415,36 +402,21 @@ export default function InstructorPaymentsPage() {
           </div>
         ) : earningsSummary && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-blue-600 mb-1">Total Class Value</div>
-                  <div className="text-3xl font-bold text-blue-900">{formatCurrency(earningsSummary.total_value)}</div>
-                  <div className="text-sm text-blue-600 mt-1">{earningsSummary.total_classes} classes</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-green-600 mb-1">Collected</div>
-                  <div className="text-3xl font-bold text-green-900">{formatCurrency(earningsSummary.total_collected)}</div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {earningsSummary.total_value > 0 
-                      ? `${Math.round((earningsSummary.total_collected / earningsSummary.total_value) * 100)}% of total`
-                      : '0%'}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-amber-600 mb-1">Outstanding</div>
-                  <div className="text-3xl font-bold text-amber-900">{formatCurrency(earningsSummary.total_outstanding)}</div>
-                  <div className="text-sm text-amber-600 mt-1">
-                    {earningsSummary.total_value > 0
-                      ? `${Math.round((earningsSummary.total_outstanding / earningsSummary.total_value) * 100)}% pending`
-                      : '0%'}
-                  </div>
-                </CardContent>
-              </Card>
+            {remindMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+                {remindMessage}
+              </div>
+            )}
+            <div className="mb-8">
+              <EarningsProgressWidget
+                total={earningsSummary.total_value}
+                collected={earningsSummary.total_collected}
+                outstanding={earningsSummary.total_outstanding}
+                classes={earningsSummary.total_classes}
+                unpaidClasses={unpaidClasses}
+                onRemindClick={handleRemindClick}
+                isReminding={remindingClassId !== null}
+              />
             </div>
 
             {/* Class Type Breakdown */}
