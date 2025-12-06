@@ -5,6 +5,25 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
 import type { Profile } from '@/lib/auth/types'
+import {
+  ChartBarIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  AcademicCapIcon,
+  BuildingOfficeIcon,
+  ClipboardDocumentCheckIcon,
+  CreditCardIcon,
+  MagnifyingGlassIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  ArrowRightOnRectangleIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  ClipboardDocumentListIcon,
+  MusicalNoteIcon,
+  DocumentIcon,
+  BanknotesIcon
+} from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
   profile: Profile | null
@@ -55,88 +74,117 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
   }
 
   const getNavigationLinks = () => {
-    if (!profile) return []
+    if (!profile) return { ungrouped: [], groups: [] }
+
+    const instructorNav = {
+      ungrouped: [
+        { href: '/instructor', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+      ],
+      groups: [
+        {
+          label: 'Teaching & Schedule',
+          links: [
+            { href: '/instructor/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
+            {
+              label: 'Classes',
+              icon: <AcademicCapIcon className="w-5 h-5" />,
+              children: [
+                { href: '/instructor/classes', label: 'Overview', icon: <AcademicCapIcon className="w-5 h-5" /> },
+                { href: '/instructor/classes/attendance', label: 'Attendance', icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
+                { href: '/instructor/classes/choreography', label: 'Choreography', icon: <MusicalNoteIcon className="w-5 h-5" /> }
+              ]
+            },
+            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Admin & Logistics',
+          links: [
+            {
+              label: 'Payments',
+              icon: <CreditCardIcon className="w-5 h-5" />,
+              children: [
+                { href: '/instructor/payments', label: 'Overview', icon: <CreditCardIcon className="w-5 h-5" /> },
+                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> },
+                { href: '/instructor/payments/payroll', label: 'Payroll', icon: <BanknotesIcon className="w-5 h-5" /> }
+              ]
+            },
+            { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
+            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> }
+          ]
+        }
+      ]
+    }
+
+    const dancerNav = {
+      ungrouped: [
+        { href: '/dancer', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+      ],
+      groups: [
+        {
+          label: 'Schedule',
+          links: [
+            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
+            { href: '/dancer/available-classes', label: 'Available Classes', icon: <MagnifyingGlassIcon className="w-5 h-5" /> },
+            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'My Progress',
+          links: [
+            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> },
+            { href: '/dancer/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
+            { href: '/dancer/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
+          ]
+        }
+      ]
+    }
+
+    const studioNav = {
+      ungrouped: [
+        { href: '/studio', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+      ],
+      groups: [
+        {
+          label: 'Studio Management',
+          links: [
+            { href: '/studio/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
+            { href: '/studio/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
+            { href: '/studio/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Admin',
+          links: [
+            { href: '/studio/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
+            { href: '/studio/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
+          ]
+        }
+      ]
+    }
 
     if (profile.role === 'admin') {
       const portal = getCurrentPortal()
       switch (portal) {
         case 'instructor':
-          return [
-            { href: '/instructor', label: 'Dashboard', icon: '📊' },
-            { href: '/instructor/schedule', label: 'Schedule', icon: '📅' },
-            { href: '/instructor/students', label: 'Students', icon: '👥' },
-            { href: '/instructor/classes', label: 'Classes', icon: '🎓' },
-            { href: '/instructor/studios', label: 'Studios', icon: '🏢' },
-            { href: '/instructor/waivers', label: 'Waivers', icon: '📋' },
-            { href: '/instructor/payments', label: 'Payments', icon: '💳' },
-          ]
+          return instructorNav
         case 'dancer':
-          return [
-            { href: '/dancer', label: 'Dashboard', icon: '📊' },
-            {
-              label: 'Schedule',
-              icon: '📅',
-              children: [
-                { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
-                { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-                { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
-              ]
-            },
-            { href: '/dancer/notes', label: 'Notes', icon: '📝' },
-            { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
-            { href: '/dancer/payments', label: 'Payments', icon: '💳' },
-          ]
+          return dancerNav
         case 'studio':
-          return [
-            { href: '/studio', label: 'Dashboard', icon: '📊' },
-            { href: '/studio/schedule', label: 'Schedule', icon: '📅' },
-            { href: '/studio/classes', label: 'Classes', icon: '🎓' },
-            { href: '/studio/students', label: 'Students', icon: '👥' },
-            { href: '/studio/waivers', label: 'Waivers', icon: '📋' },
-            { href: '/studio/payments', label: 'Payments', icon: '💳' },
-          ]
+          return studioNav
       }
     }
 
     switch (profile.role) {
       case 'instructor':
-        return [
-          { href: '/instructor', label: 'Dashboard', icon: '📊' },
-          { href: '/instructor/schedule', label: 'Schedule', icon: '📅' },
-          { href: '/instructor/students', label: 'Students', icon: '👥' },
-          { href: '/instructor/classes', label: 'Classes', icon: '🎓' },
-          { href: '/instructor/studios', label: 'Studios', icon: '🏢' },
-          { href: '/instructor/waivers', label: 'Waivers', icon: '📋' },
-          { href: '/instructor/payments', label: 'Payments', icon: '💳' },
-        ]
+        return instructorNav
       case 'dancer':
       case 'guardian':
-        return [
-          { href: '/dancer', label: 'Dashboard', icon: '📊' },
-          {
-            label: 'Schedule',
-            icon: '📅',
-            children: [
-              { href: '/dancer/classes', label: 'My Classes', icon: '🎓' },
-              { href: '/dancer/available-classes', label: 'Available Classes', icon: '🔍' },
-              { href: '/dancer/request-lesson', label: 'Private Lessons', icon: '🎯' },
-            ]
-          },
-          { href: '/dancer/notes', label: 'Notes', icon: '📝' },
-          { href: '/dancer/waivers', label: 'Waivers', icon: '📋' },
-          { href: '/dancer/payments', label: 'Payments', icon: '💳' },
-        ]
+        return dancerNav
       case 'studio_admin':
-        return [
-          { href: '/studio', label: 'Dashboard', icon: '📊' },
-          { href: '/studio/schedule', label: 'Schedule', icon: '📅' },
-          { href: '/studio/classes', label: 'Classes', icon: '🎓' },
-          { href: '/studio/students', label: 'Students', icon: '👥' },
-          { href: '/studio/waivers', label: 'Waivers', icon: '📋' },
-          { href: '/studio/payments', label: 'Payments', icon: '💳' },
-        ]
+        return studioNav
       default:
-        return []
+        return { ungrouped: [], groups: [] }
     }
   }
 
@@ -207,9 +255,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                 className="md:hidden p-2 hover:bg-rose-700 rounded-lg transition-colors"
                 aria-label="Close menu"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </Link>
           </div>
@@ -239,66 +285,11 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
           {/* Navigation Links */}
           <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-            {navLinks.map((link: any) => {
-              const hasChildren = link.children && link.children.length > 0
-              const isExpanded = expandedParents.has(link.label)
-              const childIsActive = isChildActive(link.children)
+            {/* Ungrouped Items (Dashboard) */}
+            {navLinks.ungrouped?.map((link: any) => {
               const isExactMatch = pathname === link.href
               const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
               const isActive = isExactMatch || isSubpage
-
-              if (hasChildren) {
-                return (
-                  <div key={link.label}>
-                    <button
-                      onClick={() => toggleParent(link.label)}
-                      className={`
-                        w-full text-left flex items-center justify-between px-4 py-3 rounded-lg font-medium text-sm transition-all
-                        ${childIsActive
-                          ? 'bg-rose-400 text-white shadow-md'
-                          : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
-                        }
-                      `}
-                    >
-                      <span className="flex items-center">
-                        <span className="mr-3">{link.icon}</span>
-                        {link.label}
-                      </span>
-                      <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                      </svg>
-                    </button>
-                    {isExpanded && (
-                      <div className="space-y-1 pl-4 mt-1">
-                        {link.children.map((child: any) => {
-                          const childExactMatch = pathname === child.href
-                          const childSubpage = pathname?.startsWith(child.href + '/') && child.label !== 'Dashboard'
-                          const childIsActiveItem = childExactMatch || childSubpage
-                          return (
-                            <button
-                              key={child.href}
-                              onClick={() => {
-                                setIsOpen(false)
-                                router.push(child.href)
-                              }}
-                              className={`
-                                w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
-                                ${childIsActiveItem
-                                  ? 'bg-rose-400 text-white shadow-md'
-                                  : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
-                                }
-                              `}
-                            >
-                              <span className="mr-3">{child.icon}</span>
-                              {child.label}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              }
 
               return (
                 <button
@@ -308,7 +299,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                     router.push(link.href)
                   }}
                   className={`
-                    w-full text-left block px-4 py-3 rounded-lg font-medium text-sm transition-all
+                    w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
                     ${isActive
                       ? 'bg-rose-400 text-white shadow-md'
                       : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -320,6 +311,99 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                 </button>
               )
             })}
+
+            {/* Grouped Items */}
+            {navLinks.groups?.map((group: any, groupIndex: number) => (
+              <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-6' : ''}>
+                {/* Group Header */}
+                <h3 className="px-4 text-xs font-semibold text-rose-200 uppercase tracking-wider mb-2">
+                  {group.label}
+                </h3>
+
+                {/* Group Links */}
+                <div className="space-y-1">
+                  {group.links.map((link: any) => {
+                    const hasChildren = link.children && link.children.length > 0
+                    const isExpanded = expandedParents.has(link.label)
+                    const childIsActive = isChildActive(link.children)
+                    const isExactMatch = pathname === link.href
+                    const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
+                    const isActive = isExactMatch || isSubpage
+
+                    if (hasChildren) {
+                      return (
+                        <div key={link.label}>
+                          <button
+                            onClick={() => toggleParent(link.label)}
+                            className={`
+                              w-full text-left flex items-center justify-between px-4 py-3 rounded-lg font-medium text-sm transition-all
+                              ${childIsActive
+                                ? 'bg-rose-400 text-white shadow-md'
+                                : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                              }
+                            `}
+                          >
+                            <span className="flex items-center">
+                              <span className="mr-3">{link.icon}</span>
+                              {link.label}
+                            </span>
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isExpanded && (
+                            <div className="space-y-1 pl-4 mt-1">
+                              {link.children.map((child: any) => {
+                                const childExactMatch = pathname === child.href
+                                const childSubpage = pathname?.startsWith(child.href + '/') && child.label !== 'Overview'
+                                const childIsActiveItem = childExactMatch || childSubpage
+                                return (
+                                  <button
+                                    key={child.href}
+                                    onClick={() => {
+                                      setIsOpen(false)
+                                      router.push(child.href)
+                                    }}
+                                    className={`
+                                      w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                                      ${childIsActiveItem
+                                        ? 'bg-rose-400 text-white shadow-md'
+                                        : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                                      }
+                                    `}
+                                  >
+                                    <span className="mr-3">{child.icon}</span>
+                                    {child.label}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <button
+                        key={link.href}
+                        onClick={() => {
+                          setIsOpen(false)
+                          router.push(link.href)
+                        }}
+                        className={`
+                          w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                          ${isActive
+                            ? 'bg-rose-400 text-white shadow-md'
+                            : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                          }
+                        `}
+                      >
+                        <span className="mr-3">{link.icon}</span>
+                        {link.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Footer */}
@@ -341,9 +425,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-rose-100 hover:bg-white hover:bg-opacity-10 transition-colors"
               aria-label="Sign Out"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <ArrowRightOnRectangleIcon className="h-4 w-4" />
               Sign Out
             </button>
           </div>

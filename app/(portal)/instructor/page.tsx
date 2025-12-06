@@ -6,6 +6,16 @@ import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent, Button, Badge, Spinner } from '@/components/ui'
 import type { DashboardStats, RecentActivity } from '@/lib/types'
+import {
+  UserGroupIcon,
+  CalendarIcon,
+  DocumentTextIcon,
+  BuildingOfficeIcon,
+  AcademicCapIcon,
+  CreditCardIcon,
+  ClipboardDocumentCheckIcon,
+  HandRaisedIcon
+} from '@heroicons/react/24/outline'
 
 export default function InstructorPortalPage() {
   const { user, profile, loading } = useUser()
@@ -162,11 +172,11 @@ export default function InstructorPortalPage() {
                 ) : (
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {recentActivity.map((activity) => {
-                      const activityIcons = {
-                        enrollment: '📚',
-                        note: '📝',
-                        payment: '💰',
-                        request: '✋'
+                      const activityIcons: Record<string, React.ReactNode> = {
+                        enrollment: <AcademicCapIcon className="w-6 h-6 text-blue-600" />,
+                        note: <DocumentTextIcon className="w-6 h-6 text-purple-600" />,
+                        payment: <CreditCardIcon className="w-6 h-6 text-green-600" />,
+                        request: <HandRaisedIcon className="w-6 h-6 text-yellow-600" />
                       }
 
                       const activityColors = {
@@ -177,11 +187,11 @@ export default function InstructorPortalPage() {
                       }
 
                       return (
-                        <div 
-                          key={activity.id} 
+                        <div
+                          key={activity.id}
                           className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                         >
-                          <span className="text-2xl">{activityIcons[activity.type]}</span>
+                          <div className="flex-shrink-0 mt-0.5">{activityIcons[activity.type]}</div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-gray-900">{activity.description}</p>
                             <p className="text-xs text-gray-500 mt-1">
@@ -218,7 +228,7 @@ export default function InstructorPortalPage() {
                     onClick={() => router.push('/instructor/students')}
                     className="p-4 bg-rose-50 hover:bg-rose-100 rounded-lg text-left transition-colors"
                   >
-                    <div className="text-2xl mb-2">👥</div>
+                    <UserGroupIcon className="w-8 h-8 text-rose-600 mb-2" />
                     <div className="font-semibold text-gray-900">Students</div>
                     <div className="text-xs text-gray-600">Manage roster</div>
                   </button>
@@ -227,7 +237,7 @@ export default function InstructorPortalPage() {
                     onClick={() => router.push('/instructor/classes')}
                     className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors"
                   >
-                    <div className="text-2xl mb-2">📅</div>
+                    <CalendarIcon className="w-8 h-8 text-blue-600 mb-2" />
                     <div className="font-semibold text-gray-900">Classes</div>
                     <div className="text-xs text-gray-600">View schedule</div>
                   </button>
@@ -236,7 +246,7 @@ export default function InstructorPortalPage() {
                     onClick={() => router.push('/instructor/notes')}
                     className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors"
                   >
-                    <div className="text-2xl mb-2">📝</div>
+                    <DocumentTextIcon className="w-8 h-8 text-purple-600 mb-2" />
                     <div className="font-semibold text-gray-900">Notes</div>
                     <div className="text-xs text-gray-600">Track progress</div>
                   </button>
@@ -245,7 +255,7 @@ export default function InstructorPortalPage() {
                     onClick={() => router.push('/instructor/studios')}
                     className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
                   >
-                    <div className="text-2xl mb-2">🏢</div>
+                    <BuildingOfficeIcon className="w-8 h-8 text-green-600 mb-2" />
                     <div className="font-semibold text-gray-900">Studios</div>
                     <div className="text-xs text-gray-600">Manage locations</div>
                   </button>
