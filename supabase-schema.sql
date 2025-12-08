@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
-CREATE TYPE user_role AS ENUM ('instructor', 'dancer', 'guardian', 'studio_admin', 'admin');
+CREATE TYPE user_role AS ENUM ('instructor', 'dancer', 'guardian', 'admin');
 CREATE TYPE payment_status AS ENUM ('pending', 'confirmed', 'disputed', 'cancelled');
 CREATE TYPE payment_method AS ENUM ('stripe', 'cash', 'check', 'other');
 CREATE TYPE class_type AS ENUM ('group', 'private', 'workshop', 'master_class');
@@ -412,16 +412,6 @@ CREATE POLICY "Instructors can manage all payments"
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid() AND profiles.role = 'instructor'
-    )
-  );
-
-CREATE POLICY "Studio admins can view their studio payments"
-  ON payments FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.role = 'studio_admin'
     )
   );
 

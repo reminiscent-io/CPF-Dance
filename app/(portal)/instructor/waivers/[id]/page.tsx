@@ -42,7 +42,7 @@ export default function WaiverDetailPage() {
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [loading, profile, router])
 

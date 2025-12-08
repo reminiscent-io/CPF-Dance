@@ -32,8 +32,6 @@ export async function POST(request: Request) {
     const roleRedirects: Record<UserRole, string> = {
       instructor: '/instructor',
       dancer: '/dancer',
-      studio: '/studio',
-      studio_admin: '/studio',
       guardian: '/dancer',
       admin: '/instructor',
     }
@@ -45,7 +43,6 @@ export async function POST(request: Request) {
       const portalRedirects: Record<string, string> = {
         dancer: '/dancer',
         instructor: '/instructor',
-        studio: '/studio',
       }
       redirectUrl = portalRedirects[portal] || '/instructor'
     } else {

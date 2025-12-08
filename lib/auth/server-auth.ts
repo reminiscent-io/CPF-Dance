@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type UserRole = 'instructor' | 'dancer' | 'studio' | 'admin'
+export type UserRole = 'instructor' | 'dancer' | 'admin'
 
 export interface ProfileWithRole {
   id: string
@@ -93,11 +93,3 @@ export async function requireDancer(): Promise<ProfileWithRole> {
   return requireRole('dancer')
 }
 
-export async function requireStudio(): Promise<ProfileWithRole> {
-  return requireRole('studio')
-}
-
-// Legacy alias for backward compatibility
-export async function requireStudioAdmin(): Promise<ProfileWithRole> {
-  return requireRole('studio')
-}

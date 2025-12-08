@@ -69,7 +69,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     if (!pathname) return 'instructor'
     if (pathname.startsWith('/instructor')) return 'instructor'
     if (pathname.startsWith('/dancer')) return 'dancer'
-    if (pathname.startsWith('/studio')) return 'studio'
     return 'instructor'
   }
 
@@ -140,29 +139,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ]
     }
 
-    const studioNav = {
-      ungrouped: [
-        { href: '/studio', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
-      ],
-      groups: [
-        {
-          label: 'Studio Management',
-          links: [
-            { href: '/studio/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/studio/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
-            { href: '/studio/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
-          ]
-        },
-        {
-          label: 'Admin',
-          links: [
-            { href: '/studio/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/studio/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
-          ]
-        }
-      ]
-    }
-
     if (profile.role === 'admin') {
       const portal = getCurrentPortal()
       switch (portal) {
@@ -170,8 +146,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           return instructorNav
         case 'dancer':
           return dancerNav
-        case 'studio':
-          return studioNav
       }
     }
 
@@ -181,8 +155,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       case 'dancer':
       case 'guardian':
         return dancerNav
-      case 'studio_admin':
-        return studioNav
       default:
         return { ungrouped: [], groups: [] }
     }
@@ -192,7 +164,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
   const portalOptions = [
     { value: 'instructor', label: 'Instructor', href: '/instructor' },
     { value: 'dancer', label: 'Dancer', href: '/dancer' },
-    { value: 'studio', label: 'Studio', href: '/studio' },
   ]
 
   const getProfileUrl = () => {
@@ -207,8 +178,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         return '/dancer/profile'
       case 'instructor':
         return '/instructor/profile'
-      case 'studio':
-        return '/studio/profile'
       default:
         return '#'
     }

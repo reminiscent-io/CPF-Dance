@@ -24,7 +24,7 @@ export default function NotesPage() {
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [authLoading, profile, router])
 

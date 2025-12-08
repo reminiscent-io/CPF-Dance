@@ -32,7 +32,6 @@ export const metadata: Metadata = {
     { rel: 'icon', url: '/favicon.ico' },
     { rel: 'apple-touch-icon', url: '/icon-192.png' },
   ],
-  themeColor: '#c75a6d',
 }
 
 export const viewport: Viewport = {

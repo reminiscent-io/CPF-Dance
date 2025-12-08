@@ -72,8 +72,6 @@ export async function POST(request: Request) {
     const roleRedirects: Record<UserRole, string> = {
       instructor: '/instructor',
       dancer: '/dancer',
-      studio: '/studio',
-      studio_admin: '/studio',
       guardian: '/dancer',
       admin: '/instructor',
     }

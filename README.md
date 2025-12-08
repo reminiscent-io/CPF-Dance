@@ -82,7 +82,6 @@ app/
 ├── (portal)/          # Portal routes (authenticated)
 │   ├── instructor/    # Instructor portal pages
 │   ├── dancer/        # Dancer portal pages
-│   ├── studio/        # Studio admin portal pages
 │   ├── login/         # Login page
 │   └── signup/        # Signup page
 ├── api/              # API routes
@@ -146,12 +145,6 @@ All tables have Row Level Security (RLS) policies for data protection.
 - View payment history
 - Update profile
 
-### Studio Admin
-- View studio-specific data
-- Submit cash/check payments
-- Access class confirmations
-- View payment history
-
 ## ⚠️ Critical Next Steps
 
 ### Before Production Use:
@@ -160,22 +153,12 @@ All tables have Row Level Security (RLS) policies for data protection.
    - Run `supabase-schema.sql` in your Supabase SQL Editor
    - This enables Row Level Security and all access policies
 
-2. **Add API Role Authorization** 🔴 (Security Issue)
-   - Current API routes check auth but not roles
-   - Need role verification in each endpoint
-   - Prevents unauthorized access between portals
-
-3. **Phone OTP Authentication** 🟡 (Optional Enhancement)
+2. **Phone OTP Authentication** 🟡 (Optional Enhancement)
    - Currently using email/password
    - Your plan mentioned phone OTP
    - Supabase supports phone auth natively
 
-4. **Complete Studio Portal** 🟡
-   - Cash/check submission workflow
-   - Class confirmation interface
-   - Payment reconciliation
-
-5. **Integrate Stripe Payments** 🟡
+3. **Integrate Stripe Payments** 🟡
    - Private lesson payments
    - Receipt generation
    - Webhook handling

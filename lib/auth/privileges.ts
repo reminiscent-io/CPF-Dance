@@ -25,11 +25,6 @@ export function hasInstructorPrivileges(profile: ProfileLike | null | undefined)
   return profile.role === 'instructor' || profile.role === 'admin'
 }
 
-export function hasStudioPrivileges(profile: ProfileLike | null | undefined): boolean {
-  if (!profile) return false
-  return profile.role === 'studio' || profile.role === 'studio_admin' || profile.role === 'admin'
-}
-
 export function hasDancerPrivileges(profile: ProfileLike | null | undefined): boolean {
   if (!profile) return false
   return profile.role === 'dancer' || profile.role === 'guardian' || profile.role === 'admin'
@@ -42,10 +37,6 @@ export function hasAdminPrivileges(profile: ProfileLike | null | undefined): boo
 
 export function canAccessInstructorPortal(profile: ProfileLike | null | undefined): boolean {
   return hasInstructorPrivileges(profile)
-}
-
-export function canAccessStudioPortal(profile: ProfileLike | null | undefined): boolean {
-  return hasStudioPrivileges(profile)
 }
 
 export function canAccessDancerPortal(profile: ProfileLike | null | undefined): boolean {
@@ -78,10 +69,6 @@ export function canManageWaivers(profile: ProfileLike | null | undefined): boole
 
 export function isInstructorOrAdmin(role: UserRole | string | undefined): boolean {
   return role === 'instructor' || role === 'admin'
-}
-
-export function isStudioOrAdmin(role: UserRole | string | undefined): boolean {
-  return role === 'studio' || role === 'studio_admin' || role === 'admin'
 }
 
 export function isDancerOrAdmin(role: UserRole | string | undefined): boolean {

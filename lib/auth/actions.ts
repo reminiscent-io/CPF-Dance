@@ -29,8 +29,6 @@ export async function signIn(data: SignInData) {
       const roleRedirects: Record<UserRole, string> = {
         instructor: '/instructor',
         dancer: '/dancer',
-        studio: '/studio',
-        studio_admin: '/studio',
         guardian: '/dancer',
         admin: '/instructor',
       }
@@ -85,8 +83,6 @@ export async function signUp(data: SignUpData) {
   const roleRedirects: Record<UserRole, string> = {
     instructor: '/instructor',
     dancer: '/dancer',
-    studio: '/studio',
-    studio_admin: '/studio',
     guardian: '/dancer',
     admin: '/instructor',
   }
