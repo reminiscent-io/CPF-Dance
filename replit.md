@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **December 9, 2025**: Added clickable links on instructor student profile to navigate to notes and private lesson requests
 - **December 9, 2025**: Added loading indicators to login buttons on homepage for better UX feedback
 
 ## System Architecture

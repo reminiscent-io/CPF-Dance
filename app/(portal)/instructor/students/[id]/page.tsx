@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { RichTextEditor } from '@/components/RichTextEditor'
@@ -376,9 +377,16 @@ export default function StudentDetailPage() {
           <Card>
             <div className="flex justify-between items-center">
               <CardTitle>My Notes ({notes.filter((n: any) => n.author_id === profile?.id).length})</CardTitle>
-              <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
-                + Add Note
-              </Button>
+              <div className="flex gap-2">
+                <Link href={`/instructor/notes?student_id=${student.id}`}>
+                  <Button variant="outline" size="sm">
+                    View All Notes
+                  </Button>
+                </Link>
+                <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
+                  + Add Note
+                </Button>
+              </div>
             </div>
             <CardContent className="mt-4">
               {notes.filter((n: any) => n.author_id === profile?.id).length === 0 ? (
@@ -446,7 +454,14 @@ export default function StudentDetailPage() {
 
           {/* Student Notes */}
           <Card>
-            <CardTitle>Student Notes ({notes.filter((n: any) => n.visibility === 'shared_with_instructor').length})</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Student Notes ({notes.filter((n: any) => n.visibility === 'shared_with_instructor').length})</CardTitle>
+              <Link href={`/instructor/notes?student_id=${student.id}`}>
+                <Button variant="outline" size="sm">
+                  View All Notes
+                </Button>
+              </Link>
+            </div>
             <CardContent className="mt-4">
               {notes.filter((n: any) => n.visibility === 'shared_with_instructor').length === 0 ? (
                 <div className="text-center py-8">
@@ -492,14 +507,25 @@ export default function StudentDetailPage() {
           </Card>
 
           <Card>
-            <CardTitle>Private Lesson Requests ({requests.length})</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Private Lesson Requests ({requests.length})</CardTitle>
+              <Link href="/instructor/requests">
+                <Button variant="outline" size="sm">
+                  View All Requests
+                </Button>
+              </Link>
+            </div>
             <CardContent className="mt-4">
               {requests.length === 0 ? (
                 <p className="text-gray-600">No requests</p>
               ) : (
                 <div className="space-y-3">
                   {requests.map((request: any) => (
-                    <div key={request.id} className="p-3 bg-gray-50 rounded-lg">
+                    <Link 
+                      key={request.id} 
+                      href="/instructor/requests"
+                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-medium text-gray-900">{request.requested_focus}</p>
                         <Badge variant={request.status === 'pending' ? 'warning' : 'success'}>
@@ -509,7 +535,8 @@ export default function StudentDetailPage() {
                       {request.additional_notes && (
                         <p className="text-sm text-gray-600">{request.additional_notes}</p>
                       )}
-                    </div>
+                      <p className="text-xs text-rose-600 mt-2">Click to view details →</p>
+                    </Link>
                   ))}
                 </div>
               )}
