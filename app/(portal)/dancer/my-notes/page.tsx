@@ -7,9 +7,10 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Input, Textarea } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
+import { NotesRichTextEditor, RichTextDisplay } from '@/components/NotesRichTextEditor'
 
 interface Note {
   id: string
@@ -83,7 +84,7 @@ export default function DancerMyNotesPage() {
   }
 
   const handleSave = async () => {
-    if (!formData.content.trim()) {
+    if (!formData.content.trim() || formData.content === '<p></p>') {
       alert('Please enter some content for your note')
       return
     }
@@ -97,7 +98,7 @@ export default function DancerMyNotesPage() {
 
       const payload = {
         title: formData.title.trim() || null,
-        content: formData.content.trim(),
+        content: formData.content,
         tags
       }
 
@@ -172,13 +173,13 @@ export default function DancerMyNotesPage() {
     <PortalLayout profile={profile}>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Notes 📝</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Notes</h1>
           <p className="text-gray-600">
             Keep track of your thoughts, goals, and reflections on your dance journey
           </p>
         </div>
         <Button variant="primary" onClick={() => handleOpenModal()}>
-          ✨ Add Note
+          Add Note
         </Button>
       </div>
 
@@ -203,9 +204,9 @@ export default function DancerMyNotesPage() {
                     year: 'numeric'
                   })}
                 </p>
-                <p className="text-gray-700 mb-4 whitespace-pre-wrap line-clamp-6">
-                  {note.content}
-                </p>
+                <div className="mb-4 line-clamp-6">
+                  <RichTextDisplay content={note.content} className="text-gray-700" />
+                </div>
                 {note.tags && note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
                     {note.tags.map((tag, idx) => (
@@ -268,13 +269,17 @@ export default function DancerMyNotesPage() {
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
-          <Textarea
-            label="Content"
-            placeholder="Write your thoughts, goals, or reflections..."
-            rows={8}
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content
+            </label>
+            <NotesRichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({ ...formData, content: html })}
+              placeholder="Write your thoughts, goals, or reflections..."
+              minHeight="200px"
+            />
+          </div>
           <Input
             label="Tags (optional)"
             placeholder="technique, goals, choreography (comma-separated)"

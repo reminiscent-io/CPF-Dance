@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Badge, Modal, ModalFooter, Textarea, Input, useToast, Spinner } from '@/components/ui'
+import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } from '@/components/ui'
+import { NotesRichTextEditor, RichTextDisplay } from '@/components/NotesRichTextEditor'
 import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
 
 export default function NotesPage() {
@@ -130,7 +131,6 @@ export default function NotesPage() {
           )}
         </div>
 
-        {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
             <button
@@ -229,7 +229,7 @@ export default function NotesPage() {
                 <Badge variant="secondary">{note.visibility.replace(/_/g, ' ')}</Badge>
               </div>
 
-              <p className="text-gray-700 mb-3">{note.content}</p>
+              <RichTextDisplay content={note.content} className="text-gray-700 mb-3" />
 
               {note.tags && note.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -317,13 +317,17 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
 
-          <Textarea
-            label="Content *"
-            required
-            rows={5}
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content *
+            </label>
+            <NotesRichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({ ...formData, content: html })}
+              placeholder="Write your note here... Use formatting to highlight key points."
+              minHeight="150px"
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
