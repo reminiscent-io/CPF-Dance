@@ -154,10 +154,18 @@ interface RichTextDisplayProps {
 }
 
 export function RichTextDisplay({ content, className = '' }: RichTextDisplayProps) {
+  // Import DOMPurify dynamically to handle SSR
+  const sanitizedContent = typeof window !== 'undefined' 
+    ? require('dompurify').sanitize(content, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
+        ALLOWED_ATTR: ['class']
+      })
+    : content
+
   return (
     <div 
       className={`prose prose-sm max-w-none ${className}`}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   )
 }
