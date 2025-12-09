@@ -27,6 +27,10 @@ externalPort = 3000
 localPort = 39011
 externalPort = 3001
 
+[[ports]]
+localPort = 45457
+externalPort = 3002
+
 [agent]
 expertMode = true
 integrations = ["stripe:1.0.0"]

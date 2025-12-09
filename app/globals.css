@@ -217,3 +217,12 @@ h2 {
 .typewriter-fade {
   animation: typewriter 3.5s steps(60, end) forwards, fadeOut 5s ease-in-out forwards;
 }
+
+/* Soft shadows for premium feel */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}

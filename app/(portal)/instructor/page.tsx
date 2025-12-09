@@ -88,7 +88,7 @@ export default function InstructorPortalPage() {
             >
               <Card hover>
                 <CardContent className="text-center py-4">
-                  <div className="text-3xl md:text-4xl font-bold text-rose-600 mb-1">
+                  <div className="text-3xl md:text-4xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.total_students || 0}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600 mb-1">Total Students</div>
@@ -105,7 +105,7 @@ export default function InstructorPortalPage() {
             >
               <Card hover>
                 <CardContent className="text-center py-4">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-1">
+                  <div className="text-3xl md:text-4xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.upcoming_classes || 0}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600">Upcoming Classes</div>
@@ -115,7 +115,7 @@ export default function InstructorPortalPage() {
 
             <Card hover>
               <CardContent className="text-center py-4">
-                <div className="text-3xl md:text-4xl font-bold text-yellow-600 mb-1">
+                <div className="text-3xl md:text-4xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                   {stats?.pending_requests || 0}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600">Pending Requests</div>
@@ -128,7 +128,7 @@ export default function InstructorPortalPage() {
             >
               <Card hover>
                 <CardContent className="text-center py-4">
-                  <div className="text-3xl md:text-4xl font-bold text-green-600 mb-1">
+                  <div className="text-3xl md:text-4xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.unpaid_invoices || 0}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600">Unpaid Invoices</div>
