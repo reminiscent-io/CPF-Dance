@@ -8,6 +8,10 @@ A Next.js web application for professional dance instruction management. The pla
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates
+
+- **December 9, 2025**: Added loading indicators to login buttons on homepage for better UX feedback
+
 ## System Architecture
 
 ### Authentication & Authorization

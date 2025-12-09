@@ -145,6 +145,7 @@ export default function HomePage() {
   const [scrollY, setScrollY] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
+  const [loginLoading, setLoginLoading] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const FADE_MS = 2000
   const SLIDE_MS = 4500
@@ -301,6 +302,10 @@ export default function HomePage() {
     document.getElementById('studio-inquiry')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const handleLoginClick = () => {
+    setLoginLoading(true)
+  }
+
   useEffect(() => {
     // Check for prefers-reduced-motion
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -363,9 +368,20 @@ export default function HomePage() {
           <div className="flex gap-4" style={{ fontFamily: 'var(--font-cormorant)' }}>
             <Link 
               href="/login?portal=dancer"
-              className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
+              className="text-gray-700 hover:text-rose-600 transition-colors font-medium flex items-center gap-2"
+              onClick={handleLoginClick}
             >
-              Login
+              {loginLoading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Loading...</span>
+                </>
+              ) : (
+                'Login'
+              )}
             </Link>
             <button 
               onClick={scrollToInquiry}
@@ -448,9 +464,21 @@ export default function HomePage() {
               <div className="text-center mb-6">
                 <Link
                   href="/login?portal=dancer"
-                  className="text-sm text-charcoal-700 hover:text-rose-600 transition-colors"
+                  className="text-sm text-charcoal-700 hover:text-rose-600 transition-colors inline-flex items-center gap-1"
+                  onClick={handleLoginClick}
                 >
-                  Already a member? <span className="font-semibold">Log in</span>
+                  Already a member?{' '}
+                  {loginLoading ? (
+                    <>
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="font-semibold">Logging in...</span>
+                    </>
+                  ) : (
+                    <span className="font-semibold">Log in</span>
+                  )}
                 </Link>
               </div>
 
@@ -507,9 +535,19 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <Link href="/login?portal=instructor" className="block">
-                <Button size="lg" variant="outline" className="w-full text-base sm:text-lg py-4 sm:py-6 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50">
-                  Instructor Login
+              <Link href="/login?portal=instructor" className="block" onClick={handleLoginClick}>
+                <Button size="lg" variant="outline" className="w-full text-base sm:text-lg py-4 sm:py-6 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
+                  {loginLoading ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    'Instructor Login'
+                  )}
                 </Button>
               </Link>
             </Card>
