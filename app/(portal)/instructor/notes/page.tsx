@@ -18,6 +18,8 @@ export default function NotesPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [activeTab, setActiveTab] = useState<'my-notes' | 'student-notes'>('my-notes')
   const [filterStudent, setFilterStudent] = useState<string>('')
   const [filterVisibility, setFilterVisibility] = useState<NoteVisibility | ''>('')
@@ -101,6 +103,54 @@ export default function NotesPage() {
     } catch (error) {
       console.error('Error adding note:', error)
       addToast('Failed to add note', 'error')
+    }
+  }
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note)
+    setShowEditModal(true)
+  }
+
+  const handleUpdateNote = async (formData: CreateNoteData) => {
+    if (!editingNote) return
+
+    try {
+      const response = await fetch('/api/instructor/notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingNote.id,
+          ...formData
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to update note')
+
+      await fetchNotes()
+      setShowEditModal(false)
+      setEditingNote(null)
+      addToast('Note updated successfully', 'success')
+    } catch (error) {
+      console.error('Error updating note:', error)
+      addToast('Failed to update note', 'error')
+    }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return
+
+    try {
+      const response = await fetch(`/api/instructor/notes?id=${noteId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to delete note')
+
+      setNotes(prev => prev.filter(n => n.id !== noteId))
+      addToast('Note deleted successfully', 'success')
+    } catch (error) {
+      console.error('Error deleting note:', error)
+      addToast('Failed to delete note', 'error')
     }
   }
 
@@ -226,7 +276,28 @@ export default function NotesPage() {
                     <span>{new Date(note.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
-                <Badge variant="secondary">{note.visibility.replace(/_/g, ' ')}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{note.visibility.replace(/_/g, ' ')}</Badge>
+                  {activeTab === 'my-notes' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditNote(note)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteNote(note.id)}
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <RichTextDisplay content={note.content} className="text-gray-700 mb-3" />
@@ -248,6 +319,17 @@ export default function NotesPage() {
           students={students}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddNote}
+        />
+      )}
+
+      {showEditModal && editingNote && (
+        <EditNoteModal
+          note={editingNote}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingNote(null)
+          }}
+          onSubmit={handleUpdateNote}
         />
       )}
     </PortalLayout>
@@ -374,6 +456,119 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
             Cancel
           </Button>
           <Button type="submit">Add Note</Button>
+        </ModalFooter>
+      </form>
+    </Modal>
+  )
+}
+
+interface EditNoteModalProps {
+  note: Note
+  onClose: () => void
+  onSubmit: (data: CreateNoteData) => void
+}
+
+function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
+  const [formData, setFormData] = useState<CreateNoteData>({
+    student_id: (note as any).student_id || '',
+    title: note.title || '',
+    content: note.content || '',
+    tags: note.tags || [],
+    visibility: note.visibility || 'private'
+  })
+
+  const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
+
+  const toggleTag = (tag: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags?.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...(prev.tags || []), tag]
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.content) {
+      return
+    }
+    onSubmit(formData)
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Edit Note" size="lg">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-sm text-gray-600">
+              Student: <span className="font-medium text-gray-900">{(note as any).student?.profile?.full_name || 'Unknown'}</span>
+            </p>
+          </div>
+
+          <Input
+            label="Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content *
+            </label>
+            <NotesRichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({ ...formData, content: html })}
+              placeholder="Write your note here... Use formatting to highlight key points."
+              minHeight="150px"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    formData.tags?.includes(tag)
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Visibility *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.visibility}
+              onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
+            >
+              <option value="private">Private (Only me)</option>
+              <option value="shared_with_student">Shared with Student</option>
+              <option value="shared_with_guardian">Shared with Guardian</option>
+              <option value="shared_with_studio">Shared with Studio</option>
+            </select>
+          </div>
+        </div>
+
+        <ModalFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Save Changes</Button>
         </ModalFooter>
       </form>
     </Modal>
