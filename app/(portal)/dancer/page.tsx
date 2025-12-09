@@ -6,16 +6,13 @@ import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import {
   CalendarIcon,
   SparklesIcon,
   DocumentTextIcon,
   ClockIcon,
-  MapPinIcon,
-  ChartBarIcon,
-  CreditCardIcon
+  MapPinIcon
 } from '@heroicons/react/24/outline'
 
 interface DancerStats {
@@ -36,24 +33,11 @@ interface NextClass {
   } | null
 }
 
-interface RecentNote {
-  id: string
-  title: string | null
-  content: string
-  tags: string[] | null
-  created_at: string
-  author_name: string
-  classes: {
-    title: string
-  } | null
-}
-
 export default function DancerPortalPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [stats, setStats] = useState<DancerStats | null>(null)
   const [nextClass, setNextClass] = useState<NextClass | null>(null)
-  const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
@@ -75,7 +59,6 @@ export default function DancerPortalPage() {
         const data = await response.json()
         setStats(data.stats)
         setNextClass(data.next_class)
-        setRecentNotes(data.recent_notes)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -105,8 +88,7 @@ export default function DancerPortalPage() {
       date: date.toLocaleDateString('en-US', { 
         weekday: 'long',
         month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
+        day: 'numeric'
       }),
       time: date.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
@@ -118,205 +100,123 @@ export default function DancerPortalPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {profile.full_name}! 
-        </h1>
-        <p className="text-gray-600">Keep dancing, keep growing, keep sparkling!</p>
-      </div>
-
-      {loadingData ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
+            Welcome back, {profile.full_name}!
+          </h1>
+          <p className="text-gray-600">Keep dancing, keep growing, keep sparkling!</p>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <Card hover className="bg-gradient-to-br from-rose-50 to-white">
-              <CardContent className="p-1 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Classes</p>
-                    <p className="text-3xl font-bold text-rose-600">{stats?.upcoming_classes || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
-                    <CalendarIcon className="w-7 h-7 text-rose-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card hover className="bg-gradient-to-br from-purple-50 to-white">
-              <CardContent className="p-1 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Classes Attended</p>
-                    <p className="text-3xl font-bold text-purple-600">{stats?.total_classes_attended || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <SparklesIcon className="w-7 h-7 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card hover className="bg-gradient-to-br from-mauve-50 to-white">
-              <CardContent className="p-1 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Recent Notes</p>
-                    <p className="text-3xl font-bold text-mauve-600">{stats?.recent_notes || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-mauve-100 rounded-full flex items-center justify-center">
-                    <DocumentTextIcon className="w-7 h-7 text-mauve-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {loadingData ? (
+          <div className="flex justify-center py-12">
+            <Spinner size="lg" />
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardTitle className="p-1 pb-4">Your Next Class</CardTitle>
-              <CardContent className="px-1 pb-6">
+        ) : (
+          <>
+            {/* Section A: Next Class Hero */}
+            <Card className="w-full bg-gradient-to-br from-rose-50 via-white to-purple-50 border-rose-200">
+              <CardContent className="p-6">
                 {nextClass ? (
-                  <div className="bg-gradient-to-r from-rose-50 to-purple-50 rounded-lg p-4">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {nextClass.title}
-                    </h3>
-                    {nextClass.description && (
-                      <p className="text-gray-600 mb-3 text-sm">{nextClass.description}</p>
-                    )}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center text-gray-700">
-                        <CalendarIcon className="w-5 h-5 mr-2 text-rose-600" />
-                        <span className="font-medium">{formatDateTime(nextClass.start_time).date}</span>
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <ClockIcon className="w-5 h-5 mr-2 text-rose-600" />
-                        <span>{formatDateTime(nextClass.start_time).time}</span>
-                      </div>
-                      {nextClass.location && (
-                        <div className="flex items-center text-gray-700">
-                          <MapPinIcon className="w-5 h-5 mr-2 text-rose-600" />
-                          <span>{nextClass.studios?.name || nextClass.location}</span>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-rose-600 uppercase tracking-wide mb-2">
+                        Your Next Class
+                      </p>
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
+                        {nextClass.title}
+                      </h2>
+                      <div className="flex flex-wrap gap-4 text-gray-700">
+                        <div className="flex items-center gap-2">
+                          <ClockIcon className="w-5 h-5 text-rose-500" />
+                          <span className="font-medium">
+                            {formatDateTime(nextClass.start_time).date} at {formatDateTime(nextClass.start_time).time}
+                          </span>
                         </div>
-                      )}
+                        {(nextClass.studios?.name || nextClass.location) && (
+                          <div className="flex items-center gap-2">
+                            <MapPinIcon className="w-5 h-5 text-rose-500" />
+                            <span>{nextClass.studios?.name || nextClass.location}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="mt-4 w-full"
-                      onClick={() => router.push('/dancer/classes')}
-                    >
-                      View All Classes
-                    </Button>
+                    <div className="flex-shrink-0">
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={() => router.push('/dancer/classes')}
+                        className="w-full md:w-auto"
+                      >
+                        View Schedule
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p className="mb-4">No upcoming classes scheduled</p>
-                    <p className="text-sm">Check your class schedule or talk to your instructor!</p>
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CalendarIcon className="w-8 h-8 text-rose-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
+                      Ready to dance?
+                    </h2>
+                    <p className="text-gray-600 mb-6">
+                      You don't have any upcoming classes scheduled yet.
+                    </p>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={() => router.push('/dancer/classes')}
+                    >
+                      Browse Schedule
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardTitle className="p-1 pb-4">Quick Actions</CardTitle>
-              <CardContent className="px-1 pb-6">
-                <div className="space-y-3">
-                  <Button
-                    variant="primary"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => router.push('/dancer/request-lesson')}
-                  >
-                    <SparklesIcon className="w-5 h-5" />
-                    Request Private Lesson
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => router.push('/dancer/my-notes')}
-                  >
-                    <DocumentTextIcon className="w-5 h-5" />
-                    Add Note
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => router.push('/dancer/progress')}
-                  >
-                    <ChartBarIcon className="w-5 h-5" />
-                    View Progress
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => router.push('/dancer/payments')}
-                  >
-                    <CreditCardIcon className="w-5 h-5" />
-                    Payment History
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardTitle className="p-1 pb-4">Recent Instructor Notes</CardTitle>
-            <CardContent className="px-1 pb-6">
-              {recentNotes.length > 0 ? (
-                <div className="space-y-4">
-                  {recentNotes.map((note) => (
-                    <div
-                      key={note.id}
-                      className="border-l-4 border-rose-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          {note.title && (
-                            <h4 className="font-semibold text-gray-900 mb-1">{note.title}</h4>
-                          )}
-                          <p className="text-sm text-gray-600">
-                            {note.classes?.title && `${note.classes.title} • `}
-                            {note.author_name}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {new Date(note.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-gray-700 mb-2 line-clamp-2">{note.content}</p>
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {note.tags.map((tag, idx) => (
-                            <Badge key={idx} variant="primary" size="sm">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+            {/* Section B: Progress Stats - 2 Column Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Classes Attended Card */}
+              <Card hover className="bg-gradient-to-br from-purple-50 to-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">Classes Attended</p>
+                      <p className="text-4xl font-bold text-purple-600">{stats?.total_classes_attended || 0}</p>
                     </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => router.push('/dancer/progress')}
-                  >
-                    View All Notes →
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="mb-2">No instructor notes yet</p>
-                  <p className="text-sm">Your instructor will share feedback and progress notes here!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
+                    <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                      <SparklesIcon className="w-8 h-8 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Feedback Card (formerly Recent Notes) */}
+              <div
+                onClick={() => router.push('/dancer/my-notes')}
+                className="cursor-pointer"
+              >
+                <Card hover className="bg-gradient-to-br from-amber-50 to-white h-full">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-1">Feedback</p>
+                        <p className="text-4xl font-bold text-amber-600">{stats?.recent_notes || 0}</p>
+                        <p className="text-xs text-gray-500 mt-1">Tap to view history</p>
+                      </div>
+                      <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
+                        <DocumentTextIcon className="w-8 h-8 text-amber-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </PortalLayout>
   )
 }
