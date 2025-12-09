@@ -405,7 +405,7 @@ export default function TermsOfServicePage() {
             
             <p>If you have any questions about these Terms or the Service, please contact:</p>
             <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="font-semibold">Reminiscent Technologies LLC</p>
+              <p className="font-semibold">CPF Dance LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
               <p>Email: info@cpfdance.com</p>
