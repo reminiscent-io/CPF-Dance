@@ -155,9 +155,9 @@ export default function InstructorPortalPage() {
           {/* Stats Section - Magazine Layout */}
           <div className="space-y-0 mb-12">
             {/* Total Students */}
-            <button
+            <div
               onClick={() => router.push('/instructor/students')}
-              className="w-full text-left py-6 px-0 border-b border-gray-200 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
+              className="w-full text-left py-6 px-2 border-b border-gray-200 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -171,12 +171,12 @@ export default function InstructorPortalPage() {
                 </div>
                 <UserGroupIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
               </div>
-            </button>
+            </div>
 
             {/* Pending Requests */}
-            <button
+            <div
               onClick={() => router.push('/instructor/requests')}
-              className="w-full text-left py-6 px-0 border-b border-gray-200 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
+              className="w-full text-left py-6 px-2 border-b border-gray-200 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -198,12 +198,12 @@ export default function InstructorPortalPage() {
                 </div>
                 <HandRaisedIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
               </div>
-            </button>
+            </div>
 
             {/* Unpaid Invoices */}
-            <button
+            <div
               onClick={() => router.push('/instructor/payments')}
-              className="w-full text-left py-6 px-0 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
+              className="w-full text-left py-6 px-2 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -225,7 +225,7 @@ export default function InstructorPortalPage() {
                 </div>
                 <CreditCardIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
               </div>
-            </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
