@@ -1,12 +1,80 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } from '@/components/ui'
 import { NotesRichTextEditor, RichTextDisplay } from '@/components/NotesRichTextEditor'
+import { EllipsisVerticalIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
+
+interface NoteActionsMenuProps {
+  onEdit: () => void
+  onDelete: () => void
+}
+
+function NoteActionsMenu({ onEdit, onDelete }: NoteActionsMenuProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen])
+
+  return (
+    <div className="relative flex-shrink-0" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+        aria-label="Note actions"
+        aria-expanded={isOpen}
+      >
+        <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
+      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+          <button
+            onClick={() => {
+              onEdit()
+              setIsOpen(false)
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => {
+              onDelete()
+              setIsOpen(false)
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function NotesPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -24,6 +92,7 @@ export default function NotesPage() {
   const [filterStudent, setFilterStudent] = useState<string>('')
   const [filterVisibility, setFilterVisibility] = useState<NoteVisibility | ''>('')
   const [filterTag, setFilterTag] = useState<string>('')
+  const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -211,42 +280,66 @@ export default function NotesPage() {
         </div>
 
         {activeTab === 'my-notes' && (
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={filterStudent}
-              onChange={(e) => setFilterStudent(e.target.value)}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="sm:hidden flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 mb-4"
             >
-              <option value="">All Students</option>
-              {students.map(student => (
-                <option key={student.id} value={student.id}>
-                  {student.profile?.full_name}
-                </option>
-              ))}
-            </select>
+              {showFilters ? (
+                <>
+                  <XMarkIcon className="w-4 h-4" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <FunnelIcon className="w-4 h-4" />
+                  Show Filters
+                  {(filterStudent || filterVisibility || filterTag) && (
+                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-rose-100 text-rose-600 rounded-full">
+                      {[filterStudent, filterVisibility, filterTag].filter(Boolean).length}
+                    </span>
+                  )}
+                </>
+              )}
+            </button>
+            
+            <div className={`${showFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row gap-4`}>
+              <select
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm"
+                value={filterStudent}
+                onChange={(e) => setFilterStudent(e.target.value)}
+              >
+                <option value="">All Students</option>
+                {students.map(student => (
+                  <option key={student.id} value={student.id}>
+                    {student.profile?.full_name}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={filterVisibility}
-              onChange={(e) => setFilterVisibility(e.target.value as NoteVisibility | '')}
-            >
-              <option value="">All Visibility</option>
-              <option value="private">Private</option>
-              <option value="shared_with_student">Shared with Student</option>
-              <option value="shared_with_guardian">Shared with Guardian</option>
-              <option value="shared_with_studio">Shared with Studio</option>
-            </select>
+              <select
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm"
+                value={filterVisibility}
+                onChange={(e) => setFilterVisibility(e.target.value as NoteVisibility | '')}
+              >
+                <option value="">All Visibility</option>
+                <option value="private">Private</option>
+                <option value="shared_with_student">Shared with Student</option>
+                <option value="shared_with_guardian">Shared with Guardian</option>
+                <option value="shared_with_studio">Shared with Studio</option>
+              </select>
 
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={filterTag}
-              onChange={(e) => setFilterTag(e.target.value)}
-            >
-              <option value="">All Tags</option>
-              {availableTags.map(tag => (
-                <option key={tag} value={tag}>{tag}</option>
-              ))}
-            </select>
+              <select
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm"
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+              >
+                <option value="">All Tags</option>
+                {availableTags.map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -266,44 +359,31 @@ export default function NotesPage() {
       ) : (
         <div className="space-y-4">
           {displayNotes.map((note: any) => (
-            <Card key={note.id} hover>
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{note.title || 'Untitled Note'}</h3>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                    <span>{note.student?.profile?.full_name}</span>
-                    <span>•</span>
+            <Card key={note.id} hover className="p-4 sm:p-6">
+              <div className="flex justify-between items-start gap-2 mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{note.title || 'Untitled Note'}</h3>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-sm text-gray-600">
+                    <span className="truncate">{note.student?.profile?.full_name}</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
+                      {note.visibility.replace(/_/g, ' ')}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{note.visibility.replace(/_/g, ' ')}</Badge>
-                  {activeTab === 'my-notes' && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditNote(note)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteNote(note.id)}
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
-                      >
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </div>
+                {activeTab === 'my-notes' && (
+                  <NoteActionsMenu
+                    onEdit={() => handleEditNote(note)}
+                    onDelete={() => handleDeleteNote(note.id)}
+                  />
+                )}
               </div>
 
-              <RichTextDisplay content={note.content} className="text-gray-700 mb-3" />
+              <RichTextDisplay content={note.content} className="text-gray-700 mb-3 text-sm sm:text-base" />
 
               {note.tags && note.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {note.tags.map((tag: string, idx: number) => (
                     <Badge key={idx} variant="primary" size="sm">{tag}</Badge>
                   ))}
