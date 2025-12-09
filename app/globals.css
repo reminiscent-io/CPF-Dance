@@ -226,3 +226,20 @@ h2 {
 .shadow-soft-lg {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
+
+/* Subtle background texture for editorial feel */
+.header-texture {
+  position: relative;
+  background: linear-gradient(135deg, rgba(200, 144, 144, 0.03) 0%, rgba(169, 169, 169, 0.02) 100%);
+}
+
+.header-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(200, 144, 144, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(169, 169, 169, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.5;
+}

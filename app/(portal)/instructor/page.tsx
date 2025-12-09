@@ -77,11 +77,14 @@ export default function InstructorPortalPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Instructor Dashboard
-        </h1>
-        <p className="text-gray-600">Welcome back, {profile.full_name}!</p>
+      {/* Header with subtle texture */}
+      <div className="mb-12 pb-8 header-texture rounded-lg p-8 -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold text-charcoal-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
+            Instructor Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg">Welcome back, {profile.full_name}!</p>
+        </div>
       </div>
 
       {loadingData ? (
@@ -90,13 +93,12 @@ export default function InstructorPortalPage() {
         </div>
       ) : (
         <>
-          {/* Hero Schedule Card */}
-          <Card hover className="mb-6">
-            <CardTitle className="flex items-center justify-between mb-4">
-              <span className="flex items-center gap-2">
-                <CalendarIcon className="w-6 h-6 text-charcoal-700" />
-                Schedule
-              </span>
+          {/* Next Class Section */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-charcoal-900" style={{ fontFamily: 'var(--font-family-display)' }}>
+                Next Class
+              </h2>
               {stats && stats.upcoming_classes > 0 && (
                 <button
                   onClick={() => router.push('/instructor/classes')}
@@ -105,82 +107,83 @@ export default function InstructorPortalPage() {
                   See all {stats.upcoming_classes}
                 </button>
               )}
-            </CardTitle>
-            <CardContent>
-              {nextClass ? (
-                <div className="bg-champagne-50 rounded-lg p-6 border border-champagne-200">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-600 mb-1">Next Class</div>
-                      <h4 className="text-xl font-semibold text-charcoal-900 mb-2">{nextClass.title}</h4>
-                      <div className="flex flex-col sm:flex-row sm:gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4" />
-                          {new Date(nextClass.start_time).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            meridiem: 'short'
-                          })}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <BuildingOfficeIcon className="w-4 h-4" />
-                          {nextClass.studio_name}
-                        </div>
+            </div>
+            
+            {nextClass ? (
+              <div className="pb-6 border-b border-gray-200">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-charcoal-900 mb-2">{nextClass.title}</h3>
+                    <div className="flex flex-col sm:flex-row sm:gap-6 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-charcoal-600" />
+                        {new Date(nextClass.start_time).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          meridiem: 'short'
+                        })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <BuildingOfficeIcon className="w-4 h-4 text-charcoal-600" />
+                        {nextClass.studio_name}
                       </div>
                     </div>
-                    <button
-                      onClick={() => router.push(`/instructor/classes/${nextClass.id}`)}
-                      className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      View Details
-                    </button>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-600">
-                  <p>No upcoming classes scheduled</p>
                   <button
-                    onClick={() => router.push('/instructor/classes')}
-                    className="mt-3 text-rose-600 hover:text-rose-700 font-medium"
+                    onClick={() => router.push(`/instructor/classes/${nextClass.id}`)}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-medium transition-colors"
                   >
-                    Create a class
+                    View Details
                   </button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <div className="pb-6 border-b border-gray-200 text-center py-8 text-gray-600">
+                <p>No upcoming classes scheduled</p>
+                <button
+                  onClick={() => router.push('/instructor/classes')}
+                  className="mt-3 text-rose-600 hover:text-rose-700 font-medium text-sm"
+                >
+                  Create a class
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Compact Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {/* Stats Section - Magazine Layout */}
+          <div className="space-y-0 mb-12">
+            {/* Total Students */}
             <button
               onClick={() => router.push('/instructor/students')}
-              className="w-full"
+              className="w-full text-left py-6 px-0 border-b border-gray-200 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
             >
-              <Card hover>
-                <CardContent className="text-center py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
                   <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.total_students || 0}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-600">Total Students</div>
+                  <div className="text-sm text-gray-600">Total Students</div>
                   <div className="text-xs text-gray-500">
                     {stats?.active_students || 0} active
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <UserGroupIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
+              </div>
             </button>
 
+            {/* Pending Requests */}
             <button
               onClick={() => router.push('/instructor/requests')}
-              className="w-full"
+              className="w-full text-left py-6 px-0 border-b border-gray-200 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
             >
-              <Card hover>
-                <CardContent className="text-center py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
                   <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.pending_requests || 0}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-600 mb-2">Pending Requests</div>
+                  <div className="text-sm text-gray-600 mb-2">Pending Requests</div>
                   {(stats?.pending_requests || 0) > 0 && (
                     <button
                       onClick={(e) => {
@@ -192,20 +195,22 @@ export default function InstructorPortalPage() {
                       Review
                     </button>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+                <HandRaisedIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
+              </div>
             </button>
 
+            {/* Unpaid Invoices */}
             <button
               onClick={() => router.push('/instructor/payments')}
-              className="w-full"
+              className="w-full text-left py-6 px-0 hover:bg-gray-50/50 transition-colors -mx-2 px-2"
             >
-              <Card hover>
-                <CardContent className="text-center py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
                   <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.unpaid_invoices || 0}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-600 mb-2">Unpaid Invoices</div>
+                  <div className="text-sm text-gray-600 mb-2">Unpaid Invoices</div>
                   {(stats?.unpaid_invoices || 0) > 0 && (
                     <button
                       onClick={(e) => {
@@ -217,8 +222,9 @@ export default function InstructorPortalPage() {
                       Follow up
                     </button>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+                <CreditCardIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
+              </div>
             </button>
           </div>
 
