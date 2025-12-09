@@ -786,7 +786,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-700 pt-8 text-center text-white">
-            <p>&copy; {new Date().getFullYear()} <a href="https://reminiscent.io" target="_blank" rel="noopener noreferrer" className="hover:text-rose-400 transition-colors">Reminiscent Technologies LLC</a>. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} CPF Dance LLC. All rights reserved.</p>
             <div className="mt-4 text-sm text-gray-400 space-x-4">
               <Link href="/terms-of-service" className="hover:text-rose-400 transition-colors">
                 Terms of Service
