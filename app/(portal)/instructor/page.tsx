@@ -122,7 +122,7 @@ export default function InstructorPortalPage() {
                           day: 'numeric',
                           hour: 'numeric',
                           minute: '2-digit',
-                          meridiem: 'short'
+                          dayPeriod: 'short'
                         })}
                       </div>
                       <div className="flex items-center gap-2">
