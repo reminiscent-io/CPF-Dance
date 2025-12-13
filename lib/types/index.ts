@@ -178,6 +178,9 @@ export interface CreateStudentData {
 }
 
 export interface UpdateStudentData {
+  full_name?: string
+  email?: string
+  phone?: string
   age_group?: string
   skill_level?: string
   goals?: string

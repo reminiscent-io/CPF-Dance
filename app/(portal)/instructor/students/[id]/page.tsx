@@ -720,6 +720,9 @@ interface EditStudentModalProps {
 
 function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps) {
   const [formData, setFormData] = useState<UpdateStudentData>({
+    full_name: student.full_name || student.profile?.full_name || '',
+    email: student.email || student.profile?.email || '',
+    phone: student.phone || student.profile?.phone || '',
     age_group: student.age_group || '',
     skill_level: student.skill_level || '',
     goals: student.goals || '',
@@ -738,6 +741,27 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
     <Modal isOpen={true} onClose={onClose} title="Edit Student" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
+          <Input
+            label="Full Name"
+            value={formData.full_name}
+            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <Input
+              label="Phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
