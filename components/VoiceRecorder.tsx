@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 
@@ -20,6 +20,24 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clear timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+      // Stop media recorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop()
+      }
+      // Stop all media tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
 
   const startRecording = useCallback(async () => {
     setError(null)
@@ -48,12 +66,32 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
         }
       }
 
-      mediaRecorder.onstop = async () => {
-        // Stop all tracks
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event)
+        setState('idle')
+        setRecordingDuration(0)
+        setError('Recording error occurred. Please try again.')
+        // Clean up
+        if (timerRef.current) {
+          clearInterval(timerRef.current)
+          timerRef.current = null
+        }
         stream.getTracks().forEach(track => track.stop())
+      }
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        await processAudio(audioBlob)
+      mediaRecorder.onstop = async () => {
+        try {
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop())
+
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+          await processAudio(audioBlob)
+        } catch (err) {
+          console.error('Error in onstop handler:', err)
+          setState('idle')
+          setRecordingDuration(0)
+          setError('Failed to process recording. Please try again.')
+        }
       }
 
       mediaRecorder.start(1000) // Collect data every second
@@ -108,6 +146,16 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
 
   const processAudio = async (audioBlob: Blob) => {
     try {
+      // Validate that we have audio data
+      if (!audioBlob || audioBlob.size === 0) {
+        throw new Error('No audio recorded. Please try again.')
+      }
+
+      // Check minimum audio size (at least 1KB)
+      if (audioBlob.size < 1000) {
+        throw new Error('Recording too short. Please speak for at least 1 second.')
+      }
+
       const formData = new FormData()
       formData.append('audio', audioBlob, 'recording.webm')
 
@@ -125,10 +173,14 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
 
       if (result.html) {
         onTranscriptReady(result.html)
+        setError(null) // Clear any previous errors on success
       } else if (result.cleaned_notes) {
         // Convert markdown to basic HTML if needed
         const html = markdownToHtml(result.cleaned_notes)
         onTranscriptReady(html)
+        setError(null) // Clear any previous errors on success
+      } else {
+        throw new Error('No transcription received. Please try again.')
       }
 
     } catch (err) {
