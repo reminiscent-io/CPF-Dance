@@ -239,7 +239,7 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
             className="flex items-center gap-2"
           >
             <MicrophoneIcon className="w-4 h-4" />
-            Record Voice Note
+            Voice to Text
           </Button>
         )}
 
