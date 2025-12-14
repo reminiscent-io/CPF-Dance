@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } from '@/components/ui'
-import { NotesRichTextEditor, RichTextDisplay } from '@/components/NotesRichTextEditor'
+import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
+import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { EllipsisVerticalIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
 
@@ -237,20 +238,20 @@ export default function NotesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Notes</h1>
-            <p className="text-gray-600 mt-1">Track student progress and observations</p>
-          </div>
-          {activeTab === 'my-notes' && (
-            <Button onClick={() => setShowAddModal(true)}>
-              Add Note
-            </Button>
-          )}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Notes</h1>
+          <p className="text-gray-600">Track student progress and observations</p>
         </div>
+        {activeTab === 'my-notes' && (
+          <Button onClick={() => setShowAddModal(true)}>
+            Add Note
+          </Button>
+        )}
+      </div>
 
-        <div className="border-b border-gray-200 mb-6">
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('my-notes')}
@@ -278,9 +279,10 @@ export default function NotesPage() {
             </button>
           </nav>
         </div>
+      </div>
 
-        {activeTab === 'my-notes' && (
-          <div className="mb-6">
+      {activeTab === 'my-notes' && (
+        <div className="mb-6">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="sm:hidden flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 mb-4"
@@ -342,7 +344,6 @@ export default function NotesPage() {
             </div>
           </div>
         )}
-      </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -430,6 +431,8 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
     tags: [],
     visibility: 'private'
   })
+  const [editor, setEditor] = useState<Editor | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
 
@@ -442,11 +445,26 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
     }))
   }
 
+  const handleVoiceTranscript = (html: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(html).run()
+      setFormData(prev => ({ ...prev, content: editor.getHTML() }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content && prev.content !== '<p></p>'
+          ? `${prev.content}${html}`
+          : html
+      }))
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.student_id || !formData.content) {
       return
     }
+    setSubmitting(true)
     onSubmit(formData)
   }
 
@@ -486,9 +504,16 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
             <NotesRichTextEditor
               content={formData.content}
               onChange={(html) => setFormData({ ...formData, content: html })}
+              onEditorReady={setEditor}
               placeholder="Write your note here... Use formatting to highlight key points."
               minHeight="150px"
             />
+            <div className="mt-3">
+              <VoiceRecorder
+                onTranscriptReady={handleVoiceTranscript}
+                disabled={submitting}
+              />
+            </div>
           </div>
 
           <div>
@@ -532,10 +557,12 @@ function AddNoteModal({ students, onClose, onSubmit }: AddNoteModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit">Add Note</Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? 'Adding...' : 'Add Note'}
+          </Button>
         </ModalFooter>
       </form>
     </Modal>
@@ -556,6 +583,8 @@ function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
     tags: note.tags || [],
     visibility: note.visibility || 'private'
   })
+  const [editor, setEditor] = useState<Editor | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const availableTags = ['technique', 'performance', 'improvement', 'attendance', 'behavior', 'progress', 'injury']
 
@@ -568,11 +597,26 @@ function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
     }))
   }
 
+  const handleVoiceTranscript = (html: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(html).run()
+      setFormData(prev => ({ ...prev, content: editor.getHTML() }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content && prev.content !== '<p></p>'
+          ? `${prev.content}${html}`
+          : html
+      }))
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.content) {
       return
     }
+    setSubmitting(true)
     onSubmit(formData)
   }
 
@@ -599,9 +643,16 @@ function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
             <NotesRichTextEditor
               content={formData.content}
               onChange={(html) => setFormData({ ...formData, content: html })}
+              onEditorReady={setEditor}
               placeholder="Write your note here... Use formatting to highlight key points."
               minHeight="150px"
             />
+            <div className="mt-3">
+              <VoiceRecorder
+                onTranscriptReady={handleVoiceTranscript}
+                disabled={submitting}
+              />
+            </div>
           </div>
 
           <div>
@@ -645,10 +696,12 @@ function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit">Save Changes</Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? 'Saving...' : 'Save Changes'}
+          </Button>
         </ModalFooter>
       </form>
     </Modal>

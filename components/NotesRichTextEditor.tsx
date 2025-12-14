@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect } from 'react'
@@ -10,13 +10,15 @@ interface NotesRichTextEditorProps {
   onChange: (html: string) => void
   placeholder?: string
   minHeight?: string
+  onEditorReady?: (editor: Editor) => void
 }
 
-export function NotesRichTextEditor({ 
-  content, 
-  onChange, 
+export function NotesRichTextEditor({
+  content,
+  onChange,
   placeholder = 'Start writing...',
-  minHeight = '200px'
+  minHeight = '200px',
+  onEditorReady
 }: NotesRichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -43,6 +45,13 @@ export function NotesRichTextEditor({
       editor.commands.setContent(content)
     }
   }, [content, editor])
+
+  // Expose editor instance to parent
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor)
+    }
+  }, [editor, onEditorReady])
 
   if (!editor) {
     return (
@@ -163,9 +172,12 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
     : content
 
   return (
-    <div 
+    <div
       className={`prose prose-sm max-w-none ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   )
 }
+
+// Re-export Editor type for consumers that need to handle editor instance
+export type { Editor } from '@tiptap/react'

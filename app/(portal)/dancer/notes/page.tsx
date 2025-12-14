@@ -7,7 +7,9 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Input, Textarea } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
+import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
+import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
 
@@ -66,6 +68,7 @@ export default function DancerNotesPage() {
     is_private: false
   })
   const [saving, setSaving] = useState(false)
+  const [editor, setEditor] = useState<Editor | null>(null)
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [loadingClasses, setLoadingClasses] = useState(false)
 
@@ -160,6 +163,24 @@ export default function DancerNotesPage() {
     setIsModalOpen(false)
     setEditingNote(null)
     setFormData({ title: '', content: '', tags: '', class_id: '', class_type: '', is_private: false })
+    setEditor(null)
+  }
+
+  const handleVoiceTranscript = (html: string) => {
+    if (editor) {
+      // Insert at cursor position
+      editor.chain().focus().insertContent(html).run()
+      // Update form data with new content
+      setFormData(prev => ({ ...prev, content: editor.getHTML() }))
+    } else {
+      // Fallback: append to existing content
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content && prev.content !== '<p></p>'
+          ? `${prev.content}${html}`
+          : html
+      }))
+    }
   }
 
   const handleSave = async () => {
@@ -440,7 +461,9 @@ export default function DancerNotesPage() {
                   </span>
                 </div>
 
-                <p className="text-gray-700 whitespace-pre-wrap mb-4">{note.content}</p>
+                <div className="mb-4">
+                  <RichTextDisplay content={note.content} className="text-gray-700" />
+                </div>
 
                 {note.tags && note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -532,13 +555,24 @@ export default function DancerNotesPage() {
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
-          <Textarea
-            label="Content"
-            placeholder="Write your thoughts, goals, or reflections..."
-            rows={8}
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content
+            </label>
+            <NotesRichTextEditor
+              content={formData.content}
+              onChange={(html) => setFormData({ ...formData, content: html })}
+              onEditorReady={setEditor}
+              placeholder="Write your thoughts, goals, or reflections..."
+              minHeight="200px"
+            />
+            <div className="mt-3">
+              <VoiceRecorder
+                onTranscriptReady={handleVoiceTranscript}
+                disabled={saving}
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Link to Class (optional)

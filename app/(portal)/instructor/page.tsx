@@ -77,14 +77,12 @@ export default function InstructorPortalPage() {
 
   return (
     <PortalLayout profile={profile}>
-      {/* Header with subtle texture */}
-      <div className="mb-12 pb-8 header-texture rounded-lg p-8 -mx-4 sm:-mx-6 lg:-mx-8">
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-charcoal-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
-            Instructor Dashboard
-          </h1>
-          <p className="text-gray-600 text-lg">Welcome back, {profile.full_name}!</p>
-        </div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
+          Instructor Dashboard
+        </h1>
+        <p className="text-gray-600">Welcome back, {profile.full_name}!</p>
       </div>
 
       {loadingData ? (
@@ -94,7 +92,7 @@ export default function InstructorPortalPage() {
       ) : (
         <>
           {/* Next Class Section */}
-          <div className="mb-12">
+          <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-charcoal-900" style={{ fontFamily: 'var(--font-family-display)' }}>
                 Next Class
@@ -153,7 +151,7 @@ export default function InstructorPortalPage() {
           </div>
 
           {/* Stats Section - Magazine Layout */}
-          <div className="space-y-0 mb-12">
+          <div className="space-y-0 mb-8">
             {/* Total Students */}
             <div
               onClick={() => router.push('/instructor/students')}

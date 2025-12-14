@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
-import { NotesRichTextEditor, RichTextDisplay } from '@/components/NotesRichTextEditor'
+import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
+import { VoiceRecorder } from '@/components/VoiceRecorder'
 
 interface Note {
   id: string
@@ -35,6 +36,7 @@ export default function DancerMyNotesPage() {
     tags: ''
   })
   const [saving, setSaving] = useState(false)
+  const [editor, setEditor] = useState<Editor | null>(null)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -81,6 +83,24 @@ export default function DancerMyNotesPage() {
     setIsModalOpen(false)
     setEditingNote(null)
     setFormData({ title: '', content: '', tags: '' })
+    setEditor(null)
+  }
+
+  const handleVoiceTranscript = (html: string) => {
+    if (editor) {
+      // Insert at cursor position
+      editor.chain().focus().insertContent(html).run()
+      // Update form data with new content
+      setFormData(prev => ({ ...prev, content: editor.getHTML() }))
+    } else {
+      // Fallback: append to existing content
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content && prev.content !== '<p></p>'
+          ? `${prev.content}${html}`
+          : html
+      }))
+    }
   }
 
   const handleSave = async () => {
@@ -276,9 +296,16 @@ export default function DancerMyNotesPage() {
             <NotesRichTextEditor
               content={formData.content}
               onChange={(html) => setFormData({ ...formData, content: html })}
+              onEditorReady={setEditor}
               placeholder="Write your thoughts, goals, or reflections..."
               minHeight="200px"
             />
+            <div className="mt-3">
+              <VoiceRecorder
+                onTranscriptReady={handleVoiceTranscript}
+                disabled={saving}
+              />
+            </div>
           </div>
           <Input
             label="Tags (optional)"

@@ -34,7 +34,7 @@ export interface SidebarProps {
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Students']))
   const pathname = usePathname()
   const router = useRouter()
   
@@ -93,7 +93,14 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                 { href: '/instructor/classes/choreography', label: 'Choreography', icon: <MusicalNoteIcon className="w-5 h-5" /> }
               ]
             },
-            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+            {
+              label: 'Students',
+              icon: <UserGroupIcon className="w-5 h-5" />,
+              children: [
+                { href: '/instructor/students', label: 'Overview', icon: <UserGroupIcon className="w-5 h-5" /> },
+                { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
+              ]
+            }
           ]
         },
         {
@@ -217,7 +224,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           <div className="px-6 py-4 md:p-6 border-b border-rose-500 h-16 md:h-auto flex items-center md:block">
             <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
-                Dance Studio
+                CPF Dance
               </span>
               <button
                 onClick={() => setIsOpen(false)}
