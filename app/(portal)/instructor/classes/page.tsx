@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
@@ -9,11 +9,12 @@ import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 
-export default function ClassesPage() {
+function ClassesContent() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { addToast } = useToast()
-  
+
   const [classes, setClasses] = useState<Class[]>([])
   const [studios, setStudios] = useState<Studio[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +37,22 @@ export default function ClassesPage() {
       fetchStudios()
     }
   }, [user, filterStudio, filterType, upcomingOnly])
+
+  // Check for class_id query parameter and open modal
+  useEffect(() => {
+    if (!searchParams) return
+
+    const classId = searchParams.get('class_id')
+    if (classId && classes.length > 0 && !showEditModal) {
+      const classToShow = classes.find(c => c.id === classId)
+      if (classToShow) {
+        setSelectedClass(classToShow)
+        setShowEditModal(true)
+        // Clear the query parameter after opening modal
+        router.replace('/instructor/classes', { scroll: false })
+      }
+    }
+  }, [searchParams, classes, showEditModal, router])
 
   const fetchClasses = async () => {
     try {
@@ -312,7 +329,7 @@ export default function ClassesPage() {
             <Card
               key={cls.id}
               hover
-              className="cursor-pointer"
+              className={`cursor-pointer ${cls.class_type === 'private' ? 'bg-purple-50 border-purple-200' : ''}`}
               onClick={() => handleClassClick(cls)}
             >
               <div className="flex justify-between items-start mb-3">
@@ -1680,5 +1697,17 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
         </Modal>
       )}
     </Modal>
+  )
+}
+
+export default function ClassesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <ClassesContent />
+    </Suspense>
   )
 }

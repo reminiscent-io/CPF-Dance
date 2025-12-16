@@ -244,7 +244,7 @@ export default function InstructorSchedulePage() {
         ) : (
           <>
             {/* DESKTOP VIEW - Calendar Grid */}
-            <div className="hidden md:flex flex-1 min-h-0">
+            <div className="hidden md:flex md:flex-col flex-1 min-h-0 overflow-hidden">
               <Calendar
                 events={classes}
                 onEventClick={handleEventClick}

@@ -130,7 +130,7 @@ export default function InstructorPortalPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => router.push(`/instructor/classes/${nextClass.id}`)}
+                    onClick={() => router.push(`/instructor/classes?class_id=${nextClass.id}`)}
                     className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-medium transition-colors"
                   >
                     View Details
