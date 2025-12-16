@@ -4,8 +4,8 @@ import { requireInstructor } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const { profile } = await requireInstructor()
-    
+    const profile = await requireInstructor()
+
     const supabase = await createClient()
 
     const { data: requests, error } = await supabase

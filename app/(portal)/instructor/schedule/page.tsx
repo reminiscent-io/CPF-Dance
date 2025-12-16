@@ -162,18 +162,22 @@ export default function InstructorSchedulePage() {
 
   const navigatePrevious = () => {
     const newDate = new Date(currentDate)
-    newDate.setDate(newDate.getDate() - 7)
+    newDate.setMonth(newDate.getMonth() - 1)
     handleDateChange(newDate)
+    setCurrentDate(newDate)
   }
 
   const navigateNext = () => {
     const newDate = new Date(currentDate)
-    newDate.setDate(newDate.getDate() + 7)
+    newDate.setMonth(newDate.getMonth() + 1)
     handleDateChange(newDate)
+    setCurrentDate(newDate)
   }
 
   const navigateToday = () => {
-    handleDateChange(new Date())
+    const today = new Date()
+    handleDateChange(today)
+    setCurrentDate(today)
   }
 
   const handleAddToAppleCalendar = () => {
