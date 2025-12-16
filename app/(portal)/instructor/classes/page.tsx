@@ -329,7 +329,7 @@ function ClassesContent() {
             <Card
               key={cls.id}
               hover
-              className={`cursor-pointer ${cls.class_type === 'private' ? 'bg-purple-50 border-purple-200' : ''}`}
+              className={`cursor-pointer ${cls.class_type === 'private' ? '!bg-purple-50 !border-2 !border-purple-400' : ''}`}
               onClick={() => handleClassClick(cls)}
             >
               <div className="flex justify-between items-start mb-3">
