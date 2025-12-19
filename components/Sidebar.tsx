@@ -22,7 +22,7 @@ import {
   ClipboardDocumentListIcon,
   MusicalNoteIcon,
   DocumentIcon,
-  BanknotesIcon
+  PhotoIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -84,15 +84,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           label: 'Teaching & Schedule',
           links: [
             { href: '/instructor/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
-            {
-              label: 'Classes',
-              icon: <AcademicCapIcon className="w-5 h-5" />,
-              children: [
-                { href: '/instructor/classes', label: 'Overview', icon: <AcademicCapIcon className="w-5 h-5" /> },
-                { href: '/instructor/classes/attendance', label: 'Attendance', icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
-                { href: '/instructor/classes/choreography', label: 'Choreography', icon: <MusicalNoteIcon className="w-5 h-5" /> }
-              ]
-            },
+            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
             {
               label: 'Students',
               icon: <UserGroupIcon className="w-5 h-5" />,
@@ -111,12 +103,12 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               icon: <CreditCardIcon className="w-5 h-5" />,
               children: [
                 { href: '/instructor/payments', label: 'Overview', icon: <CreditCardIcon className="w-5 h-5" /> },
-                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> },
-                { href: '/instructor/payments/payroll', label: 'Payroll', icon: <BanknotesIcon className="w-5 h-5" /> }
+                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> }
               ]
             },
             { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> }
+            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
           ]
         }
       ]

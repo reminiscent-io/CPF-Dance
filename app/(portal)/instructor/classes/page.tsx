@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
@@ -36,7 +37,7 @@ function ClassesContent() {
       fetchClasses()
       fetchStudios()
     }
-  }, [user, filterStudio, filterType, upcomingOnly])
+  }, [user?.id, filterStudio, filterType, upcomingOnly])
 
   // Check for class_id query parameter and open modal
   useEffect(() => {
@@ -273,8 +274,8 @@ function ClassesContent() {
             <h1 className="text-3xl font-bold text-gray-900">Classes</h1>
             <p className="text-gray-600 mt-1">Manage your class schedule</p>
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            Create Class
+          <Button onClick={() => setShowCreateModal(true)} aria-label="Create Class">
+            <PlusIcon className="w-5 h-5" />
           </Button>
         </div>
 

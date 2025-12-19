@@ -35,7 +35,7 @@ export function AddNoteModal({
     title: '',
     content: '',
     tags: [],
-    visibility: 'private'
+    visibility: 'shared_with_student'
   })
   const [editor, setEditor] = useState<Editor | null>(null)
   const [submitting, setSubmitting] = useState(false)

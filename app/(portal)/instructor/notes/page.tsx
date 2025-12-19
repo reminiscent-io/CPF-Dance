@@ -8,7 +8,7 @@ import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } fro
 import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { AddNoteModal } from '@/components/AddNoteModal'
-import { EllipsisVerticalIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon, FunnelIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
 
 interface NoteActionsMenuProps {
@@ -108,7 +108,7 @@ export default function NotesPage() {
       fetchStudentNotes()
       fetchStudents()
     }
-  }, [user, filterStudent, filterVisibility, filterTag, activeTab])
+  }, [user?.id, filterStudent, filterVisibility, filterTag, activeTab])
 
   const fetchNotes = async () => {
     try {
@@ -245,8 +245,8 @@ export default function NotesPage() {
           <p className="text-gray-600">Track student progress and observations</p>
         </div>
         {activeTab === 'my-notes' && (
-          <Button onClick={() => setShowAddModal(true)}>
-            Add Note
+          <Button onClick={() => setShowAddModal(true)} aria-label="Add Note">
+            <PlusIcon className="w-5 h-5" />
           </Button>
         )}
       </div>

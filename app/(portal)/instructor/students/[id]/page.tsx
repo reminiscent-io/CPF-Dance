@@ -47,7 +47,7 @@ export default function StudentDetailPage() {
     if (user && id) {
       fetchStudentDetails()
     }
-  }, [user, id])
+  }, [user?.id, id])
 
   const fetchStudentDetails = async () => {
     try {

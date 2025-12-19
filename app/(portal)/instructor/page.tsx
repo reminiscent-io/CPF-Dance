@@ -42,7 +42,7 @@ export default function InstructorPortalPage() {
     if (user && (profile?.role === 'instructor' || profile?.role === 'admin')) {
       fetchDashboardData()
     }
-  }, [user, profile])
+  }, [user?.id, profile?.role])
 
   const fetchDashboardData = async () => {
     try {
