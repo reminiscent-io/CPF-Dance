@@ -10,6 +10,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **December 19, 2025**: Fixed font display issue on home page by moving font-family CSS variables from @theme block to :root selector
+- **December 19, 2025**: Fixed getCurrentUserWithRole() usage in asset API routes to properly handle ProfileWithRole return type
 - **December 9, 2025**: Added edit and delete functionality to instructor notes page
 - **December 9, 2025**: Added clickable links on instructor student profile to navigate to notes and private lesson requests
 - **December 9, 2025**: Added loading indicators to login buttons on homepage for better UX feedback

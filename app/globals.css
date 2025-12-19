@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root {
+  /* Typography - CSS variables for fonts */
+  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
+  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
 @theme {
   /* Ballet Noir Color Palette - Sophisticated Dark + Blush */
 
@@ -91,10 +97,6 @@
   --color-cream-800: var(--color-champagne-800);
   --color-cream-900: var(--color-champagne-900);
   --color-cream-950: var(--color-champagne-950);
-
-  /* Typography */
-  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
-  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 * {
