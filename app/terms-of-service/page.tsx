@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
           <p>
-            These Terms of Service ("Terms") govern your access to and use of the website, platform, and related services (collectively, the "Service") provided by Reminiscent Technologies LLC ("Company," "we," or "us"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the Service.
+            These Terms of Service ("Terms") govern your access to and use of the website, platform, and related services (collectively, the "Service") provided by CPF Dance LLC ("Company," "we," or "us"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the Service.
           </p>
 
           <div>
@@ -240,7 +240,7 @@ export default function TermsOfServicePage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">8.1 Ownership</h3>
                 <p>
-                  All content and materials included in or made available through the Service (excluding User Content as defined below), including text, graphics, logos, images, software, and design elements, are owned by or licensed to Reminiscent Technologies LLC and are protected by intellectual property and other laws.
+                  All content and materials included in or made available through the Service (excluding User Content as defined below), including text, graphics, logos, images, software, and design elements, are owned by or licensed to CPF Dance LLC and are protected by intellectual property and other laws.
                 </p>
               </div>
 
@@ -334,7 +334,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">12. Indemnification</h2>
             
             <p>
-              You agree to indemnify, defend, and hold harmless Reminiscent Technologies LLC and its owners, members, managers, employees, contractors, and agents from and against any and all claims, demands, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms or any applicable law; or (c) your User Content or interactions with other users, instructors, or studios.
+              You agree to indemnify, defend, and hold harmless CPF Dance LLC and its owners, members, managers, employees, contractors, and agents from and against any and all claims, demands, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms or any applicable law; or (c) your User Content or interactions with other users, instructors, or studios.
             </p>
           </div>
 
@@ -405,7 +405,7 @@ export default function TermsOfServicePage() {
             
             <p>If you have any questions about these Terms or the Service, please contact:</p>
             <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="font-semibold">Reminiscent Technologies LLC</p>
+              <p className="font-semibold">CPF Dance LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
               <p>Email: info@cpfdance.com</p>

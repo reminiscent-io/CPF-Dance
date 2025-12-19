@@ -93,8 +93,8 @@
   --color-cream-950: var(--color-champagne-950);
 
   /* Typography */
-  --font-family-display: var(--font-cormorant), 'Georgia', 'Garamond', serif;
-  --font-family-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
+  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 * {
@@ -216,4 +216,30 @@ h2 {
 
 .typewriter-fade {
   animation: typewriter 3.5s steps(60, end) forwards, fadeOut 5s ease-in-out forwards;
+}
+
+/* Soft shadows for premium feel */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Subtle background texture for editorial feel */
+.header-texture {
+  position: relative;
+  background: linear-gradient(135deg, rgba(200, 144, 144, 0.03) 0%, rgba(169, 169, 169, 0.02) 100%);
+}
+
+.header-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(200, 144, 144, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(169, 169, 169, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.5;
 }

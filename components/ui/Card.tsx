@@ -23,13 +23,13 @@ export function Card({
   }
 
   const hoverStyles = hover
-    ? 'hover:shadow-lg hover:-translate-y-1 transition-all duration-200'
+    ? 'hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200'
     : ''
 
   return (
     <div
       className={`
-        bg-white rounded-lg shadow-md
+        bg-white rounded-lg shadow-soft
         ${paddingStyles[padding]}
         ${hoverStyles}
         ${className}

@@ -11,13 +11,13 @@ export default function PrivacyPolicyPage() {
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
           <p>
-            This Privacy Policy describes how Reminiscent Technologies LLC ("Company," "we," "us") collects, uses, discloses, and protects personal information when you use our website and related services (the "Service"). By using the Service, you agree to the collection and use of information in accordance with this Policy.
+            This Privacy Policy describes how CPF Dance LLC ("Company," "we," "us") collects, uses, discloses, and protects personal information when you use our website and related services (the "Service"). By using the Service, you agree to the collection and use of information in accordance with this Policy.
           </p>
 
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">1. Who We Are and How to Contact Us</h2>
             <div className="p-4 bg-gray-50 rounded-md">
-              <p className="font-semibold">Reminiscent Technologies LLC</p>
+              <p className="font-semibold">CPF Dance LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
               <p>Email: info@cpfdance.com</p>
@@ -385,7 +385,7 @@ export default function PrivacyPolicyPage() {
             
             <p>If you have questions about this Privacy Policy, your personal information, or your rights, please contact:</p>
             <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="font-semibold">Reminiscent Technologies LLC</p>
+              <p className="font-semibold">CPF Dance LLC</p>
               <p>418 BROADWAY STE R</p>
               <p>ALBANY, NY 12207</p>
               <p>Email: info@cpfdance.com</p>

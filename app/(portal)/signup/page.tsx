@@ -26,16 +26,6 @@ const portalConfig = {
     textColor: 'text-mauve-600',
     defaultRole: 'instructor' as UserRole,
   },
-  studio: {
-    title: 'Studio Signup',
-    subtitle: 'Manage your studio with ease',
-    icon: '🏢',
-    gradient: 'from-gray-50 to-slate-50',
-    buttonColor: 'bg-gray-700 hover:bg-gray-800',
-    ringColor: 'focus:ring-gray-500',
-    textColor: 'text-gray-700',
-    defaultRole: 'studio' as UserRole,
-  },
 }
 
 function SignupForm() {

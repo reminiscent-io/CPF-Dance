@@ -81,9 +81,11 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
 
   const getStartOfWeek = (date: Date) => {
     const d = new Date(date)
-    const day = d.getDay()
-    const diff = d.getDate() - day
-    return new Date(d.setDate(diff))
+    const day = d.getDay() // 0 = Sunday, 1 = Monday, etc.
+    // Subtract days to get to Sunday - this works across month boundaries
+    d.setDate(d.getDate() - day)
+    d.setHours(0, 0, 0, 0)
+    return d
   }
 
   const getStartOfMonth = (date: Date) => {
@@ -121,6 +123,21 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
         return 'amber'
       default:
         return 'gray'
+    }
+  }
+
+  const getClassTypeStyles = (type: string) => {
+    switch (type) {
+      case 'private':
+        return 'bg-purple-100 border border-purple-300 text-purple-900'
+      case 'group':
+        return 'bg-blue-100 border border-blue-300 text-blue-900'
+      case 'workshop':
+        return 'bg-green-100 border border-green-300 text-green-900'
+      case 'master_class':
+        return 'bg-amber-100 border border-amber-300 text-amber-900'
+      default:
+        return 'bg-rose-100 border border-rose-300 text-gray-900'
     }
   }
 
@@ -199,14 +216,14 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
                         onClick={() => onEventClick?.(event)}
                         className={`absolute inset-0.5 sm:inset-1 rounded p-0.5 sm:p-1 cursor-pointer hover:shadow-md transition-shadow text-[10px] sm:text-xs overflow-hidden ${
                           event.is_cancelled
-                            ? 'bg-gray-200 opacity-50'
-                            : 'bg-rose-100 border border-rose-300'
+                            ? 'bg-gray-200 opacity-50 border border-gray-300'
+                            : getClassTypeStyles(event.class_type)
                         }`}
                       >
-                        <div className="font-semibold truncate text-gray-900">
+                        <div className="font-semibold truncate">
                           {event.title}
                         </div>
-                        <div className="text-gray-600 truncate hidden sm:block">
+                        <div className="truncate hidden sm:block opacity-75">
                           {formatTime(event.start_time)}
                         </div>
                       </div>
@@ -287,14 +304,14 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
                       onClick={() => onEventClick?.(event)}
                       className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer hover:shadow-md transition-shadow ${
                         event.is_cancelled
-                          ? 'bg-gray-200 opacity-50'
-                          : 'bg-rose-100 border border-rose-300'
+                          ? 'bg-gray-200 opacity-50 border border-gray-300'
+                          : getClassTypeStyles(event.class_type)
                       }`}
                     >
-                      <div className="font-semibold truncate text-gray-900 leading-tight">
+                      <div className="font-semibold truncate leading-tight">
                         {formatTime(event.start_time)}
                       </div>
-                      <div className="truncate text-gray-700 leading-tight hidden sm:block">{event.title}</div>
+                      <div className="truncate leading-tight hidden sm:block">{event.title}</div>
                     </div>
                   ))}
                   {dayEvents.length > maxEventsToShow && (

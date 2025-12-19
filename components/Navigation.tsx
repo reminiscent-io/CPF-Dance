@@ -79,14 +79,6 @@ export function Navigation({ profile }: NavigationProps) {
           { href: '/dancer/request-lesson', label: 'Private Lessons' },
           { href: '/dancer/payments', label: 'Payments' },
         ]
-      case 'studio_admin':
-        return [
-          { href: '/studio', label: 'Dashboard' },
-          { href: '/studio/schedule', label: 'Schedule' },
-          { href: '/studio/classes', label: 'Classes' },
-          { href: '/studio/students', label: 'Students' },
-          { href: '/studio/payments', label: 'Payments' },
-        ]
       default:
         return []
     }
@@ -97,7 +89,6 @@ export function Navigation({ profile }: NavigationProps) {
   const portalOptions = [
     { value: 'instructor', label: 'Instructor Portal', href: '/instructor' },
     { value: 'dancer', label: 'Dancer Portal', href: '/dancer' },
-    { value: 'studio', label: 'Studio Portal', href: '/studio' },
   ]
 
   const getProfileUrl = () => {
@@ -116,8 +107,6 @@ export function Navigation({ profile }: NavigationProps) {
         return '/dancer/profile'
       case 'instructor':
         return '/instructor/profile'
-      case 'studio':
-        return '/studio/profile'
       default:
         return '#'
     }

@@ -24,6 +24,19 @@ export async function GET(request: NextRequest) {
       .gte('start_time', now)
       .eq('is_cancelled', false)
 
+    const { data: nextClass } = await supabase
+      .from('classes')
+      .select(`
+        id,
+        title,
+        start_time,
+        studio:studios(name)
+      `)
+      .gte('start_time', now)
+      .eq('is_cancelled', false)
+      .order('start_time', { ascending: true })
+      .limit(1)
+
     const { count: pendingRequests } = await supabase
       .from('private_lesson_requests')
       .select('*', { count: 'exact', head: true })
@@ -108,7 +121,14 @@ export async function GET(request: NextRequest) {
       unpaid_invoices: unpaidInvoices || 0
     }
 
-    return NextResponse.json({ stats, recent_activity: recentActivity })
+    const nextClassData = nextClass && nextClass.length > 0 ? {
+      id: nextClass[0].id,
+      title: nextClass[0].title,
+      start_time: nextClass[0].start_time,
+      studio_name: (nextClass[0].studio as any)?.[0]?.name || 'Studio TBA'
+    } : null
+
+    return NextResponse.json({ stats, recent_activity: recentActivity, next_class: nextClassData })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

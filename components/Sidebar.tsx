@@ -22,7 +22,7 @@ import {
   ClipboardDocumentListIcon,
   MusicalNoteIcon,
   DocumentIcon,
-  BanknotesIcon
+  PhotoIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -34,7 +34,7 @@ export interface SidebarProps {
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Students']))
   const pathname = usePathname()
   const router = useRouter()
   
@@ -69,7 +69,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     if (!pathname) return 'instructor'
     if (pathname.startsWith('/instructor')) return 'instructor'
     if (pathname.startsWith('/dancer')) return 'dancer'
-    if (pathname.startsWith('/studio')) return 'studio'
     return 'instructor'
   }
 
@@ -85,16 +84,15 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           label: 'Teaching & Schedule',
           links: [
             { href: '/instructor/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
+            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
             {
-              label: 'Classes',
-              icon: <AcademicCapIcon className="w-5 h-5" />,
+              label: 'Students',
+              icon: <UserGroupIcon className="w-5 h-5" />,
               children: [
-                { href: '/instructor/classes', label: 'Overview', icon: <AcademicCapIcon className="w-5 h-5" /> },
-                { href: '/instructor/classes/attendance', label: 'Attendance', icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
-                { href: '/instructor/classes/choreography', label: 'Choreography', icon: <MusicalNoteIcon className="w-5 h-5" /> }
+                { href: '/instructor/students', label: 'Overview', icon: <UserGroupIcon className="w-5 h-5" /> },
+                { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
               ]
-            },
-            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+            }
           ]
         },
         {
@@ -105,12 +103,12 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               icon: <CreditCardIcon className="w-5 h-5" />,
               children: [
                 { href: '/instructor/payments', label: 'Overview', icon: <CreditCardIcon className="w-5 h-5" /> },
-                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> },
-                { href: '/instructor/payments/payroll', label: 'Payroll', icon: <BanknotesIcon className="w-5 h-5" /> }
+                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> }
               ]
             },
             { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> }
+            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
           ]
         }
       ]
@@ -140,29 +138,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ]
     }
 
-    const studioNav = {
-      ungrouped: [
-        { href: '/studio', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
-      ],
-      groups: [
-        {
-          label: 'Studio Management',
-          links: [
-            { href: '/studio/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/studio/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
-            { href: '/studio/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
-          ]
-        },
-        {
-          label: 'Admin',
-          links: [
-            { href: '/studio/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/studio/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
-          ]
-        }
-      ]
-    }
-
     if (profile.role === 'admin') {
       const portal = getCurrentPortal()
       switch (portal) {
@@ -170,8 +145,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           return instructorNav
         case 'dancer':
           return dancerNav
-        case 'studio':
-          return studioNav
       }
     }
 
@@ -181,8 +154,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       case 'dancer':
       case 'guardian':
         return dancerNav
-      case 'studio_admin':
-        return studioNav
       default:
         return { ungrouped: [], groups: [] }
     }
@@ -192,7 +163,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
   const portalOptions = [
     { value: 'instructor', label: 'Instructor', href: '/instructor' },
     { value: 'dancer', label: 'Dancer', href: '/dancer' },
-    { value: 'studio', label: 'Studio', href: '/studio' },
   ]
 
   const getProfileUrl = () => {
@@ -207,8 +177,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         return '/dancer/profile'
       case 'instructor':
         return '/instructor/profile'
-      case 'studio':
-        return '/studio/profile'
       default:
         return '#'
     }
@@ -248,7 +216,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           <div className="px-6 py-4 md:p-6 border-b border-rose-500 h-16 md:h-auto flex items-center md:block">
             <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
-                Dance Studio
+                CPF Dance
               </span>
               <button
                 onClick={() => setIsOpen(false)}

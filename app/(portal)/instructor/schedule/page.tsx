@@ -10,7 +10,11 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { useToast } from '@/components/ui/Toast'
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
+import { AddNoteModal } from '@/components/AddNoteModal'
+import type { CreateNoteData } from '@/lib/types'
 
 interface ClassEvent {
   id: string
@@ -30,19 +34,35 @@ interface ClassEvent {
   }
 }
 
+interface EnrolledStudent {
+  id: string
+  full_name: string
+  email?: string
+}
+
+interface StudentForNotes {
+  id: string
+  full_name: string
+}
+
 export default function InstructorSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
+  const { addToast } = useToast()
   const [classes, setClasses] = useState<ClassEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
+  const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
+  const [showNoteModal, setShowNoteModal] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [authLoading, profile, router])
 
@@ -91,9 +111,68 @@ export default function InstructorSchedulePage() {
     fetchSchedule(startOfMonth, endOfMonth)
   }
 
-  const handleEventClick = (event: ClassEvent) => {
+  const handleEventClick = async (event: ClassEvent) => {
     setSelectedEvent(event)
     setShowEventModal(true)
+
+    // For private lessons, fetch enrolled students
+    if (event.class_type === 'private') {
+      await fetchEnrolledStudents(event.id)
+    }
+  }
+
+  const fetchEnrolledStudents = async (classId: string) => {
+    try {
+      const response = await fetch(`/api/classes/${classId}/enrollments`)
+      if (!response.ok) throw new Error('Failed to fetch enrollments')
+
+      const result = await response.json()
+      setEnrolledStudents(result.enrollments || [])
+    } catch (err: any) {
+      console.error('Error fetching enrollments:', err)
+      setEnrolledStudents([])
+    }
+  }
+
+  const handleCreateNote = () => {
+    // Convert enrolled students to the format needed for AddNoteModal
+    const studentsForModal: StudentForNotes[] = enrolledStudents.map(s => ({
+      id: s.id,
+      full_name: s.full_name
+    }))
+    setStudentsForNotes(studentsForModal)
+    setShowNoteModal(true)
+    setShowEventModal(false)
+  }
+
+  const handleSubmitNote = async (data: CreateNoteData) => {
+    if (!selectedEvent) {
+      addToast('No class selected', 'error')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          class_id: selectedEvent.id
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create note')
+      }
+
+      addToast('Note created successfully', 'success')
+      setShowNoteModal(false)
+      setShowEventModal(true)
+    } catch (err: any) {
+      addToast(err.message, 'error')
+      setShowNoteModal(false)
+    }
   }
 
   const formatDateTime = (dateString: string) => {
@@ -138,6 +217,46 @@ export default function InstructorSchedulePage() {
     }
   }
 
+  const getClassesByDay = () => {
+    const grouped: { [key: string]: ClassEvent[] } = {}
+    classes.forEach(cls => {
+      const date = new Date(cls.start_time)
+      const dayKey = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      if (!grouped[dayKey]) grouped[dayKey] = []
+      grouped[dayKey].push(cls)
+    })
+    return Object.entries(grouped)
+      .sort(([keyA], [keyB]) => new Date(keyA).getTime() - new Date(keyB).getTime())
+      .map(([key, events]) => ({
+        date: new Date(key),
+        events: events.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+      }))
+  }
+
+  const formatDateHeader = (date: Date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  }
+
+  const navigatePrevious = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(newDate.getMonth() - 1)
+    handleDateChange(newDate)
+    setCurrentDate(newDate)
+  }
+
+  const navigateNext = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(newDate.getMonth() + 1)
+    handleDateChange(newDate)
+    setCurrentDate(newDate)
+  }
+
+  const navigateToday = () => {
+    const today = new Date()
+    handleDateChange(today)
+    setCurrentDate(today)
+  }
+
   const handleAddToAppleCalendar = () => {
     if (selectedEvent) {
       downloadICS(selectedEvent)
@@ -176,13 +295,15 @@ export default function InstructorSchedulePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="flex flex-col h-[calc(100vh-280px)]">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4 flex-shrink-0">
+      <div className="flex flex-col min-h-[calc(100vh-180px)] md:min-h-[calc(100vh-160px)]">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 flex-shrink-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Schedule</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
             <p className="text-sm sm:text-base text-gray-600 mt-1">View and manage your upcoming classes</p>
           </div>
-          <Button onClick={() => router.push('/instructor/classes')} className="self-start sm:self-auto">
+          {/* Desktop button - visible on sm and up */}
+          <Button onClick={() => router.push('/instructor/classes')} className="hidden sm:inline-block">
             Manage Classes
           </Button>
         </div>
@@ -198,13 +319,109 @@ export default function InstructorSchedulePage() {
             <Spinner size="lg" />
           </div>
         ) : (
-          <div className="flex-1 min-h-0">
-            <Calendar
-              events={classes}
-              onEventClick={handleEventClick}
-              onDateChange={handleDateChange}
-            />
-          </div>
+          <>
+            {/* DESKTOP VIEW - Calendar Grid */}
+            <div className="hidden md:flex md:flex-col flex-1 min-h-[600px] overflow-hidden">
+              <Calendar
+                events={classes}
+                onEventClick={handleEventClick}
+                onDateChange={handleDateChange}
+              />
+            </div>
+
+            {/* MOBILE VIEW - Agenda List */}
+            <div className="flex md:hidden flex-col flex-1 min-h-0 overflow-y-auto">
+              {/* Mobile Navigation */}
+              <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                <button
+                  onClick={navigatePrevious}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h2>
+                <button
+                  onClick={navigateNext}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <ChevronRightIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <button
+                onClick={navigateToday}
+                className="mb-4 text-sm text-rose-600 hover:text-rose-700 font-medium"
+              >
+                Today
+              </button>
+
+              {/* Agenda List */}
+              {getClassesByDay().length === 0 ? (
+                <p className="text-center text-gray-600 py-8">No classes scheduled</p>
+              ) : (
+                <div className="space-y-4">
+                  {getClassesByDay().map(dayGroup => (
+                    <div key={dayGroup.date.toISOString()}>
+                      {/* Day Header */}
+                      <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                        {formatDateHeader(dayGroup.date)}
+                      </h3>
+
+                      {/* Classes for this day */}
+                      <div className="space-y-2">
+                        {dayGroup.events.map(event => (
+                          <button
+                            key={event.id}
+                            onClick={() => handleEventClick(event)}
+                            className="w-full text-left px-0 py-3 border-b border-gray-200 hover:bg-gray-50/50 transition-colors -mx-0"
+                          >
+                            <div className="flex gap-4">
+                              {/* Time on left */}
+                              <div className="flex-shrink-0 w-16">
+                                <div className="text-sm font-semibold text-charcoal-700">
+                                  {new Date(event.start_time).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Details on right */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-gray-900 truncate" style={{ fontFamily: 'var(--font-family-display)' }}>
+                                  {event.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 truncate">
+                                  {event.studios?.name || 'Studio TBA'}
+                                </p>
+                                <Badge className={`${getClassTypeClassName(event.class_type)} mt-1 text-xs`}>
+                                  {getClassTypeLabel(event.class_type)}
+                                </Badge>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Floating Action Button */}
+            <button
+              onClick={() => router.push('/instructor/classes')}
+              className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
+              title="Manage Classes"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </>
         )}
       </div>
 
@@ -303,7 +520,29 @@ export default function InstructorSchedulePage() {
               </div>
             )}
 
+            {/* Show enrolled students for private lessons */}
+            {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-1">Enrolled Student{enrolledStudents.length > 1 ? 's' : ''}</p>
+                {enrolledStudents.map(student => (
+                  <p key={student.id} className="text-sm text-gray-900">
+                    {student.full_name} {student.email && `(${student.email})`}
+                  </p>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-3">
+              {/* Create Note button for private lessons with enrolled students */}
+              {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
+                <Button
+                  onClick={handleCreateNote}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  ✏️ Create Note for Student
+                </Button>
+              )}
+
               <div className="relative">
                 <Button
                   onClick={() => setShowCalendarMenu(!showCalendarMenu)}
@@ -358,6 +597,20 @@ export default function InstructorSchedulePage() {
           </div>
         )}
       </Modal>
+
+      {/* Note Creation Modal */}
+      {showNoteModal && (
+        <AddNoteModal
+          students={studentsForNotes}
+          onClose={() => {
+            setShowNoteModal(false)
+            setShowEventModal(true)
+          }}
+          onSubmit={handleSubmitNote}
+          initialStudentId={enrolledStudents.length === 1 ? enrolledStudents[0].id : undefined}
+          initialClassId={selectedEvent?.id}
+        />
+      )}
     </PortalLayout>
   )
 }

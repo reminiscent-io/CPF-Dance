@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Input, Modal, ModalFooter, Textarea, Table, useToast, Spinner } from '@/components/ui'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import type { Student, CreateStudentData } from '@/lib/types'
 
 export default function StudentsPage() {
@@ -24,7 +25,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [authLoading, profile, router])
 
@@ -36,7 +37,7 @@ export default function StudentsPage() {
         fetchRelationships()
       }
     }
-  }, [user, filterActive, profile])
+  }, [user?.id, filterActive, profile?.role])
 
   const fetchStudents = async () => {
     try {
@@ -254,8 +255,8 @@ export default function StudentsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Students</h1>
             <p className="text-gray-600 mt-1">Manage your student roster</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)}>
-            Add New Student
+          <Button onClick={() => setShowAddModal(true)} aria-label="Add New Student">
+            <PlusIcon className="w-5 h-5" />
           </Button>
         </div>
 

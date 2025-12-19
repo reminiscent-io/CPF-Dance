@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { CommunicationsSection } from '@/components/CommunicationsSection'
 import type { Studio, CreateStudioData } from '@/lib/types'
 
@@ -22,7 +23,7 @@ export default function StudiosPage() {
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [authLoading, profile, router])
 
@@ -30,7 +31,7 @@ export default function StudiosPage() {
     if (user) {
       fetchStudios()
     }
-  }, [user, filterActive])
+  }, [user?.id, filterActive])
 
   const fetchStudios = async () => {
     try {
@@ -118,8 +119,8 @@ export default function StudiosPage() {
             <h1 className="text-3xl font-bold text-gray-900">Studios</h1>
             <p className="text-gray-600 mt-1">Manage studio locations and contacts</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)}>
-            Add Studio
+          <Button onClick={() => setShowAddModal(true)} aria-label="Add Studio">
+            <PlusIcon className="w-5 h-5" />
           </Button>
         </div>
 

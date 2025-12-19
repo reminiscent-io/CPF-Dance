@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a dance teaching schedule management platform for professional dance instruction. Built for dance instructors (like former Rockettes) to manage students, track progress, schedule classes, and handle payments. The application supports five user roles: Instructor, Dancer, Guardian, Studio Admin, and Admin, each with their own portal and capabilities.
+This is a dance teaching schedule management platform for professional dance instruction. Built for dance instructors (like former Rockettes) to manage students, track progress, schedule classes, and handle payments. The application supports four user roles: Instructor, Dancer, Guardian, and Admin, each with their own portal and capabilities.
 
 **Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, Supabase (PostgreSQL + Auth), Tailwind CSS v4
 
@@ -34,7 +34,7 @@ npm lint
 4. This creates tables, RLS policies, and triggers - essential for security
 
 The schema defines:
-- User roles: `instructor`, `dancer`, `guardian`, `studio_admin`, `admin`
+- User roles: `instructor`, `dancer`, `guardian`, `admin`
 - Core tables: profiles, students, classes, enrollments, notes, payments, studios, waivers, waiver_templates
 - Row-level security (RLS) policies for data isolation
 - Automatic `updated_at` triggers
@@ -55,7 +55,6 @@ The schema defines:
 2. **API Route Guards** (`lib/auth/server-auth.ts`):
    - `requireInstructor()` - Ensures instructor role
    - `requireDancer()` - Ensures dancer role
-   - `requireStudio()` - Ensures studio role (alias: `requireStudioAdmin()`)
    - `requireRole(role)` - Generic role checker with **admin override**
    - `getCurrentDancerStudent()` - Gets authenticated dancer's student record
    - `getCurrentUserWithRole()` - Gets current user with profile
@@ -115,13 +114,6 @@ app/
 │   │   ├── payments/      # Payment history
 │   │   ├── profile/       # Profile management
 │   │   └── waivers/       # View & sign waivers
-│   ├── studio/            # Studio admin portal (6 pages)
-│   │   ├── page.tsx       # Dashboard
-│   │   ├── classes/       # Studio classes
-│   │   ├── students/      # Enrolled students
-│   │   ├── schedule/      # Class calendar
-│   │   ├── payments/      # Cash/check submission
-│   │   └── profile/       # Studio profile
 │   ├── login/             # Login page
 │   └── signup/            # Signup with role selection
 ├── api/                   # API routes (45+ endpoints)
@@ -149,14 +141,6 @@ app/
 │   │   ├── payments/      # Payment history
 │   │   ├── profile/       # Profile management
 │   │   └── stats/         # Dashboard statistics
-│   ├── studio/            # Studio-specific routes
-│   │   ├── stats/         # Studio dashboard
-│   │   ├── classes/       # Studio class management
-│   │   ├── students/      # Studio students
-│   │   ├── payments/      # Payment submission
-│   │   ├── profile/       # Studio profile
-│   │   ├── schedule/      # Studio schedule
-│   │   └── notes/         # Studio notes
 │   ├── waivers/           # Waiver management
 │   │   └── [id]/          # Individual waiver operations & signing
 │   ├── waiver-templates/  # Waiver template CRUD
@@ -265,16 +249,6 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Studio routes** (prefix: `/api/studio/`):
-```typescript
-// Require studio role first
-export async function GET(request: NextRequest) {
-  await requireStudio() // or requireStudioAdmin()
-  const supabase = await createClient()
-  // ... studio can access their classes, students, etc.
-}
-```
-
 ### Note Visibility System
 
 Notes have a `visibility` field with these options:
@@ -350,9 +324,9 @@ Complete digital waiver management with templates and signatures.
 
 **Admin role** (`admin`) has special privileges:
 
-- Access to all three portals via sidebar switcher dropdown
+- Access to both portals (Instructor and Dancer) via sidebar switcher dropdown
 - Bypass most RLS restrictions (respects private notes)
-- Can view all data across instructors, dancers, and studios
+- Can view all data across instructors and dancers
 - No separate admin portal route - uses existing portals
 
 **Implementation:**
@@ -411,7 +385,7 @@ Manual override for class attendance when using external booking systems.
 
 When adding new features:
 
-1. ✅ Add API route guard (`requireInstructor()`, `requireDancer()`, `requireStudio()`, etc.)
+1. ✅ Add API route guard (`requireInstructor()`, `requireDancer()`, etc.)
 2. ✅ Filter queries by appropriate scope (student_id for dancers, instructor_id for instructors)
 3. ✅ Add RLS policy in `supabase-schema.sql` or create migration if adding new tables
 4. ✅ Update proxy.ts if adding new portal routes
@@ -589,7 +563,7 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 ## Testing Approach
 
 **Manual testing checklist:**
-1. Create test accounts for each role (instructor, dancer, guardian, studio_admin, admin)
+1. Create test accounts for each role (instructor, dancer, guardian, admin)
 2. Verify portal access redirects correctly
 3. Test admin portal switcher functionality
 4. Test cross-role API access (should be denied except for admin)

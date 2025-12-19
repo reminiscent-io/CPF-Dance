@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
       tiered_base_students,
       tiered_additional_cost,
       external_signup_url,
-      is_public
+      is_public,
+      student_id // For automatically enrolling a student (private lessons)
     } = body
 
     // Determine instructor_id based on role
@@ -181,6 +182,27 @@ export async function POST(request: NextRequest) {
         details: error.details,
         hint: error.hint
       }, { status: 500 })
+    }
+
+    // If a student_id was provided (for private lessons), automatically enroll them
+    if (student_id && classData) {
+      try {
+        const { error: enrollError } = await supabase
+          .from('enrollments')
+          .insert({
+            student_id,
+            class_id: classData.id,
+            enrolled_at: new Date().toISOString()
+          })
+
+        if (enrollError) {
+          console.error('Error auto-enrolling student:', enrollError)
+          // Don't fail the entire request - class was created successfully
+          // Just log the error
+        }
+      } catch (enrollError) {
+        console.error('Unexpected error during enrollment:', enrollError)
+      }
     }
 
     return NextResponse.json({ class: classData }, { status: 201 })

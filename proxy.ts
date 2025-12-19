@@ -8,8 +8,7 @@ export async function proxy(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/signup')
   const isInstructorPage = request.nextUrl.pathname.startsWith('/instructor')
   const isDancerPage = request.nextUrl.pathname.startsWith('/dancer')
-  const isStudioPage = request.nextUrl.pathname.startsWith('/studio')
-  const isPortalPage = isInstructorPage || isDancerPage || isStudioPage
+  const isPortalPage = isInstructorPage || isDancerPage
 
   if (isPortalPage) {
     const cookies = request.cookies.getAll()
@@ -39,31 +38,21 @@ export async function proxy(request: NextRequest) {
 
     if (isInstructorPage && profile.role !== 'instructor') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'dancer' ? '/dancer' : '/studio'
+      url.pathname = '/dancer'
       return NextResponse.redirect(url)
     }
 
     if (isDancerPage && profile.role !== 'dancer') {
       const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/instructor' : '/studio'
-      return NextResponse.redirect(url)
-    }
-
-    if (isStudioPage && profile.role !== 'studio' && profile.role !== 'studio_admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
+      url.pathname = '/instructor'
       return NextResponse.redirect(url)
     }
   }
 
   if (user && isAuthPage && profile) {
     const url = request.nextUrl.clone()
-    if (profile.role === 'instructor') {
+    if (profile.role === 'instructor' || profile.role === 'admin') {
       url.pathname = '/instructor'
-    } else if (profile.role === 'studio' || profile.role === 'studio_admin') {
-      url.pathname = '/studio'
-    } else if (profile.role === 'admin') {
-      url.pathname = '/instructor' // Default admin landing page
     } else {
       url.pathname = '/dancer'
     }

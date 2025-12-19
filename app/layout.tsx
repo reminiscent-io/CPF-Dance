@@ -1,23 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
-import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui'
 import { RegisterServiceWorker } from './register-sw'
-
-const cormorant = Cormorant_Garamond({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-cormorant',
-  display: 'swap',
-})
-
-const manrope = Manrope({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'Dance Teaching Schedule',
@@ -32,7 +17,6 @@ export const metadata: Metadata = {
     { rel: 'icon', url: '/favicon.ico' },
     { rel: 'apple-touch-icon', url: '/icon-192.png' },
   ],
-  themeColor: '#c75a6d',
 }
 
 export const viewport: Viewport = {
@@ -48,8 +32,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${manrope.variable}`}>
+    <html lang="en">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#c75a6d" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

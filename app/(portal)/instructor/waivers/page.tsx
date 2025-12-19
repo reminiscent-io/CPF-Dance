@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { CreateWaiverTemplateDialog } from '@/components/CreateWaiverTemplateDialog'
 import { IssueWaiverDialog } from '@/components/IssueWaiverDialog'
 
@@ -42,7 +43,7 @@ export default function InstructorWaiversPage() {
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
-      router.push(`/${profile.role === 'studio' ? 'studio' : 'dancer'}`)
+      router.push('/dancer')
     }
   }, [loading, profile, router])
 
@@ -51,7 +52,7 @@ export default function InstructorWaiversPage() {
       fetchTemplates()
       fetchIssuedWaivers()
     }
-  }, [loading, user])
+  }, [loading, user?.id])
 
   const fetchTemplates = async () => {
     try {
@@ -124,8 +125,8 @@ export default function InstructorWaiversPage() {
           <CardTitle>Waiver Templates ({templates.length})</CardTitle>
           <CardContent className="mt-4">
             <div className="mb-4 flex gap-3">
-              <Button onClick={() => setShowCreateDialog(true)}>
-                + Create Template
+              <Button onClick={() => setShowCreateDialog(true)} aria-label="Create Template">
+                <PlusIcon className="w-5 h-5" />
               </Button>
               <Button variant="outline">
                 📄 Upload PDF Template

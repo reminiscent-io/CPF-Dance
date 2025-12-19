@@ -1,7 +1,7 @@
 run = "npm run dev"
 entrypoint = "index.js"
 hidden = [".config", "package-lock.json", ".next", ".swc"]
-modules = ["nodejs-22", "python-3.11", "postgresql-16"]
+modules = ["nodejs-22", "python-3.11"]
 
 [nix]
 channel = "stable-24_11"
@@ -18,14 +18,6 @@ deploymentTarget = "autoscale"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 34113
-externalPort = 3000
-
-[[ports]]
-localPort = 39011
-externalPort = 3001
 
 [agent]
 expertMode = true

@@ -1,0 +1,30 @@
+Here is a structured, technical prompt you can copy and paste directly to your AI coder (like Cursor, Replit, or ChatGPT).
+It focuses on switching the layout logic based on screen size, which is the standard way to fix "funky" mobile calendars.
+Copy and Paste this Prompt:
+Context:
+I am updating the Instructor Schedule page in my React application. Currently, the calendar component attempts to render a full 7-day horizontal grid on mobile, which results in squished columns and unreadable text.
+The Goal:
+I need to refactor this page to be responsive. It should keep the grid view on Desktop but switch to a "Vertical Agenda/List View" on Mobile.
+Please implement the following changes:
+1. Layout Logic (Responsive Breakpoint):
+ * Desktop: Keep the current weekly grid view (7 columns).
+ * Mobile: Switch to a vertical list view.
+   * Group the data by Day (e.g., "Monday, Dec 8").
+   * Under each Day header, list the classes chronologically as individual cards/rows.
+   * If a day has no classes, you can either hide the day or show "No classes scheduled."
+2. Visual Styling (Mobile Only):
+ * Remove the Container: On mobile, remove the white card container (box-shadow and padding) that wraps the calendar. The list should span the full width of the screen (edge-to-edge) for a cleaner, native app feel.
+ * Class Cards: Design the individual class items in the list to show:
+   * Time: (e.g., 4:00 PM) on the left.
+   * Details: (Class Name, Studio) on the right.
+   * Ensure the typography matches the current serif font used for headers.
+3. "Manage Classes" Button:
+ * The current "Manage Classes" button takes up too much vertical space at the top.
+ * Please move this button to be a sticky Floating Action Button (FAB) in the bottom-right corner, OR make it a smaller secondary outline button next to the "My Schedule" header.
+Tech Stack Note:
+ * Use the existing theme colors (Mauve/Dusty Rose) for the headers and accents.
+ * Ensure the date navigation (Next/Prev/Today) remains accessible at the top.
+Why this prompt works:
+ * It defines the "Responsive Breakpoint": It tells the AI that you don't want to destroy the desktop view (which probably looks fine), you only want to change the Mobile view.
+ * It specifies the "Agenda" pattern: "Vertical Agenda View" is a specific UI term that AI coding tools understand well. It knows this means "Stack days on top of each other."
+ * It addresses the "Edge-to-Edge" look: By asking to remove the container on mobile, you get that sleek, modern look where the content touches the sides of the phone, maximizing space.
