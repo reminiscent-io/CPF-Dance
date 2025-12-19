@@ -93,8 +93,8 @@
   --color-cream-950: var(--color-champagne-950);
 
   /* Typography */
-  --font-family-display: var(--font-cormorant), 'Georgia', 'Garamond', serif;
-  --font-family-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
+  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 * {
