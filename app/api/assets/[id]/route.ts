@@ -8,8 +8,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, profile } = await getCurrentUserWithRole()
-    if (!user || !profile) {
+    const profile = await getCurrentUserWithRole()
+    if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -28,7 +28,7 @@ export async function DELETE(
     }
 
     // Check if user can delete (must be owner or admin)
-    if (asset.instructor_id !== user.id && profile.role !== 'admin') {
+    if (asset.instructor_id !== profile.id && profile.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

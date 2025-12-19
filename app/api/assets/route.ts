@@ -6,8 +6,8 @@ import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 export async function GET(request: NextRequest) {
   try {
     // Require authentication (any authenticated user can view assets)
-    const { user } = await getCurrentUserWithRole()
-    if (!user) {
+    const profile = await getCurrentUserWithRole()
+    if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Require instructor or admin role
-    const { user, profile } = await getCurrentUserWithRole()
-    if (!user || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
+    const profile = await getCurrentUserWithRole()
+    if (!profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `${user.id}/${fileName}`
+    const filePath = `${profile.id}/${fileName}`
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         file_url: publicUrl,
         file_type: file.type,
         file_size: file.size,
-        instructor_id: user.id
+        instructor_id: profile.id
       })
       .select(`
         *,
