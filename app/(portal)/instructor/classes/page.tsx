@@ -420,6 +420,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const { profile } = useUser()
   const { addToast } = useToast()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
+  const [students, setStudents] = useState<{ id: string; full_name: string; email: string }[]>([])
+  const [enrolledStudents, setEnrolledStudents] = useState<{ id: string; full_name: string }[]>([])
 
   // Recurring copy state
   const [showRecurringSection, setShowRecurringSection] = useState(false)
@@ -453,12 +455,16 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
 
-  // Fetch instructors for admin users
+  // Fetch instructors for admin users, students for all, and enrolled students
   useEffect(() => {
     if (profile?.role === 'admin') {
       fetchInstructors()
     }
-  }, [profile])
+    fetchStudents()
+    if (classData.class_type === 'private') {
+      fetchEnrolledStudents()
+    }
+  }, [profile, classData.id])
 
   const fetchInstructors = async () => {
     try {
@@ -468,6 +474,28 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
       setInstructors(data.profiles || [])
     } catch (error) {
       console.error('Error fetching instructors:', error)
+    }
+  }
+
+  const fetchStudents = async () => {
+    try {
+      const response = await fetch('/api/students')
+      if (!response.ok) throw new Error('Failed to fetch students')
+      const data = await response.json()
+      setStudents(data.students || [])
+    } catch (error) {
+      console.error('Error fetching students:', error)
+    }
+  }
+
+  const fetchEnrolledStudents = async () => {
+    try {
+      const response = await fetch(`/api/classes/${classData.id}/enrollments`)
+      if (!response.ok) throw new Error('Failed to fetch enrollments')
+      const result = await response.json()
+      setEnrolledStudents(result.enrollments || [])
+    } catch (error) {
+      console.error('Error fetching enrollments:', error)
     }
   }
 
@@ -698,7 +726,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
           <Textarea
             label="Description"
-            rows={3}
+            rows={2}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
@@ -788,6 +816,89 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               <option value="master_class">Master Class</option>
             </select>
           </div>
+
+          {/* Student enrollment management for private lessons */}
+          {formData.class_type === 'private' && (
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Enrolled Students
+              </label>
+
+              {enrolledStudents.length > 0 ? (
+                <div className="space-y-2">
+                  {enrolledStudents.map(student => (
+                    <div key={student.id} className="flex items-center justify-between p-2 bg-white rounded border border-purple-200">
+                      <span className="text-sm font-medium text-gray-900">{student.full_name}</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm(`Remove ${student.full_name} from this lesson?`)) {
+                            try {
+                              const response = await fetch(`/api/classes/${classData.id}/enrollments/${student.id}`, {
+                                method: 'DELETE'
+                              })
+                              if (response.ok) {
+                                setEnrolledStudents(enrolledStudents.filter(s => s.id !== student.id))
+                                addToast('Student removed from lesson', 'success')
+                              } else {
+                                throw new Error('Failed to remove student')
+                              }
+                            } catch (error) {
+                              addToast('Failed to remove student', 'error')
+                            }
+                          }
+                        }}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">No students enrolled yet</p>
+              )}
+
+              <div className="pt-2 border-t border-purple-200">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Add Student
+                </label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  onChange={async (e) => {
+                    const studentId = e.target.value
+                    if (studentId) {
+                      try {
+                        const response = await fetch(`/api/classes/${classData.id}/enrollments`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ student_id: studentId })
+                        })
+                        if (response.ok) {
+                          await fetchEnrolledStudents()
+                          addToast('Student enrolled successfully', 'success')
+                          e.target.value = ''
+                        } else {
+                          throw new Error('Failed to enroll student')
+                        }
+                      } catch (error) {
+                        addToast('Failed to enroll student', 'error')
+                      }
+                    }
+                  }}
+                >
+                  <option value="">Select a student to add...</option>
+                  {students
+                    .filter(s => !enrolledStudents.find(es => es.id === s.id))
+                    .map(student => (
+                      <option key={student.id} value={student.id}>
+                        {student.full_name} {student.email && `(${student.email})`}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           <GooglePlacesInput
             label="Location"
@@ -1344,7 +1455,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
           <Textarea
             label="Description"
-            rows={3}
+            rows={2}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />

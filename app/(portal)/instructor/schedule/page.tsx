@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
-import { Textarea } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
+import { AddNoteModal } from '@/components/AddNoteModal'
+import type { CreateNoteData } from '@/lib/types'
 
 interface ClassEvent {
   id: string
@@ -39,6 +40,11 @@ interface EnrolledStudent {
   email?: string
 }
 
+interface StudentForNotes {
+  id: string
+  full_name: string
+}
+
 export default function InstructorSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -51,10 +57,8 @@ export default function InstructorSchedulePage() {
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
+  const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
-  const [noteContent, setNoteContent] = useState('')
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
-  const [creatingNote, setCreatingNote] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -131,32 +135,29 @@ export default function InstructorSchedulePage() {
   }
 
   const handleCreateNote = () => {
-    if (enrolledStudents.length === 1) {
-      // If only one student, pre-select them
-      setSelectedStudentId(enrolledStudents[0].id)
-    }
-    setNoteContent('')
+    // Convert enrolled students to the format needed for AddNoteModal
+    const studentsForModal: StudentForNotes[] = enrolledStudents.map(s => ({
+      id: s.id,
+      full_name: s.full_name
+    }))
+    setStudentsForNotes(studentsForModal)
     setShowNoteModal(true)
     setShowEventModal(false)
   }
 
-  const handleSubmitNote = async () => {
-    if (!selectedStudentId || !noteContent.trim() || !selectedEvent) {
-      addToast('Please select a student and enter note content', 'error')
+  const handleSubmitNote = async (data: CreateNoteData) => {
+    if (!selectedEvent) {
+      addToast('No class selected', 'error')
       return
     }
 
-    setCreatingNote(true)
     try {
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student_id: selectedStudentId,
-          class_id: selectedEvent.id,
-          content: noteContent,
-          visibility: 'private', // Default to private, can be changed later
-          tags: []
+          ...data,
+          class_id: selectedEvent.id
         })
       })
 
@@ -167,12 +168,10 @@ export default function InstructorSchedulePage() {
 
       addToast('Note created successfully', 'success')
       setShowNoteModal(false)
-      setNoteContent('')
-      setSelectedStudentId(null)
+      setShowEventModal(true)
     } catch (err: any) {
       addToast(err.message, 'error')
-    } finally {
-      setCreatingNote(false)
+      setShowNoteModal(false)
     }
   }
 
@@ -600,80 +599,18 @@ export default function InstructorSchedulePage() {
       </Modal>
 
       {/* Note Creation Modal */}
-      <Modal
-        isOpen={showNoteModal}
-        onClose={() => {
-          setShowNoteModal(false)
-          setNoteContent('')
-          setSelectedStudentId(null)
-        }}
-        title="Create Note"
-      >
-        <div className="space-y-4">
-          {enrolledStudents.length > 1 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Student *
-              </label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                value={selectedStudentId || ''}
-                onChange={(e) => setSelectedStudentId(e.target.value)}
-              >
-                <option value="">Select a student</option>
-                {enrolledStudents.map(student => (
-                  <option key={student.id} value={student.id}>
-                    {student.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {enrolledStudents.length === 1 && (
-            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm text-gray-700">
-                Creating note for: <strong>{enrolledStudents[0].full_name}</strong>
-              </p>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note Content *
-            </label>
-            <Textarea
-              rows={6}
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Enter your note about this private lesson..."
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button
-              onClick={handleSubmitNote}
-              disabled={creatingNote || !selectedStudentId || !noteContent.trim()}
-              className="flex-1"
-            >
-              {creatingNote ? 'Creating...' : 'Create Note'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowNoteModal(false)
-                setNoteContent('')
-                setSelectedStudentId(null)
-                setShowEventModal(true)
-              }}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {showNoteModal && (
+        <AddNoteModal
+          students={studentsForNotes}
+          onClose={() => {
+            setShowNoteModal(false)
+            setShowEventModal(true)
+          }}
+          onSubmit={handleSubmitNote}
+          initialStudentId={enrolledStudents.length === 1 ? enrolledStudents[0].id : undefined}
+          initialClassId={selectedEvent?.id}
+        />
+      )}
     </PortalLayout>
   )
 }
