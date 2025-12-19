@@ -1058,8 +1058,9 @@ interface CreateClassModalProps {
 function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps) {
   const { profile } = useUser()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
+  const [students, setStudents] = useState<{ id: string; full_name: string; email: string }[]>([])
 
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string }>({
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string; student_id?: string }>({
     studio_id: '',
     class_type: 'group',
     title: '',
@@ -1078,7 +1079,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     external_signup_url: '',
     is_public: false,
     newStudioName: '',
-    instructor_id: undefined
+    instructor_id: undefined,
+    student_id: undefined
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
@@ -1170,11 +1172,12 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
   const recurringDates = isRecurring ? calculateRecurringDates() : []
 
-  // Fetch instructors for admin users
+  // Fetch instructors for admin users and students for all users
   useEffect(() => {
     if (profile?.role === 'admin') {
       fetchInstructors()
     }
+    fetchStudents()
   }, [profile])
 
   const fetchInstructors = async () => {
@@ -1185,6 +1188,17 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       setInstructors(data.profiles || [])
     } catch (error) {
       console.error('Error fetching instructors:', error)
+    }
+  }
+
+  const fetchStudents = async () => {
+    try {
+      const response = await fetch('/api/students')
+      if (!response.ok) throw new Error('Failed to fetch students')
+      const data = await response.json()
+      setStudents(data.students || [])
+    } catch (error) {
+      console.error('Error fetching students:', error)
     }
   }
 
@@ -1460,6 +1474,30 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           <p className="text-xs text-gray-600 -mt-2 mb-2">
             Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
           </p>
+
+          {/* Student selection for private lessons */}
+          {formData.class_type === 'private' && (
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Student (Optional)
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                value={formData.student_id || ''}
+                onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+              >
+                <option value="">Select a student</option>
+                {students.map(student => (
+                  <option key={student.id} value={student.id}>
+                    {student.full_name} {student.email && `(${student.email})`}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-purple-700 mt-2">
+                Select a student to automatically enroll them in this private lesson
+              </p>
+            </div>
+          )}
 
           {/* Recurring Class Options */}
           <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-4">

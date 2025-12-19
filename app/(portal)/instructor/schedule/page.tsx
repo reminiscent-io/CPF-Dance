@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { Textarea } from '@/components/ui/Input'
+import { useToast } from '@/components/ui/Toast'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 
@@ -31,9 +33,16 @@ interface ClassEvent {
   }
 }
 
+interface EnrolledStudent {
+  id: string
+  full_name: string
+  email?: string
+}
+
 export default function InstructorSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
+  const { addToast } = useToast()
   const [classes, setClasses] = useState<ClassEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,6 +50,11 @@ export default function InstructorSchedulePage() {
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
+  const [showNoteModal, setShowNoteModal] = useState(false)
+  const [noteContent, setNoteContent] = useState('')
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [creatingNote, setCreatingNote] = useState(false)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -93,9 +107,73 @@ export default function InstructorSchedulePage() {
     fetchSchedule(startOfMonth, endOfMonth)
   }
 
-  const handleEventClick = (event: ClassEvent) => {
+  const handleEventClick = async (event: ClassEvent) => {
     setSelectedEvent(event)
     setShowEventModal(true)
+
+    // For private lessons, fetch enrolled students
+    if (event.class_type === 'private') {
+      await fetchEnrolledStudents(event.id)
+    }
+  }
+
+  const fetchEnrolledStudents = async (classId: string) => {
+    try {
+      const response = await fetch(`/api/classes/${classId}/enrollments`)
+      if (!response.ok) throw new Error('Failed to fetch enrollments')
+
+      const result = await response.json()
+      setEnrolledStudents(result.enrollments || [])
+    } catch (err: any) {
+      console.error('Error fetching enrollments:', err)
+      setEnrolledStudents([])
+    }
+  }
+
+  const handleCreateNote = () => {
+    if (enrolledStudents.length === 1) {
+      // If only one student, pre-select them
+      setSelectedStudentId(enrolledStudents[0].id)
+    }
+    setNoteContent('')
+    setShowNoteModal(true)
+    setShowEventModal(false)
+  }
+
+  const handleSubmitNote = async () => {
+    if (!selectedStudentId || !noteContent.trim() || !selectedEvent) {
+      addToast('Please select a student and enter note content', 'error')
+      return
+    }
+
+    setCreatingNote(true)
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: selectedStudentId,
+          class_id: selectedEvent.id,
+          content: noteContent,
+          visibility: 'private', // Default to private, can be changed later
+          tags: []
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create note')
+      }
+
+      addToast('Note created successfully', 'success')
+      setShowNoteModal(false)
+      setNoteContent('')
+      setSelectedStudentId(null)
+    } catch (err: any) {
+      addToast(err.message, 'error')
+    } finally {
+      setCreatingNote(false)
+    }
   }
 
   const formatDateTime = (dateString: string) => {
@@ -218,7 +296,7 @@ export default function InstructorSchedulePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="flex flex-col h-[calc(100vh-280px)]">
+      <div className="flex flex-col min-h-[calc(100vh-180px)] md:min-h-[calc(100vh-160px)]">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 flex-shrink-0">
           <div>
@@ -244,7 +322,7 @@ export default function InstructorSchedulePage() {
         ) : (
           <>
             {/* DESKTOP VIEW - Calendar Grid */}
-            <div className="hidden md:flex md:flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="hidden md:flex md:flex-col flex-1 min-h-[600px] overflow-hidden">
               <Calendar
                 events={classes}
                 onEventClick={handleEventClick}
@@ -443,7 +521,29 @@ export default function InstructorSchedulePage() {
               </div>
             )}
 
+            {/* Show enrolled students for private lessons */}
+            {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-1">Enrolled Student{enrolledStudents.length > 1 ? 's' : ''}</p>
+                {enrolledStudents.map(student => (
+                  <p key={student.id} className="text-sm text-gray-900">
+                    {student.full_name} {student.email && `(${student.email})`}
+                  </p>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-3">
+              {/* Create Note button for private lessons with enrolled students */}
+              {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
+                <Button
+                  onClick={handleCreateNote}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  ✏️ Create Note for Student
+                </Button>
+              )}
+
               <div className="relative">
                 <Button
                   onClick={() => setShowCalendarMenu(!showCalendarMenu)}
@@ -497,6 +597,82 @@ export default function InstructorSchedulePage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Note Creation Modal */}
+      <Modal
+        isOpen={showNoteModal}
+        onClose={() => {
+          setShowNoteModal(false)
+          setNoteContent('')
+          setSelectedStudentId(null)
+        }}
+        title="Create Note"
+      >
+        <div className="space-y-4">
+          {enrolledStudents.length > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Student *
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                value={selectedStudentId || ''}
+                onChange={(e) => setSelectedStudentId(e.target.value)}
+              >
+                <option value="">Select a student</option>
+                {enrolledStudents.map(student => (
+                  <option key={student.id} value={student.id}>
+                    {student.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {enrolledStudents.length === 1 && (
+            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm text-gray-700">
+                Creating note for: <strong>{enrolledStudents[0].full_name}</strong>
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Note Content *
+            </label>
+            <Textarea
+              rows={6}
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Enter your note about this private lesson..."
+              className="w-full"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              onClick={handleSubmitNote}
+              disabled={creatingNote || !selectedStudentId || !noteContent.trim()}
+              className="flex-1"
+            >
+              {creatingNote ? 'Creating...' : 'Create Note'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNoteModal(false)
+                setNoteContent('')
+                setSelectedStudentId(null)
+                setShowEventModal(true)
+              }}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       </Modal>
     </PortalLayout>
   )
