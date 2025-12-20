@@ -69,13 +69,13 @@ export function sanitizeHtml(
   if (typeof window === 'undefined') {
     // Use jsdom for server-side sanitization
     const { JSDOM } = require('jsdom')
-    const window = new JSDOM('').window
-    const DOMPurifyServer = DOMPurify(window as unknown as Window)
-    return DOMPurifyServer.sanitize(dirty, finalConfig)
+    const domWindow = new JSDOM('').window
+    const DOMPurifyServer = DOMPurify(domWindow as any)
+    return DOMPurifyServer.sanitize(dirty, finalConfig as any) as unknown as string
   }
 
   // Client-side sanitization
-  return DOMPurify.sanitize(dirty, finalConfig)
+  return DOMPurify.sanitize(dirty, finalConfig as any) as unknown as string
 }
 
 /**

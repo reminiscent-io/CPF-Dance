@@ -4,6 +4,7 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect } from 'react'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
 interface NotesRichTextEditorProps {
   content: string
@@ -163,17 +164,13 @@ interface RichTextDisplayProps {
 }
 
 export function RichTextDisplay({ content, className = '' }: RichTextDisplayProps) {
-  const sanitizedContent = typeof window !== 'undefined' 
-    ? require('dompurify').sanitize(content, {
-        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote'],
-        ALLOWED_ATTR: ['class']
-      })
-    : ''
+  // Use centralized sanitization utility - works on both client and server
+  const sanitizedContent = createSanitizedHtml(content)
 
   return (
     <div
       className={`prose prose-sm max-w-none ${className}`}
-      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+      dangerouslySetInnerHTML={sanitizedContent}
     />
   )
 }

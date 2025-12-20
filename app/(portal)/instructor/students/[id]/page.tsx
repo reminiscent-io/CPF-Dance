@@ -8,6 +8,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { Card, CardTitle, CardContent, Button, Badge, useToast, Spinner, Input, Textarea, Modal, ModalFooter } from '@/components/ui'
 import type { Student, Note, Enrollment, Payment, PrivateLessonRequest, UpdateStudentData } from '@/lib/types'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
 export default function StudentDetailPage() {
   const params = useParams()
@@ -434,7 +435,7 @@ export default function StudentDetailPage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: note.content }} />
+                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.map((tag: string, idx: number) => (
@@ -491,7 +492,7 @@ export default function StudentDetailPage() {
                           {new Date(note.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: note.content }} />
+                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {note.tags.map((tag: string, idx: number) => (
