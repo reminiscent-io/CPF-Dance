@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -59,12 +59,24 @@ export default function InstructorSchedulePage() {
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
   const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
+  const mobileScrollRef = useRef<HTMLDivElement>(null)
+  const todayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
       router.push('/dancer')
     }
   }, [authLoading, profile, router])
+
+  useEffect(() => {
+    if (!loading && classes.length > 0 && mobileScrollRef.current) {
+      setTimeout(() => {
+        if (todayRef.current) {
+          todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [loading, classes])
 
   const fetchSchedule = async (startDate?: Date, endDate?: Date) => {
     try {
@@ -330,7 +342,7 @@ export default function InstructorSchedulePage() {
             </div>
 
             {/* MOBILE VIEW - Agenda List */}
-            <div className="flex md:hidden flex-col flex-1 min-h-0 overflow-y-auto">
+            <div ref={mobileScrollRef} className="flex md:hidden flex-col flex-1 min-h-0 overflow-y-auto">
               {/* Mobile Navigation */}
               <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 <button
@@ -362,12 +374,41 @@ export default function InstructorSchedulePage() {
                 <p className="text-center text-gray-600 py-8">No classes scheduled</p>
               ) : (
                 <div className="space-y-4">
-                  {getClassesByDay().map(dayGroup => (
-                    <div key={dayGroup.date.toISOString()}>
-                      {/* Day Header */}
-                      <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                        {formatDateHeader(dayGroup.date)}
-                      </h3>
+                  {(() => {
+                    const dayGroups = getClassesByDay()
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    
+                    let scrollTargetIndex = dayGroups.findIndex(dg => {
+                      const dayDate = new Date(dg.date)
+                      dayDate.setHours(0, 0, 0, 0)
+                      return dayDate.getTime() === today.getTime()
+                    })
+                    
+                    if (scrollTargetIndex === -1) {
+                      scrollTargetIndex = dayGroups.findIndex(dg => {
+                        const dayDate = new Date(dg.date)
+                        dayDate.setHours(0, 0, 0, 0)
+                        return dayDate.getTime() >= today.getTime()
+                      })
+                    }
+                    
+                    if (scrollTargetIndex === -1 && dayGroups.length > 0) {
+                      scrollTargetIndex = dayGroups.length - 1
+                    }
+                    
+                    return dayGroups.map((dayGroup, index) => {
+                      const isScrollTarget = index === scrollTargetIndex
+                      const dayDate = new Date(dayGroup.date)
+                      dayDate.setHours(0, 0, 0, 0)
+                      const isToday = dayDate.getTime() === today.getTime()
+                      
+                      return (
+                        <div key={dayGroup.date.toISOString()} ref={isScrollTarget ? todayRef : undefined}>
+                          {/* Day Header */}
+                          <h3 className={`text-sm font-semibold mb-2 uppercase tracking-wide ${isToday ? 'text-rose-600' : 'text-gray-600'}`}>
+                            {isToday ? 'Today' : formatDateHeader(dayGroup.date)}
+                          </h3>
 
                       {/* Classes for this day */}
                       <div className="space-y-2">
@@ -404,9 +445,11 @@ export default function InstructorSchedulePage() {
                             </div>
                           </button>
                         ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })
+                  })()}
                 </div>
               )}
             </div>
