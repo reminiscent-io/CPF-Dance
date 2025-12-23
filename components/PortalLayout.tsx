@@ -45,7 +45,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
       <MobileHeader onMenuToggle={handleToggleSidebar} />
       <Sidebar profile={profile} isOpen={isOpen} setIsOpen={setIsOpen} />
 
-      <div className="flex-1 flex flex-col overflow-hidden pt-16 md:pt-0">
+      <div className="flex-1 flex flex-col overflow-hidden pt-12 md:pt-0">
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
