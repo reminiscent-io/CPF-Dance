@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       id: nextClass[0].id,
       title: nextClass[0].title,
       start_time: nextClass[0].start_time,
-      studio_name: (nextClass[0].studio as any)?.[0]?.name || 'Studio TBA'
+      studio_name: (nextClass[0].studio as any)?.name || 'Studio TBA'
     } : null
 
     return NextResponse.json({ stats, recent_activity: recentActivity, next_class: nextClassData })

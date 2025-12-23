@@ -10,6 +10,16 @@ import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 
+// Helper function to parse currency values and round to 2 decimal places
+const parseCurrency = (value: string): number | undefined => {
+  // Return undefined only for empty string, not for "0"
+  if (value === '' || value === null || value === undefined) return undefined
+  const num = parseFloat(value)
+  if (isNaN(num)) return undefined
+  // Allow 0 for free classes, and round to 2 decimal places to avoid floating point precision issues
+  return Math.round(num * 100) / 100
+}
+
 function ClassesContent() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -994,7 +1004,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               step="0.01"
               required
               value={formData.cost_per_person || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_person: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, cost_per_person: parseCurrency(e.target.value) })}
               placeholder="e.g., 25.00"
             />
           )}
@@ -1007,7 +1017,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               step="0.01"
               required
               value={formData.base_cost || ''}
-              onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
               placeholder="e.g., 150.00"
             />
           )}
@@ -1020,7 +1030,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               step="0.01"
               required
               value={formData.cost_per_hour || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_hour: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, cost_per_hour: parseCurrency(e.target.value) })}
               placeholder="e.g., 75.00"
             />
           )}
@@ -1035,7 +1045,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                 step="0.01"
                 required
                 value={formData.base_cost || ''}
-                onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
                 placeholder="e.g., 100.00"
               />
               <Input
@@ -1054,7 +1064,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                 step="0.01"
                 required
                 value={formData.tiered_additional_cost || ''}
-                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: parseCurrency(e.target.value) })}
                 placeholder="e.g., 15.00"
               />
             </div>
@@ -1722,7 +1732,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               step="0.01"
               required
               value={formData.cost_per_person || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_person: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, cost_per_person: parseCurrency(e.target.value) })}
               placeholder="e.g., 25.00"
             />
           )}
@@ -1735,7 +1745,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               step="0.01"
               required
               value={formData.base_cost || ''}
-              onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
               placeholder="e.g., 150.00"
             />
           )}
@@ -1748,7 +1758,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               step="0.01"
               required
               value={formData.cost_per_hour || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_hour: e.target.value ? parseFloat(e.target.value) : undefined })}
+              onChange={(e) => setFormData({ ...formData, cost_per_hour: parseCurrency(e.target.value) })}
               placeholder="e.g., 75.00"
             />
           )}
@@ -1763,7 +1773,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 step="0.01"
                 required
                 value={formData.base_cost || ''}
-                onChange={(e) => setFormData({ ...formData, base_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
                 placeholder="e.g., 100.00"
               />
               <Input
@@ -1782,7 +1792,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 step="0.01"
                 required
                 value={formData.tiered_additional_cost || ''}
-                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: parseCurrency(e.target.value) })}
                 placeholder="e.g., 15.00"
               />
             </div>

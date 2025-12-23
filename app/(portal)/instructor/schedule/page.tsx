@@ -295,7 +295,7 @@ export default function InstructorSchedulePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="flex flex-col min-h-[calc(100vh-180px)] md:min-h-[calc(100vh-160px)]">
+      <div className="flex flex-col h-[calc(100vh-15rem)] md:h-[calc(100vh-11rem)]">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 flex-shrink-0">
           <div>
@@ -321,7 +321,7 @@ export default function InstructorSchedulePage() {
         ) : (
           <>
             {/* DESKTOP VIEW - Calendar Grid */}
-            <div className="hidden md:flex md:flex-col flex-1 min-h-[600px] overflow-hidden">
+            <div className="hidden md:flex md:flex-col flex-1 overflow-hidden">
               <Calendar
                 events={classes}
                 onEventClick={handleEventClick}
