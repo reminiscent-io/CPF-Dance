@@ -402,8 +402,6 @@ export default function HomePage() {
         className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[60vh] sm:min-h-[55vh]"
       >
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
 
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
           <motion.h1
@@ -412,9 +410,9 @@ export default function HomePage() {
             animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Your Dance Journey
+            Precision. Passion.
             <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
-              Starts Here
+              Performance.
             </span>
           </motion.h1>
           <motion.p
@@ -425,6 +423,25 @@ export default function HomePage() {
           >
             Track your progress, connect with world-class instructors, and elevate your dance practice with personalized guidance
           </motion.p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+          >
+            <Link href="/signup?role=dancer">
+              <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow">
+                Get Started
+              </Button>
+            </Link>
+            <Link
+              href="/login?portal=dancer"
+              className="text-lg font-semibold text-gray-700 hover:text-rose-600 transition-colors"
+              onClick={handleLoginClick}
+            >
+              Already a member? Sign In →
+            </Link>
+          </motion.div>
         </div>
       </section>
 
