@@ -119,7 +119,7 @@ export function Navigation({ profile }: NavigationProps) {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-12 md:h-16">
+        <div className="flex justify-between items-center h-10 md:h-16">
           <div className="flex items-center">
             <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center">
               <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent">
