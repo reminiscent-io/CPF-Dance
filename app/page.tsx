@@ -146,6 +146,7 @@ export default function HomePage() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const [loginLoading, setLoginLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const FADE_MS = 2000
   const SLIDE_MS = 4500
@@ -324,6 +325,10 @@ export default function HomePage() {
     setShowNav(true)
   }, [])
 
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Image cycling effect with preloading
   useEffect(() => {
     const imageTimer = setInterval(() => {
@@ -403,8 +408,8 @@ export default function HomePage() {
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
           <motion.h1
             className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: -20 } : false}
+            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             Your Dance Journey
@@ -414,8 +419,8 @@ export default function HomePage() {
           </motion.h1>
           <motion.p
             className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={isMounted ? { opacity: 0 } : false}
+            animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
             Track your progress, connect with world-class instructors, and elevate your dance practice with personalized guidance
@@ -440,8 +445,8 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
@@ -502,8 +507,8 @@ export default function HomePage() {
       <section id="instructor-portal" className="py-12 sm:py-20 bg-gradient-to-br from-gray-50 to-rose-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="text-center mb-8 sm:mb-12"
@@ -517,8 +522,8 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
