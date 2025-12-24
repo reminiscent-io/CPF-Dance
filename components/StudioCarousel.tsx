@@ -11,6 +11,8 @@ interface StudioLogo {
 export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number | null>(null)
@@ -23,6 +25,12 @@ export default function StudioCarousel() {
   const momentumRef = useRef<number | null>(null)
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const fetchLogos = async () => {
       try {
         const supabase = createClient()
@@ -79,9 +87,15 @@ export default function StudioCarousel() {
           }
         }
 
+        if (studiosWithLogos.length === 0) {
+          console.warn('StudioCarousel: No studios with logos found')
+        }
+
         setStudios(studiosWithLogos)
-      } catch (error) {
-        console.error('Error fetching studio logos:', error)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching studio logos:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load studio logos')
         setStudios([])
       } finally {
         setLoading(false)
@@ -89,7 +103,7 @@ export default function StudioCarousel() {
     }
 
     fetchLogos()
-  }, [])
+  }, [mounted])
 
   const autoScroll = useCallback(() => {
     const container = scrollContainerRef.current
@@ -213,7 +227,12 @@ export default function StudioCarousel() {
   const studiosWithImages = studios.filter(studio => studio.image)
   const extendedStudios = [...studiosWithImages, ...studiosWithImages]
 
-  if (loading) {
+  if (!mounted || loading) {
+    return null
+  }
+
+  if (error) {
+    console.error('StudioCarousel error:', error)
     return null
   }
 

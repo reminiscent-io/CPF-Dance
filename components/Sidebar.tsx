@@ -201,6 +201,18 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     return children.some(child => pathname === child.href || pathname?.startsWith(child.href + '/'))
   }
 
+  if (!mounted) {
+    return (
+      <aside className="fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-screen">
+        <div className="flex flex-col h-full">
+          <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
+            <span className="text-2xl font-bold text-white">CPF Dance</span>
+          </div>
+        </div>
+      </aside>
+    )
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-40 md:hidden" style={{ display: isOpen ? 'block' : 'none' }} onClick={() => setIsOpen(false)} />
