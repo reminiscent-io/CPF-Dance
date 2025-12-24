@@ -21,6 +21,8 @@ interface CalendarEvent {
   }
 }
 
+type ViewMode = 'month' | 'week' | 'day'
+
 interface MobileCalendarProps {
   events: CalendarEvent[]
   currentDate: Date
@@ -44,8 +46,10 @@ export function MobileCalendar({
   }
 
   const [selectedDate, setSelectedDate] = useState<Date>(getInitialSelectedDate)
+  const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [lastTap, setLastTap] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const isUserSelectionRef = useRef<boolean>(false)
 
@@ -95,15 +99,47 @@ export function MobileCalendar({
   }
 
   const navigatePrevious = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() - 1)
-    onMonthChange?.(newDate)
+    if (viewMode === 'month') {
+      const newDate = new Date(currentDate)
+      newDate.setMonth(newDate.getMonth() - 1)
+      onMonthChange?.(newDate)
+    } else if (viewMode === 'week') {
+      const newDate = new Date(selectedDate)
+      newDate.setDate(newDate.getDate() - 7)
+      setSelectedDate(newDate)
+      if (newDate.getMonth() !== currentDate.getMonth()) {
+        onMonthChange?.(newDate)
+      }
+    } else {
+      const newDate = new Date(selectedDate)
+      newDate.setDate(newDate.getDate() - 1)
+      setSelectedDate(newDate)
+      if (newDate.getMonth() !== currentDate.getMonth()) {
+        onMonthChange?.(newDate)
+      }
+    }
   }
 
   const navigateNext = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() + 1)
-    onMonthChange?.(newDate)
+    if (viewMode === 'month') {
+      const newDate = new Date(currentDate)
+      newDate.setMonth(newDate.getMonth() + 1)
+      onMonthChange?.(newDate)
+    } else if (viewMode === 'week') {
+      const newDate = new Date(selectedDate)
+      newDate.setDate(newDate.getDate() + 7)
+      setSelectedDate(newDate)
+      if (newDate.getMonth() !== currentDate.getMonth()) {
+        onMonthChange?.(newDate)
+      }
+    } else {
+      const newDate = new Date(selectedDate)
+      newDate.setDate(newDate.getDate() + 1)
+      setSelectedDate(newDate)
+      if (newDate.getMonth() !== currentDate.getMonth()) {
+        onMonthChange?.(newDate)
+      }
+    }
   }
 
   const navigateToday = () => {
@@ -118,6 +154,24 @@ export function MobileCalendar({
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getStartOfWeek = (date: Date) => {
+    const d = new Date(date)
+    const day = d.getDay()
+    d.setDate(d.getDate() - day)
+    return d
+  }
+
+  const getWeekDays = (date: Date) => {
+    const start = getStartOfWeek(date)
+    const days: Date[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      days.push(d)
+    }
+    return days
   }
 
   const getEventsForDate = useCallback((date: Date) => {
@@ -141,13 +195,30 @@ export function MobileCalendar({
   }
 
   const handleDayClick = (date: Date) => {
-    setSelectedDate(date)
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300
     
-    if (date.getMonth() !== currentDate.getMonth() || 
-        date.getFullYear() !== currentDate.getFullYear()) {
-      isUserSelectionRef.current = true
-      onMonthChange?.(date)
+    if (now - lastTap < DOUBLE_TAP_DELAY && date.toDateString() === selectedDate.toDateString()) {
+      if (viewMode === 'month') {
+        setViewMode('day')
+      } else if (viewMode === 'week') {
+        setViewMode('day')
+      }
+      setLastTap(0)
+    } else {
+      setSelectedDate(date)
+      setLastTap(now)
+      
+      if (date.getMonth() !== currentDate.getMonth() || 
+          date.getFullYear() !== currentDate.getFullYear()) {
+        isUserSelectionRef.current = true
+        onMonthChange?.(date)
+      }
     }
+  }
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
   }
 
   const formatTime = (dateString: string) => {
@@ -156,6 +227,14 @@ export function MobileCalendar({
       minute: '2-digit',
       hour12: true
     })
+  }
+
+  const getHourFromTime = (dateString: string) => {
+    return new Date(dateString).getHours()
+  }
+
+  const getMinutesFromTime = (dateString: string) => {
+    return new Date(dateString).getMinutes()
   }
 
   const getClassTypeColor = (type: string) => {
@@ -170,6 +249,21 @@ export function MobileCalendar({
         return 'bg-amber-500'
       default:
         return 'bg-rose-500'
+    }
+  }
+
+  const getClassTypeBgColor = (type: string) => {
+    switch (type) {
+      case 'private':
+        return 'bg-purple-100 border-purple-500 text-purple-900'
+      case 'group':
+        return 'bg-blue-100 border-blue-500 text-blue-900'
+      case 'workshop':
+        return 'bg-green-100 border-green-500 text-green-900'
+      case 'master_class':
+        return 'bg-amber-100 border-amber-500 text-amber-900'
+      default:
+        return 'bg-rose-100 border-rose-500 text-rose-900'
     }
   }
 
@@ -201,6 +295,28 @@ export function MobileCalendar({
       default:
         return type
     }
+  }
+
+  const renderViewModeSelector = () => {
+    return (
+      <div className="flex bg-gray-100 rounded-lg p-1 mx-4 mb-3">
+        {(['month', 'week', 'day'] as ViewMode[]).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => handleViewModeChange(mode)}
+            className={`
+              flex-1 py-1.5 text-sm font-medium rounded-md transition-all
+              ${viewMode === mode 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-900'
+              }
+            `}
+          >
+            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+          </button>
+        ))}
+      </div>
+    )
   }
 
   const renderCalendarGrid = () => {
@@ -285,6 +401,239 @@ export function MobileCalendar({
     )
   }
 
+  const renderWeekStrip = () => {
+    const weekDays = getWeekDays(selectedDate)
+    
+    return (
+      <div className="px-2 pb-3">
+        <div className="grid grid-cols-7 gap-1">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div 
+              key={`header-${index}`} 
+              className="text-center text-xs font-medium text-gray-500 py-1"
+            >
+              {day}
+            </div>
+          ))}
+          
+          {weekDays.map((day, index) => {
+            const dayEvents = getEventsForDate(day)
+            const hasEvents = dayEvents.length > 0
+            const today = isToday(day)
+            const selected = isSelected(day)
+            const inCurrentMonth = isSameMonth(day)
+            const uniqueTypes = [...new Set(dayEvents.map(e => e.class_type))]
+            
+            return (
+              <button
+                key={index}
+                onClick={() => handleDayClick(day)}
+                className={`
+                  flex flex-col items-center justify-center rounded-full py-2 relative
+                  transition-all duration-150 min-h-[52px]
+                  ${selected 
+                    ? 'bg-rose-600 text-white' 
+                    : today 
+                      ? 'bg-rose-100 text-rose-600' 
+                      : inCurrentMonth 
+                        ? 'text-gray-900 hover:bg-gray-100' 
+                        : 'text-gray-400'
+                  }
+                `}
+              >
+                <span className={`text-sm font-medium ${selected ? 'text-white' : ''}`}>
+                  {day.getDate()}
+                </span>
+                
+                {hasEvents && (
+                  <div className="flex gap-0.5 mt-1">
+                    {uniqueTypes.slice(0, 3).map((type, i) => (
+                      <div 
+                        key={i} 
+                        className={`w-1.5 h-1.5 rounded-full ${selected ? 'bg-white' : getClassTypeColor(type)}`} 
+                      />
+                    ))}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const renderHourlyTimeline = (dateToShow: Date) => {
+    const dayEvents = getEventsForDate(dateToShow)
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    
+    const START_HOUR = 5
+    const END_HOUR = 23
+    const hours = []
+    for (let i = START_HOUR; i <= END_HOUR; i++) {
+      hours.push(i)
+    }
+
+    const getEventPosition = (event: CalendarEvent) => {
+      const startHour = getHourFromTime(event.start_time)
+      const startMinutes = getMinutesFromTime(event.start_time)
+      const endHour = getHourFromTime(event.end_time)
+      const endMinutes = getMinutesFromTime(event.end_time)
+      
+      const top = ((startHour - START_HOUR) * 60 + startMinutes) * (60 / 60)
+      const duration = ((endHour - startHour) * 60 + (endMinutes - startMinutes)) * (60 / 60)
+      
+      return { top, height: Math.max(duration, 30) }
+    }
+
+    return (
+      <div className="relative">
+        {hours.map((hour) => (
+          <div key={hour} className="flex border-t border-gray-200" style={{ height: '60px' }}>
+            <div className="w-14 flex-shrink-0 pr-2 text-right">
+              <span className="text-xs text-gray-400 -mt-2 block">
+                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+              </span>
+            </div>
+            <div className="flex-1 relative" />
+          </div>
+        ))}
+        
+        <div className="absolute top-0 left-14 right-0" style={{ height: `${hours.length * 60}px` }}>
+          {dayEvents.map((event) => {
+            const { top, height } = getEventPosition(event)
+            
+            return (
+              <button
+                key={event.id}
+                onClick={() => onEventClick?.(event)}
+                className={`absolute left-1 right-1 rounded-md border-l-4 px-2 py-1 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
+                style={{ top: `${top}px`, height: `${height}px`, minHeight: '30px' }}
+              >
+                <div className="text-xs font-semibold truncate">
+                  {event.title}
+                </div>
+                <div className="text-xs opacity-75 truncate">
+                  {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                </div>
+                {height >= 50 && (
+                  <div className="text-xs opacity-75 truncate">
+                    {event.studios?.name || event.location}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const renderWeekTimeline = () => {
+    const weekDays = getWeekDays(selectedDate)
+    const START_HOUR = 5
+    const END_HOUR = 23
+    const hours = []
+    for (let i = START_HOUR; i <= END_HOUR; i++) {
+      hours.push(i)
+    }
+
+    const getEventPosition = (event: CalendarEvent) => {
+      const startHour = getHourFromTime(event.start_time)
+      const startMinutes = getMinutesFromTime(event.start_time)
+      const endHour = getHourFromTime(event.end_time)
+      const endMinutes = getMinutesFromTime(event.end_time)
+      
+      const top = ((startHour - START_HOUR) * 60 + startMinutes) * (48 / 60)
+      const duration = ((endHour - startHour) * 60 + (endMinutes - startMinutes)) * (48 / 60)
+      
+      return { top, height: Math.max(duration, 20) }
+    }
+
+    return (
+      <div className="relative">
+        <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
+          <div className="flex">
+            <div className="w-10 flex-shrink-0" />
+            {weekDays.map((day, index) => (
+              <div 
+                key={index} 
+                className={`flex-1 text-center py-2 ${isSelected(day) ? 'bg-rose-50' : ''}`}
+              >
+                <div className="text-xs text-gray-500">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'][day.getDay()]}
+                </div>
+                <button
+                  onClick={() => handleDayClick(day)}
+                  className={`
+                    w-7 h-7 rounded-full text-sm font-medium mx-auto flex items-center justify-center
+                    ${isSelected(day)
+                      ? 'bg-rose-600 text-white'
+                      : isToday(day)
+                        ? 'bg-rose-100 text-rose-600'
+                        : 'text-gray-900'
+                    }
+                  `}
+                >
+                  {day.getDate()}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="relative">
+          {hours.map((hour) => (
+            <div key={hour} className="flex border-t border-gray-100" style={{ height: '48px' }}>
+              <div className="w-10 flex-shrink-0 text-right pr-1">
+                <span className="text-[10px] text-gray-400 -mt-1.5 block">
+                  {hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`}
+                </span>
+              </div>
+              {weekDays.map((_, dayIndex) => (
+                <div key={dayIndex} className="flex-1 border-l border-gray-100 relative" />
+              ))}
+            </div>
+          ))}
+          
+          {weekDays.map((day, dayIndex) => {
+            const dayEvents = getEventsForDate(day)
+            const colWidth = `calc((100% - 40px) / 7)`
+            const leftPos = `calc(40px + ${dayIndex} * ${colWidth})`
+            
+            return dayEvents.map((event) => {
+              const { top, height } = getEventPosition(event)
+              
+              return (
+                <button
+                  key={event.id}
+                  onClick={() => onEventClick?.(event)}
+                  className={`absolute rounded-sm border-l-2 px-0.5 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
+                  style={{ 
+                    top: `${top}px`, 
+                    height: `${height}px`, 
+                    minHeight: '20px',
+                    left: leftPos,
+                    width: `calc((100% - 40px) / 7 - 2px)`
+                  }}
+                >
+                  <div className="text-[10px] font-semibold truncate leading-tight">
+                    {event.title}
+                  </div>
+                  {height >= 30 && (
+                    <div className="text-[9px] opacity-75 truncate">
+                      {formatTime(event.start_time)}
+                    </div>
+                  )}
+                </button>
+              )
+            })
+          })}
+        </div>
+      </div>
+    )
+  }
+
   const selectedDayEvents = getEventsForDate(selectedDate)
     .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
 
@@ -299,53 +648,25 @@ export function MobileCalendar({
     })
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      <div 
-        ref={containerRef}
-        className="flex-shrink-0 bg-white"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <div className="flex items-center justify-between px-2 py-3">
-          <button
-            onClick={navigatePrevious}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Previous month"
-          >
-            <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </h2>
-            <button
-              onClick={navigateToday}
-              className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 hover:bg-rose-50 rounded transition-colors"
-            >
-              Today
-            </button>
-          </div>
-          
-          <button
-            onClick={navigateNext}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Next month"
-          >
-            <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
+  const formatNavigationHeader = () => {
+    if (viewMode === 'month') {
+      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    } else if (viewMode === 'week') {
+      const weekDays = getWeekDays(selectedDate)
+      const start = weekDays[0]
+      const end = weekDays[6]
+      if (start.getMonth() === end.getMonth()) {
+        return `${start.toLocaleDateString('en-US', { month: 'long' })} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
+      }
+      return `${start.toLocaleDateString('en-US', { month: 'short' })} ${start.getDate()} - ${end.toLocaleDateString('en-US', { month: 'short' })} ${end.getDate()}`
+    } else {
+      return selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    }
+  }
 
-        <div className="px-2 pb-3">
-          {renderCalendarGrid()}
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200" />
-
-      <div className="flex-1 overflow-y-auto bg-gray-50">
+  const renderMonthEventList = () => {
+    return (
+      <>
         <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
             {formatSelectedDateHeader()}
@@ -360,6 +681,7 @@ export function MobileCalendar({
               </svg>
             </div>
             <p className="text-gray-500 text-center">No classes scheduled</p>
+            <p className="text-xs text-gray-400 mt-1">Double-tap a day to zoom in</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -411,6 +733,81 @@ export function MobileCalendar({
                 </div>
               </button>
             ))}
+          </div>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div 
+        ref={containerRef}
+        className="flex-shrink-0 bg-white"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="flex items-center justify-between px-2 py-3">
+          <button
+            onClick={navigatePrevious}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label={viewMode === 'month' ? 'Previous month' : viewMode === 'week' ? 'Previous week' : 'Previous day'}
+          >
+            <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+          </button>
+          
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-semibold text-gray-900 text-center">
+              {formatNavigationHeader()}
+            </h2>
+            <button
+              onClick={navigateToday}
+              className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 hover:bg-rose-50 rounded transition-colors"
+            >
+              Today
+            </button>
+          </div>
+          
+          <button
+            onClick={navigateNext}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label={viewMode === 'month' ? 'Next month' : viewMode === 'week' ? 'Next week' : 'Next day'}
+          >
+            <ChevronRightIcon className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+
+        {renderViewModeSelector()}
+
+        {viewMode === 'month' && (
+          <div className="px-2 pb-3">
+            {renderCalendarGrid()}
+          </div>
+        )}
+
+        {viewMode === 'week' && renderWeekStrip()}
+      </div>
+
+      <div className="border-t border-gray-200" />
+
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        {viewMode === 'month' && renderMonthEventList()}
+        
+        {viewMode === 'week' && (
+          <div className="bg-white">
+            {renderWeekTimeline()}
+          </div>
+        )}
+        
+        {viewMode === 'day' && (
+          <div className="bg-white">
+            <div className="sticky top-0 bg-white z-10 px-4 py-3 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-700">
+                {formatSelectedDateHeader()}
+              </h3>
+            </div>
+            {renderHourlyTimeline(selectedDate)}
           </div>
         )}
       </div>
