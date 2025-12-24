@@ -855,7 +855,7 @@ export function MobileCalendar({
         {viewMode === 'month' && renderMonthEventList()}
         
         {viewMode === 'week' && (
-          <div className="bg-white">
+          <div className="bg-white min-h-full">
             {renderWeekTimeline()}
           </div>
         )}
