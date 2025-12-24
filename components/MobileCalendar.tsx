@@ -742,26 +742,26 @@ export function MobileCalendar({
             <p className="text-xs text-gray-400 mt-1">Double-tap a day to zoom in</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-100">
             {selectedDayEvents.map(event => (
               <button
                 key={event.id}
                 onClick={() => onEventClick?.(event)}
-                className={`w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors ${getClassTypeStyles(event.class_type)}`}
+                className={`w-full text-left px-4 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors ${getClassTypeStyles(event.class_type)}`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-16 pt-0.5">
-                    <div className="text-sm font-semibold text-gray-900">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-14">
+                    <div className="text-base font-semibold text-gray-900">
                       {formatTime(event.start_time)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-gray-500 mt-0.5">
                       {formatTime(event.end_time)}
                     </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-900 truncate" style={{ fontFamily: 'var(--font-family-display)' }}>
+                      <h4 className="text-base font-semibold text-gray-900 truncate" style={{ fontFamily: 'var(--font-family-display)' }}>
                         {event.title}
                       </h4>
                       {event.is_cancelled && (
@@ -771,12 +771,12 @@ export function MobileCalendar({
                       )}
                     </div>
                     
-                    <p className="text-sm text-gray-600 truncate mt-0.5">
+                    <p className="text-sm text-gray-600 truncate mt-1">
                       {event.studios?.name || event.location || 'Location TBA'}
                     </p>
                     
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
                         {getClassTypeLabel(event.class_type)}
                       </span>
                       {event.enrolled_count !== undefined && (
@@ -787,7 +787,7 @@ export function MobileCalendar({
                     </div>
                   </div>
                   
-                  <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
                 </div>
               </button>
             ))}
