@@ -561,7 +561,7 @@ export default function HomePage() {
               </div>
 
               <Link href="/login?portal=instructor" className="block" onClick={handleLoginClick}>
-                <Button size="lg" variant="outline" className="w-full text-base sm:text-lg py-4 sm:py-6 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
+                <Button size="lg" variant="outline" className="w-full text-lg py-3 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
                   {loginLoading ? (
                     <>
                       <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
