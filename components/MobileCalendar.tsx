@@ -544,17 +544,20 @@ export function MobileCalendar({
       const endHour = getHourFromTime(event.end_time)
       const endMinutes = getMinutesFromTime(event.end_time)
       
-      const top = ((startHour - START_HOUR) * 60 + startMinutes) * (48 / 60)
-      const duration = ((endHour - startHour) * 60 + (endMinutes - startMinutes)) * (48 / 60)
+      const HOUR_HEIGHT = 60
+      const top = ((startHour - START_HOUR) * 60 + startMinutes) * (HOUR_HEIGHT / 60)
+      const duration = ((endHour - startHour) * 60 + (endMinutes - startMinutes)) * (HOUR_HEIGHT / 60)
       
-      return { top, height: Math.max(duration, 20) }
+      return { top, height: Math.max(duration, 24) }
     }
+
+    const HOUR_HEIGHT = 60
 
     return (
       <div className="relative">
         <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
           <div className="flex">
-            <div className="w-10 flex-shrink-0" />
+            <div className="w-12 flex-shrink-0" />
             {weekDays.map((day, index) => (
               <div 
                 key={index} 
@@ -584,8 +587,8 @@ export function MobileCalendar({
         
         <div className="relative">
           {hours.map((hour) => (
-            <div key={hour} className="flex border-t border-gray-100" style={{ height: '48px' }}>
-              <div className="w-10 flex-shrink-0 text-right pr-1">
+            <div key={hour} className="flex border-t border-gray-100" style={{ height: `${HOUR_HEIGHT}px` }}>
+              <div className="w-12 flex-shrink-0 text-right pr-1">
                 <span className="text-[10px] text-gray-400 -mt-1.5 block">
                   {hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`}
                 </span>
@@ -598,8 +601,8 @@ export function MobileCalendar({
           
           {weekDays.map((day, dayIndex) => {
             const dayEvents = getEventsForDate(day)
-            const colWidth = `calc((100% - 40px) / 7)`
-            const leftPos = `calc(40px + ${dayIndex} * ${colWidth})`
+            const colWidth = `calc((100% - 48px) / 7)`
+            const leftPos = `calc(48px + ${dayIndex} * ${colWidth})`
             
             return dayEvents.map((event) => {
               const { top, height } = getEventPosition(event)
@@ -612,15 +615,15 @@ export function MobileCalendar({
                   style={{ 
                     top: `${top}px`, 
                     height: `${height}px`, 
-                    minHeight: '20px',
+                    minHeight: '24px',
                     left: leftPos,
-                    width: `calc((100% - 40px) / 7 - 2px)`
+                    width: `calc((100% - 48px) / 7 - 2px)`
                   }}
                 >
                   <div className="text-[10px] font-semibold truncate leading-tight">
                     {event.title}
                   </div>
-                  {height >= 30 && (
+                  {height >= 36 && (
                     <div className="text-[9px] opacity-75 truncate">
                       {formatTime(event.start_time)}
                     </div>
@@ -786,7 +789,6 @@ export function MobileCalendar({
           </div>
         )}
 
-        {viewMode === 'week' && renderWeekStrip()}
       </div>
 
       <div className="border-t border-gray-200" />
