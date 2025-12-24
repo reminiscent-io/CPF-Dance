@@ -583,7 +583,7 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
+            <div className="order-1 lg:order-1">
               <h2 className="mb-8" style={{ fontFamily: 'var(--font-family-display)' }}>
                 Learn from the Best
               </h2>
@@ -614,7 +614,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <div className="relative">
                 <div className="aspect-[3/4] bg-gray-100 rounded-2xl shadow-2xl overflow-hidden relative">
                   <AnimatePresence initial={false} mode="wait">
