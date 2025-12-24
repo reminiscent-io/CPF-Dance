@@ -262,7 +262,7 @@ export default function InstructorSchedulePage() {
     <PortalLayout profile={profile}>
       <div className="flex flex-col h-[calc(100vh-15rem)] md:h-[calc(100vh-11rem)]">
         {/* Header */}
-        <div className="mb-6 flex-shrink-0">
+        <div className="hidden md:block mb-6 flex-shrink-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes</p>
         </div>
