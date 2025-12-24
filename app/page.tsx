@@ -524,8 +524,21 @@ export default function HomePage() {
       </section>
 
       {/* Instructor Portal Section - Secondary */}
-      <section id="instructor-portal" className="py-16 bg-gradient-to-br from-champagne-50 to-ballet-pink-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="instructor-portal" className="relative py-16 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2"
+            alt="Dance instructor"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* White Opaque Overlay */}
+        <div className="absolute inset-0 bg-white/60 z-10"></div>
+
+        {/* Content */}
+        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={isMounted ? { opacity: 0, y: 20 } : false}
             whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
