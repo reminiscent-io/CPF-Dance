@@ -225,7 +225,7 @@ export default function StudioCarousel() {
     <section className="py-6 sm:py-8 bg-white border-t border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-4 sm:mb-6">
-          <h3 className="text-xs sm:text-sm font-semibold tracking-widest text-gray-500 uppercase">
+          <h3 className="text-sm sm:text-base font-semibold tracking-widest text-rose-600 uppercase">
             Trusted by Top Studios & Programs
           </h3>
         </div>
