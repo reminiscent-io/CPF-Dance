@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **December 24, 2025**: Added zoom functionality to mobile calendar with Month/Week/Day view modes, segmented control for view switching, hourly timeline views, and double-tap to zoom gesture
 - **December 23, 2025**: Replaced mobile schedule view with Apple Calendar-style interface featuring month grid, swipe navigation, day selection with event dots, and day timeline panel (MobileCalendar component)
 - **December 19, 2025**: Fixed font display issue on home page by moving font-family CSS variables from @theme block to :root selector
 - **December 19, 2025**: Fixed getCurrentUserWithRole() usage in asset API routes to properly handle ProfileWithRole return type
