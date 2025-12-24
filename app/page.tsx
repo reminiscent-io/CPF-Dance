@@ -571,7 +571,7 @@ export default function HomePage() {
                       <span>Loading...</span>
                     </>
                   ) : (
-                    'Instructor Login'
+                    'Request Access'
                   )}
                 </Button>
               </Link>
