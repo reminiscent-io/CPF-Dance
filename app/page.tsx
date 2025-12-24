@@ -421,7 +421,7 @@ export default function HomePage() {
             animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            Track your progress, connect with world-class instructors, and elevate your dance practice with personalized guidance
+            A free platform for dancers to track their progress, connect with world-class instructors, and elevate their craft
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
