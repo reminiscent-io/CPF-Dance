@@ -509,7 +509,7 @@ export default function HomePage() {
 
               <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                 {dancerFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 hover:bg-white/80 transition-colors">
+                  <div key={feature.id} className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 hover:bg-white/80 transition-colors shadow-sm">
                     <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
                     <div>
                       <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
