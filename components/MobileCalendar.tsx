@@ -366,18 +366,18 @@ export function MobileCalendar({
     }
 
     return (
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
           <div 
             key={`header-${index}`} 
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="text-center text-[10px] font-medium text-gray-500 py-1"
           >
             {day}
           </div>
         ))}
         
         {days.map((day, index) => {
-          if (!day) return <div key={index} className="aspect-square" />
+          if (!day) return <div key={index} className="h-10" />
           
           const dayEvents = getEventsForDate(day)
           const hasEvents = dayEvents.length > 0
@@ -392,8 +392,8 @@ export function MobileCalendar({
               key={index}
               onClick={() => handleDayClick(day)}
               className={`
-                aspect-square flex flex-col items-center justify-center rounded-full relative
-                transition-all duration-150 min-h-[44px]
+                h-10 flex flex-col items-center justify-center rounded-full relative
+                transition-all duration-150
                 ${selected 
                   ? 'bg-rose-600 text-white' 
                   : today 
@@ -850,7 +850,7 @@ export function MobileCalendar({
 
       <div 
         ref={timelineScrollRef}
-        className="flex-1 overflow-y-auto bg-gray-50"
+        className="flex-1 min-h-[200px] overflow-y-auto bg-gray-50"
       >
         {viewMode === 'month' && renderMonthEventList()}
         
