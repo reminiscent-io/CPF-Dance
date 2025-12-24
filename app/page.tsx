@@ -525,30 +525,24 @@ export default function HomePage() {
 
       {/* Instructor Portal Section - Secondary */}
       <section id="instructor-portal" className="py-16 bg-gradient-to-br from-champagne-50 to-ballet-pink-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={isMounted ? { opacity: 0, y: 20 } : false}
             whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-              For Instructors
-            </h2>
-            <p className="text-lg text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
-              Professional tools to manage your studio, track student progress, and streamline your teaching
-            </p>
-          </motion.div>
+            <Card className="bg-gradient-to-br from-champagne-50/90 to-ballet-pink-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
+              <div className="text-center mb-6">
+                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  For Instructors
+                </h2>
+                <p className="text-lg text-charcoal-800 leading-relaxed">
+                  Professional tools to manage your studio, track student progress, and streamline your teaching
+                </p>
+              </div>
 
-          <motion.div
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="bg-white p-6 sm:p-8">
-              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
                 {instructorFeatures.map((feature) => (
                   <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm">
                     <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
