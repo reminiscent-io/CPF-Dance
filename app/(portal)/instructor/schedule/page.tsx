@@ -262,15 +262,9 @@ export default function InstructorSchedulePage() {
     <PortalLayout profile={profile}>
       <div className="flex flex-col h-[calc(100vh-15rem)] md:h-[calc(100vh-11rem)]">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 flex-shrink-0">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">View and manage your upcoming classes</p>
-          </div>
-          {/* Desktop button - visible on sm and up */}
-          <Button onClick={() => router.push('/instructor/classes')} className="hidden sm:inline-block">
-            Manage Classes
-          </Button>
+        <div className="mb-6 flex-shrink-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes</p>
         </div>
 
         {error && (
@@ -304,16 +298,6 @@ export default function InstructorSchedulePage() {
               />
             </div>
 
-            {/* Mobile Floating Action Button */}
-            <button
-              onClick={() => router.push('/instructor/classes')}
-              className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
-              title="Manage Classes"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
           </>
         )}
       </div>
