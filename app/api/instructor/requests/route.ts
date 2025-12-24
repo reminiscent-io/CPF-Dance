@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
           profile:profiles!students_profile_id_fkey(full_name, email, phone)
         )
       `)
-      .eq('instructor_id', profile.id)
       .order('created_at', { ascending: false })
 
     if (error) {

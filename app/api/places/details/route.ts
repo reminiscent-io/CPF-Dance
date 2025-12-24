@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 interface AddressComponent {
   long_name: string
+  short_name: string
   types: string[]
 }
 
@@ -22,7 +23,7 @@ function parseAddressComponents(components: AddressComponent[]) {
       city = component.long_name
     }
     if (component.types.includes('administrative_area_level_1')) {
-      state = component.long_name
+      state = component.short_name // Use abbreviation (e.g., "CA" instead of "California")
     }
     if (component.types.includes('postal_code')) {
       zip = component.long_name
@@ -81,7 +82,6 @@ export async function POST(request: NextRequest) {
     }
 
     const details = parseAddressComponents(data.result.address_components || [])
-    details.address = data.result.formatted_address || details.address
 
     return NextResponse.json({ details })
   } catch (error) {

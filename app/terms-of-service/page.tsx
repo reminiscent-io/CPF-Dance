@@ -1,5 +1,5 @@
 export default function TermsOfServicePage() {
-  const lastUpdated = 'November 23, 2025'
+  const lastUpdated = 'December 23, 2025'
 
   return (
     <main className="min-h-screen bg-white">
@@ -132,33 +132,56 @@ export default function TermsOfServicePage() {
 
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">5. Payments, Cancellations, and Refunds</h2>
-            
+
             <div className="ml-4 space-y-4">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">5.1 Payments</h3>
                 <p>
-                  The Service may allow payments for private lessons, group classes, events, or related offerings through integrated payment providers. By submitting payment information, you authorize the Company and its third‑party payment processors to charge your chosen payment method for all applicable fees.
+                  The Service allows payments for private lessons, group classes, events, or related offerings through integrated payment providers (including Stripe). By submitting payment information, you authorize the Company and its third‑party payment processors to charge your chosen payment method for all applicable fees.
                 </p>
               </div>
 
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">5.2 Third‑Party Payment Processors</h3>
                 <p>
-                  Payments are processed by third‑party providers under their own terms and privacy policies. The Company does not control and is not responsible for the acts, errors, or omissions of such providers.
+                  Payments are processed by third‑party providers (such as Stripe) under their own terms and privacy policies. The Company does not control and is not responsible for the acts, errors, or omissions of such providers.
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.3 Cancellations and Rescheduling</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.3 Private Lesson Purchase Policy</h3>
                 <p>
-                  Cancellation, rescheduling, and no‑show policies may be established by the Company, individual instructors, or studios. Specific policy terms (such as required notice periods and applicable fees) will be communicated through the Service or at the time of booking. By making a booking, you agree to the applicable policy.
+                  Private lessons purchased through the Service are subject to the following terms:
+                </p>
+                <ul className="list-disc list-inside mt-2 space-y-2">
+                  <li><strong>Validity Period:</strong> Private lessons are valid for twelve (12) months from the date of purchase. Lessons not scheduled and completed within this period will expire and become non-redeemable.</li>
+                  <li><strong>No Refunds:</strong> All private lesson purchases are final and non-refundable. Once payment is processed, lessons cannot be refunded or exchanged for cash value.</li>
+                  <li><strong>Scheduling Responsibility:</strong> It is your responsibility to schedule and attend lessons within the validity period. The Company is not responsible for unused lessons that expire due to lack of scheduling or attendance.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.4 Instructor Unavailability Exceptions</h3>
+                <p>
+                  The following exceptions apply to the private lesson validity period and no-refund policy:
+                </p>
+                <ul className="list-disc list-inside mt-2 space-y-2">
+                  <li><strong>Temporary Instructor Inability:</strong> If an instructor is temporarily unable to teach due to physical limitations, injury, illness, or other medical circumstances, the validity period for any outstanding lessons with that instructor will be extended by the duration of the instructor's unavailability. The Company will notify affected students of any such extensions.</li>
+                  <li><strong>Instructor Departure:</strong> If an instructor permanently ceases teaching and is no longer available to provide lessons through the Service, any outstanding, unused lessons purchased with that instructor will be eligible for refund. Such refunds will be processed less any applicable payment processing fees, transaction costs, or administrative fees incurred by the Company. Refunds will be issued to the original payment method where possible.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.5 Cancellations and Rescheduling</h3>
+                <p>
+                  Individual lesson cancellation and rescheduling policies may be established by the Company or individual instructors. Specific policy terms (such as required notice periods) will be communicated through the Service or at the time of booking. By scheduling a lesson, you agree to the applicable cancellation policy. Failure to provide adequate notice or attend a scheduled lesson may result in forfeiture of that lesson without refund or credit.
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.4 Refunds</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">5.6 Group Classes and Events</h3>
                 <p>
-                  Eligibility for refunds depends on the cancellation or refund policy communicated at booking. Unless otherwise stated, fees are non‑refundable once the related lesson, class, or event has been delivered. Any approved refunds will be processed using the original payment method where practicable.
+                  For group classes, workshops, events, or other offerings not specifically identified as "private lessons," different cancellation and refund policies may apply. Such policies will be communicated at the time of booking or registration.
                 </p>
               </div>
             </div>

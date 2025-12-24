@@ -146,9 +146,10 @@ export default function HomePage() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const [loginLoading, setLoginLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
-  const FADE_MS = 2000
-  const SLIDE_MS = 4500
+  const FADE_MS = 600
+  const SLIDE_MS = 3000
   const TOTAL_DURATION = FADE_MS + SLIDE_MS
 
   // Framer Motion variants
@@ -324,6 +325,10 @@ export default function HomePage() {
     setShowNav(true)
   }, [])
 
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Image cycling effect with preloading
   useEffect(() => {
     const imageTimer = setInterval(() => {
@@ -350,7 +355,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white marketing-page">
       {/* Navigation Bar */}
       <nav 
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
@@ -362,10 +367,10 @@ export default function HomePage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-cormorant)' }}>
+          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-family-display)' }}>
             CPF Dance
           </Link>
-          <div className="flex gap-4" style={{ fontFamily: 'var(--font-cormorant)' }}>
+          <div className="flex gap-4">
             <Link 
               href="/login?portal=dancer"
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium flex items-center gap-2"
@@ -394,37 +399,57 @@ export default function HomePage() {
       </nav>
 
       <section
-        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[60vh] sm:min-h-[55vh]"
+        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
       >
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-mauve-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
 
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
           <motion.h1
-            className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl sm:text-5xl lg:text-7xl font-bold text-charcoal-950 mb-6"
+            initial={isMounted ? { opacity: 0, y: -20 } : false}
+            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Your Dance Journey
-            <span className="block bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent mt-2">
-              Starts Here
+            Precision. Passion.
+            <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+              Performance.
             </span>
           </motion.h1>
           <motion.p
-            className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="text-lg sm:text-xl lg:text-2xl text-charcoal-800 mb-8 max-w-3xl mx-auto leading-relaxed"
+            initial={isMounted ? { opacity: 0 } : false}
+            animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            Track your progress, connect with world-class instructors, and elevate your dance practice with personalized guidance
+            A free platform for dancers to track their progress, connect with world-class instructors, and elevate their craft
           </motion.p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+          >
+            <Link href="/signup?role=dancer">
+              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                Get Started
+              </Button>
+            </Link>
+            <Link
+              href="/login?portal=dancer"
+              className="text-lg font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
+              onClick={handleLoginClick}
+            >
+              Already a member? Sign In →
+            </Link>
+          </motion.div>
         </div>
       </section>
 
+      {/* Studio Carousel - Right after hero */}
+      <StudioCarousel />
+
       {/* Dancer Portal Section - Primary Focus */}
-      <section id="dancer-portal" className="relative py-12 sm:py-20 overflow-hidden">
+      <section id="dancer-portal" className="relative py-16 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
@@ -440,23 +465,23 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
             <Card className="bg-gradient-to-br from-rose-50/90 to-mauve-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
               <div className="text-center mb-6">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-charcoal-950 mb-4">
+                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
                   For Dancers
                 </h2>
-                <p className="text-base sm:text-lg text-charcoal-800 leading-relaxed">
+                <p className="text-lg text-charcoal-800 leading-relaxed">
                   Everything you need to track your journey and reach your goals
                 </p>
               </div>
 
               <Link href="/signup?role=dancer" className="block mb-4">
-                <Button size="lg" className="w-full text-lg py-6">
+                <Button size="lg" className="w-full text-lg py-3">
                   Join Now
                 </Button>
               </Link>
@@ -482,13 +507,13 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="space-y-3 sm:space-y-4">
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                 {dancerFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 hover:bg-white/80 transition-colors">
+                  <div key={feature.id} className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 hover:bg-white/80 transition-colors shadow-sm">
                     <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
                     <div>
-                      <h3 className="font-semibold text-charcoal-950 text-sm sm:text-base">{feature.title}</h3>
-                      <p className="text-xs sm:text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
+                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
+                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
                     </div>
                   </div>
                 ))}
@@ -499,44 +524,51 @@ export default function HomePage() {
       </section>
 
       {/* Instructor Portal Section - Secondary */}
-      <section id="instructor-portal" className="py-12 sm:py-20 bg-gradient-to-br from-gray-50 to-rose-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="instructor-portal" className="relative py-16 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2"
+            alt="Dance instructor"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* White Opaque Overlay */}
+        <div className="absolute inset-0 bg-white/60 z-10"></div>
+
+        {/* Content */}
+        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-charcoal-950 mb-4">
-              For Instructors
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-charcoal-800 max-w-2xl mx-auto leading-relaxed">
-              Professional tools to manage your studio, track student progress, and streamline your teaching
-            </p>
-          </motion.div>
+            <Card className="bg-gradient-to-br from-champagne-50/90 to-ballet-pink-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
+              <div className="text-center mb-6">
+                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  For Instructors
+                </h2>
+                <p className="text-lg text-charcoal-800 leading-relaxed">
+                  Professional tools to manage your studio, track student progress, and streamline your teaching
+                </p>
+              </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="bg-white p-6 sm:p-8">
-              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
                 {instructorFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm">
                     <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
                     <div>
-                      <h3 className="font-semibold text-charcoal-950 text-sm sm:text-base">{feature.title}</h3>
-                      <p className="text-xs sm:text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
+                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
+                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               <Link href="/login?portal=instructor" className="block" onClick={handleLoginClick}>
-                <Button size="lg" variant="outline" className="w-full text-base sm:text-lg py-4 sm:py-6 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
+                <Button size="lg" variant="outline" className="w-full text-lg py-3 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
                   {loginLoading ? (
                     <>
                       <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -546,7 +578,7 @@ export default function HomePage() {
                       <span>Loading...</span>
                     </>
                   ) : (
-                    'Instructor Login'
+                    'Request Access'
                   )}
                 </Button>
               </Link>
@@ -555,11 +587,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-rose-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-charcoal-950 mb-8 leading-tight" style={{ letterSpacing: '-0.04em' }}>
+            <div className="order-1 lg:order-1">
+              <h2 className="mb-8" style={{ fontFamily: 'var(--font-family-display)' }}>
                 Learn from the Best
               </h2>
               <div className="space-y-4 text-lg text-charcoal-800 leading-relaxed">
@@ -589,9 +621,9 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <div className="relative">
-                <div className="aspect-[3/4] bg-gradient-to-br from-rose-200 to-mauve-200 rounded-2xl shadow-2xl overflow-hidden relative">
+                <div className="aspect-[3/4] bg-gray-100 rounded-2xl shadow-2xl overflow-hidden relative">
                   <AnimatePresence initial={false} mode="wait">
                     <motion.img
                       key={imageIndex}
@@ -621,13 +653,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="studio-inquiry" className="py-20 bg-white">
+      <section id="studio-inquiry" className="py-20 bg-champagne-50">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-4">
+            <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
               Studio Partnership Inquiry
             </h2>
-            <p className="text-xl text-charcoal-800 leading-relaxed">
+            <p className="text-lg text-charcoal-800 leading-relaxed">
               Interested in bringing our expertise to your studio? Let's connect.
             </p>
           </div>
@@ -640,7 +672,7 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</h3>
+                <div className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</div>
                 <p className="text-charcoal-800 mb-6 leading-relaxed">
                   We've received your inquiry and will be in touch shortly.
                 </p>
@@ -736,14 +768,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <StudioCarousel />
-
       <footer className="bg-mauve-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
           <div className="space-y-4 mb-8">
             <div className="grid md:grid-cols-2 gap-12">
               <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Quick Links</h4>
+                <div className="text-xl font-semibold text-white mb-4">Quick Links</div>
                 <ul className="space-y-2">
                   <li>
                     <Link href="/login" className="text-white hover:text-rose-400 transition-colors">
@@ -764,7 +794,7 @@ export default function HomePage() {
               </div>
 
               <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Contact</h4>
+                <div className="text-xl font-semibold text-white mb-4">Contact</div>
                 <ul className="space-y-2 text-white">
                   <li>Email: info@cpfdance.com</li>
                   <li>

@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
 interface Waiver {
   id: string
@@ -350,7 +351,7 @@ export default function WaiverDetailPage() {
           <CardContent className="mt-4">
             <div
               className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-gray-200"
-              dangerouslySetInnerHTML={{ __html: waiver.content }}
+              dangerouslySetInnerHTML={createSanitizedHtml(waiver.content)}
             />
           </CardContent>
         </Card>

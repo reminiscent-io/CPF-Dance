@@ -17,12 +17,17 @@ npm run dev
 # Production build
 npm run build
 
-# Start production server (port 3000)
+# Start production server (port 5000, not 3000)
 npm start
 
 # Linting
 npm lint
 ```
+
+**Important Notes:**
+- Both dev and production run on **port 5000** (not 3000)
+- Port 5000 maps to external port 80 on Replit
+- Dev server binds to `0.0.0.0` for external access
 
 ## Database Setup (CRITICAL)
 
@@ -47,10 +52,12 @@ The schema defines:
 **Multi-layered security approach:**
 
 1. **Middleware Proxy** (`proxy.ts`): Portal-level routing protection
+   - **CRITICAL**: Must use `export default async function proxy()` (Next.js 16 requirement)
    - Redirects unauthenticated users to `/login`
    - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`)
    - Redirects users to their correct portal based on role
    - **Admin role** can access all portals via sidebar switcher
+   - Matcher pattern excludes `_next/`, `api/`, and static assets
 
 2. **API Route Guards** (`lib/auth/server-auth.ts`):
    - `requireInstructor()` - Ensures instructor role
@@ -159,7 +166,8 @@ app/
 lib/
 ├── auth/
 │   ├── server-auth.ts     # Role guards and auth helpers
-│   └── waiver-access.ts   # Waiver access control helpers
+│   ├── waiver-access.ts   # Waiver access control helpers
+│   └── privileges.ts      # Role privilege checking utilities
 ├── supabase/
 │   ├── client.ts          # Browser client
 │   ├── server.ts          # Server client
@@ -168,7 +176,8 @@ lib/
 │   ├── database.types.ts  # Supabase generated types
 │   └── index.ts           # Custom types
 └── utils/
-    └── pricing.ts         # Pricing calculation utilities
+    ├── pricing.ts         # Pricing calculation utilities
+    └── sanitize.ts        # HTML sanitization (XSS prevention)
 
 components/
 ├── ui/                    # Reusable UI components
@@ -393,6 +402,38 @@ When adding new features:
 6. ✅ Never trust client-side data - always validate on server
 7. ✅ Test cross-role access (should be denied)
 
+## HTML Sanitization (XSS Prevention)
+
+**CRITICAL**: All user-generated HTML must be sanitized before rendering.
+
+**Utility:** `lib/utils/sanitize.ts`
+
+```typescript
+import { createSanitizedHtml, sanitizeHtml } from '@/lib/utils/sanitize'
+
+// For React dangerouslySetInnerHTML
+<div dangerouslySetInnerHTML={createSanitizedHtml(userContent)} />
+
+// For string sanitization
+const clean = sanitizeHtml(dirtyHtml)
+```
+
+**Features:**
+- DOMPurify-based with strict whitelist
+- Works on both client and server (uses jsdom for SSR)
+- Removes scripts, event handlers, and dangerous tags
+- Specialized functions: `sanitizeWaiverHtml()`, `sanitizePlainText()`
+
+**When to use:**
+- Rendering notes content (rich text from TipTap editor)
+- Displaying waiver content
+- Any user-provided HTML content
+
+**Never:**
+- Use `dangerouslySetInnerHTML` without sanitization
+- Trust client-side input
+- Allow arbitrary HTML tags
+
 ## Common Patterns
 
 ### Creating a new API route for dancers:
@@ -594,21 +635,50 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 
 **Core Files:**
 - `supabase-schema.sql` - Main database schema
-- `proxy.ts` - Route protection and role-based redirects
+- `proxy.ts` - Route protection and role-based redirects (MUST use `export default`)
 - `lib/auth/server-auth.ts` - Role guard utilities
 - `lib/auth/waiver-access.ts` - Waiver access helpers
+- `lib/auth/privileges.ts` - Role privilege checking
 - `lib/utils/pricing.ts` - Pricing calculation utilities
+- `lib/utils/sanitize.ts` - HTML sanitization for XSS prevention
 - `components/Sidebar.tsx` - Unified navigation with admin switcher
+- `components/NotesRichTextEditor.tsx` - TipTap editor with sanitization
 
 ## Best Practices
 
 1. **Always use server-side auth guards** - Never rely on client-side checks alone
 2. **Filter queries by scope** - Dancers see only their data, instructors see only their students
 3. **Use RLS policies** - Database-level security is the last line of defense
-4. **Validate pricing data** - Use `validatePricingData()` before saving pricing configurations
-5. **Test with multiple roles** - Ensure cross-role access is properly denied
-6. **Consider admin access** - When building features, think about what admins should see
-7. **Use TypeScript** - Leverage type safety for database queries and API responses
-8. **Handle errors gracefully** - Return appropriate error messages and status codes
-9. **Document new features** - Update this file when adding major features or changes
-10. **Apply migrations carefully** - Test migrations on development database first
+4. **Sanitize all HTML** - Use `createSanitizedHtml()` for any user content rendered with `dangerouslySetInnerHTML`
+5. **Validate pricing data** - Use `validatePricingData()` before saving pricing configurations
+6. **Test with multiple roles** - Ensure cross-role access is properly denied
+7. **Consider admin access** - When building features, think about what admins should see
+8. **Use TypeScript** - Leverage type safety for database queries and API responses
+9. **Handle errors gracefully** - Return appropriate error messages and status codes
+10. **Document new features** - Update this file when adding major features or changes
+11. **Apply migrations carefully** - Test migrations on development database first
+
+## Critical Gotchas
+
+### Next.js 16 Proxy Export
+**Problem**: Using `export async function proxy()` instead of `export default async function proxy()`
+**Symptom**: Middleware not recognized, empty middleware manifest, auth not working
+**Solution**: Always use `export default` for proxy function
+
+### RLS vs API Filtering
+**Problem**: Adding `.eq('author_id', user.id)` in API when RLS policy already handles authorization
+**Symptom**: "0 rows" errors, PGRST116 errors, updates fail
+**Solution**: Trust RLS policies, don't over-filter in API layer unless specifically required
+
+### Replit Deployment Cache
+**Problem**: Code changes deployed but not reflected in production
+**Symptom**: Old bugs persist after fixes, JavaScript 403 errors
+**Solution**: Delete deployment and create fresh one (don't just republish)
+
+### Session Management
+**Problem**: Using incorrect Supabase client type
+**Symptom**: Auth works in dev but fails in production, session errors
+**Solution**: Use correct client:
+- Server components: `@/lib/supabase/server`
+- Client components: `@/lib/supabase/client`
+- Middleware: `@/lib/supabase/middleware`

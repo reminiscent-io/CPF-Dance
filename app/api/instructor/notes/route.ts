@@ -115,6 +115,8 @@ export async function PUT(request: Request) {
     }
 
     // Update the note
+    // Note: RLS policy already restricts access to instructor/admin notes
+    // Instructors can edit ALL notes (not just their own) for collaboration
     const { data: note, error: noteError } = await supabase
       .from('notes')
       .update({
@@ -125,7 +127,8 @@ export async function PUT(request: Request) {
         visibility: visibility || 'shared_with_student',
       })
       .eq('id', id)
-      .eq('author_id', user.id) // Ensure user can only edit their own notes
+      // Removed .eq('author_id', user.id) to allow instructors to edit any note
+      // RLS policy "Instructors and Admins can manage all notes" handles security
       .select()
       .single()
 
@@ -180,11 +183,12 @@ export async function DELETE(request: Request) {
     }
 
     // Delete the note
+    // Note: RLS policy restricts access - only instructors/admins can delete notes
     const { error: deleteError } = await supabase
       .from('notes')
       .delete()
       .eq('id', id)
-      .eq('author_id', user.id) // Ensure user can only delete their own notes
+      // Removed .eq('author_id', user.id) - RLS policy handles authorization
 
     if (deleteError) {
       console.error('Supabase error deleting note:', deleteError)

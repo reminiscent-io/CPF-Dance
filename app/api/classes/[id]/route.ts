@@ -63,6 +63,7 @@ export async function PATCH(
     const body = await request.json()
 
     const {
+      instructor_id,
       studio_id,
       class_type,
       title,
@@ -98,6 +99,32 @@ export async function PATCH(
     }
 
     const updateData: any = {}
+
+    // Only admins can change the instructor
+    if (instructor_id !== undefined && profile.role === 'admin') {
+      if (instructor_id) {
+        // Validate that the specified user exists and is an instructor or admin
+        const { data: instructorProfile, error: instructorError } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', instructor_id)
+          .single()
+
+        if (instructorError || !instructorProfile) {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User not found'
+          }, { status: 400 })
+        }
+
+        if (!isInstructorOrAdmin(instructorProfile.role)) {
+          return NextResponse.json({
+            error: 'Invalid instructor_id: User must be an instructor or admin'
+          }, { status: 400 })
+        }
+
+        updateData.instructor_id = instructor_id
+      }
+    }
 
     if (studio_id !== undefined) updateData.studio_id = studio_id || null
     if (class_type !== undefined) updateData.class_type = class_type

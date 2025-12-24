@@ -1,0 +1,98 @@
+[
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can link inquiries to studios",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can manage all inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can manage all studio inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can manage studio inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can view all studio inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Admins can view studio inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Anyone can create studio inquiries",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Instructors can view studio inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'instructor'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Public can create inquiries",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "tablename": "studio_inquiries",
+    "policyname": "Studio can view their inquiries",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'studio_admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "tablename": "waiver_signatures",
+    "policyname": "Users can create waiver signatures",
+    "qual": null,
+    "with_check": "((EXISTS ( SELECT 1\n   FROM waivers\n  WHERE ((waivers.id = waiver_signatures.waiver_id) AND (auth.uid() = waivers.recipient_id)))) AND (auth.uid() = signed_by_id))"
+  },
+  {
+    "tablename": "waiver_signatures",
+    "policyname": "Users can view waiver signatures with proper access",
+    "qual": "(EXISTS ( SELECT 1\n   FROM waivers\n  WHERE ((waivers.id = waiver_signatures.waiver_id) AND ((auth.uid() = waivers.issued_by_id) OR (auth.uid() = waivers.recipient_id) OR (auth.uid() = waivers.signed_by_id) OR (EXISTS ( SELECT 1\n           FROM profiles\n          WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role)))) OR (EXISTS ( SELECT 1\n           FROM (students\n             JOIN profiles ON ((profiles.id = auth.uid())))\n          WHERE ((students.profile_id = waivers.recipient_id) AND ((students.guardian_id = auth.uid()) OR (profiles.guardian_id = auth.uid())))))))))",
+    "with_check": null
+  },
+  {
+    "tablename": "waiver_templates",
+    "policyname": "Instructors and admins can create templates",
+    "qual": null,
+    "with_check": "((auth.uid() = created_by_id) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['instructor'::user_role, 'admin'::user_role]))))))"
+  },
+  {
+    "tablename": "waiver_templates",
+    "policyname": "Users can delete their own templates",
+    "qual": "(auth.uid() = created_by_id)",
+    "with_check": null
+  },
+  {
+    "tablename": "waiver_templates",
+    "policyname": "Users can update their own templates",
+    "qual": "(auth.uid() = created_by_id)",
+    "with_check": "(auth.uid() = created_by_id)"
+  },
+  {
+    "tablename": "waiver_templates",
+    "policyname": "Users can view their templates or shared templates",
+    "qual": "((auth.uid() = created_by_id) OR (is_shared = true))",
+    "with_check": null
+  }
+]

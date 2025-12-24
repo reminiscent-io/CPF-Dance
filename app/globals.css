@@ -1,6 +1,24 @@
 @import "tailwindcss";
 
+:root {
+  /* Typography - CSS variables for fonts */
+  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
+  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
 @theme {
+  /* Spacing System - Systematic scale for consistent rhythm */
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-5: 1.5rem;    /* 24px */
+  --spacing-6: 2rem;      /* 32px */
+  --spacing-8: 3rem;      /* 48px */
+  --spacing-10: 4rem;     /* 64px */
+  --spacing-12: 6rem;     /* 96px */
+  --spacing-16: 8rem;     /* 128px */
+
   /* Ballet Noir Color Palette - Sophisticated Dark + Blush */
 
   /* Charcoal - Primary text and headings */
@@ -29,18 +47,18 @@
   --color-champagne-900: #584d3d;
   --color-champagne-950: #2f2920;
 
-  /* Ballet Pink - Muted dusty rose accents */
-  --color-ballet-pink-50: #faf5f5;
-  --color-ballet-pink-100: #f5ebeb;
-  --color-ballet-pink-200: #ead9d9;
-  --color-ballet-pink-300: #dabcbc;
-  --color-ballet-pink-400: #d4a5a5;
-  --color-ballet-pink-500: #c89090;
-  --color-ballet-pink-600: #b67676;
-  --color-ballet-pink-700: #9d6f6f;
-  --color-ballet-pink-800: #7d5959;
-  --color-ballet-pink-900: #5f4545;
-  --color-ballet-pink-950: #3a2828;
+  /* Ballet Pink - Sophisticated rose accents */
+  --color-ballet-pink-50: #faf5f6;
+  --color-ballet-pink-100: #f5e8ea;
+  --color-ballet-pink-200: #ebd2d6;
+  --color-ballet-pink-300: #ddb5bb;
+  --color-ballet-pink-400: #d19ba3;
+  --color-ballet-pink-500: #c27d88;
+  --color-ballet-pink-600: #b06472;
+  --color-ballet-pink-700: #945563;
+  --color-ballet-pink-800: #7a4652;
+  --color-ballet-pink-900: #5f3a43;
+  --color-ballet-pink-950: #3a2328;
 
   /* Gold - Premium accents and CTAs */
   --color-gold-50: #faf8f0;
@@ -91,10 +109,6 @@
   --color-cream-800: var(--color-champagne-800);
   --color-cream-900: var(--color-champagne-900);
   --color-cream-950: var(--color-champagne-950);
-
-  /* Typography */
-  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
-  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 * {
@@ -111,19 +125,37 @@ body {
   line-height: 1.6;
 }
 
+/* Typography System - Default styles for all headings */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-display);
   color: var(--color-charcoal-950);
   font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Marketing site typography (large, dramatic sizes) */
+/* Only applies to elements with marketing-page class */
+.marketing-page h1 {
+  font-size: 4.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.marketing-page h2 {
+  font-size: 3.5rem;
+  line-height: 1.15;
   letter-spacing: -0.03em;
 }
 
-h1 {
-  line-height: 1.2;
-}
+/* Responsive marketing typography - scale down on mobile */
+@media (max-width: 640px) {
+  .marketing-page h1 {
+    font-size: 3rem;
+  }
 
-h2 {
-  line-height: 1.25;
+  .marketing-page h2 {
+    font-size: 2.5rem;
+  }
 }
 
 @keyframes fadeIn {

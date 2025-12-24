@@ -213,7 +213,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-6 py-4 md:p-6 border-b border-rose-500 h-16 md:h-auto flex items-center md:block">
+          <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
             <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 CPF Dance
@@ -284,9 +284,9 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             {navLinks.groups?.map((group: any, groupIndex: number) => (
               <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-6' : ''}>
                 {/* Group Header */}
-                <h3 className="px-4 text-xs font-semibold text-rose-200 uppercase tracking-wider mb-2">
+                <div className="px-4 text-xs font-semibold text-rose-200 uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-family-sans)' }}>
                   {group.label}
-                </h3>
+                </div>
 
                 {/* Group Links */}
                 <div className="space-y-1">

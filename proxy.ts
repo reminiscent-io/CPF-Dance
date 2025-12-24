@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { response, user, profile } = await updateSession(request)
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
@@ -64,6 +64,15 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Match all request paths except:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - _next/webpack-hmr (webpack HMR)
+     * - favicon and icons
+     * - public images
+     */
+    '/((?!api/|_next/|favicon\\.ico|icon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
