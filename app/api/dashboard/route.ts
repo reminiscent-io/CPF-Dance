@@ -17,13 +17,36 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
 
-    const now = new Date().toISOString()
+    const now = new Date()
+    const nowISO = now.toISOString()
+    
+    // Get start and end of today in local timezone
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+    
     const { count: upcomingClasses } = await supabase
       .from('classes')
       .select('*', { count: 'exact', head: true })
-      .gte('start_time', now)
+      .gte('start_time', nowISO)
       .eq('is_cancelled', false)
 
+    // Get all of today's classes (including ones that already started today)
+    const { data: todaysClasses } = await supabase
+      .from('classes')
+      .select(`
+        id,
+        title,
+        start_time,
+        end_time,
+        class_type,
+        studio:studios(name)
+      `)
+      .gte('start_time', todayStart.toISOString())
+      .lte('start_time', todayEnd.toISOString())
+      .eq('is_cancelled', false)
+      .order('start_time', { ascending: true })
+
+    // Get next upcoming class (after now)
     const { data: nextClass } = await supabase
       .from('classes')
       .select(`
@@ -32,7 +55,7 @@ export async function GET(request: NextRequest) {
         start_time,
         studio:studios(name)
       `)
-      .gte('start_time', now)
+      .gte('start_time', nowISO)
       .eq('is_cancelled', false)
       .order('start_time', { ascending: true })
       .limit(1)
@@ -128,7 +151,21 @@ export async function GET(request: NextRequest) {
       studio_name: (nextClass[0].studio as any)?.name || 'Studio TBA'
     } : null
 
-    return NextResponse.json({ stats, recent_activity: recentActivity, next_class: nextClassData })
+    const todaysClassesData = (todaysClasses || []).map(c => ({
+      id: c.id,
+      title: c.title,
+      start_time: c.start_time,
+      end_time: c.end_time,
+      class_type: c.class_type,
+      studio_name: (c.studio as any)?.name || 'Studio TBA'
+    }))
+
+    return NextResponse.json({ 
+      stats, 
+      recent_activity: recentActivity, 
+      next_class: nextClassData,
+      todays_classes: todaysClassesData
+    })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

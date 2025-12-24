@@ -24,12 +24,22 @@ interface NextClass {
   studio_name: string
 }
 
+interface TodaysClass {
+  id: string
+  title: string
+  start_time: string
+  end_time: string
+  class_type: string
+  studio_name: string
+}
+
 export default function InstructorPortalPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [nextClass, setNextClass] = useState<NextClass | null>(null)
+  const [todaysClasses, setTodaysClasses] = useState<TodaysClass[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
@@ -52,6 +62,7 @@ export default function InstructorPortalPage() {
       const data = await response.json()
       setStats(data.stats)
       setNextClass(data.next_class)
+      setTodaysClasses(data.todays_classes || [])
       setRecentActivity(data.recent_activity || [])
     } catch (error) {
       console.error('Error fetching dashboard:', error)
@@ -91,11 +102,11 @@ export default function InstructorPortalPage() {
         </div>
       ) : (
         <>
-          {/* Next Class Section */}
+          {/* Today's Classes Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-charcoal-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                Next Class
+                {todaysClasses.length > 0 ? "Today's Classes" : "Next Up"}
               </h2>
               {stats && stats.upcoming_classes > 0 && (
                 <button
@@ -107,7 +118,57 @@ export default function InstructorPortalPage() {
               )}
             </div>
             
-            {nextClass ? (
+            {todaysClasses.length > 0 ? (
+              <div className="space-y-4">
+                {todaysClasses.map((classItem) => {
+                  const startTime = new Date(classItem.start_time)
+                  const endTime = new Date(classItem.end_time)
+                  const isPast = endTime < new Date()
+                  
+                  return (
+                    <div 
+                      key={classItem.id}
+                      className={`pb-4 border-b border-gray-200 ${isPast ? 'opacity-60' : ''}`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-charcoal-900">{classItem.title}</h3>
+                            {isPast && (
+                              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Completed</span>
+                            )}
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:gap-6 text-sm text-gray-600">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4 text-charcoal-600" />
+                              {startTime.toLocaleString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                dayPeriod: 'short'
+                              })} - {endTime.toLocaleString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                dayPeriod: 'short'
+                              })}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <BuildingOfficeIcon className="w-4 h-4 text-charcoal-600" />
+                              {classItem.studio_name}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => router.push(`/instructor/classes?class_id=${classItem.id}`)}
+                          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-medium transition-colors text-sm"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : nextClass ? (
               <div className="pb-6 border-b border-gray-200">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div className="flex-1">
@@ -116,6 +177,7 @@ export default function InstructorPortalPage() {
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="w-4 h-4 text-charcoal-600" />
                         {new Date(nextClass.start_time).toLocaleString('en-US', {
+                          weekday: 'short',
                           month: 'short',
                           day: 'numeric',
                           hour: 'numeric',
