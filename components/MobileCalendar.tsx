@@ -50,7 +50,9 @@ export function MobileCalendar({
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [lastTap, setLastTap] = useState<number>(0)
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const containerRef = useRef<HTMLDivElement>(null)
+  const timelineScrollRef = useRef<HTMLDivElement>(null)
   const isUserSelectionRef = useRef<boolean>(false)
 
   useEffect(() => {
@@ -73,6 +75,28 @@ export function MobileCalendar({
       }
     }
   }, [currentDate])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if ((viewMode === 'week' || viewMode === 'day') && timelineScrollRef.current) {
+      const now = new Date()
+      const hours = now.getHours()
+      const minutes = now.getMinutes()
+      const HOUR_HEIGHT = 60
+      const START_HOUR = 5
+      const scrollTo = Math.max(0, ((hours - START_HOUR) * HOUR_HEIGHT + (minutes / 60) * HOUR_HEIGHT) - 100)
+      
+      setTimeout(() => {
+        timelineScrollRef.current?.scrollTo({ top: scrollTo, behavior: 'smooth' })
+      }, 100)
+    }
+  }, [viewMode])
 
   const minSwipeDistance = 50
 
@@ -299,13 +323,13 @@ export function MobileCalendar({
 
   const renderViewModeSelector = () => {
     return (
-      <div className="flex bg-gray-100 rounded-lg p-1 mx-4 mb-3">
+      <div className="flex bg-gray-100 rounded-lg p-0.5 mx-3 mb-2">
         {(['month', 'week', 'day'] as ViewMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => handleViewModeChange(mode)}
             className={`
-              flex-1 py-1.5 text-sm font-medium rounded-md transition-all
+              flex-1 py-1 text-xs font-medium rounded-md transition-all
               ${viewMode === mode 
                 ? 'bg-white text-gray-900 shadow-sm' 
                 : 'text-gray-600 hover:text-gray-900'
@@ -553,23 +577,25 @@ export function MobileCalendar({
 
     const HOUR_HEIGHT = 60
 
+    const GUTTER_WIDTH = 32
+
     return (
       <div className="relative">
         <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
           <div className="flex">
-            <div className="w-12 flex-shrink-0" />
+            <div className="flex-shrink-0" style={{ width: `${GUTTER_WIDTH}px` }} />
             {weekDays.map((day, index) => (
               <div 
                 key={index} 
-                className={`flex-1 text-center py-2 ${isSelected(day) ? 'bg-rose-50' : ''}`}
+                className={`flex-1 text-center py-1 ${isSelected(day) ? 'bg-rose-50' : ''}`}
               >
-                <div className="text-xs text-gray-500">
+                <div className="text-[10px] text-gray-500">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'][day.getDay()]}
                 </div>
                 <button
                   onClick={() => handleDayClick(day)}
                   className={`
-                    w-7 h-7 rounded-full text-sm font-medium mx-auto flex items-center justify-center
+                    w-6 h-6 rounded-full text-xs font-medium mx-auto flex items-center justify-center
                     ${isSelected(day)
                       ? 'bg-rose-600 text-white'
                       : isToday(day)
@@ -588,8 +614,8 @@ export function MobileCalendar({
         <div className="relative">
           {hours.map((hour) => (
             <div key={hour} className="flex border-t border-gray-100" style={{ height: `${HOUR_HEIGHT}px` }}>
-              <div className="w-12 flex-shrink-0 text-right pr-1">
-                <span className="text-[10px] text-gray-400 -mt-1.5 block">
+              <div className="flex-shrink-0 text-right pr-1" style={{ width: `${GUTTER_WIDTH}px` }}>
+                <span className="text-[10px] text-gray-500 -mt-1.5 block">
                   {hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`}
                 </span>
               </div>
@@ -601,8 +627,8 @@ export function MobileCalendar({
           
           {weekDays.map((day, dayIndex) => {
             const dayEvents = getEventsForDate(day)
-            const colWidth = `calc((100% - 48px) / 7)`
-            const leftPos = `calc(48px + ${dayIndex} * ${colWidth})`
+            const colWidth = `calc((100% - ${GUTTER_WIDTH}px) / 7)`
+            const leftPos = `calc(${GUTTER_WIDTH}px + ${dayIndex} * ${colWidth})`
             
             return dayEvents.map((event) => {
               const { top, height } = getEventPosition(event)
@@ -617,7 +643,7 @@ export function MobileCalendar({
                     height: `${height}px`, 
                     minHeight: '24px',
                     left: leftPos,
-                    width: `calc((100% - 48px) / 7 - 2px)`
+                    width: `calc((100% - ${GUTTER_WIDTH}px) / 7 - 2px)`
                   }}
                 >
                   <div className="text-[10px] font-semibold truncate leading-tight">
@@ -632,6 +658,35 @@ export function MobileCalendar({
               )
             })
           })}
+
+          {(() => {
+            const todayIndex = weekDays.findIndex(d => isToday(d))
+            if (todayIndex === -1) return null
+            
+            const nowHours = currentTime.getHours()
+            const nowMinutes = currentTime.getMinutes()
+            if (nowHours < START_HOUR || nowHours > END_HOUR) return null
+            
+            const timeTop = ((nowHours - START_HOUR) * 60 + nowMinutes) * (HOUR_HEIGHT / 60)
+            const colWidth = `calc((100% - ${GUTTER_WIDTH}px) / 7)`
+            const leftPos = `calc(${GUTTER_WIDTH}px + ${todayIndex} * ${colWidth})`
+            
+            return (
+              <div 
+                className="absolute pointer-events-none z-20"
+                style={{ 
+                  top: `${timeTop}px`,
+                  left: leftPos,
+                  width: colWidth
+                }}
+              >
+                <div className="relative flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
+                  <div className="flex-1 h-0.5 bg-red-500" />
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </div>
     )
@@ -751,22 +806,22 @@ export function MobileCalendar({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="flex items-center justify-between px-2 py-3">
+        <div className="flex items-center justify-between px-2 py-2">
           <button
             onClick={navigatePrevious}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             aria-label={viewMode === 'month' ? 'Previous month' : viewMode === 'week' ? 'Previous week' : 'Previous day'}
           >
             <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
           </button>
           
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold text-gray-900 text-center">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-gray-900 text-center">
               {formatNavigationHeader()}
             </h2>
             <button
               onClick={navigateToday}
-              className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 hover:bg-rose-50 rounded transition-colors"
+              className="text-xs text-rose-600 hover:text-rose-700 font-medium px-1.5 py-0.5 hover:bg-rose-50 rounded transition-colors"
             >
               Today
             </button>
@@ -774,7 +829,7 @@ export function MobileCalendar({
           
           <button
             onClick={navigateNext}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             aria-label={viewMode === 'month' ? 'Next month' : viewMode === 'week' ? 'Next week' : 'Next day'}
           >
             <ChevronRightIcon className="w-5 h-5 text-gray-600" />
@@ -793,7 +848,10 @@ export function MobileCalendar({
 
       <div className="border-t border-gray-200" />
 
-      <div className="flex-1 overflow-y-auto bg-gray-50">
+      <div 
+        ref={timelineScrollRef}
+        className="flex-1 overflow-y-auto bg-gray-50"
+      >
         {viewMode === 'month' && renderMonthEventList()}
         
         {viewMode === 'week' && (
@@ -804,7 +862,7 @@ export function MobileCalendar({
         
         {viewMode === 'day' && (
           <div className="bg-white">
-            <div className="sticky top-0 bg-white z-10 px-4 py-3 border-b border-gray-200">
+            <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b border-gray-200">
               <h3 className="text-sm font-semibold text-gray-700">
                 {formatSelectedDateHeader()}
               </h3>
