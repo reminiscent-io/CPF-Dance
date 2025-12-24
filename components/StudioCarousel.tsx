@@ -142,15 +142,12 @@ export default function StudioCarousel() {
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-6 sm:py-8 bg-white border-t border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Studios I've Worked With
-          </h2>
-          <p className="text-lg text-gray-600">
-            Trusted by leading dance studios in the NYC area
-          </p>
+        <div className="text-center mb-4 sm:mb-6">
+          <h3 className="text-xs sm:text-sm font-semibold tracking-widest text-gray-500 uppercase">
+            Trusted by Top Studios & Programs
+          </h3>
         </div>
 
         <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
@@ -176,8 +173,8 @@ export default function StudioCarousel() {
                 key={index}
                 className="flex-shrink-0 flex items-center justify-center group"
                 style={{
-                  width: '200px',
-                  height: '120px'
+                  width: '140px',
+                  height: '70px'
                 }}
               >
                 <div className="relative w-full h-full p-4 flex items-center justify-center">

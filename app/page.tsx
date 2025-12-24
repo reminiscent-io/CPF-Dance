@@ -399,7 +399,7 @@ export default function HomePage() {
       </nav>
 
       <section
-        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[60vh] sm:min-h-[55vh]"
+        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
       >
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
@@ -444,6 +444,9 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Studio Carousel - Right after hero */}
+      <StudioCarousel />
 
       {/* Dancer Portal Section - Primary Focus */}
       <section id="dancer-portal" className="relative py-16 overflow-hidden">
@@ -757,8 +760,6 @@ export default function HomePage() {
           </Card>
         </div>
       </section>
-
-      <StudioCarousel />
 
       <footer className="bg-mauve-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
