@@ -269,9 +269,19 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 50%, rgba(200, 144, 144, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(169, 169, 169, 0.06) 0%, transparent 50%);
   pointer-events: none;
   opacity: 0.5;
+}
+
+/* Hide scrollbar for swipable galleries */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
