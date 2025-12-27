@@ -580,7 +580,7 @@ export default function HomePage() {
                 {/* Swipable Gallery */}
                 <div
                   ref={galleryRef}
-                  className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
+                  className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide bg-white"
                   style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none'
