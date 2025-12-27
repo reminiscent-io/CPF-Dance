@@ -79,11 +79,10 @@ export async function POST(request: Request) {
     // For admin role, allow access to any portal
     let redirectUrl: string
     if (role === 'admin') {
-      // Admins can use any portal - dancer, instructor, or studio
+      // Admins can use any portal - dancer or instructor
       const portalRedirects: Record<string, string> = {
         dancer: '/dancer',
         instructor: '/instructor',
-        studio: '/studio',
       }
       redirectUrl = portalRedirects[portal] || '/instructor'
     } else {

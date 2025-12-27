@@ -597,7 +597,7 @@ export default function HomePage() {
                       key={idx}
                       className="flex-shrink-0 w-full snap-center"
                     >
-                      <div className="aspect-[3/4] bg-gray-100 rounded-2xl shadow-2xl overflow-hidden">
+                      <div className="aspect-[3/4] rounded-2xl shadow-2xl overflow-hidden">
                         <img
                           src={image}
                           alt={`Courtney - Professional Dancer and Instructor ${idx + 1}`}

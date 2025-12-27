@@ -87,7 +87,6 @@ The proxy (`proxy.ts`) now enforces role-based portal access:
 
 - `/instructor/*` - Only users with `role='instructor'` can access
 - `/dancer/*` - Only users with `role='dancer'` can access
-- `/studio/*` - Only users with `role='studio_admin'` can access
 
 ### Automatic Redirection:
 
