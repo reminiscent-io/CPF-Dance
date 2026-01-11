@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -39,6 +39,7 @@ export default function DancerPortalPage() {
   const [stats, setStats] = useState<DancerStats | null>(null)
   const [nextClass, setNextClass] = useState<NextClass | null>(null)
   const [loadingData, setLoadingData] = useState(true)
+  const hasFetched = useRef(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian' && profile.role !== 'admin') {
@@ -47,7 +48,8 @@ export default function DancerPortalPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && profile) {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
       fetchDashboardData()
     }
   }, [loading, user, profile])

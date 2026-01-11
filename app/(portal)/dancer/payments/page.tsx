@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -36,6 +36,7 @@ export default function DancerPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loadingPayments, setLoadingPayments] = useState(true)
   const [filter, setFilter] = useState<FilterType>('all')
+  const hasFetched = useRef(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -44,7 +45,8 @@ export default function DancerPaymentsPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && profile) {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
       fetchPayments()
     }
   }, [loading, user, profile])

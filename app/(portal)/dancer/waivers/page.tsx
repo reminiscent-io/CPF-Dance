@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -24,6 +24,7 @@ export default function DancerWaiversPage() {
   const router = useRouter()
   const [waivers, setWaivers] = useState<Waiver[]>([])
   const [loadingWaivers, setLoadingWaivers] = useState(true)
+  const hasFetched = useRef(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'guardian' && profile.role !== 'admin') {
@@ -32,7 +33,8 @@ export default function DancerWaiversPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !hasFetched.current) {
+      hasFetched.current = true
       fetchWaivers()
     }
   }, [loading, user])
