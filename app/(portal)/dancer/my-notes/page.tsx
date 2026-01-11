@@ -12,6 +12,7 @@ import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
 import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
+import { PlusIcon } from '@heroicons/react/24/outline'
 
 interface Note {
   id: string
@@ -198,8 +199,8 @@ export default function DancerMyNotesPage() {
             Keep track of your thoughts, goals, and reflections on your dance journey
           </p>
         </div>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          Add Note
+        <Button variant="primary" onClick={() => handleOpenModal()} className="p-2 rounded-full aspect-square flex items-center justify-center">
+          <PlusIcon className="h-6 w-6" />
         </Button>
       </div>
 
