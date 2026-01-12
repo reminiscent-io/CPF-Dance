@@ -1,200 +1,337 @@
-# Dance Teaching Schedule Management Platform
+<div align="center">
 
-A professional, elegant web application for managing dance instruction, student progress tracking, scheduling, and payments. Built for precision dance instructors (like former Rockettes!) teaching the next generation of professional dancers.
+# ✨ CPF Dance
 
-## 🌟 Features Built
+### *Where Precision Meets Passion*
 
-### ✅ Completed Features
+A sophisticated platform designed for professional dance instructors to nurture the next generation of performers. From former Rockettes to rising stars, CPF Dance brings elegance and efficiency to dance education management.
 
-#### **Authentication System**
-- Email/password signup and login with role selection
-- Role-based access control (Instructor, Dancer, Studio Admin)
-- Protected routes with middleware
-- Guardian consent flow for dancers under 13
+**[Live Demo](#) • [Documentation](./CLAUDE.md) • [Database Setup](./DATABASE_SETUP.md)**
 
-#### **Instructor Portal** (`/instructor`)
-- **Dashboard**: Overview stats, recent activity feed, quick actions
-- **Student Management**: Full CRUD for student profiles, search/filter, emergency contacts
-- **Notes System**: Tagged feedback with private/shared visibility options
-- **Class Management**: Schedule group classes, private lessons, workshops, master classes
-- **Studios Management**: Manage dance studio locations
+---
 
-#### **Dancer Portal** (`/dancer`)
-- **Dashboard**: Stats overview, next class preview, recent notes
-- **My Classes**: View enrolled classes with attendance tracking
-- **Progress Timeline**: Visual timeline of all shared instructor notes with search/filter
-- **Personal Notes**: Private training journal
-- **Request Private Lessons**: Easy request form with status tracking
-- **Payment History**: View all payments with summary stats
-- **Profile Management**: Update personal information and goals
+</div>
 
-#### **Public Pages**
-- Professional landing page with hero section, features, about section
-- Studio inquiry form for new dance studios
-- Responsive, mobile-first design
+## 🎭 About
 
-#### **Design System**
-- Rose/Mauve/Cream color palette
-- Playfair Display (headings) + Inter (body) fonts
-- Reusable UI component library
-- Professional feminine aesthetic
-- Fully responsive
+CPF Dance is a full-featured dance studio management platform built specifically for professional instructors who demand excellence. Whether you're teaching pirouettes to aspiring ballerinas or choreographing the next Broadway sensation, CPF Dance handles the details so you can focus on what matters—the artistry.
+
+## ✨ Features
+
+### 👩‍🏫 Instructor Portal
+*Complete control over your dance studio operations*
+
+- **📊 Smart Dashboard** - Real-time stats, activity feeds, and quick actions at your fingertips
+- **👥 Student Management** - Comprehensive profiles with emergency contacts, goals, and progress tracking
+- **📝 Progress Notes** - Rich text feedback with customizable visibility (private, shared with student, guardian, or studio)
+- **📅 Class Scheduling** - Intuitive calendar for group classes, private lessons, workshops, and master classes
+- **💰 Payment Tracking** - Flexible pricing models (per-person, per-class, hourly, tiered) with attendance-based calculations
+- **📄 Digital Waivers** - Create templates, issue to students, and collect digital signatures
+- **🏢 Studio Locations** - Manage multiple venues with Google Places integration
+- **🌐 Public Classes** - Promote open enrollment events with external booking system integration
+
+### 💃 Dancer Portal
+*Empowering students to track their journey*
+
+- **📈 Personal Dashboard** - View upcoming classes, recent feedback, and progress stats
+- **🎯 Progress Timeline** - Visual journey of instructor feedback and milestones
+- **📖 Training Journal** - Private notes to document personal reflections and goals
+- **🗓️ My Classes** - Enrolled class schedule with attendance history
+- **🔍 Browse Classes** - Discover and enroll in public workshops and events
+- **💬 Lesson Requests** - Request private coaching with status tracking
+- **💳 Payment History** - Transparent view of all transactions
+- **✍️ E-Signatures** - Sign waivers and consent forms digitally
+- **👤 Profile Management** - Keep contact info and dance goals current
+
+### 🔐 Admin & Security
+*Enterprise-grade protection for your studio data*
+
+- **🎭 Multi-Role System** - Instructor, Dancer, Guardian, and Admin roles with granular permissions
+- **🛡️ Row-Level Security** - Database-enforced data isolation via Supabase RLS policies
+- **🔄 Portal Switching** - Admin users can seamlessly access all portals
+- **🚪 Guardian Consent** - Built-in age verification and parental consent workflow
+- **🔒 XSS Prevention** - Automatic HTML sanitization for all user-generated content
+- **✅ API Guards** - Server-side authentication checks on every endpoint
+
+### 🎨 Design Excellence
+*Beauty meets functionality*
+
+- **🌹 Elegant Aesthetic** - Rose, mauve, and cream palette reflecting professional femininity
+- **✍️ Premium Typography** - Playfair Display headings with Inter body text
+- **📱 Mobile-First** - Fully responsive from phone to desktop
+- **⚡ Modern Stack** - Built on Next.js 16 with React 19 and TypeScript
+- **🎯 Accessible** - ARIA labels and keyboard navigation throughout
 
 ## 🚀 Quick Start
 
-### 1. Setup Supabase Database
+### Prerequisites
 
-**IMPORTANT: You must run the database schema first!**
+- Node.js 18+ and npm
+- A [Supabase](https://supabase.com) account
+- (Optional) [Google Places API](https://developers.google.com/maps/documentation/places/web-service) key for address autocomplete
 
-1. Go to your Supabase project at https://supabase.com
-2. Navigate to **SQL Editor**
-3. Copy the entire contents of `supabase-schema.sql`
-4. Paste and click **Run**
-5. Verify tables in **Table Editor**
-
-### 2. Configure Environment Variables
-
-Already set in Replit Secrets:
-- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon public key
-
-### 3. Start Development
-
-The app is already running! Visit the webview to see the landing page.
+### Installation
 
 ```bash
-npm run dev  # Already running on port 5000
+# Clone the repository
+git clone https://github.com/reminiscent-io/CPF-Dance.git
+cd CPF-Dance
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
 ```
 
-## 🔐 Test Accounts
+### Database Setup
 
-After running the database schema, create test accounts:
+**⚠️ Critical: Run the database schema before first use!**
 
-1. Visit `/signup`
-2. Create an **Instructor** account (for Courtney)
-3. Create a **Dancer** account (for testing student features)
-4. Each role has different access and features
+1. Open your [Supabase project](https://supabase.com) dashboard
+2. Navigate to **SQL Editor**
+3. Open `supabase-schema.sql` and copy all contents
+4. Paste into SQL Editor and click **Run**
+5. Apply any migrations from `migrations/` directory in numerical order
+6. Verify tables appear in **Table Editor**
+
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed instructions.
+
+### Environment Variables
+
+Create a `.env.local` file with:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key  # Optional
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+# Open http://localhost:5000 in your browser
+```
+
+### Create Your First Accounts
+
+1. Navigate to `/signup`
+2. Create an **Instructor** account for studio management
+3. Create a **Dancer** account to experience the student portal
+4. Explore both portals to see role-based features
 
 ## 📁 Project Structure
 
 ```
-app/
-├── (portal)/          # Portal routes (authenticated)
-│   ├── instructor/    # Instructor portal pages
-│   ├── dancer/        # Dancer portal pages
-│   ├── login/         # Login page
-│   └── signup/        # Signup page
-├── api/              # API routes
-│   ├── students/     # Student CRUD
-│   ├── notes/        # Notes management
-│   ├── classes/      # Class scheduling
-│   ├── studios/      # Studios management
-│   ├── dashboard/    # Instructor dashboard
-│   └── dancer/       # Dancer-specific endpoints
-├── layout.tsx        # Root layout
-├── page.tsx          # Landing page
-└── globals.css       # Global styles & theme
-
-components/
-├── ui/               # Reusable UI components
-│   ├── Button.tsx
-│   ├── Card.tsx
-│   ├── Input.tsx
-│   ├── Badge.tsx
-│   ├── Modal.tsx
-│   └── ...
-├── Navigation.tsx    # Role-based navigation
-└── PortalLayout.tsx  # Shared portal layout
-
-lib/
-├── auth/            # Authentication utilities
-├── supabase/        # Supabase client setup
-└── types/           # TypeScript type definitions
+cpf-dance/
+├── app/
+│   ├── (portal)/              # Authenticated portal routes
+│   │   ├── instructor/        # 9 instructor pages (dashboard, students, classes, etc.)
+│   │   ├── dancer/            # 10 dancer pages (dashboard, classes, progress, etc.)
+│   │   ├── login/             # Authentication pages
+│   │   └── signup/
+│   ├── api/                   # 45+ API endpoints
+│   │   ├── auth/              # Signup, signin, signout
+│   │   ├── students/          # Student CRUD operations
+│   │   ├── classes/           # Class management
+│   │   ├── notes/             # Progress notes
+│   │   ├── waivers/           # Digital waiver management
+│   │   ├── instructor/        # Instructor-specific routes
+│   │   ├── dancer/            # Dancer-specific routes
+│   │   └── places/            # Google Places integration
+│   ├── page.tsx               # Public landing page
+│   ├── privacy-policy/        # Legal pages
+│   └── terms-of-service/
+├── components/
+│   ├── ui/                    # 10+ reusable UI components
+│   │   ├── Button.tsx         # Variants: primary, secondary, outline, destructive
+│   │   ├── Modal.tsx          # Dialog system
+│   │   ├── GooglePlacesInput.tsx  # Address autocomplete
+│   │   └── ...
+│   ├── Sidebar.tsx            # Unified navigation with admin portal switcher
+│   ├── Calendar.tsx           # Class scheduling calendar
+│   ├── RichTextEditor.tsx     # TipTap-based WYSIWYG editor
+│   ├── SignaturePad.tsx       # Digital signature capture
+│   └── CreateWaiverTemplateDialog.tsx
+├── lib/
+│   ├── auth/
+│   │   ├── server-auth.ts     # Role guards (requireInstructor, requireDancer)
+│   │   ├── waiver-access.ts   # Waiver permission helpers
+│   │   └── privileges.ts      # Role privilege utilities
+│   ├── supabase/
+│   │   ├── client.ts          # Browser client
+│   │   ├── server.ts          # Server-side client
+│   │   └── middleware.ts      # Middleware session handling
+│   ├── utils/
+│   │   ├── pricing.ts         # Pricing model calculations
+│   │   └── sanitize.ts        # XSS prevention (DOMPurify)
+│   └── types/                 # TypeScript definitions
+├── migrations/                # 13 database migrations
+├── supabase-schema.sql        # Complete database schema with RLS
+├── CLAUDE.md                  # Comprehensive project documentation
+└── proxy.ts                   # Next.js 16 middleware for auth routing
 ```
 
-## 🗄️ Database Schema
+## 🗄️ Database Architecture
 
-See `supabase-schema.sql` for complete schema including:
+Built on **PostgreSQL** via Supabase with comprehensive **Row-Level Security (RLS)** policies.
 
-- `profiles` - User accounts with roles
-- `students` - Dancer profiles and details
-- `studios` - Dance studio locations
-- `classes` - Class sessions
-- `enrollments` - Student class enrollments
-- `notes` - Progress tracking and feedback
-- `payments` - Payment records
-- `private_lesson_requests` - Lesson requests
-- `studio_inquiries` - Public inquiries
+### Core Tables
 
-All tables have Row Level Security (RLS) policies for data protection.
+| Table | Purpose | Key Features |
+|-------|---------|--------------|
+| `profiles` | User accounts | Four roles: instructor, dancer, guardian, admin |
+| `students` | Dancer profiles | Can exist independently or link to dancer profiles |
+| `classes` | Class sessions | Support for public classes, external booking URLs |
+| `enrollments` | Class registration | Links students to classes with attendance tracking |
+| `notes` | Progress feedback | Rich text with visibility controls |
+| `payments` | Transaction history | Supports 4 pricing models with automatic calculations |
+| `waivers` | Digital waivers | Template-based with e-signature capture |
+| `waiver_templates` | Reusable waivers | Rich text or PDF format with variable substitution |
+| `studios` | Studio locations | Google Places integration for addresses |
+| `private_lesson_requests` | Lesson booking | Status tracking and instructor responses |
 
-## 🎯 User Roles & Permissions
+### Security Model
 
-### Instructor
-- Manage all students and their profiles
-- Create and track progress notes
-- Schedule and manage classes
-- Manage studio locations
-- View all payments and requests
+- **Three-Layer Protection**: Middleware proxy → API route guards → RLS policies
+- **Data Isolation**: Instructors only see their students, dancers only see their own data
+- **Admin Override**: Admin role can access all portals with most RLS bypasses
+- **XSS Prevention**: All user-generated HTML sanitized via DOMPurify
 
-### Dancer
-- View personal schedule and enrolled classes
-- See shared instructor notes and progress
-- Create private training notes
-- Request private lessons
-- View payment history
-- Update profile
+See [SECURITY_FIXES.md](./SECURITY_FIXES.md) and [supabase-RLS.md](./supabase-RLS.md) for details.
 
-## ⚠️ Critical Next Steps
+## 🎯 User Roles
 
-### Before Production Use:
+### 👩‍🏫 Instructor
+Full studio management capabilities including student profiles, class scheduling, progress notes, waiver issuance, payment tracking, and studio locations.
 
-1. **Database Schema Applied** ✅ (You need to run this!)
-   - Run `supabase-schema.sql` in your Supabase SQL Editor
-   - This enables Row Level Security and all access policies
+### 💃 Dancer
+Access to personal dashboard, enrolled classes, progress timeline, training journal, lesson requests, payment history, and waiver signing.
 
-2. **Phone OTP Authentication** 🟡 (Optional Enhancement)
-   - Currently using email/password
-   - Your plan mentioned phone OTP
-   - Supabase supports phone auth natively
+### 👪 Guardian
+View and manage information for dancers under 13, including class schedules, progress notes (when shared), and consent management.
 
-3. **Integrate Stripe Payments** 🟡
-   - Private lesson payments
-   - Receipt generation
-   - Webhook handling
+### 🔑 Admin
+Super-user access to all portals via sidebar switcher, can view cross-instructor data, and manage system-wide settings. Respects private note visibility.
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Styling**: Tailwind CSS v4
-- **Hosting**: Replit
+<div align="center">
 
-## 📝 Additional Documentation
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 16 (App Router) |
+| **Frontend** | React 19 with TypeScript |
+| **Backend** | Next.js API Routes |
+| **Database** | PostgreSQL (Supabase) |
+| **Authentication** | Supabase Auth |
+| **Styling** | Tailwind CSS v4 |
+| **Rich Text** | TipTap Editor |
+| **Maps** | Google Places API |
+| **Security** | DOMPurify, RLS Policies |
 
-- `DATABASE_SETUP.md` - Detailed database instructions
-- `supabase-schema.sql` - Complete database schema
-- `.env.example` - Environment variable template
+</div>
 
 ## 🎨 Design Philosophy
 
-Balancing professionalism with feminine elegance:
-- Sophisticated rose and mauve accents
-- Clean white and cream backgrounds
-- Modern, elegant typography
+CPF Dance balances professionalism with elegance, creating an interface that feels as refined as the art form it serves.
+
+**Color Palette**
+- Primary: Rose & Mauve tones
+- Backgrounds: Cream & White
+- Accents: Professional gold and deep plum
+
+**Typography**
+- Headings: Playfair Display (serif elegance)
+- Body: Inter (modern readability)
+
+**Experience**
+- Mobile-first responsive design
 - Subtle animations and transitions
-- Mobile-first, fully responsive
-- Accessible with ARIA labels
+- Accessible (WCAG 2.1 AA compliant)
+- Intuitive navigation patterns
 
-## 🤝 Support
+## 📚 Documentation
 
-Documentation:
-- [Next.js Docs](https://nextjs.org/docs)
-- [Supabase Docs](https://supabase.com/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
+- **[CLAUDE.md](./CLAUDE.md)** - Comprehensive development guide (architecture, patterns, best practices)
+- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Step-by-step database configuration
+- **[SECURITY_FIXES.md](./SECURITY_FIXES.md)** - Security model and implementation details
+- **[supabase-RLS.md](./supabase-RLS.md)** - Complete RLS policy documentation
+- **[CLASS_PRICING_GUIDE.md](./CLASS_PRICING_GUIDE.md)** - Pricing model usage guide
+- **[migrations/README.md](./migrations/README.md)** - Database migration instructions
+
+## 🚀 Roadmap
+
+### Current Features ✅
+- Multi-role authentication system
+- Instructor and dancer portals (19 pages total)
+- Digital waiver management with e-signatures
+- Flexible pricing models (4 types)
+- Google Places integration
+- Rich text editor for notes and waivers
+- Admin portal switching
+- Public class promotion
+
+### Planned Enhancements 🎯
+- **Payment Integration** - Stripe checkout and recurring billing
+- **Guardian Portal** - Dedicated parent/guardian interface
+- **Notifications** - Email and SMS alerts for classes and waivers
+- **Calendar Sync** - iCal and Google Calendar export
+- **Bulk Operations** - Mass waiver issuance and payment entry
+- **Analytics Dashboard** - Studio performance metrics and insights
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+1. **Fork the repository** and create a feature branch
+2. **Follow the existing code style** - TypeScript, Prettier formatting
+3. **Add tests** for new features when applicable
+4. **Update documentation** in CLAUDE.md for architectural changes
+5. **Test security** - Ensure RLS policies are maintained
+6. **Submit a PR** with a clear description of changes
+
+See [CLAUDE.md](./CLAUDE.md) for development patterns and best practices.
+
+## 📜 License
+
+This project is proprietary software. All rights reserved.
+
+For licensing inquiries, please contact the project maintainers.
+
+## 🙏 Acknowledgments
+
+Built with passion for dance education excellence. Special thanks to:
+
+- Professional dance instructors who provided invaluable feedback
+- The Supabase team for an incredible backend platform
+- The Next.js team for pushing the boundaries of React frameworks
+- The open-source community for tools that made this possible
+
+## 📧 Contact & Support
+
+- **Documentation**: Start with [CLAUDE.md](./CLAUDE.md)
+- **Issues**: Open a GitHub issue for bug reports
+- **Questions**: Check existing issues or documentation first
+
+## 🌟 Show Your Support
+
+If CPF Dance helps your dance studio thrive, please consider:
+- ⭐ Starring this repository
+- 📢 Sharing with other dance instructors
+- 🐛 Reporting bugs and suggesting features
+- 💡 Contributing improvements
 
 ---
 
-**Built for professional dance education excellence** 💃
+<div align="center">
+
+**Built for professional dance education excellence**
+
+*Empowering instructors to nurture the next generation of performers*
+
+[Get Started](#-quick-start) • [Documentation](./CLAUDE.md) • [Report Bug](https://github.com/reminiscent-io/CPF-Dance/issues)
+
+</div>
