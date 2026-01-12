@@ -64,6 +64,18 @@ export default function RequestPrivateLessonPage() {
   }, [loading, user, profile])
 
   useEffect(() => {
+    if (instructors.length > 0 && !formData.instructor_id) {
+      const courtney = instructors.find(i => 
+        i.full_name?.toLowerCase().includes('courtney') && 
+        i.full_name?.toLowerCase().includes('file')
+      )
+      if (courtney) {
+        setFormData(prev => ({ ...prev, instructor_id: courtney.id }))
+      }
+    }
+  }, [instructors, formData.instructor_id])
+
+  useEffect(() => {
     // Check for payment success/canceled in URL (client-side only)
     if (typeof window === 'undefined') return
 
