@@ -54,7 +54,7 @@ The schema defines:
 1. **Middleware Proxy** (`proxy.ts`): Portal-level routing protection
    - **CRITICAL**: Must use `export default async function proxy()` (Next.js 16 requirement)
    - Redirects unauthenticated users to `/login`
-   - Enforces role-based portal access (`/instructor`, `/dancer`, `/studio`)
+   - Enforces role-based portal access (`/instructor`, `/dancer`)
    - Redirects users to their correct portal based on role
    - **Admin role** can access all portals via sidebar switcher
    - Matcher pattern excludes `_next/`, `api/`, and static assets

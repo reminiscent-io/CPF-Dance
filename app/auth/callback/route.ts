@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
       const roleRedirects: Record<string, string> = {
         instructor: '/instructor',
         dancer: '/dancer',
-        studio: '/studio',
       }
 
       return NextResponse.redirect(new URL(roleRedirects[profile.role] || '/dancer', requestUrl.origin))

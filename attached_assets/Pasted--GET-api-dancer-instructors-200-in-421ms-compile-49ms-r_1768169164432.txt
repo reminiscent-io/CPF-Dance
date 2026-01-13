@@ -1,0 +1,102 @@
+ GET /api/dancer/instructors 200 in 421ms (compile: 49ms, render: 373ms)
+ GET /api/dancer/lesson-requests 200 in 406ms (compile: 26ms, render: 380ms)
+ GET /api/dancer/lesson-packs/history 200 in 562ms (compile: 29ms, render: 533ms)
+ GET /api/dancer/instructors 200 in 393ms (compile: 2ms, render: 391ms)
+ GET /api/dancer/lesson-requests 200 in 333ms (compile: 1791µs, render: 331ms)
+ GET /api/dancer/lesson-packs/history 200 in 412ms (compile: 1597µs, render: 410ms)
+ GET /api/dancer/lesson-requests 200 in 302ms (compile: 1524µs, render: 300ms)
+ GET /api/dancer/instructors 200 in 410ms (compile: 2ms, render: 408ms)
+ GET /api/dancer/lesson-requests 200 in 386ms (compile: 3ms, render: 383ms)
+ GET /api/dancer/instructors 200 in 421ms (compile: 8ms, render: 413ms)
+ GET /api/dancer/instructors 200 in 368ms (compile: 2ms, render: 366ms)
+ GET /api/dancer/lesson-requests 200 in 410ms (compile: 4ms, render: 407ms)
+Proxy check: {
+  path: '/dancer',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer 200 in 190ms (compile: 5ms, proxy.ts: 171ms, render: 14ms)
+[Dancer Stats] Starting request...
+[Dancer Stats] Student: {
+  id: '33fe17c9-5db1-4f92-b32c-2fc5c9eeccbe',
+  profile_id: '4adcd650-930b-4929-bf72-88fc1cab7e3e'
+}
+[Dancer Stats] Profile: {
+  id: '4adcd650-930b-4929-bf72-88fc1cab7e3e',
+  email: 'klowe001@gmail.com',
+  phone: '5054703055',
+  full_name: 'Kevin Lowe',
+  role: 'admin',
+  avatar_url: null,
+  date_of_birth: '1993-04-02',
+  guardian_id: null,
+  consent_given: false,
+  created_at: '2025-11-16T21:59:03.828097+00:00',
+  updated_at: '2025-11-17T23:46:03.822294+00:00'
+}
+Proxy check: {
+  path: '/dancer/notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /api/dancer/stats 200 in 1289ms (compile: 1974µs, render: 1287ms)
+[Dancer Stats] Starting request...
+[Dancer Stats] Student: {
+  id: '33fe17c9-5db1-4f92-b32c-2fc5c9eeccbe',
+  profile_id: '4adcd650-930b-4929-bf72-88fc1cab7e3e'
+}
+[Dancer Stats] Profile: {
+  id: '4adcd650-930b-4929-bf72-88fc1cab7e3e',
+  email: 'klowe001@gmail.com',
+  phone: '5054703055',
+  full_name: 'Kevin Lowe',
+  role: 'admin',
+  avatar_url: null,
+  date_of_birth: '1993-04-02',
+  guardian_id: null,
+  consent_given: false,
+  created_at: '2025-11-16T21:59:03.828097+00:00',
+  updated_at: '2025-11-17T23:46:03.822294+00:00'
+}
+ GET /dancer/notes 200 in 1096ms (compile: 800ms, proxy.ts: 273ms, render: 23ms)
+ GET /api/dancer/stats 200 in 1496ms (compile: 17ms, render: 1479ms)
+[Dancer Stats] Starting request...
+ GET /api/dancer/personal-classes 200 in 418ms (compile: 40ms, render: 378ms)
+[Dancer Stats] Student: {
+  id: '33fe17c9-5db1-4f92-b32c-2fc5c9eeccbe',
+  profile_id: '4adcd650-930b-4929-bf72-88fc1cab7e3e'
+}
+ GET /api/dancer/classes 200 in 550ms (compile: 54ms, render: 496ms)
+[Dancer Stats] Profile: {
+  id: '4adcd650-930b-4929-bf72-88fc1cab7e3e',
+  email: 'klowe001@gmail.com',
+  phone: '5054703055',
+  full_name: 'Kevin Lowe',
+  role: 'admin',
+  avatar_url: null,
+  date_of_birth: '1993-04-02',
+  guardian_id: null,
+  consent_given: false,
+  created_at: '2025-11-16T21:59:03.828097+00:00',
+  updated_at: '2025-11-17T23:46:03.822294+00:00'
+}
+ GET /api/dancer/notes 200 in 695ms (compile: 31ms, render: 663ms)
+ GET /api/dancer/stats 200 in 1650ms (compile: 1968µs, render: 1648ms)
+Proxy check: {
+  path: '/dancer/notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/notes 200 in 389ms (compile: 5ms, proxy.ts: 227ms, render: 157ms)
+ GET /api/dancer/personal-classes 200 in 372ms (compile: 1506µs, render: 370ms)
+ GET /api/dancer/classes 200 in 485ms (compile: 1603µs, render: 483ms)
+ GET /api/dancer/notes 200 in 625ms (compile: 3ms, render: 622ms)

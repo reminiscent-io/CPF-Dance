@@ -46,18 +46,6 @@ export default function DevPage() {
             </Card>
           </div>
 
-          <div onClick={() => selectRole('studio', '/studio')} className="cursor-pointer">
-            <Card className="text-center hover:shadow-lg transition-shadow h-full">
-              <CardContent>
-                <div className="text-4xl mb-3">🏢</div>
-                <h3 className="font-semibold text-lg mb-4">Studio</h3>
-                <Button variant="outline" size="sm" className="w-full">
-                  Access Portal
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
           <div onClick={() => selectRole('admin', '/instructor')} className="cursor-pointer">
             <Card className="text-center hover:shadow-lg transition-shadow h-full border-2 border-rose-300">
               <CardContent>

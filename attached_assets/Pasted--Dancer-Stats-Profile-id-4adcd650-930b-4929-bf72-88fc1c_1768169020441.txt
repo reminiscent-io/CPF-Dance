@@ -1,0 +1,196 @@
+[Dancer Stats] Profile: {
+  id: '4adcd650-930b-4929-bf72-88fc1cab7e3e',
+  email: 'klowe001@gmail.com',
+  phone: '5054703055',
+  full_name: 'Kevin Lowe',
+  role: 'admin',
+  avatar_url: null,
+  date_of_birth: '1993-04-02',
+  guardian_id: null,
+  consent_given: false,
+  created_at: '2025-11-16T21:59:03.828097+00:00',
+  updated_at: '2025-11-17T23:46:03.822294+00:00'
+}
+ GET /api/dancer/stats 200 in 1200ms (compile: 1894µs, render: 1199ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 749ms (compile: 536ms, proxy.ts: 186ms, render: 26ms)
+ GET /api/dancer/notes 200 in 682ms (compile: 26ms, render: 656ms)
+ GET /api/dancer/notes 200 in 580ms (compile: 2ms, render: 578ms)
+ GET /api/dancer/notes 200 in 585ms (compile: 4ms, render: 581ms)
+ GET / 200 in 284ms (compile: 6ms, proxy.ts: 207ms, render: 71ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 346ms (compile: 5ms, proxy.ts: 173ms, render: 169ms)
+ GET /api/dancer/notes 200 in 654ms (compile: 2ms, render: 652ms)
+ GET /api/dancer/notes 200 in 568ms (compile: 2ms, render: 566ms)
+ GET /api/dancer/notes 200 in 676ms (compile: 3ms, render: 674ms)
+ GET /api/dancer/notes 200 in 532ms (compile: 2ms, render: 530ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 229ms (compile: 3ms, proxy.ts: 183ms, render: 42ms)
+ GET / 200 in 221ms (compile: 6ms, proxy.ts: 148ms, render: 68ms)
+ GET /api/dancer/notes 200 in 554ms (compile: 4ms, render: 550ms)
+ GET /api/dancer/notes 200 in 570ms (compile: 1970µs, render: 568ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 291ms (compile: 4ms, proxy.ts: 231ms, render: 56ms)
+ GET /api/dancer/notes 200 in 716ms (compile: 3ms, render: 713ms)
+ GET /api/dancer/notes 200 in 644ms (compile: 2ms, render: 642ms)
+ GET / 200 in 487ms (compile: 5ms, proxy.ts: 403ms, render: 79ms)
+ GET /api/dancer/notes 200 in 739ms (compile: 3ms, render: 736ms)
+ GET /api/dancer/notes 200 in 588ms (compile: 3ms, render: 586ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 239ms (compile: 5ms, proxy.ts: 184ms, render: 50ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 290ms (compile: 6ms, proxy.ts: 234ms, render: 50ms)
+ GET /api/dancer/notes 200 in 593ms (compile: 1876µs, render: 591ms)
+ GET /api/dancer/notes 200 in 539ms (compile: 2ms, render: 537ms)
+ GET / 200 in 346ms (compile: 7ms, proxy.ts: 238ms, render: 101ms)
+ GET / 200 in 220ms (compile: 3ms, proxy.ts: 173ms, render: 44ms)
+Proxy check: {
+  path: '/dancer/my-notes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/my-notes 200 in 479ms (compile: 4ms, proxy.ts: 410ms, render: 65ms)
+ GET /api/dancer/notes 200 in 746ms (compile: 2ms, render: 743ms)
+ GET /api/dancer/notes 200 in 592ms (compile: 2ms, render: 589ms)
+ GET / 200 in 343ms (compile: 4ms, proxy.ts: 291ms, render: 48ms)
+ GET / 200 in 209ms (compile: 4ms, proxy.ts: 160ms, render: 45ms)
+ GET /api/dancer/notes 200 in 689ms (compile: 2ms, render: 687ms)
+ GET /api/dancer/notes 200 in 667ms (compile: 2ms, render: 665ms)
+Proxy check: {
+  path: '/dancer/profile',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/profile 200 in 728ms (compile: 418ms, proxy.ts: 248ms, render: 61ms)
+Proxy check: {
+  path: '/dancer/profile',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/profile 200 in 213ms (compile: 4ms, proxy.ts: 188ms, render: 21ms)
+Proxy check: {
+  path: '/dancer/profile',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/profile 200 in 219ms (compile: 3ms, proxy.ts: 202ms, render: 14ms)
+ GET /api/dancer/profile 200 in 412ms (compile: 115ms, render: 297ms)
+ GET /api/dancer/profile 200 in 302ms (compile: 2ms, render: 300ms)
+ GET /api/dancer/profile 200 in 291ms (compile: 1608µs, render: 289ms)
+ GET / 200 in 243ms (compile: 5ms, proxy.ts: 186ms, render: 52ms)
+Proxy check: {
+  path: '/dancer/available-classes',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/available-classes 200 in 601ms (compile: 376ms, proxy.ts: 200ms, render: 25ms)
+ GET /api/dancer/public-classes 200 in 451ms (compile: 160ms, render: 291ms)
+ GET /api/dancer/public-classes 200 in 311ms (compile: 2ms, render: 309ms)
+ GET /api/dancer/public-classes 200 in 274ms (compile: 2ms, render: 271ms)
+Proxy check: {
+  path: '/dancer/request-lesson',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/request-lesson 200 in 643ms (compile: 401ms, proxy.ts: 205ms, render: 37ms)
+ GET /api/dancer/lesson-requests 200 in 647ms (compile: 209ms, render: 439ms)
+ GET /api/dancer/instructors 200 in 611ms (compile: 197ms, render: 413ms)
+ GET /api/dancer/lesson-packs/history 200 in 760ms (compile: 196ms, render: 564ms)
+ GET /api/dancer/instructors 200 in 338ms (compile: 6ms, render: 332ms)
+ GET /api/dancer/lesson-requests 200 in 481ms (compile: 3ms, render: 478ms)
+ GET /api/dancer/lesson-packs/history 200 in 488ms (compile: 1847µs, render: 486ms)
+ GET /api/dancer/instructors 200 in 355ms (compile: 2ms, render: 353ms)
+Proxy check: {
+  path: '/dancer/request-lesson',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /api/dancer/lesson-requests 200 in 403ms (compile: 3ms, render: 401ms)
+ GET /dancer/request-lesson 200 in 262ms (compile: 3ms, proxy.ts: 204ms, render: 55ms)
+ GET /api/dancer/instructors 200 in 381ms (compile: 2ms, render: 379ms)
+ GET /api/dancer/lesson-packs/history 200 in 436ms (compile: 5ms, render: 431ms)
+ GET /api/dancer/lesson-requests 200 in 393ms (compile: 1835µs, render: 391ms)
+ GET /api/dancer/instructors 200 in 381ms (compile: 2ms, render: 379ms)
+ GET /api/dancer/lesson-requests 200 in 393ms (compile: 3ms, render: 390ms)
+ GET /api/dancer/lesson-packs/history 200 in 409ms (compile: 3ms, render: 405ms)
+ GET /api/dancer/lesson-packs/history 200 in 549ms (compile: 1772µs, render: 547ms)
+ GET / 200 in 383ms (compile: 6ms, proxy.ts: 327ms, render: 50ms)
+Proxy check: {
+  path: '/dancer/request-lesson',
+  hasUser: true,
+  hasProfile: true,
+  profileRole: 'admin',
+  cookieCount: 4,
+  supabaseCookieCount: 0
+}
+ GET /dancer/request-lesson 200 in 274ms (compile: 3ms, proxy.ts: 226ms, render: 44ms)
+ GET /api/dancer/instructors 200 in 353ms (compile: 3ms, render: 350ms)
+ GET /api/dancer/lesson-requests 200 in 417ms (compile: 4ms, render: 413ms)
+ GET /api/dancer/lesson-packs/history 200 in 597ms (compile: 2ms, render: 595ms)
+ GET /api/dancer/instructors 200 in 376ms (compile: 4ms, render: 371ms)
+ GET /api/dancer/lesson-requests 200 in 496ms (compile: 2ms, render: 494ms)
+ GET /api/dancer/lesson-packs/history 200 in 449ms (compile: 1590µs, render: 447ms)
+^A

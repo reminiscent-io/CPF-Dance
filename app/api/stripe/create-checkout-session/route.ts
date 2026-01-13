@@ -4,7 +4,7 @@ import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
+  apiVersion: '2025-12-15.clover',
 })
 
 export async function POST(request: NextRequest) {
@@ -55,6 +55,11 @@ export async function POST(request: NextRequest) {
       .eq('id', student.profile_id)
       .single()
 
+    // Determine the base URL for redirects
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin
+    console.log('Base URL being used:', baseUrl)
+    console.log('Success URL will be:', `${baseUrl}/dancer/request-lesson?session_id={CHECKOUT_SESSION_ID}&success=true`)
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -72,8 +77,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin}/dancer/request-lesson?session_id={CHECKOUT_SESSION_ID}&success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin}/dancer/request-lesson?canceled=true`,
+      success_url: `${baseUrl}/dancer/request-lesson?session_id={CHECKOUT_SESSION_ID}&success=true`,
+      cancel_url: `${baseUrl}/dancer/request-lesson?canceled=true`,
       customer_email: profile?.email || undefined,
       metadata: {
         student_id: student.id,
@@ -86,8 +91,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sessionId: session.id, url: session.url })
   } catch (error) {
     console.error('Error creating checkout session:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      {
+        error: 'Failed to create checkout session',
+        details: errorMessage,
+        debug: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }

@@ -19,7 +19,6 @@ export function Navigation({ profile }: NavigationProps) {
     if (!pathname) return 'instructor'
     if (pathname.startsWith('/instructor')) return 'instructor'
     if (pathname.startsWith('/dancer')) return 'dancer'
-    if (pathname.startsWith('/studio')) return 'studio'
     return 'instructor' // default for admin
   }
 
@@ -47,14 +46,6 @@ export function Navigation({ profile }: NavigationProps) {
             { href: '/dancer/notes', label: 'Notes' },
             { href: '/dancer/request-lesson', label: 'Private Lessons' },
             { href: '/dancer/payments', label: 'Payments' },
-          ]
-        case 'studio':
-          return [
-            { href: '/studio', label: 'Dashboard' },
-            { href: '/studio/schedule', label: 'Schedule' },
-            { href: '/studio/classes', label: 'Classes' },
-            { href: '/studio/students', label: 'Students' },
-            { href: '/studio/payments', label: 'Payments' },
           ]
       }
     }

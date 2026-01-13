@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -47,6 +47,7 @@ export default function RequestPrivateLessonPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [paymentCanceled, setPaymentCanceled] = useState(false)
+  const hasFetched = useRef(false)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -55,11 +56,24 @@ export default function RequestPrivateLessonPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && profile) {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
       fetchRequests()
       fetchInstructors()
     }
   }, [loading, user, profile])
+
+  useEffect(() => {
+    if (instructors.length > 0 && !formData.instructor_id) {
+      const courtney = instructors.find(i => 
+        i.full_name?.toLowerCase().includes('courtney') && 
+        i.full_name?.toLowerCase().includes('file')
+      )
+      if (courtney) {
+        setFormData(prev => ({ ...prev, instructor_id: courtney.id }))
+      }
+    }
+  }, [instructors, formData.instructor_id])
 
   useEffect(() => {
     // Check for payment success/canceled in URL (client-side only)

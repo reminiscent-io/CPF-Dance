@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const profile = await requireDancer()
     const supabase = await createClient()
 
-    const { data: notes, error: notesError } = await supabase
+    const { data: notes, error: notesError} = await supabase
       .from('notes')
       .select(`
         id,
@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
         author_id,
         class_id,
         personal_class_id,
+        is_pinned,
+        pin_order,
         classes (
           id,
           title,
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('student_id', student.id)
+      .order('is_pinned', { ascending: false, nullsFirst: false })
+      .order('pin_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (notesError) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -121,10 +121,8 @@ const instructorFeatures = [
 ]
 
 const learnFromTheBestImages = [
-  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpeg',
-  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563.jpeg',
-  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565.jpeg',
-  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579.jpeg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpeg', 'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563_medium.jpg',  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565_medium.jpg',
+'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579_medium.jpg',
 ]
 
 export default function HomePage() {
@@ -141,16 +139,13 @@ export default function HomePage() {
   const [formStep, setFormStep] = useState(0)
   const [heroHeight] = useState(55)
   const [showNav, setShowNav] = useState(false)
-  const [imageIndex, setImageIndex] = useState(0)
   const [scrollY, setScrollY] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const [loginLoading, setLoginLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [galleryIndex, setGalleryIndex] = useState(0)
   const heroContentRef = useRef<HTMLDivElement>(null)
-  const FADE_MS = 600
-  const SLIDE_MS = 3000
-  const TOTAL_DURATION = FADE_MS + SLIDE_MS
+  const galleryRef = useRef<HTMLDivElement>(null)
 
   // Framer Motion variants
   const containerVariants = {
@@ -168,32 +163,6 @@ export default function HomePage() {
 
   const cardHoverVariants = {
     hover: { y: -8, transition: { duration: 0.3 } }
-  }
-
-  // Modern Ken Burns effect with smooth crossfade
-  const imageVariants = {
-    enter: {
-      opacity: 0,
-      scale: 1.02
-    },
-    center: {
-      opacity: 1,
-      scale: 1.08
-    },
-    exit: {
-      opacity: 0
-    }
-  }
-
-  // Image preloading
-  const preloadImage = (imageUrl: string) => {
-    if (preloadedImages.has(imageUrl)) return
-    
-    const img = new Image()
-    img.onload = () => {
-      setPreloadedImages((prev) => new Set([...prev, imageUrl]))
-    }
-    img.src = imageUrl
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -327,21 +296,6 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsMounted(true)
-  }, [])
-
-  // Image cycling effect with preloading
-  useEffect(() => {
-    const imageTimer = setInterval(() => {
-      setImageIndex((prev) => {
-        const nextIndex = (prev + 1) % learnFromTheBestImages.length
-        // Preload the next image after current one
-        const nextNextIndex = (nextIndex + 1) % learnFromTheBestImages.length
-        preloadImage(learnFromTheBestImages[nextNextIndex])
-        return nextIndex
-      })
-    }, TOTAL_DURATION)
-
-    return () => clearInterval(imageTimer)
   }, [])
 
   // Scroll listener for parallax effect
@@ -623,28 +577,62 @@ export default function HomePage() {
             </div>
             <div className="order-2 lg:order-2">
               <div className="relative">
-                <div className="aspect-[3/4] bg-gray-100 rounded-2xl shadow-2xl overflow-hidden relative">
-                  <AnimatePresence initial={false} mode="wait">
-                    <motion.img
-                      key={imageIndex}
-                      src={learnFromTheBestImages[imageIndex]}
-                      alt="Courtney - Professional Dancer and Instructor"
-                      className="w-full h-full object-cover absolute inset-0"
-                      loading="lazy"
-                      variants={imageVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      style={{
-                        transform: !prefersReducedMotion ? `translateY(${scrollY * 0.5}px)` : 'translateY(0px)'
-                      }}
-                      transition={prefersReducedMotion ? { duration: 0 } : {
-                        opacity: { duration: FADE_MS / 1000 },
-                        scale: { duration: SLIDE_MS / 1000 }
-                      }}
-                    />
-                  </AnimatePresence>
+                {/* Swipable Gallery */}
+                <div
+                  ref={galleryRef}
+                  className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide bg-white"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
+                  }}
+                  onScroll={(e) => {
+                    const scrollLeft = e.currentTarget.scrollLeft
+                    const itemWidth = e.currentTarget.scrollWidth / learnFromTheBestImages.length
+                    const index = Math.round(scrollLeft / itemWidth)
+                    setGalleryIndex(index)
+                  }}
+                >
+                  {learnFromTheBestImages.map((image, idx) => (
+                    <div
+                      key={idx}
+                      className="flex-shrink-0 w-full snap-center"
+                    >
+                      <div className="aspect-[3/4] rounded-2xl shadow-2xl overflow-hidden">
+                        <img
+                          src={image}
+                          alt={`Courtney - Professional Dancer and Instructor ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Gallery Indicators */}
+                <div className="flex justify-center gap-2 mt-4">
+                  {learnFromTheBestImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (galleryRef.current) {
+                          const itemWidth = galleryRef.current.scrollWidth / learnFromTheBestImages.length
+                          galleryRef.current.scrollTo({
+                            left: itemWidth * idx,
+                            behavior: 'smooth'
+                          })
+                        }
+                      }}
+                      className={`h-2 rounded-full transition-all ${
+                        idx === galleryIndex
+                          ? 'w-8 bg-rose-600'
+                          : 'w-2 bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to image ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-rose-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
                 <div className="absolute -top-6 -left-6 w-32 h-32 bg-mauve-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
               </div>
