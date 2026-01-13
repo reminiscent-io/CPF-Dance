@@ -2,42 +2,24 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
-import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
-import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
-import { VoiceRecorder } from '@/components/VoiceRecorder'
-import { PlusIcon } from '@heroicons/react/24/outline'
-
-interface Note {
-  id: string
-  title: string | null
-  content: string
-  tags: string[] | null
-  created_at: string
-  updated_at: string
-  is_personal: boolean
-}
+import { NoteFeedList } from '@/components/notes/NoteFeedList'
+import { NoteFocusMode } from '@/components/notes/NoteFocusMode'
+import { NoteSearchBar } from '@/components/notes/NoteSearchBar'
+import { FloatingActionButton } from '@/components/notes/FloatingActionButton'
+import { Note } from '@/lib/utils/date-helpers'
 
 export default function DancerMyNotesPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [notes, setNotes] = useState<Note[]>([])
   const [loadingNotes, setLoadingNotes] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const [focusModeOpen, setFocusModeOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    tags: ''
-  })
-  const [saving, setSaving] = useState(false)
-  const [editor, setEditor] = useState<Editor | null>(null)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -58,7 +40,9 @@ export default function DancerMyNotesPage() {
       const response = await fetch('/api/dancer/notes')
       if (response.ok) {
         const data = await response.json()
-        setNotes(data.notes.filter((note: Note) => note.is_personal))
+        // Filter to only show personal notes (authored by the dancer)
+        const personalNotes = data.notes.filter((note: Note) => note.is_personal)
+        setNotes(personalNotes)
       }
     } catch (error) {
       console.error('Error fetching notes:', error)
@@ -67,91 +51,73 @@ export default function DancerMyNotesPage() {
     }
   }
 
-  const handleOpenModal = (note?: Note) => {
-    if (note) {
-      setEditingNote(note)
-      setFormData({
-        title: note.title || '',
-        content: note.content,
-        tags: note.tags?.join(', ') || ''
-      })
-    } else {
-      setEditingNote(null)
-      setFormData({ title: '', content: '', tags: '' })
-    }
-    setIsModalOpen(true)
+  // Get all unique tags from notes
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>()
+    notes.forEach(note => {
+      note.tags?.forEach(tag => tagSet.add(tag))
+    })
+    return Array.from(tagSet).sort()
+  }, [notes])
+
+  // Filter notes based on search term and selected tag
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => {
+      // Search filter
+      const matchesSearch = !searchTerm ||
+        note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+
+      // Tag filter
+      const matchesTag = !selectedTag || note.tags?.includes(selectedTag)
+
+      return matchesSearch && matchesTag
+    })
+  }, [notes, searchTerm, selectedTag])
+
+  const handleOpenFocusMode = (note?: Note) => {
+    setEditingNote(note || null)
+    setFocusModeOpen(true)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
+  const handleCloseFocusMode = () => {
+    setFocusModeOpen(false)
     setEditingNote(null)
-    setFormData({ title: '', content: '', tags: '' })
-    setEditor(null)
   }
 
-  const handleVoiceTranscript = (html: string) => {
-    if (editor) {
-      // Insert at cursor position
-      editor.chain().focus().insertContent(html).run()
-      // Update form data with new content
-      setFormData(prev => ({ ...prev, content: editor.getHTML() }))
-    } else {
-      // Fallback: append to existing content
-      setFormData(prev => ({
-        ...prev,
-        content: prev.content && prev.content !== '<p></p>'
-          ? `${prev.content}${html}`
-          : html
-      }))
-    }
-  }
-
-  const handleSave = async () => {
-    if (!formData.content.trim() || formData.content === '<p></p>') {
-      alert('Please enter some content for your note')
-      return
-    }
-
-    setSaving(true)
+  const handleSave = async (data: { title: string; content: string; tags: string[] }) => {
     try {
-      const tags = formData.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0)
+      const endpoint = '/api/dancer/notes'
+      const method = editingNote ? 'PUT' : 'POST'
 
-      const payload = {
-        title: formData.title.trim() || null,
-        content: formData.content,
-        tags
+      const body: any = {
+        title: data.title || null,
+        content: data.content,
+        tags: data.tags,
+        visibility: 'shared_with_instructor'
       }
 
-      const url = editingNote
-        ? '/api/dancer/notes'
-        : '/api/dancer/notes'
-      
-      const method = editingNote ? 'PUT' : 'POST'
-      const body = editingNote
-        ? { ...payload, id: editingNote.id }
-        : payload
+      if (editingNote) {
+        body.id = editingNote.id
+      }
 
-      const response = await fetch(url, {
+      const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      if (response.ok) {
-        await fetchNotes()
-        handleCloseModal()
-      } else {
+      if (!response.ok) {
         const error = await response.json()
-        alert(error.error || 'Failed to save note')
+        throw new Error(error.error || 'Failed to save note')
       }
+
+      await fetchNotes()
+      handleCloseFocusMode()
     } catch (error) {
       console.error('Error saving note:', error)
-      alert('Failed to save note')
-    } finally {
-      setSaving(false)
+      throw error
     }
   }
 
@@ -165,15 +131,51 @@ export default function DancerMyNotesPage() {
         method: 'DELETE'
       })
 
-      if (response.ok) {
-        await fetchNotes()
-      } else {
+      if (!response.ok) {
         const error = await response.json()
-        alert(error.error || 'Failed to delete note')
+        throw new Error(error.error || 'Failed to delete note')
       }
+
+      await fetchNotes()
     } catch (error) {
       console.error('Error deleting note:', error)
       alert('Failed to delete note')
+    }
+  }
+
+  const handlePin = async (noteId: string) => {
+    const note = notes.find(n => n.id === noteId)
+    if (!note) return
+
+    // Optimistic update
+    setNotes(prev => prev.map(n =>
+      n.id === noteId
+        ? { ...n, is_pinned: !n.is_pinned }
+        : n
+    ))
+
+    try {
+      const response = await fetch('/api/dancer/notes/pin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: noteId, is_pinned: !note.is_pinned })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to pin note')
+      }
+
+      // Refresh notes to get correct ordering
+      await fetchNotes()
+    } catch (error) {
+      // Rollback optimistic update
+      setNotes(prev => prev.map(n =>
+        n.id === noteId
+          ? { ...n, is_pinned: note.is_pinned }
+          : n
+      ))
+      console.error('Error pinning note:', error)
+      alert('Failed to pin note')
     }
   }
 
@@ -194,140 +196,52 @@ export default function DancerMyNotesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Notes</h1>
-          <p className="text-gray-600">
-            Keep track of your thoughts, goals, and reflections on your dance journey
-          </p>
-        </div>
-        <Button variant="primary" onClick={() => handleOpenModal()} className="p-2 rounded-full aspect-square flex items-center justify-center">
-          <PlusIcon className="h-6 w-6" />
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          My Notes 📝
+        </h1>
+        <p className="text-gray-600">
+          Your personal dance journal
+        </p>
       </div>
 
       {loadingNotes ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
-      ) : notes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {notes.map((note) => (
-            <Card key={note.id} hover>
-              <CardContent className="p-6">
-                {note.title && (
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {note.title}
-                  </h3>
-                )}
-                <p className="text-sm text-gray-500 mb-3">
-                  {new Date(note.created_at).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </p>
-                <div className="mb-4 line-clamp-6">
-                  <RichTextDisplay content={note.content} className="text-gray-700" />
-                </div>
-                {note.tags && note.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {note.tags.map((tag, idx) => (
-                      <Badge key={idx} variant="default" size="sm">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                <div className="flex gap-2 pt-4 border-t border-gray-200">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleOpenModal(note)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-red-600 hover:bg-red-50"
-                    onClick={() => handleDelete(note.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">✍️</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Start Your Personal Journal
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Create your first note to track your goals, reflections, and progress.
-              These notes are private and only visible to you.
-            </p>
-            <Button variant="primary" onClick={() => handleOpenModal()}>
-              Create Your First Note
-            </Button>
-          </CardContent>
-        </Card>
+        <>
+          {/* Search and filter bar */}
+          <NoteSearchBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedTag={selectedTag}
+            onTagSelect={setSelectedTag}
+            allTags={allTags}
+          />
+
+          {/* Notes feed with timeline */}
+          <NoteFeedList
+            notes={filteredNotes}
+            onEdit={handleOpenFocusMode}
+            onDelete={handleDelete}
+            onPin={handlePin}
+          />
+
+          {/* Floating action button */}
+          <FloatingActionButton
+            onClick={() => handleOpenFocusMode()}
+          />
+
+          {/* Focus mode for editing */}
+          <NoteFocusMode
+            note={editingNote}
+            isOpen={focusModeOpen}
+            onClose={handleCloseFocusMode}
+            onSave={handleSave}
+          />
+        </>
       )}
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingNote ? 'Edit Note' : 'Create New Note'}
-        size="lg"
-      >
-        <div className="space-y-4">
-          <Input
-            label="Title (optional)"
-            placeholder="Give your note a title..."
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Content
-            </label>
-            <NotesRichTextEditor
-              content={formData.content}
-              onChange={(html) => setFormData({ ...formData, content: html })}
-              onEditorReady={setEditor}
-              placeholder="Write your thoughts, goals, or reflections..."
-              minHeight="200px"
-            />
-            <div className="mt-3">
-              <VoiceRecorder
-                onTranscriptReady={handleVoiceTranscript}
-                disabled={saving}
-              />
-            </div>
-          </div>
-          <Input
-            label="Tags (optional)"
-            placeholder="technique, goals, choreography (comma-separated)"
-            value={formData.tags}
-            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-            helperText="Add tags to organize your notes"
-          />
-        </div>
-
-        <ModalFooter>
-          <Button variant="outline" onClick={handleCloseModal} disabled={saving}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editingNote ? 'Update Note' : 'Create Note'}
-          </Button>
-        </ModalFooter>
-      </Modal>
     </PortalLayout>
   )
 }

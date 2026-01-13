@@ -285,3 +285,99 @@ h1, h2, h3, h4, h5, h6 {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Rich text preview styling for note feed items */
+.rich-text-preview {
+  overflow: hidden;
+}
+
+.rich-text-preview p {
+  margin: 0.25rem 0;
+}
+
+.rich-text-preview p:first-child {
+  margin-top: 0;
+}
+
+.rich-text-preview p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-preview strong {
+  font-weight: 600;
+  color: var(--color-charcoal-900);
+}
+
+.rich-text-preview em {
+  font-style: italic;
+}
+
+.rich-text-preview u {
+  text-decoration: underline;
+}
+
+.rich-text-preview s,
+.rich-text-preview del {
+  text-decoration: line-through;
+}
+
+.rich-text-preview ul,
+.rich-text-preview ol {
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-preview li {
+  margin: 0.125rem 0;
+}
+
+.rich-text-preview h1,
+.rich-text-preview h2,
+.rich-text-preview h3,
+.rich-text-preview h4,
+.rich-text-preview h5,
+.rich-text-preview h6 {
+  font-weight: 600;
+  color: var(--color-charcoal-900);
+  margin: 0.25rem 0;
+}
+
+.rich-text-preview h1 {
+  font-size: 1.25rem;
+}
+
+.rich-text-preview h2 {
+  font-size: 1.125rem;
+}
+
+.rich-text-preview h3 {
+  font-size: 1rem;
+}
+
+.rich-text-preview blockquote {
+  border-left: 2px solid var(--color-rose-400);
+  padding-left: 0.75rem;
+  margin: 0.25rem 0;
+  font-style: italic;
+}
+
+.rich-text-preview code {
+  background-color: var(--color-champagne-100);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.875em;
+}
+
+.rich-text-preview pre {
+  background-color: var(--color-champagne-100);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin: 0.25rem 0;
+}
+
+.rich-text-preview a {
+  color: var(--color-rose-600);
+  text-decoration: underline;
+}
