@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -7,6 +7,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+
+// Create a Supabase client with service role key to bypass RLS
+// This is necessary because webhooks come from Stripe (no user session)
+function createServiceClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,8 +62,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Create the lesson pack purchase
-      const supabase = await createClient()
+      // Create the lesson pack purchase using service role client
+      // This bypasses RLS since webhooks don't have user sessions
+      const supabase = createServiceClient()
 
       const { data: purchase, error: insertError } = await supabase
         .from('lesson_pack_purchases')
