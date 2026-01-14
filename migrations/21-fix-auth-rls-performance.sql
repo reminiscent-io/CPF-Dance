@@ -85,7 +85,7 @@ DROP POLICY IF EXISTS "Users can update waivers" ON public.waivers;
 CREATE POLICY "Users can update waivers" ON public.waivers
   FOR UPDATE USING (
     -- User is the issuer
-    issued_by = (select auth.uid())
+    issued_by_id = (select auth.uid())
     OR
     -- User is admin
     EXISTS (
@@ -107,7 +107,7 @@ DROP POLICY IF EXISTS "Users can view waivers with proper access" ON public.waiv
 CREATE POLICY "Users can view waivers with proper access" ON public.waivers
   FOR SELECT USING (
     -- User is the issuer
-    issued_by = (select auth.uid())
+    issued_by_id = (select auth.uid())
     OR
     -- User is admin
     EXISTS (
@@ -140,7 +140,7 @@ CREATE POLICY "Users can view waivers with proper access" ON public.waivers
 DROP POLICY IF EXISTS "Users can delete their own templates" ON public.waiver_templates;
 CREATE POLICY "Users can delete their own templates" ON public.waiver_templates
   FOR DELETE USING (
-    created_by = (select auth.uid())
+    created_by_id = (select auth.uid())
     OR EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = (select auth.uid())
