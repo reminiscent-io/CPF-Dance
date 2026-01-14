@@ -4,12 +4,9 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
-import { Table } from '@/components/ui/Table'
-import type { Column } from '@/components/ui/Table'
 
 interface Payment {
   id: string
@@ -28,14 +25,59 @@ interface Payment {
   } | null
 }
 
-type FilterType = 'all' | 'confirmed' | 'pending'
+interface LessonPack {
+  id: string
+  name: string
+  lesson_count: number
+  price: number
+}
+
+interface LessonPackPurchase {
+  id: string
+  purchased_at: string
+  remaining_lessons: number
+  expires_at: string | null
+  lesson_packs: LessonPack
+}
+
+interface LessonPackUsage {
+  id: string
+  lessons_used: number
+  used_at: string
+  lesson_pack_purchases: {
+    id: string
+    student_id: string
+    lesson_packs: {
+      id: string
+      name: string
+    }
+  }
+  private_lesson_requests: {
+    id: string
+    requested_focus: string | null
+  } | null
+}
+
+// Unified transaction type for display
+interface Transaction {
+  id: string
+  type: 'payment' | 'pack_purchase' | 'lesson_used'
+  date: string
+  title: string
+  subtitle?: string
+  amount?: number
+  status?: string
+  receipt_url?: string | null
+  remaining?: number
+}
 
 export default function DancerPaymentsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [payments, setPayments] = useState<Payment[]>([])
-  const [loadingPayments, setLoadingPayments] = useState(true)
-  const [filter, setFilter] = useState<FilterType>('all')
+  const [lessonPackPurchases, setLessonPackPurchases] = useState<LessonPackPurchase[]>([])
+  const [lessonPackUsage, setLessonPackUsage] = useState<LessonPackUsage[]>([])
+  const [loadingData, setLoadingData] = useState(true)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -47,21 +89,23 @@ export default function DancerPaymentsPage() {
   useEffect(() => {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
-      fetchPayments()
+      fetchData()
     }
   }, [loading, user, profile])
 
-  const fetchPayments = async () => {
+  const fetchData = async () => {
     try {
       const response = await fetch('/api/dancer/payments')
       if (response.ok) {
         const data = await response.json()
-        setPayments(data.payments)
+        setPayments(data.payments || [])
+        setLessonPackPurchases(data.lessonPackPurchases || [])
+        setLessonPackUsage(data.lessonPackUsage || [])
       }
     } catch (error) {
-      console.error('Error fetching payments:', error)
+      console.error('Error fetching data:', error)
     } finally {
-      setLoadingPayments(false)
+      setLoadingData(false)
     }
   }
 
@@ -80,219 +124,219 @@ export default function DancerPaymentsPage() {
     return null
   }
 
-  const filteredPayments = payments.filter((payment) => {
-    if (filter === 'all') return true
-    return payment.payment_status === filter
-  })
+  // Build unified transaction list
+  const transactions: Transaction[] = [
+    // Regular payments
+    ...payments.map((p): Transaction => ({
+      id: `payment-${p.id}`,
+      type: 'payment',
+      date: p.transaction_date,
+      title: p.classes?.title || 'Class Payment',
+      amount: parseFloat(p.amount.toString()),
+      status: p.payment_status,
+      receipt_url: p.receipt_url
+    })),
+    // Lesson pack purchases
+    ...lessonPackPurchases.map((p): Transaction => ({
+      id: `pack-${p.id}`,
+      type: 'pack_purchase',
+      date: p.purchased_at,
+      title: p.lesson_packs?.name || 'Lesson Pack',
+      subtitle: `${p.lesson_packs?.lesson_count || 0} lessons`,
+      amount: p.lesson_packs?.price ? parseFloat(p.lesson_packs.price.toString()) : undefined,
+      remaining: p.remaining_lessons
+    })),
+    // Lesson usage
+    ...lessonPackUsage.map((u): Transaction => ({
+      id: `usage-${u.id}`,
+      type: 'lesson_used',
+      date: u.used_at,
+      title: 'Private Lesson',
+      subtitle: u.private_lesson_requests?.requested_focus || u.lesson_pack_purchases?.lesson_packs?.name || 'Lesson Pack'
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  const totalDue = payments
-    .filter((p) => p.payment_status === 'pending')
-    .reduce((sum, payment) => sum + parseFloat(payment.amount.toString()), 0)
+  // Separate pending payments
+  const pendingPayments = payments.filter((p) => p.payment_status === 'pending')
 
-  const getStatusColor = (status: string): any => {
-    const colors: Record<string, any> = {
-      confirmed: 'success',
-      pending: 'warning',
-      disputed: 'danger',
-      cancelled: 'default'
-    }
-    return colors[status] || 'default'
+  // Active lesson packs (with remaining lessons)
+  const activePacks = lessonPackPurchases.filter((p) => p.remaining_lessons > 0)
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
   }
 
-  const getPaymentMethodIcon = (method: string) => {
-    const icons: Record<string, string> = {
-      stripe: '💳',
-      cash: '💵',
-      check: '📝',
-      other: '💰'
-    }
-    return icons[method] || '💰'
-  }
-
-  const columns: Column<Payment>[] = [
-    {
-      key: 'transaction_date',
-      header: 'Date',
-      render: (payment) =>
-        new Date(payment.transaction_date).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        })
-    },
-    {
-      key: 'amount',
-      header: 'Amount',
-      render: (payment) => (
-        <span className="font-semibold text-gray-900">
-          ${parseFloat(payment.amount.toString()).toFixed(2)}
-        </span>
-      )
-    },
-    {
-      key: 'class_id',
-      header: 'Description',
-      render: (payment) => (
-        <div>
-          {payment.classes ? (
-            <div>
-              <div className="font-medium text-gray-900">{payment.classes.title}</div>
-              <div className="text-sm text-gray-500">
-                {new Date(payment.classes.start_time).toLocaleDateString()}
-              </div>
-            </div>
+  const TransactionRow = ({ transaction }: { transaction: Transaction }) => (
+    <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+          transaction.type === 'lesson_used'
+            ? 'bg-emerald-50 text-emerald-600'
+            : transaction.type === 'pack_purchase'
+            ? 'bg-violet-50 text-violet-600'
+            : 'bg-gray-100 text-gray-600'
+        }`}>
+          {transaction.type === 'lesson_used' ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : transaction.type === 'pack_purchase' ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
           ) : (
-            <span className="text-gray-600">General Payment</span>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
           )}
         </div>
-      )
-    },
-    {
-      key: 'payment_method',
-      header: 'Method',
-      render: (payment) => (
-        <div className="flex items-center gap-2">
-          <span>{getPaymentMethodIcon(payment.payment_method)}</span>
-          <span className="capitalize">{payment.payment_method}</span>
+        <div className="min-w-0">
+          <p className="font-medium text-gray-900 truncate">{transaction.title}</p>
+          <p className="text-sm text-gray-500">
+            {formatDate(transaction.date)}
+            {transaction.subtitle && ` · ${transaction.subtitle}`}
+          </p>
         </div>
-      )
-    },
-    {
-      key: 'payment_status',
-      header: 'Status',
-      render: (payment) => (
-        <Badge variant={getStatusColor(payment.payment_status)}>
-          {payment.payment_status.charAt(0).toUpperCase() +
-            payment.payment_status.slice(1)}
-        </Badge>
-      )
-    },
-    {
-      key: 'receipt_url',
-      header: 'Receipt',
-      render: (payment) =>
-        payment.receipt_url ? (
+      </div>
+      <div className="flex items-center gap-3 ml-4">
+        {transaction.type === 'lesson_used' ? (
+          <span className="text-emerald-600 text-sm font-medium">Lesson used</span>
+        ) : (
+          <>
+            {transaction.amount !== undefined && (
+              <span className="text-gray-700 font-medium">
+                ${transaction.amount.toFixed(2)}
+              </span>
+            )}
+            {transaction.status && (
+              <Badge
+                variant={transaction.status === 'confirmed' ? 'success' : transaction.status === 'pending' ? 'warning' : 'default'}
+                className="text-xs"
+              >
+                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+              </Badge>
+            )}
+          </>
+        )}
+        {transaction.receipt_url && (
           <a
-            href={payment.receipt_url}
+            href={transaction.receipt_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-rose-600 hover:text-rose-700 underline"
+            className="text-rose-600 hover:text-rose-700 text-sm"
           >
-            Download
+            Receipt
           </a>
-        ) : (
-          <span className="text-gray-400">N/A</span>
-        )
-    }
-  ]
+        )}
+      </div>
+    </div>
+  )
+
+  const hasData = transactions.length > 0 || activePacks.length > 0
 
   return (
     <PortalLayout profile={profile}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment History 💳</h1>
-        <p className="text-gray-600">Track your dance class payments and receipts</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
+        <p className="text-gray-600">View your payment history and lesson packs</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-yellow-50 to-white">
-          <CardContent className="p-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total Due</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  ${totalDue.toFixed(2)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl">💰</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-white">
-          <CardContent className="p-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Confirmed</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {payments.filter((p) => p.payment_status === 'confirmed').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl">✅</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-50 to-white">
-          <CardContent className="p-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {payments.filter((p) => p.payment_status === 'pending').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl">⏳</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Button
-          variant={filter === 'all' ? 'primary' : 'outline'}
-          onClick={() => setFilter('all')}
-        >
-          All Payments
-        </Button>
-        <Button
-          variant={filter === 'confirmed' ? 'primary' : 'outline'}
-          onClick={() => setFilter('confirmed')}
-        >
-          Confirmed
-        </Button>
-        <Button
-          variant={filter === 'pending' ? 'primary' : 'outline'}
-          onClick={() => setFilter('pending')}
-        >
-          Pending
-        </Button>
-      </div>
-
-      {loadingPayments ? (
+      {loadingData ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
-      ) : filteredPayments.length > 0 ? (
-        <Table
-          data={filteredPayments}
-          columns={columns}
-          emptyMessage="No payments found"
-        />
-      ) : (
+      ) : !hasData ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">💳</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {filter === 'all' ? 'No Payments Yet' : `No ${filter} Payments`}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {filter === 'all'
-                ? "Your payment history will appear here once you've made payments for classes."
-                : `You don't have any ${filter} payments at the moment.`}
-            </p>
-            {filter !== 'all' && (
-              <Button variant="outline" onClick={() => setFilter('all')}>
-                View All Payments
-              </Button>
-            )}
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No payments yet</h3>
+            <p className="text-gray-500">Your payment history will appear here</p>
           </CardContent>
         </Card>
+      ) : (
+        <div className="space-y-6">
+          {/* Active Lesson Packs */}
+          {activePacks.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Lesson Packs</h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {activePacks.map((pack) => (
+                    <div
+                      key={pack.id}
+                      className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900">{pack.lesson_packs?.name}</h3>
+                        <Badge variant="default" className="bg-violet-100 text-violet-700">
+                          {pack.remaining_lessons} left
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {pack.lesson_packs?.lesson_count} lesson pack
+                        {pack.expires_at && ` · Expires ${formatDate(pack.expires_at)}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Outstanding Payments */}
+          {pendingPayments.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Outstanding</h2>
+                  <span className="text-sm text-gray-500">
+                    {pendingPayments.length} {pendingPayments.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+                <div>
+                  {pendingPayments.map((payment) => (
+                    <TransactionRow
+                      key={payment.id}
+                      transaction={{
+                        id: `payment-${payment.id}`,
+                        type: 'payment',
+                        date: payment.transaction_date,
+                        title: payment.classes?.title || 'Class Payment',
+                        amount: parseFloat(payment.amount.toString()),
+                        status: payment.payment_status,
+                        receipt_url: payment.receipt_url
+                      }}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Transaction History */}
+          {transactions.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">History</h2>
+                <div>
+                  {transactions
+                    .filter(t => !(t.type === 'payment' && t.status === 'pending'))
+                    .map((transaction) => (
+                      <TransactionRow key={transaction.id} transaction={transaction} />
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </PortalLayout>
   )
