@@ -17,47 +17,17 @@ CREATE POLICY "Instructors can view all studios" ON public.studios
     )
   );
 
--- Drop and recreate: Studio admins can update their studio
+-- Note: Studio admin policies removed - studio portal was removed in migration 16
+-- Drop legacy studio admin policies if they exist
 DROP POLICY IF EXISTS "Studio admins can update their studio" ON public.studios;
-CREATE POLICY "Studio admins can update their studio" ON public.studios
-  FOR UPDATE USING (
-    studio_admin_id = (select auth.uid())
-  );
-
--- Drop and recreate: Studio admins can view studios
 DROP POLICY IF EXISTS "Studio admins can view studios" ON public.studios;
-CREATE POLICY "Studio admins can view studios" ON public.studios
-  FOR SELECT USING (
-    studio_admin_id = (select auth.uid())
-  );
 
 -- =====================================================
 -- STUDENTS TABLE
 -- =====================================================
 
--- Drop and recreate: Instructors can delete students
-DROP POLICY IF EXISTS "Instructors can delete students" ON public.students;
-CREATE POLICY "Instructors can delete students" ON public.students
-  FOR DELETE USING (
-    instructor_id = (select auth.uid())
-    OR EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE profiles.id = (select auth.uid())
-      AND profiles.role = 'admin'
-    )
-  );
-
--- Drop and recreate: Instructors can update students
-DROP POLICY IF EXISTS "Instructors can update students" ON public.students;
-CREATE POLICY "Instructors can update students" ON public.students
-  FOR UPDATE USING (
-    instructor_id = (select auth.uid())
-    OR EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE profiles.id = (select auth.uid())
-      AND profiles.role = 'admin'
-    )
-  );
+-- Note: students table does not have instructor_id column
+-- Instructors can manage ALL students (no per-instructor filtering)
 
 -- Drop and recreate: Instructors can view all students
 DROP POLICY IF EXISTS "Instructors can view all students" ON public.students;
@@ -70,24 +40,30 @@ CREATE POLICY "Instructors can view all students" ON public.students
     )
   );
 
--- Drop and recreate: Instructors can view their students
-DROP POLICY IF EXISTS "Instructors can view their students" ON public.students;
-CREATE POLICY "Instructors can view their students" ON public.students
-  FOR SELECT USING (
-    instructor_id = (select auth.uid())
-    OR EXISTS (
+-- Drop and recreate: Instructors can manage students (ALL operations)
+DROP POLICY IF EXISTS "Instructors can manage students" ON public.students;
+CREATE POLICY "Instructors can manage students" ON public.students
+  FOR ALL USING (
+    EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = (select auth.uid())
-      AND profiles.role = 'admin'
+      AND profiles.role = 'instructor'
     )
   );
 
--- Drop and recreate: Students can view themselves
-DROP POLICY IF EXISTS "Students can view themselves" ON public.students;
-CREATE POLICY "Students can view themselves" ON public.students
+-- Drop and recreate: Students can view their own student record
+DROP POLICY IF EXISTS "Students can view their own student record" ON public.students;
+CREATE POLICY "Students can view their own student record" ON public.students
   FOR SELECT USING (
     profile_id = (select auth.uid())
+    OR guardian_id = (select auth.uid())
   );
+
+-- Drop legacy policies if they exist
+DROP POLICY IF EXISTS "Instructors can delete students" ON public.students;
+DROP POLICY IF EXISTS "Instructors can update students" ON public.students;
+DROP POLICY IF EXISTS "Instructors can view their students" ON public.students;
+DROP POLICY IF EXISTS "Students can view themselves" ON public.students;
 
 -- =====================================================
 -- WAIVERS TABLE
@@ -147,11 +123,12 @@ CREATE POLICY "Users can view waivers with proper access" ON public.waivers
       AND students.profile_id = (select auth.uid())
     )
     OR
-    -- User is instructor of the student
+    -- User is instructor of the student (via relationship table)
     EXISTS (
-      SELECT 1 FROM public.students
-      WHERE students.id = waivers.student_id
-      AND students.instructor_id = (select auth.uid())
+      SELECT 1 FROM public.instructor_student_relationships
+      WHERE instructor_student_relationships.student_id = waivers.student_id
+      AND instructor_student_relationships.instructor_id = (select auth.uid())
+      AND instructor_student_relationships.relationship_status = 'active'
     )
   );
 

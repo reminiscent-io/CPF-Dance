@@ -310,9 +310,22 @@ If you encounter issues:
 
 All migrations are **additive and safe** - they don't delete data, only add security constraints.
 
+## Core Table Migrations
+
+### 13a-create-instructor-student-relationships.sql
+**Purpose:** Creates the instructor-student relationships table (foundational)
+
+**What it does:**
+- Creates `instructor_student_relationships` table to track which instructors can access which students
+- Adds permission flags: `can_view_notes`, `can_view_progress`, `can_view_payments`
+- Implements RLS policies restricting access to instructors and admins
+- Used by migrations 14+ for relationship-based security
+
+**Note:** This table is referenced by migrations 14, 19, 21 and the `/api/relationships` endpoint. This migration documents the table structure that was previously created manually.
+
 ## Performance Optimization Migrations
 
-### 19-fix-auth-rls-performance.sql
+### 21-fix-auth-rls-performance.sql
 **Purpose:** Optimize RLS policies for better query performance
 
 **What it does:**
@@ -326,7 +339,7 @@ All migrations are **additive and safe** - they don't delete data, only add secu
 - Significant improvement for tables with large datasets
 - No functional changes - security model remains identical
 
-**Run this after migrations 01-18**
+**Run this after migrations 01-20**
 
 ### 20-remove-duplicate-indexes.sql
 **Purpose:** Remove duplicate indexes to improve write performance and reduce storage
