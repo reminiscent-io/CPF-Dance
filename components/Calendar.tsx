@@ -121,6 +121,8 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
         return 'green'
       case 'master_class':
         return 'amber'
+      case 'personal':
+        return 'rose'
       default:
         return 'gray'
     }
@@ -136,8 +138,10 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
         return 'bg-green-100 border border-green-300 text-green-900'
       case 'master_class':
         return 'bg-amber-100 border border-amber-300 text-amber-900'
+      case 'personal':
+        return 'bg-rose-100 border border-rose-300 text-rose-900'
       default:
-        return 'bg-rose-100 border border-rose-300 text-gray-900'
+        return 'bg-gray-100 border border-gray-300 text-gray-900'
     }
   }
 

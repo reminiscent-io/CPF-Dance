@@ -122,6 +122,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         {
           label: 'Schedule',
           links: [
+            { href: '/dancer/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
             { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
             { href: '/dancer/available-classes', label: 'Available Classes', icon: <MagnifyingGlassIcon className="w-5 h-5" /> },
             { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-5 h-5" /> }

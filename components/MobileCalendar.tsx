@@ -271,8 +271,10 @@ export function MobileCalendar({
         return 'bg-green-500'
       case 'master_class':
         return 'bg-amber-500'
-      default:
+      case 'personal':
         return 'bg-rose-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
@@ -286,8 +288,10 @@ export function MobileCalendar({
         return 'bg-green-100 border-green-500 text-green-900'
       case 'master_class':
         return 'bg-amber-100 border-amber-500 text-amber-900'
-      default:
+      case 'personal':
         return 'bg-rose-100 border-rose-500 text-rose-900'
+      default:
+        return 'bg-gray-100 border-gray-500 text-gray-900'
     }
   }
 
@@ -301,8 +305,10 @@ export function MobileCalendar({
         return 'bg-green-50 border-l-4 border-green-500'
       case 'master_class':
         return 'bg-amber-50 border-l-4 border-amber-500'
-      default:
+      case 'personal':
         return 'bg-rose-50 border-l-4 border-rose-500'
+      default:
+        return 'bg-gray-50 border-l-4 border-gray-500'
     }
   }
 
@@ -316,6 +322,8 @@ export function MobileCalendar({
         return 'Workshop'
       case 'master_class':
         return 'Master'
+      case 'personal':
+        return 'Personal'
       default:
         return type
     }
