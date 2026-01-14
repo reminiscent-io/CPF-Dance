@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { useToast } from '@/components/ui/Toast'
+import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 
 interface EnrolledClass {
@@ -74,12 +76,14 @@ interface CalendarEvent {
 export default function DancerSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
+  const { addToast } = useToast()
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
+  const [showNoteModal, setShowNoteModal] = useState(false)
   const [currentDate, setCurrentDate] = useState(new Date())
 
   useEffect(() => {
@@ -249,6 +253,52 @@ export default function DancerSchedulePage() {
     if (selectedEvent) {
       window.open(generateOutlookLink(selectedEvent), '_blank')
       setShowCalendarMenu(false)
+    }
+  }
+
+  const handleCreateNote = () => {
+    setShowEventModal(false)
+    setShowCalendarMenu(false)
+    setShowNoteModal(true)
+  }
+
+  const handleNoteSubmit = async (data: {
+    title: string
+    content: string
+    tags: string[]
+    visibility: 'private' | 'shared_with_instructor'
+    class_id?: string
+    personal_class_id?: string
+  }) => {
+    const response = await fetch('/api/dancer/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create note')
+    }
+
+    addToast('Note created successfully', 'success')
+    setShowNoteModal(false)
+  }
+
+  // Extract actual class ID and type from the event
+  const getClassInfoFromEvent = (event: CalendarEvent | null) => {
+    if (!event) return null
+
+    // Event IDs are prefixed with "enrolled-" or "personal-"
+    const isPersonal = event.id.startsWith('personal-')
+    const actualId = event.id.replace(/^(enrolled-|personal-)/, '')
+
+    return {
+      id: actualId,
+      title: event.title,
+      type: isPersonal ? 'personal' as const : 'enrolled' as const,
+      start_time: event.start_time,
+      instructorName: event.instructorName
     }
   }
 
@@ -424,8 +474,17 @@ export default function DancerSchedulePage() {
             )}
 
             <div className="space-y-3 pt-2">
+              {/* Create Note button */}
+              <Button
+                onClick={handleCreateNote}
+                className="w-full bg-rose-600 hover:bg-rose-700"
+              >
+                Create Note
+              </Button>
+
               <div className="relative">
                 <Button
+                  variant="outline"
                   onClick={() => setShowCalendarMenu(!showCalendarMenu)}
                   className="w-full"
                 >
@@ -468,6 +527,15 @@ export default function DancerSchedulePage() {
           </div>
         )}
       </Modal>
+
+      {/* Note Creation Modal */}
+      {showNoteModal && selectedEvent && (
+        <DancerAddNoteModal
+          onClose={() => setShowNoteModal(false)}
+          onSubmit={handleNoteSubmit}
+          initialClass={getClassInfoFromEvent(selectedEvent) || undefined}
+        />
+      )}
     </PortalLayout>
   )
 }

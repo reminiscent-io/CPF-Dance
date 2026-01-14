@@ -302,7 +302,7 @@ export default function DancerNotesPage() {
     <PortalLayout profile={profile}>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Notes 📝
+          Notes
         </h1>
         <p className="text-gray-600">
           Track your progress with instructor feedback and personal reflections
@@ -387,15 +387,17 @@ export default function DancerNotesPage() {
             isOpen={focusModeOpen}
             onClose={handleCloseFocusMode}
             onSave={handleSave}
+            classes={classes}
+            selectedClassId={classId}
+            selectedClassType={classType}
+            onClassChange={(id, type) => {
+              setClassId(id)
+              setClassType(type)
+            }}
+            isPrivate={isPrivate}
+            onVisibilityChange={setIsPrivate}
           />
 
-          {/* Additional form fields overlay for Focus Mode */}
-          {focusModeOpen && (
-            <div style={{ display: 'none' }}>
-              {/* These would need to be integrated into NoteFocusMode component */}
-              {/* For now, keeping basic functionality */}
-            </div>
-          )}
         </>
       )}
     </PortalLayout>

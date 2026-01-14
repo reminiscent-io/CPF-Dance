@@ -9,19 +9,71 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Note } from '@/lib/utils/date-helpers'
 
+interface ClassOption {
+  id: string
+  title: string
+  start_time: string
+  type: 'enrolled' | 'personal'
+}
+
 interface NoteFocusModeProps {
   note: Note | null
   isOpen: boolean
   onClose: () => void
   onSave: (data: { title: string; content: string; tags: string[] }) => void
+  // Optional class linking props
+  classes?: ClassOption[]
+  selectedClassId?: string
+  selectedClassType?: 'enrolled' | 'personal' | ''
+  onClassChange?: (classId: string, classType: 'enrolled' | 'personal' | '') => void
+  // Optional visibility props
+  isPrivate?: boolean
+  onVisibilityChange?: (isPrivate: boolean) => void
 }
 
-export function NoteFocusMode({ note, isOpen, onClose, onSave }: NoteFocusModeProps) {
+export function NoteFocusMode({
+  note,
+  isOpen,
+  onClose,
+  onSave,
+  classes = [],
+  selectedClassId = '',
+  selectedClassType = '',
+  onClassChange,
+  isPrivate = false,
+  onVisibilityChange
+}: NoteFocusModeProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [saving, setSaving] = useState(false)
   const editorRef = useRef<Editor | null>(null)
+
+  const formatClassDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+  }
+
+  const handleClassSelect = (value: string) => {
+    if (!onClassChange) return
+
+    if (!value) {
+      onClassChange('', '')
+      return
+    }
+
+    const [type, id] = value.split(':')
+    onClassChange(id, type as 'enrolled' | 'personal')
+  }
+
+  const getClassSelectValue = () => {
+    if (!selectedClassId || !selectedClassType) return ''
+    return `${selectedClassType}:${selectedClassId}`
+  }
 
   // Initialize form with note data when opening
   useEffect(() => {
@@ -187,6 +239,66 @@ export function NoteFocusMode({ note, isOpen, onClose, onSave }: NoteFocusModePr
                 onChange={(e) => setTagsInput(e.target.value)}
                 helperText="Separate tags with commas"
               />
+
+              {/* Class linking - only shown if classes are provided */}
+              {classes.length > 0 && onClassChange && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Link to Class (optional)
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                    value={getClassSelectValue()}
+                    onChange={(e) => handleClassSelect(e.target.value)}
+                  >
+                    <option value="">No class linked</option>
+                    {classes.filter(c => c.type === 'enrolled').length > 0 && (
+                      <optgroup label="Enrolled Classes">
+                        {classes
+                          .filter(c => c.type === 'enrolled')
+                          .map(c => (
+                            <option key={`enrolled:${c.id}`} value={`enrolled:${c.id}`}>
+                              {c.title} - {formatClassDate(c.start_time)}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                    {classes.filter(c => c.type === 'personal').length > 0 && (
+                      <optgroup label="Personal Classes">
+                        {classes
+                          .filter(c => c.type === 'personal')
+                          .map(c => (
+                            <option key={`personal:${c.id}`} value={`personal:${c.id}`}>
+                              {c.title} - {formatClassDate(c.start_time)}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                  </select>
+                </div>
+              )}
+
+              {/* Visibility toggle - only shown if callback provided */}
+              {onVisibilityChange && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Visibility
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                    value={isPrivate ? 'private' : 'shared'}
+                    onChange={(e) => onVisibilityChange(e.target.value === 'private')}
+                  >
+                    <option value="private">Private (Only me)</option>
+                    <option value="shared">Shared with Instructor</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {isPrivate
+                      ? 'Only you can see this note'
+                      : 'Your instructor will be able to read this note'}
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </>

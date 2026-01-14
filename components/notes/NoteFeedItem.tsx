@@ -111,6 +111,23 @@ export function NoteFeedItem({ note, onEdit, onDelete, onPin }: NoteFeedItemProp
           </span>
         </div>
 
+        {/* Linked class info */}
+        {((note as any).classes || (note as any).personal_classes) && (
+          <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-500">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>
+              {(note as any).classes?.title || (note as any).personal_classes?.title}
+              {((note as any).classes?.start_time || (note as any).personal_classes?.start_time) && (
+                <span className="text-gray-400 ml-1">
+                  ({new Date((note as any).classes?.start_time || (note as any).personal_classes?.start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
         {/* Content preview with rich text formatting */}
         <div
           className="text-sm text-gray-600 mb-2 line-clamp-3 rich-text-preview"
