@@ -7,6 +7,9 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { Modal } from '@/components/ui/Modal'
+import { Badge } from '@/components/ui/Badge'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 import {
   CalendarIcon,
   DocumentTextIcon,
@@ -57,6 +60,8 @@ export default function DancerPortalPage() {
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([])
   const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  const [viewingNote, setViewingNote] = useState<RecentNote | null>(null)
+  const [showViewModal, setShowViewModal] = useState(false)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -113,8 +118,26 @@ export default function DancerPortalPage() {
   }
 
   const handleNoteClick = (note: RecentNote) => {
-    const tab = note.is_personal ? 'personal' : 'instructor'
-    router.push(`/dancer/notes?tab=${tab}`)
+    setViewingNote(note)
+    setShowViewModal(true)
+  }
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false)
+    setViewingNote(null)
+  }
+
+  const getTagColor = (tag: string) => {
+    const colors: Record<string, any> = {
+      technique: 'primary',
+      performance: 'secondary',
+      improvement: 'success',
+      strength: 'warning',
+      flexibility: 'default',
+      musicality: 'primary',
+      choreography: 'secondary'
+    }
+    return colors[tag.toLowerCase()] || 'default'
   }
 
   if (loading) {
@@ -137,10 +160,10 @@ export default function DancerPortalPage() {
       <div className="space-y-6">
         {/* Welcome Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
             Welcome back, {profile.full_name}
           </h1>
-          <p className="text-gray-500">Here's what's happening with your dance journey</p>
+          <p className="text-gray-600 text-base md:text-lg">Here's what's happening with your dance journey</p>
         </div>
 
         {loadingData ? (
@@ -153,8 +176,8 @@ export default function DancerPortalPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column - Notes */}
               <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
                     Recent Notes
                   </h2>
                   <button
@@ -167,59 +190,57 @@ export default function DancerPortalPage() {
                 </div>
 
                 {recentNotes.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {recentNotes.slice(0, 5).map((note) => (
-                      <div
+                      <Card
                         key={note.id}
+                        className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                         onClick={() => handleNoteClick(note)}
-                        className="bg-white border border-gray-200 rounded-lg p-3 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <span className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${
                                 note.is_personal 
                                   ? 'bg-blue-50 text-blue-600' 
                                   : 'bg-purple-50 text-purple-600'
                               }`}>
                                 {note.is_personal ? 'Personal' : 'Instructor'}
                               </span>
-                              <span className="text-xs text-gray-400">
-                                {new Date(note.created_at).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </span>
+                              {note.title && (
+                                <h3 className="font-semibold text-gray-900 text-base truncate">
+                                  {note.title}
+                                </h3>
+                              )}
                             </div>
-                            {note.title && (
-                              <h3 className="font-medium text-gray-900 text-sm mb-0.5 truncate">
-                                {note.title}
-                              </h3>
-                            )}
-                            <p className="text-sm text-gray-600 line-clamp-2 leading-snug">
-                              {getContentPreview(note.content, 100)}
-                            </p>
-                            {!note.is_personal && (
-                              <p className="text-xs text-gray-400 mt-1">
-                                {note.author_name}
-                                {note.classes && ` · ${note.classes.title}`}
-                              </p>
-                            )}
+                            <span className="text-sm text-gray-500 flex-shrink-0">
+                              {new Date(note.created_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
                           </div>
-                          <ChevronRightIcon className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" />
-                        </div>
-                      </div>
+                          <p className="text-base text-gray-600 line-clamp-2 leading-relaxed">
+                            {getContentPreview(note.content, 120)}
+                          </p>
+                          {!note.is_personal && (
+                            <p className="text-sm text-gray-400 mt-2">
+                              {note.author_name}
+                              {note.classes && ` · ${note.classes.title}`}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 ) : (
                   <Card className="bg-gray-50 border-dashed">
                     <CardContent className="p-6 text-center">
-                      <DocumentTextIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">No notes yet</h3>
-                      <p className="text-xs text-gray-500 mb-3">Start capturing your dance journey</p>
+                      <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <h3 className="font-medium text-gray-900 mb-1 text-base">No notes yet</h3>
+                      <p className="text-sm text-gray-500 mb-4">Start capturing your dance journey</p>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => router.push('/dancer/notes')}
                       >
                         Add a note
@@ -231,8 +252,8 @@ export default function DancerPortalPage() {
 
               {/* Right Column - Upcoming */}
               <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
                     Upcoming Classes
                   </h2>
                   <button
@@ -245,46 +266,47 @@ export default function DancerPortalPage() {
                 </div>
 
                 {upcomingClasses.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {upcomingClasses.slice(0, 5).map((classItem) => {
                       const { date, time } = formatDateTime(classItem.start_time)
                       return (
-                        <div
+                        <Card
                           key={classItem.id}
+                          className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                           onClick={() => router.push('/dancer/classes')}
-                          className="bg-white border border-gray-200 rounded-lg p-3 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 text-sm truncate">{classItem.title}</h3>
-                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                <span className="flex items-center gap-1">
-                                  <ClockIcon className="w-3 h-3" />
-                                  {date}, {time}
-                                </span>
-                                {(classItem.studios?.name || classItem.location) && (
-                                  <span className="flex items-center gap-1 truncate">
-                                    <MapPinIcon className="w-3 h-3 flex-shrink-0" />
-                                    <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 text-base truncate">{classItem.title}</h3>
+                                <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                                  <span className="flex items-center gap-1">
+                                    <ClockIcon className="w-4 h-4" />
+                                    {date}, {time}
                                   </span>
-                                )}
+                                  {(classItem.studios?.name || classItem.location) && (
+                                    <span className="flex items-center gap-1 truncate">
+                                      <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                                      <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                              <ChevronRightIcon className="w-5 h-5 text-gray-300 flex-shrink-0" />
                             </div>
-                            <ChevronRightIcon className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       )
                     })}
                   </div>
                 ) : (
                   <Card className="bg-gray-50 border-dashed">
                     <CardContent className="p-6 text-center">
-                      <CalendarIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">No upcoming classes</h3>
-                      <p className="text-xs text-gray-500 mb-3">Browse available classes to get started</p>
+                      <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <h3 className="font-medium text-gray-900 mb-1 text-base">No upcoming classes</h3>
+                      <p className="text-sm text-gray-500 mb-4">Browse available classes to get started</p>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => router.push('/dancer/classes')}
                       >
                         Browse classes
@@ -295,27 +317,96 @@ export default function DancerPortalPage() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div
+                  <Card
+                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                     onClick={() => router.push('/dancer/classes')}
-                    className="bg-white border border-gray-200 rounded-lg p-3 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
                   >
-                    <p className="text-2xl font-bold text-gray-900">{stats?.total_classes_attended || 0}</p>
-                    <p className="text-xs text-gray-500">Classes Attended</p>
-                  </div>
+                    <CardContent className="p-4">
+                      <p className="text-3xl font-bold text-gray-900">{stats?.total_classes_attended || 0}</p>
+                      <p className="text-sm text-gray-500">Classes Attended</p>
+                    </CardContent>
+                  </Card>
 
-                  <div
+                  <Card
+                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                     onClick={() => router.push('/dancer/notes?tab=instructor')}
-                    className="bg-white border border-gray-200 rounded-lg p-3 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
                   >
-                    <p className="text-2xl font-bold text-gray-900">{stats?.recent_notes || 0}</p>
-                    <p className="text-xs text-gray-500">Instructor Notes</p>
-                  </div>
+                    <CardContent className="p-4">
+                      <p className="text-3xl font-bold text-gray-900">{stats?.recent_notes || 0}</p>
+                      <p className="text-sm text-gray-500">Instructor Notes</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </section>
             </div>
           </>
         )}
       </div>
+
+      {/* Note View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={handleCloseViewModal}
+        title={viewingNote?.is_personal ? 'Personal Note' : 'Instructor Feedback'}
+      >
+        {viewingNote && (
+          <div className="space-y-4">
+            {viewingNote.title && (
+              <h3 className="text-2xl font-bold text-gray-900">
+                {viewingNote.title}
+              </h3>
+            )}
+
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>{viewingNote.is_personal ? '📝' : '🎓'} {viewingNote.author_name}</span>
+              {viewingNote.classes && (
+                <>
+                  <span>•</span>
+                  <span>{viewingNote.classes.title}</span>
+                </>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <div className="prose prose-sm max-w-none">
+                <div
+                  className="text-gray-700 text-base leading-relaxed"
+                  dangerouslySetInnerHTML={createSanitizedHtml(viewingNote.content)}
+                />
+              </div>
+            </div>
+
+            {viewingNote.tags && viewingNote.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
+                {viewingNote.tags.map((tag, idx) => (
+                  <Badge key={idx} variant={getTagColor(tag)}>
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
+              <span>
+                {new Date(viewingNote.created_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => router.push(`/dancer/notes?tab=${viewingNote.is_personal ? 'personal' : 'instructor'}`)}>
+                View All Notes
+              </Button>
+              <Button onClick={handleCloseViewModal}>
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </PortalLayout>
   )
 }
