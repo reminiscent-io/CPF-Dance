@@ -200,10 +200,10 @@ export default function DancerPortalPage() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between gap-3 mb-2">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <span className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${
+                              <span className={`text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${
                                 note.is_personal 
-                                  ? 'bg-blue-50 text-blue-600' 
-                                  : 'bg-purple-50 text-purple-600'
+                                  ? 'bg-gray-100 text-gray-500' 
+                                  : 'bg-gray-100 text-gray-500'
                               }`}>
                                 {note.is_personal ? 'Personal' : 'Instructor'}
                               </span>
