@@ -55,8 +55,8 @@ export async function GET(request: NextRequest) {
       const student = studentMap.get(profile.id)
       const lessonPacks = student?.lesson_pack_purchases || []
 
-      const totalPurchased = lessonPacks.reduce((sum, pack) => sum + pack.lessons_purchased, 0)
-      const totalUsed = lessonPacks.reduce((sum, pack) => sum + pack.lessons_used, 0)
+      const totalPurchased = lessonPacks.reduce((sum: number, pack: any) => sum + pack.lessons_purchased, 0)
+      const totalUsed = lessonPacks.reduce((sum: number, pack: any) => sum + pack.lessons_used, 0)
       const available = totalPurchased - totalUsed
 
       return {
