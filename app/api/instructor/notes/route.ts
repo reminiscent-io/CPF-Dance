@@ -104,7 +104,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, title, content, tags, class_id, visibility } = body
+    const { id, title, content, tags, class_id, visibility, student_id } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Note ID is required' }, { status: 400 })
@@ -114,18 +114,26 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      title: title || null,
+      content: content.trim(),
+      tags: tags || [],
+      class_id: class_id || null,
+      visibility: visibility || 'shared_with_student',
+    }
+
+    // Only update student_id if it's provided (allows changing which student a note is for)
+    if (student_id !== undefined) {
+      updateData.student_id = student_id || null
+    }
+
     // Update the note
     // Note: RLS policy already restricts access to instructor/admin notes
     // Instructors can edit ALL notes (not just their own) for collaboration
     const { data: note, error: noteError } = await supabase
       .from('notes')
-      .update({
-        title: title || null,
-        content: content.trim(),
-        tags: tags || [],
-        class_id: class_id || null,
-        visibility: visibility || 'shared_with_student',
-      })
+      .update(updateData)
       .eq('id', id)
       // Removed .eq('author_id', user.id) to allow instructors to edit any note
       // RLS policy "Instructors and Admins can manage all notes" handles security

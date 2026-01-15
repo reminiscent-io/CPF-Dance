@@ -86,6 +86,7 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [studentNotes, setStudentNotes] = useState<Note[]>([])
   const [students, setStudents] = useState<Student[]>([])
+  const [classes, setClasses] = useState<Array<{ id: string; title: string; start_time: string }>>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -107,6 +108,7 @@ export default function NotesPage() {
       fetchNotes()
       fetchStudentNotes()
       fetchStudents()
+      fetchClasses()
     }
   }, [user?.id, filterStudent, filterVisibility, filterTag, activeTab])
 
@@ -149,11 +151,23 @@ export default function NotesPage() {
     try {
       const response = await fetch('/api/students?is_active=true')
       if (!response.ok) throw new Error('Failed to fetch students')
-      
+
       const data = await response.json()
       setStudents(data.students || [])
     } catch (error) {
       console.error('Error fetching students:', error)
+    }
+  }
+
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch('/api/classes')
+      if (!response.ok) throw new Error('Failed to fetch classes')
+
+      const data = await response.json()
+      setClasses(data.classes || [])
+    } catch (error) {
+      console.error('Error fetching classes:', error)
     }
   }
 
@@ -407,6 +421,8 @@ export default function NotesPage() {
       {showEditModal && editingNote && (
         <EditNoteModal
           note={editingNote}
+          students={students}
+          classes={classes}
           onClose={() => {
             setShowEditModal(false)
             setEditingNote(null)
@@ -420,18 +436,26 @@ export default function NotesPage() {
 
 interface EditNoteModalProps {
   note: Note
+  students: Student[]
+  classes: Array<{ id: string; title: string; start_time: string }>
   onClose: () => void
   onSubmit: (data: CreateNoteData) => void
 }
 
-function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
+function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteModalProps) {
   const [formData, setFormData] = useState<CreateNoteData>({
     student_id: (note as any).student_id || '',
+    class_id: (note as any).class_id || '',
     title: note.title || '',
     content: note.content || '',
     tags: note.tags || [],
     visibility: note.visibility || 'private'
   })
+
+  // Helper to get student display name
+  const getStudentName = (student: Student) => {
+    return student.full_name || student.profile?.full_name || 'Unknown'
+  }
   const [editor, setEditor] = useState<Editor | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -473,10 +497,40 @@ function EditNoteModal({ note, onClose, onSubmit }: EditNoteModalProps) {
     <Modal isOpen={true} onClose={onClose} title="Edit Note" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-600">
-              Student: <span className="font-medium text-gray-900">{(note as any).student?.profile?.full_name || 'Unknown'}</span>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Student
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.student_id}
+              onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+            >
+              <option value="">No student selected</option>
+              {students.map(student => (
+                <option key={student.id} value={student.id}>
+                  {getStudentName(student)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Related Class
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.class_id || ''}
+              onChange={(e) => setFormData({ ...formData, class_id: e.target.value || undefined })}
+            >
+              <option value="">No class selected</option>
+              {classes.map(cls => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.title} - {new Date(cls.start_time).toLocaleDateString()}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Input

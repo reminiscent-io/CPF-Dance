@@ -28,6 +28,11 @@ export default function StudentDetailPage() {
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [linkEmail, setLinkEmail] = useState('')
   const [linking, setLinking] = useState(false)
+  const [showMergeModal, setShowMergeModal] = useState(false)
+  const [linkedStudents, setLinkedStudents] = useState<Array<{ id: string; profile: { full_name: string; email: string } }>>([])
+  const [selectedTargetId, setSelectedTargetId] = useState('')
+  const [merging, setMerging] = useState(false)
+  const [loadingLinkedStudents, setLoadingLinkedStudents] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [noteFormData, setNoteFormData] = useState({
     title: '',
@@ -235,6 +240,65 @@ export default function StudentDetailPage() {
     }
   }
 
+  const handleOpenMergeModal = async () => {
+    setLoadingLinkedStudents(true)
+    setShowMergeModal(true)
+    try {
+      const response = await fetch(`/api/students/linked?exclude=${id}`)
+      if (!response.ok) throw new Error('Failed to fetch linked students')
+      const data = await response.json()
+      setLinkedStudents(data.students || [])
+    } catch (error) {
+      console.error('Error fetching linked students:', error)
+      addToast('Failed to load dancer accounts', 'error')
+    } finally {
+      setLoadingLinkedStudents(false)
+    }
+  }
+
+  const handleCloseMergeModal = () => {
+    setShowMergeModal(false)
+    setSelectedTargetId('')
+    setLinkedStudents([])
+  }
+
+  const handleMerge = async () => {
+    if (!selectedTargetId) {
+      addToast('Please select a dancer account to merge into', 'error')
+      return
+    }
+
+    if (!confirm('Are you sure you want to merge this student? This action cannot be undone. All notes, enrollments, payments, and other data will be transferred to the selected dancer account, and this student record will be deleted.')) {
+      return
+    }
+
+    setMerging(true)
+    try {
+      const response = await fetch(`/api/students/${id}/merge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_student_id: selectedTargetId })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        addToast(data.error || 'Failed to merge students', 'error')
+        return
+      }
+
+      addToast(data.message || 'Students merged successfully', 'success')
+      handleCloseMergeModal()
+      // Redirect to the merged student's page
+      router.push(`/instructor/students/${selectedTargetId}`)
+    } catch (error) {
+      console.error('Error merging students:', error)
+      addToast('Failed to merge students', 'error')
+    } finally {
+      setMerging(false)
+    }
+  }
+
   if (authLoading || loading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -289,14 +353,24 @@ export default function StudentDetailPage() {
                     <p className="text-sm text-yellow-800 mb-2">
                       This student doesn't have a linked dancer account yet.
                     </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowLinkModal(true)}
-                      className="w-full"
-                    >
-                      Link to Dancer Account
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowLinkModal(true)}
+                        className="w-full"
+                      >
+                        Link to Dancer Account
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleOpenMergeModal}
+                        className="w-full"
+                      >
+                        Merge into Existing Dancer
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -620,6 +694,80 @@ export default function StudentDetailPage() {
               disabled={linking || !linkEmail.trim()}
             >
               {linking ? 'Linking...' : 'Link Account'}
+            </Button>
+          </ModalFooter>
+        </Modal>
+      )}
+
+      {showMergeModal && (
+        <Modal
+          isOpen={true}
+          onClose={handleCloseMergeModal}
+          title="Merge Student into Dancer Account"
+          size="md"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Select an existing dancer account to merge this student into. All notes, enrollments, payments, and other data will be transferred to the selected account.
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-700 mb-1">Data to be transferred:</p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>{enrollments.length} enrollment(s)</li>
+                <li>{notes.length} note(s)</li>
+                <li>{payments.length} payment(s)</li>
+                <li>{requests.length} lesson request(s)</li>
+              </ul>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Dancer Account
+              </label>
+              {loadingLinkedStudents ? (
+                <div className="flex items-center justify-center py-4">
+                  <Spinner size="sm" />
+                  <span className="ml-2 text-sm text-gray-600">Loading dancer accounts...</span>
+                </div>
+              ) : linkedStudents.length === 0 ? (
+                <p className="text-sm text-gray-500 py-2">No dancer accounts available to merge into.</p>
+              ) : (
+                <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  value={selectedTargetId}
+                  onChange={(e) => setSelectedTargetId(e.target.value)}
+                >
+                  <option value="">-- Select a dancer account --</option>
+                  {linkedStudents.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.profile?.full_name} ({s.profile?.email})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-amber-800">
+                <strong>Warning:</strong> This action cannot be undone. The current student record will be deleted after the merge.
+              </p>
+            </div>
+          </div>
+
+          <ModalFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={handleCloseMergeModal}
+              disabled={merging}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleMerge}
+              disabled={merging || !selectedTargetId || loadingLinkedStudents}
+            >
+              {merging ? 'Merging...' : 'Merge Students'}
             </Button>
           </ModalFooter>
         </Modal>
