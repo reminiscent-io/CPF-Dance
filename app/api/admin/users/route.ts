@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
     await requireRole('admin')
     const supabase = await createClient()
 
-    // Get all profiles first
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select(`
@@ -24,7 +23,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: profilesError.message }, { status: 500 })
     }
 
-    // Get students with lesson pack purchases separately
     const { data: studentsData, error: studentsError } = await supabase
       .from('students')
       .select(`
@@ -32,9 +30,10 @@ export async function GET(request: NextRequest) {
         profile_id,
         lesson_pack_purchases (
           id,
-          lessons_purchased,
-          lessons_used,
-          created_at
+          remaining_lessons,
+          lesson_packs (
+            lesson_count
+          )
         )
       `)
     
@@ -42,7 +41,6 @@ export async function GET(request: NextRequest) {
       console.error('[Admin Users] Error fetching students:', studentsError)
     }
 
-    // Create a map of profile_id to student data
     const studentMap = new Map()
     studentsData?.forEach(student => {
       studentMap.set(student.profile_id, student)
@@ -50,14 +48,20 @@ export async function GET(request: NextRequest) {
 
     console.log('[Admin Users] Fetched profiles count:', profiles?.length || 0)
 
-    // Transform data to include lesson pack summary
     const usersWithLessonData = profiles?.map(profile => {
       const student = studentMap.get(profile.id)
       const lessonPacks = student?.lesson_pack_purchases || []
 
-      const totalPurchased = lessonPacks.reduce((sum: number, pack: any) => sum + pack.lessons_purchased, 0)
-      const totalUsed = lessonPacks.reduce((sum: number, pack: any) => sum + pack.lessons_used, 0)
-      const available = totalPurchased - totalUsed
+      let totalPurchased = 0
+      let totalRemaining = 0
+
+      lessonPacks.forEach((pack: any) => {
+        const lessonCount = pack.lesson_packs?.lesson_count || 0
+        totalPurchased += lessonCount
+        totalRemaining += pack.remaining_lessons || 0
+      })
+
+      const totalUsed = totalPurchased - totalRemaining
 
       return {
         id: profile.id,
@@ -68,7 +72,7 @@ export async function GET(request: NextRequest) {
         student_id: student?.id || null,
         lessons_purchased: totalPurchased,
         lessons_used: totalUsed,
-        lessons_available: available,
+        lessons_available: totalRemaining,
         lesson_pack_count: lessonPacks.length
       }
     }) || []
