@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
         created_at,
         responded_at,
         studio_id,
+        gmail_thread_id,
+        email_count,
+        last_email_date,
+        has_unread_reply,
         studios (
           name,
           address
