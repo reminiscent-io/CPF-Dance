@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **January 15, 2026**: Redesigned Dancer Dashboard - features Recent Notes prominently at the top (showing both personal and instructor notes), followed by Upcoming Classes list, then quick stats. Clicking items navigates to the relevant tab
 - **January 15, 2026**: Added "Format with AI" button to both Add Note and Edit Note modals (Instructor and Dancer portals) - uses OpenAI to tighten formatting and fix spelling while preserving names and dance terminology, includes undo functionality. Updated AI prompt to use bullet points sparingly and keep logically connected sentences together in paragraphs
 - **January 15, 2026**: Added Gmail email integration for studio inquiries - admins can reply via Gmail with pre-filled templates, view email threads, and check for replies with "Refresh Inbox" button
 - **January 15, 2026**: Replaced Tremor UI with Recharts and custom Shadcn-style components in admin dashboard for React 19 compatibility

@@ -4,18 +4,18 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
-import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 import {
   CalendarIcon,
-  SparklesIcon,
   DocumentTextIcon,
   ClockIcon,
-  MapPinIcon
+  MapPinIcon,
+  ChevronRightIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 interface DancerStats {
@@ -24,13 +24,14 @@ interface DancerStats {
   recent_notes: number
 }
 
-interface NextClass {
+interface UpcomingClass {
   id: string
   title: string
   description: string
   location: string
   start_time: string
   end_time: string
+  class_type: string
   studios: {
     name: string
   } | null
@@ -44,6 +45,7 @@ interface RecentNote {
   created_at: string
   author_id: string
   author_name: string
+  is_personal: boolean
   class_id: string | null
   classes: {
     title: string
@@ -54,10 +56,8 @@ export default function DancerPortalPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [stats, setStats] = useState<DancerStats | null>(null)
-  const [nextClass, setNextClass] = useState<NextClass | null>(null)
+  const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([])
   const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
-  const [selectedNote, setSelectedNote] = useState<RecentNote | null>(null)
-  const [showNoteModal, setShowNoteModal] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const hasFetched = useRef(false)
 
@@ -80,7 +80,7 @@ export default function DancerPortalPage() {
       if (response.ok) {
         const data = await response.json()
         setStats(data.stats)
-        setNextClass(data.next_class)
+        setUpcomingClasses(data.upcoming_classes || [])
         setRecentNotes(data.recent_notes || [])
       }
     } catch (error) {
@@ -88,16 +88,6 @@ export default function DancerPortalPage() {
     } finally {
       setLoadingData(false)
     }
-  }
-
-  const handleNoteClick = (note: RecentNote) => {
-    setSelectedNote(note)
-    setShowNoteModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setShowNoteModal(false)
-    setSelectedNote(null)
   }
 
   const getTagColor = (tag: string) => {
@@ -113,16 +103,33 @@ export default function DancerPortalPage() {
     return colors[tag.toLowerCase()] || 'default'
   }
 
-  // Truncate HTML content for preview
-  const getContentPreview = (html: string, maxLength: number = 200): string => {
+  const getContentPreview = (html: string, maxLength: number = 150): string => {
     if (!html) return ''
-    // Strip HTML tags for length calculation
     const text = html.replace(/<[^>]*>/g, '')
-    // If text is short enough, return original HTML
     if (text.length <= maxLength) return html
-    // Otherwise, truncate and add ellipsis
     const truncated = text.substring(0, maxLength)
     return truncated + '...'
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return {
+      date: date.toLocaleDateString('en-US', { 
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric'
+      }),
+      time: date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    }
+  }
+
+  const handleNoteClick = (note: RecentNote) => {
+    const tab = note.is_personal ? 'personal' : 'instructor'
+    router.push(`/dancer/notes?tab=${tab}`)
   }
 
   if (loading) {
@@ -140,31 +147,18 @@ export default function DancerPortalPage() {
     return null
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return {
-      date: date.toLocaleDateString('en-US', { 
-        weekday: 'long',
-        month: 'long', 
-        day: 'numeric'
-      }),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      })
-    }
-  }
+  const instructorNotes = recentNotes.filter(n => !n.is_personal)
+  const personalNotes = recentNotes.filter(n => n.is_personal)
 
   return (
     <PortalLayout profile={profile}>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Welcome Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
-            Welcome back, {profile.full_name}!
+          <h1 className="text-3xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
+            Welcome back, {profile.full_name}
           </h1>
-          <p className="text-gray-600">Keep dancing, keep growing, keep sparkling!</p>
+          <p className="text-gray-500">Here's what's happening with your dance journey</p>
         </div>
 
         {loadingData ? (
@@ -173,263 +167,198 @@ export default function DancerPortalPage() {
           </div>
         ) : (
           <>
-            {/* Section A: Next Class Hero */}
-            <Card className="w-full bg-gradient-to-br from-rose-50 via-white to-purple-50 border-rose-200">
-              <CardContent className="p-6">
-                {nextClass ? (
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-rose-600 uppercase tracking-wide mb-2">
-                        Your Next Class
-                      </p>
-                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-                        {nextClass.title}
-                      </h2>
-                      <div className="flex flex-wrap gap-4 text-gray-700">
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="w-5 h-5 text-rose-500" />
-                          <span className="font-medium">
-                            {formatDateTime(nextClass.start_time).date} at {formatDateTime(nextClass.start_time).time}
-                          </span>
-                        </div>
-                        {(nextClass.studios?.name || nextClass.location) && (
-                          <div className="flex items-center gap-2">
-                            <MapPinIcon className="w-5 h-5 text-rose-500" />
-                            <span>{nextClass.studios?.name || nextClass.location}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        onClick={() => router.push('/dancer/classes')}
-                        className="w-full md:w-auto"
-                      >
-                        View Schedule
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CalendarIcon className="w-8 h-8 text-rose-500" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
-                      Ready to dance?
-                    </h2>
-                    <p className="text-gray-600 mb-6">
-                      You don't have any upcoming classes scheduled yet.
-                    </p>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={() => router.push('/dancer/classes')}
-                    >
-                      Browse Schedule
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Section B: Progress Stats - 2 Column Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Classes Attended Card */}
-              <Card hover className="bg-gradient-to-br from-purple-50 to-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">Classes Attended</p>
-                      <p className="text-4xl font-bold text-purple-600">{stats?.total_classes_attended || 0}</p>
-                    </div>
-                    <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
-                      <SparklesIcon className="w-8 h-8 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Feedback Card (formerly Recent Notes) */}
-              <div
-                onClick={() => router.push('/dancer/notes')}
-                className="cursor-pointer"
-              >
-                <Card hover className="bg-gradient-to-br from-amber-50 to-white h-full">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">Feedback</p>
-                        <p className="text-4xl font-bold text-amber-600">{stats?.recent_notes || 0}</p>
-                        <p className="text-xs text-gray-500 mt-1">Tap to view all</p>
-                      </div>
-                      <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
-                        <DocumentTextIcon className="w-8 h-8 text-amber-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Recent Notes Section - Featured */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  Recent Notes
+                </h2>
+                <button
+                  onClick={() => router.push('/dancer/notes')}
+                  className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                >
+                  View all
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
               </div>
-            </div>
 
-            {/* Section C: Recent Instructor Feedback */}
-            {recentNotes.length > 0 && (
-              <Card className="bg-gradient-to-br from-purple-50 via-white to-rose-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                      ✨ Recent Instructor Feedback
-                    </h2>
+              {recentNotes.length > 0 ? (
+                <div className="space-y-3">
+                  {recentNotes.slice(0, 4).map((note) => (
+                    <div
+                      key={note.id}
+                      onClick={() => handleNoteClick(note)}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          note.is_personal ? 'bg-blue-100' : 'bg-purple-100'
+                        }`}>
+                          {note.is_personal ? (
+                            <DocumentTextIcon className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <SparklesIcon className="w-5 h-5 text-purple-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              note.is_personal 
+                                ? 'bg-blue-50 text-blue-700' 
+                                : 'bg-purple-50 text-purple-700'
+                            }`}>
+                              {note.is_personal ? 'Personal' : 'Instructor'}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(note.created_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          {note.title && (
+                            <h3 className="font-medium text-gray-900 mb-1 truncate">
+                              {note.title}
+                            </h3>
+                          )}
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {getContentPreview(note.content, 120).replace(/<[^>]*>/g, '')}
+                          </p>
+                          {!note.is_personal && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              From {note.author_name}
+                              {note.classes && ` • ${note.classes.title}`}
+                            </p>
+                          )}
+                        </div>
+                        <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card className="bg-gray-50 border-dashed">
+                  <CardContent className="p-8 text-center">
+                    <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="font-medium text-gray-900 mb-1">No notes yet</h3>
+                    <p className="text-sm text-gray-500 mb-4">Start capturing your dance journey</p>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => router.push('/dancer/notes')}
                     >
-                      View All
+                      Add a note
                     </Button>
-                  </div>
-                  <div className="space-y-3">
-                    {recentNotes.map((note) => (
-                      <Card
-                        key={note.id}
-                        hover
-                        className="cursor-pointer bg-white border-l-4 border-l-purple-400"
-                        onClick={() => handleNoteClick(note)}
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+
+            {/* Upcoming Classes Section */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  Upcoming Classes
+                </h2>
+                <button
+                  onClick={() => router.push('/dancer/classes')}
+                  className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                >
+                  View all
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {upcomingClasses.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingClasses.slice(0, 4).map((classItem) => {
+                    const { date, time } = formatDateTime(classItem.start_time)
+                    return (
+                      <div
+                        key={classItem.id}
+                        onClick={() => router.push('/dancer/classes')}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              {note.title && (
-                                <div className="flex items-center gap-2 mb-1">
-                                  <svg
-                                    className="w-4 h-4 flex-shrink-0 text-purple-500"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                    aria-label="Instructor feedback"
-                                  >
-                                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                                  </svg>
-                                  <h3 className="font-semibold text-gray-900 truncate">
-                                    {note.title}
-                                  </h3>
-                                </div>
-                              )}
-                              <div
-                                className="text-sm text-gray-700 line-clamp-2 mb-2"
-                                dangerouslySetInnerHTML={createSanitizedHtml(getContentPreview(note.content))}
-                              />
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                                <span>📝 {note.author_name}</span>
-                                {note.classes && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{note.classes.title}</span>
-                                  </>
-                                )}
-                                <span>•</span>
-                                <span>
-                                  {new Date(note.created_at).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
-                              </div>
-                              {note.tags && note.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {note.tags.slice(0, 3).map((tag, idx) => (
-                                    <Badge key={idx} variant={getTagColor(tag)} size="sm">
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                  {note.tags.length > 3 && (
-                                    <Badge variant="default" size="sm">
-                                      +{note.tags.length - 3}
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <CalendarIcon className="w-5 h-5 text-rose-600" />
                             </div>
-                            <div className="flex-shrink-0">
-                              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
+                            <div>
+                              <h3 className="font-medium text-gray-900">{classItem.title}</h3>
+                              <div className="flex items-center gap-3 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <ClockIcon className="w-3.5 h-3.5" />
+                                  {date} at {time}
+                                </span>
+                                {(classItem.studios?.name || classItem.location) && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPinIcon className="w-3.5 h-3.5" />
+                                    {classItem.studios?.name || classItem.location}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <Card className="bg-gray-50 border-dashed">
+                  <CardContent className="p-8 text-center">
+                    <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="font-medium text-gray-900 mb-1">No upcoming classes</h3>
+                    <p className="text-sm text-gray-500 mb-4">Browse available classes to get started</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/dancer/classes')}
+                    >
+                      Browse classes
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+
+            {/* Quick Stats Row */}
+            <section className="grid grid-cols-2 gap-4">
+              <div
+                onClick={() => router.push('/dancer/classes')}
+                className="bg-white border border-gray-200 rounded-lg p-4 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <SparklesIcon className="w-5 h-5 text-purple-600" />
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.total_classes_attended || 0}</p>
+                    <p className="text-sm text-gray-500">Classes Attended</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => router.push('/dancer/notes?tab=instructor')}
+                className="bg-white border border-gray-200 rounded-lg p-4 hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <DocumentTextIcon className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.recent_notes || 0}</p>
+                    <p className="text-sm text-gray-500">Instructor Feedback</p>
+                  </div>
+                </div>
+              </div>
+            </section>
           </>
         )}
       </div>
-
-      {/* Note Detail Modal */}
-      <Modal
-        isOpen={showNoteModal}
-        onClose={handleCloseModal}
-        title="Instructor Feedback"
-      >
-        {selectedNote && (
-          <div className="space-y-4">
-            {selectedNote.title && (
-              <h3 className="text-2xl font-bold text-gray-900">
-                {selectedNote.title}
-              </h3>
-            )}
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>📝 {selectedNote.author_name}</span>
-              {selectedNote.classes && (
-                <>
-                  <span>•</span>
-                  <span>{selectedNote.classes.title}</span>
-                </>
-              )}
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <div className="prose prose-sm max-w-none">
-                <div
-                  className="text-gray-700"
-                  dangerouslySetInnerHTML={createSanitizedHtml(selectedNote.content)}
-                />
-              </div>
-            </div>
-
-            {selectedNote.tags && selectedNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
-                {selectedNote.tags.map((tag, idx) => (
-                  <Badge key={idx} variant={getTagColor(tag)}>
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
-              <span>
-                Created: {new Date(selectedNote.created_at).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleCloseModal}>
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </PortalLayout>
   )
 }

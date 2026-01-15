@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
       .in('visibility', ['shared_with_student', 'shared_with_guardian'])
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
-    // Get next enrolled class
-    const { data: nextEnrolledClass } = await supabase
+    // Get upcoming enrolled classes (next 5)
+    const { data: upcomingEnrolledClasses } = await supabase
       .from('enrollments')
       .select(`
         id,
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
           location,
           start_time,
           end_time,
+          class_type,
           studios (
             name
           )
@@ -66,55 +67,55 @@ export async function GET(request: NextRequest) {
       .gte('classes.start_time', now)
       .eq('classes.is_cancelled', false)
       .order('classes(start_time)', { ascending: true })
-      .limit(1)
-      .single()
+      .limit(5)
 
-    // Get next personal class
-    const { data: nextPersonalClass } = await supabase
+    // Get upcoming personal classes (next 5)
+    const { data: upcomingPersonalClasses } = await supabase
       .from('personal_classes')
       .select('*')
       .eq('student_id', student.id)
       .gte('start_time', now)
       .order('start_time', { ascending: true })
-      .limit(1)
-      .single()
+      .limit(5)
 
-    // Determine which class is actually next
-    let nextClass = null
-    if (nextEnrolledClass?.classes && nextPersonalClass) {
-      // Compare timestamps to find the soonest
-      const enrolledClass = Array.isArray(nextEnrolledClass.classes) ? nextEnrolledClass.classes[0] : nextEnrolledClass.classes
-      const enrolledTime = new Date(enrolledClass.start_time).getTime()
-      const personalTime = new Date(nextPersonalClass.start_time).getTime()
-      if (personalTime < enrolledTime) {
-        nextClass = {
-          id: nextPersonalClass.id,
-          title: nextPersonalClass.title,
-          description: null,
-          location: nextPersonalClass.location,
-          start_time: nextPersonalClass.start_time,
-          end_time: nextPersonalClass.end_time,
-          studios: nextPersonalClass.instructor_name ? { name: nextPersonalClass.instructor_name } : null
-        }
-      } else {
-        nextClass = enrolledClass
+    // Merge and sort all upcoming classes
+    const allUpcomingClasses: any[] = []
+    
+    upcomingEnrolledClasses?.forEach(enrollment => {
+      const cls = Array.isArray(enrollment.classes) ? enrollment.classes[0] : enrollment.classes
+      if (cls) {
+        allUpcomingClasses.push({
+          id: cls.id,
+          title: cls.title,
+          description: cls.description,
+          location: cls.location,
+          start_time: cls.start_time,
+          end_time: cls.end_time,
+          class_type: cls.class_type,
+          studios: cls.studios
+        })
       }
-    } else if (nextEnrolledClass?.classes) {
-      const enrolledClass = Array.isArray(nextEnrolledClass.classes) ? nextEnrolledClass.classes[0] : nextEnrolledClass.classes
-      nextClass = enrolledClass
-    } else if (nextPersonalClass) {
-      nextClass = {
-        id: nextPersonalClass.id,
-        title: nextPersonalClass.title,
+    })
+
+    upcomingPersonalClasses?.forEach(pc => {
+      allUpcomingClasses.push({
+        id: pc.id,
+        title: pc.title,
         description: null,
-        location: nextPersonalClass.location,
-        start_time: nextPersonalClass.start_time,
-        end_time: nextPersonalClass.end_time,
-        studios: nextPersonalClass.instructor_name ? { name: nextPersonalClass.instructor_name } : null
-      }
-    }
+        location: pc.location,
+        start_time: pc.start_time,
+        end_time: pc.end_time,
+        class_type: 'private',
+        studios: pc.instructor_name ? { name: pc.instructor_name } : null
+      })
+    })
 
-    const { data: recentNotes } = await supabase
+    // Sort by start time and take first 5
+    allUpcomingClasses.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    const upcomingClasses = allUpcomingClasses.slice(0, 5)
+
+    // Get instructor notes (shared with student)
+    const { data: instructorNotes } = await supabase
       .from('notes')
       .select(`
         id,
@@ -134,7 +135,26 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(3)
 
-    const authorIds = [...new Set(recentNotes?.map(n => n.author_id) || [])]
+    // Get dancer's personal notes
+    const { data: personalNotes } = await supabase
+      .from('dancer_notes')
+      .select(`
+        id,
+        title,
+        content,
+        tags,
+        created_at,
+        is_private
+      `)
+      .eq('dancer_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    // Combine all notes with proper type markers
+    const allNotes: any[] = []
+
+    // Add instructor notes
+    const authorIds = [...new Set(instructorNotes?.map(n => n.author_id) || [])]
     let authorMap = new Map()
     
     if (authorIds.length > 0) {
@@ -146,10 +166,29 @@ export async function GET(request: NextRequest) {
       authorMap = new Map(authors?.map(a => [a.id, a.full_name]) || [])
     }
 
-    const notesWithAuthors = recentNotes?.map(note => ({
-      ...note,
-      author_name: authorMap.get(note.author_id) || 'Instructor'
-    })) || []
+    instructorNotes?.forEach(note => {
+      allNotes.push({
+        ...note,
+        author_name: authorMap.get(note.author_id) || 'Instructor',
+        is_personal: false
+      })
+    })
+
+    // Add personal notes
+    personalNotes?.forEach(note => {
+      allNotes.push({
+        ...note,
+        author_id: profile.id,
+        author_name: profile.full_name,
+        is_personal: true,
+        class_id: null,
+        classes: null
+      })
+    })
+
+    // Sort by created_at and take the most recent
+    allNotes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const recentNotesWithType = allNotes.slice(0, 5)
 
     return NextResponse.json({
       stats: {
@@ -157,8 +196,8 @@ export async function GET(request: NextRequest) {
         total_classes_attended: totalClassesCount || 0,
         recent_notes: recentNotesCount || 0
       },
-      next_class: nextClass,
-      recent_notes: notesWithAuthors
+      upcoming_classes: upcomingClasses,
+      recent_notes: recentNotesWithType
     })
   } catch (error) {
     console.error('Error fetching dancer stats:', error)
