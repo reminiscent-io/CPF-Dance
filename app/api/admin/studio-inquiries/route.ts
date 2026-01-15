@@ -12,18 +12,18 @@ export async function GET(request: NextRequest) {
       .from('studio_inquiries')
       .select(`
         id,
-        name,
-        email,
-        phone,
+        studio_name,
+        contact_name,
+        contact_email,
+        contact_phone,
         message,
         status,
         created_at,
         responded_at,
-        responded_by,
         studio_id,
         studios (
           name,
-          location
+          address
         )
       `)
       .order('created_at', { ascending: false })
@@ -49,8 +49,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const { data: currentUser } = await supabase.auth.getUser()
-
     const updateData: any = {
       status,
       updated_at: new Date().toISOString()
@@ -58,7 +56,9 @@ export async function PUT(request: NextRequest) {
 
     if (status === 'responded') {
       updateData.responded_at = new Date().toISOString()
-      updateData.responded_by = currentUser.user?.id
+      updateData.is_responded = true
+    } else if (status === 'new') {
+      updateData.is_responded = false
     }
 
     const { data, error } = await supabase

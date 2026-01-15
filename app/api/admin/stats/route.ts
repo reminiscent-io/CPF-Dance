@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     // Get recent pending inquiries
     const { data: recentInquiries } = await supabase
       .from('studio_inquiries')
-      .select('id, name, email, created_at, status')
+      .select('id, studio_name, contact_name, contact_email, created_at, status')
       .eq('status', 'new')
       .order('created_at', { ascending: false })
       .limit(5)
@@ -171,7 +171,12 @@ export async function GET(request: NextRequest) {
       inquiries: {
         total: totalInquiries || 0,
         pending: pendingInquiries || 0,
-        recent: recentInquiries || []
+        recent: recentInquiries?.map(inq => ({
+          id: inq.id,
+          name: inq.studio_name,
+          email: inq.contact_email,
+          created_at: inq.created_at
+        })) || []
       },
       waivers: {
         total: totalWaivers || 0,
