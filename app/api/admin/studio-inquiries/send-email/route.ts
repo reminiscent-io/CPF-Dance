@@ -15,9 +15,13 @@ export async function POST(request: NextRequest) {
 
     const { data: inquiry } = await supabase
       .from('studio_inquiries')
-      .select('gmail_thread_id, last_email_message_id')
+      .select('gmail_thread_id, last_email_message_id, email_count')
       .eq('id', inquiryId)
       .single()
+    
+    if (!inquiry) {
+      return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 })
+    }
 
     const fullBody = `
       <div style="font-family: Arial, sans-serif;">
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
       .update({
         gmail_thread_id: result.threadId,
         last_email_message_id: result.messageId,
-        email_count: (inquiry?.gmail_thread_id ? 1 : 0) + 1,
+        email_count: (inquiry.email_count ?? 0) + 1,
         last_email_date: new Date().toISOString(),
         is_responded: true,
         responded_at: new Date().toISOString(),

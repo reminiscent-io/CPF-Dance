@@ -117,11 +117,11 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
     
     let body = '';
     if (msg.payload?.body?.data) {
-      body = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+      body = Buffer.from(msg.payload.body.data, 'base64url').toString('utf-8');
     } else if (msg.payload?.parts) {
       const textPart = msg.payload.parts.find((p) => p.mimeType === 'text/plain' || p.mimeType === 'text/html');
       if (textPart?.body?.data) {
-        body = Buffer.from(textPart.body.data, 'base64').toString('utf-8');
+        body = Buffer.from(textPart.body.data, 'base64url').toString('utf-8');
       }
     }
     
