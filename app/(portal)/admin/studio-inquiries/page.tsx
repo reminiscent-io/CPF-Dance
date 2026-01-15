@@ -66,6 +66,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] px-3 py-2',
       },
     },
+    immediatelyRender: false,
   })
 
   const handleSend = async () => {
@@ -183,7 +184,13 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
                 </button>
               </div>
               {/* Editor */}
-              <EditorContent editor={editor} className="bg-white" />
+              {editor ? (
+                <EditorContent editor={editor} className="bg-white" />
+              ) : (
+                <div className="min-h-[200px] px-3 py-2 flex items-center justify-center">
+                  <Spinner size="sm" />
+                </div>
+              )}
             </div>
           </div>
 
