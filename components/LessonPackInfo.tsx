@@ -71,15 +71,15 @@ export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
       <div className="space-y-3">
         <button
           onClick={() => setHistoryOpen(true)}
-          className="w-full p-6 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
+          className="w-full p-3 md:p-5 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
         >
           <div className="flex items-center justify-between">
             <div className="text-left">
-              <p className="text-sm font-medium text-blue-700 mb-1">Available Lessons</p>
-              <p className="text-4xl font-bold text-blue-900">{totalRemaining}</p>
-              <p className="text-xs text-blue-600 mt-2">Click to view history & usage</p>
+              <p className="text-xs md:text-sm font-medium text-blue-700 mb-0.5 md:mb-1">Available Lessons</p>
+              <p className="text-2xl md:text-4xl font-bold text-blue-900">{totalRemaining}</p>
+              <p className="text-xs text-blue-600 mt-1 md:mt-2">Click to view history & usage</p>
             </div>
-            <div className="text-4xl">📦</div>
+            <div className="text-2xl md:text-4xl">📦</div>
           </div>
         </button>
 
