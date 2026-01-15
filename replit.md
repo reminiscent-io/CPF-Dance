@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **January 15, 2026**: Added "Format with AI" button to note editing modals (Instructor and Dancer portals) - uses OpenAI to tighten formatting and fix spelling while preserving names and dance terminology, includes undo functionality
 - **January 15, 2026**: Added Gmail email integration for studio inquiries - admins can reply via Gmail with pre-filled templates, view email threads, and check for replies with "Refresh Inbox" button
 - **January 15, 2026**: Replaced Tremor UI with Recharts and custom Shadcn-style components in admin dashboard for React 19 compatibility
 - **December 24, 2025**: Added zoom functionality to mobile calendar with Month/Week/Day view modes, segmented control for view switching, hourly timeline views, and double-tap to zoom gesture
