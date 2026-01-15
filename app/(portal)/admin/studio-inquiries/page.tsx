@@ -8,6 +8,9 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
 
 interface StudioInquiry {
   id: string
@@ -48,10 +51,25 @@ interface EmailComposeModalProps {
 }
 
 function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps) {
-  const [body, setBody] = useState(`<p>Hi ${inquiry.contact_name},</p><p>Thank you for reaching out!</p><p></p><p>Best regards,<br>Courtney</p>`)
   const [sending, setSending] = useState(false)
+  
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Write your response...',
+      }),
+    ],
+    content: `<p>Hi ${inquiry.contact_name},</p><p>Thank you for reaching out!</p><p></p><p>Best regards,<br>Courtney</p>`,
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] px-3 py-2',
+      },
+    },
+  })
 
   const handleSend = async () => {
+    if (!editor) return
     setSending(true)
     try {
       const response = await fetch('/api/admin/studio-inquiries/send-email', {
@@ -61,7 +79,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
           inquiryId: inquiry.id,
           to: inquiry.contact_email,
           subject: `CPF Dance Inquiry | ${inquiry.studio_name}`,
-          body,
+          body: editor.getHTML(),
           studioName: inquiry.studio_name,
           contactName: inquiry.contact_name,
           originalMessage: inquiry.message,
@@ -118,13 +136,55 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-            <textarea
-              value={body.replace(/<[^>]*>/g, '')}
-              onChange={(e) => setBody(`<p>${e.target.value.replace(/\n/g, '</p><p>')}</p>`)}
-              rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
-              placeholder="Write your response..."
-            />
+            <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-rose-500 focus-within:border-transparent">
+              {/* Formatting Toolbar */}
+              <div className="bg-gray-50 border-b border-gray-200 p-2 flex gap-1 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                  className={`p-2 rounded hover:bg-gray-200 transition-colors ${editor?.isActive('bold') ? 'bg-gray-200 text-rose-600' : 'text-gray-600'}`}
+                  title="Bold"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 4h7a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  className={`p-2 rounded hover:bg-gray-200 transition-colors ${editor?.isActive('italic') ? 'bg-gray-200 text-rose-600' : 'text-gray-600'}`}
+                  title="Italic"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 4h4m-2 0v16m-4 0h8" transform="skewX(-12)" />
+                  </svg>
+                </button>
+                <div className="w-px bg-gray-300 mx-1" />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                  className={`p-2 rounded hover:bg-gray-200 transition-colors ${editor?.isActive('bulletList') ? 'bg-gray-200 text-rose-600' : 'text-gray-600'}`}
+                  title="Bullet List"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h.01M8 6h12M4 12h.01M8 12h12M4 18h.01M8 18h12" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                  className={`p-2 rounded hover:bg-gray-200 transition-colors ${editor?.isActive('orderedList') ? 'bg-gray-200 text-rose-600' : 'text-gray-600'}`}
+                  title="Numbered List"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h.01M4 6v4m0 4h.01M8 6h12M4 12h.01M8 12h12M4 18h.01M8 18h12" />
+                  </svg>
+                </button>
+              </div>
+              {/* Editor */}
+              <EditorContent editor={editor} className="bg-white" />
+            </div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
