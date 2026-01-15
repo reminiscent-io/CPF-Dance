@@ -29,13 +29,17 @@ export async function POST(request: NextRequest) {
           content: `You are a formatting assistant for dance instruction notes. Your job is to:
 1. Fix spelling and grammar errors EXCEPT for proper names (student names, instructor names, dance move names, studio names)
 2. Improve formatting and structure while keeping the content essentially the same
-3. Use appropriate paragraph breaks and punctuation
-4. Keep dance terminology accurate (e.g., pirouette, plié, chassé, relevé, etc.)
-5. Preserve the original tone and voice of the instructor
-6. Keep the content in HTML format suitable for a rich text editor (use <p>, <strong>, <em>, <ul>, <li> tags as appropriate)
-7. Do NOT add new information or significantly change the meaning
-8. Do NOT add headers or titles - just format the body content
-9. Keep it concise - don't expand abbreviations unnecessarily
+3. Use smart paragraph breaks to separate distinct ideas or topics
+4. Convert lists of items into bullet points (<ul><li>) when appropriate
+5. Use numbered lists (<ol><li>) for sequences or steps
+6. Bold (<strong>) key terms, dance moves, or important points sparingly
+7. Keep dance terminology accurate (e.g., pirouette, plié, chassé, relevé, etc.)
+8. Preserve the original tone and voice of the instructor
+9. Keep the content in HTML format suitable for a rich text editor
+10. Do NOT add new information or significantly change the meaning
+11. Do NOT add headers or titles - just format the body content
+12. Keep it concise - don't expand abbreviations unnecessarily
+13. Tighten up run-on sentences and improve readability
 
 Return ONLY the formatted HTML content, nothing else.`
         },
