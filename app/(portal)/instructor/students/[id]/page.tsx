@@ -448,10 +448,10 @@ export default function StudentDetailPage() {
             </CardContent>
           </Card>
 
-          {/* My Notes */}
+          {/* Instructor Notes - shows all notes from instructors (not student-authored) */}
           <Card>
             <div className="flex justify-between items-center">
-              <CardTitle>My Notes ({notes.filter((n: any) => n.author_id === profile?.id).length})</CardTitle>
+              <CardTitle>Instructor Notes ({notes.filter((n: any) => n.visibility !== 'shared_with_instructor').length})</CardTitle>
               <div className="flex gap-2">
                 <Link href={`/instructor/notes?student_id=${student.id}`}>
                   <Button variant="outline" size="sm">
@@ -464,7 +464,7 @@ export default function StudentDetailPage() {
               </div>
             </div>
             <CardContent className="mt-4">
-              {notes.filter((n: any) => n.author_id === profile?.id).length === 0 ? (
+              {notes.filter((n: any) => n.visibility !== 'shared_with_instructor').length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">No notes yet</p>
                   <Button variant="outline" onClick={() => handleOpenNoteModal()}>
@@ -473,55 +473,62 @@ export default function StudentDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {notes.filter((n: any) => n.author_id === profile?.id).map((note: any) => (
-                    <div
-                      key={note.id}
-                      className="border-l-4 border-rose-500 pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors cursor-pointer group relative"
-                      onClick={() => handleOpenNoteModal(note)}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="primary" size="sm">
-                              You
-                            </Badge>
-                            {note.class_name && (
-                              <span className="text-xs text-gray-600">{note.class_name}</span>
+                  {notes.filter((n: any) => n.visibility !== 'shared_with_instructor').map((note: any) => {
+                    const isOwnNote = note.author_id === profile?.id
+                    return (
+                      <div
+                        key={note.id}
+                        className={`border-l-4 ${isOwnNote ? 'border-rose-500' : 'border-purple-400'} pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors ${isOwnNote ? 'cursor-pointer' : ''} group relative`}
+                        onClick={() => isOwnNote && handleOpenNoteModal(note)}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant={isOwnNote ? 'primary' : 'default'} size="sm">
+                                {isOwnNote ? 'You' : note.author_name || 'Instructor'}
+                              </Badge>
+                              {note.class_name && (
+                                <span className="text-xs text-gray-600">{note.class_name}</span>
+                              )}
+                              <Badge variant="secondary" size="sm">{note.visibility}</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-gray-500">
+                              {new Date(note.created_at).toLocaleDateString()}
+                            </p>
+                            {isOwnNote && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteNote(note.id)
+                                }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                Delete
+                              </Button>
                             )}
-                            <Badge variant="secondary" size="sm">{note.visibility}</Badge>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs text-gray-500">
-                            {new Date(note.created_at).toLocaleDateString()}
+                        <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {note.tags.map((tag: string, idx: number) => (
+                              <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
+                            ))}
+                          </div>
+                        )}
+                        {isOwnNote && (
+                          <p className="text-xs text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Click to edit
                           </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteNote(note.id)
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            Delete
-                          </Button>
-                        </div>
+                        )}
                       </div>
-                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {note.tags.map((tag: string, idx: number) => (
-                            <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        Click to edit
-                      </p>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </CardContent>

@@ -431,8 +431,18 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const { profile } = useUser()
   const { addToast } = useToast()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
-  const [students, setStudents] = useState<{ id: string; full_name: string; email: string }[]>([])
+  const [students, setStudents] = useState<{ id: string; full_name: string; email: string; profile?: { full_name: string; email?: string } }[]>([])
   const [enrolledStudents, setEnrolledStudents] = useState<{ id: string; full_name: string }[]>([])
+
+  // Helper to get student display name (handles both linked and unlinked students)
+  const getStudentDisplayName = (student: { full_name?: string | null; profile?: { full_name?: string } }) => {
+    return student.full_name || student.profile?.full_name || 'Unknown'
+  }
+
+  // Helper to get student email (handles both linked and unlinked students)
+  const getStudentEmail = (student: { email?: string | null; profile?: { email?: string } }) => {
+    return student.email || student.profile?.email || ''
+  }
 
   // Recurring copy state
   const [showRecurringSection, setShowRecurringSection] = useState(false)
@@ -903,7 +913,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                     .filter(s => !enrolledStudents.find(es => es.id === s.id))
                     .map(student => (
                       <option key={student.id} value={student.id}>
-                        {student.full_name} {student.email && `(${student.email})`}
+                        {getStudentDisplayName(student)} {getStudentEmail(student) && `(${getStudentEmail(student)})`}
                       </option>
                     ))}
                 </select>
@@ -1180,7 +1190,17 @@ interface CreateClassModalProps {
 function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps) {
   const { profile } = useUser()
   const [instructors, setInstructors] = useState<{ id: string; full_name: string }[]>([])
-  const [students, setStudents] = useState<{ id: string; full_name: string; email: string }[]>([])
+  const [students, setStudents] = useState<{ id: string; full_name: string; email: string; profile?: { full_name: string; email?: string } }[]>([])
+
+  // Helper to get student display name (handles both linked and unlinked students)
+  const getStudentDisplayName = (student: { full_name?: string | null; profile?: { full_name?: string } }) => {
+    return student.full_name || student.profile?.full_name || 'Unknown'
+  }
+
+  // Helper to get student email (handles both linked and unlinked students)
+  const getStudentEmail = (student: { email?: string | null; profile?: { email?: string } }) => {
+    return student.email || student.profile?.email || ''
+  }
 
   const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string; student_id?: string }>({
     studio_id: '',
@@ -1611,7 +1631,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 <option value="">Select a student</option>
                 {students.map(student => (
                   <option key={student.id} value={student.id}>
-                    {student.full_name} {student.email && `(${student.email})`}
+                    {getStudentDisplayName(student)} {getStudentEmail(student) && `(${getStudentEmail(student)})`}
                   </option>
                 ))}
               </select>

@@ -18,10 +18,10 @@ interface NoteFeedListProps {
 
 export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListProps) {
   const groupedNotes = groupNotesByDate(notes)
-  const groupKeys = getDateGroupKeys()
+  const groupKeys = getDateGroupKeys(groupedNotes)
 
   // Filter out empty groups
-  const nonEmptyGroups = groupKeys.filter(key => groupedNotes[key].length > 0)
+  const nonEmptyGroups = groupKeys.filter(key => groupedNotes[key]?.length > 0)
 
   if (nonEmptyGroups.length === 0) {
     return (

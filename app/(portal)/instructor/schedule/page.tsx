@@ -45,6 +45,8 @@ interface StudentForNotes {
   full_name: string
 }
 
+type ViewType = 'day' | 'month'
+
 export default function InstructorSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -59,6 +61,7 @@ export default function InstructorSchedulePage() {
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
   const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
+  const [viewType, setViewType] = useState<ViewType>('month')
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -243,6 +246,56 @@ export default function InstructorSchedulePage() {
     }
   }
 
+  // Day view helpers
+  const getClassesForDate = (date: Date) => {
+    const dateStart = new Date(date)
+    dateStart.setHours(0, 0, 0, 0)
+    const dateEnd = new Date(date)
+    dateEnd.setHours(23, 59, 59, 999)
+
+    return classes
+      .filter(cls => {
+        const classDate = new Date(cls.start_time)
+        return classDate >= dateStart && classDate <= dateEnd
+      })
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  }
+
+  const navigateDay = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate)
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1))
+    setCurrentDate(newDate)
+
+    // Fetch data for new month if we crossed a month boundary
+    if (newDate.getMonth() !== currentDate.getMonth()) {
+      handleDateChange(newDate)
+    }
+  }
+
+  const goToToday = () => {
+    const today = new Date()
+    setCurrentDate(today)
+    if (today.getMonth() !== currentDate.getMonth()) {
+      handleDateChange(today)
+    }
+  }
+
+  const formatDayViewDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const isToday = (date: Date) => {
+    const today = new Date()
+    return date.toDateString() === today.toDateString()
+  }
+
+  const dayClasses = getClassesForDate(currentDate)
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -260,33 +313,188 @@ export default function InstructorSchedulePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="flex flex-col h-[calc(100vh-15rem)] md:h-[calc(100vh-11rem)]">
+      <div className="flex flex-col">
         {/* Header */}
-        <div className="hidden md:block mb-6 flex-shrink-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes</p>
+        <div className="hidden md:flex md:items-center md:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes</p>
+          </div>
+          {/* View Toggle */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewType('day')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                viewType === 'day'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewType('month')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                viewType === 'month'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Calendar
+            </button>
+          </div>
         </div>
 
         {error && (
-          <Card className="bg-red-50 border-red-200 mb-4 flex-shrink-0">
+          <Card className="bg-red-50 border-red-200 mb-4">
             <p className="text-red-700">{error}</p>
           </Card>
         )}
 
         {loading && classes.length === 0 ? (
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex items-center justify-center py-12">
             <Spinner size="lg" />
           </div>
         ) : (
           <>
-            {/* DESKTOP VIEW - Calendar Grid */}
-            <div className="hidden md:flex md:flex-col flex-1 overflow-hidden">
-              <Calendar
-                events={classes}
-                onEventClick={handleEventClick}
-                onDateChange={handleDateChange}
-              />
-            </div>
+            {/* DESKTOP VIEW - Day View */}
+            {viewType === 'day' && (
+              <div className="hidden md:flex md:flex-col">
+                {/* Day Navigation */}
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                  <button
+                    onClick={() => navigateDay('prev')}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="text-center">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {formatDayViewDate(currentDate)}
+                    </h2>
+                    {!isToday(currentDate) && (
+                      <button
+                        onClick={goToToday}
+                        className="text-sm text-rose-600 hover:text-rose-700 font-medium mt-1"
+                      >
+                        Go to Today
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => navigateDay('next')}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Day Classes List */}
+                <div className="pb-8">
+                  {dayClasses.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-5xl mb-4">📅</div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No classes scheduled</h3>
+                      <p className="text-gray-600">You don't have any classes on this day.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {dayClasses.map((classItem) => {
+                        const startTime = new Date(classItem.start_time)
+                        const endTime = new Date(classItem.end_time)
+                        const isPast = endTime < new Date()
+
+                        return (
+                          <div
+                            key={classItem.id}
+                            onClick={() => handleEventClick(classItem)}
+                            className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                              isPast ? 'opacity-60 bg-gray-50' : 'bg-white hover:border-rose-300'
+                            } ${classItem.is_cancelled ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-lg font-semibold text-gray-900">{classItem.title}</h3>
+                                  <Badge className={getClassTypeClassName(classItem.class_type)}>
+                                    {getClassTypeLabel(classItem.class_type)}
+                                  </Badge>
+                                  {isPast && (
+                                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Completed</span>
+                                  )}
+                                  {classItem.is_cancelled && (
+                                    <span className="text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded">Cancelled</span>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                  <div className="flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {startTime.toLocaleTimeString('en-US', {
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })} - {endTime.toLocaleTimeString('en-US', {
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
+                                  </div>
+                                  {classItem.location && (
+                                    <div className="flex items-center gap-1">
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      </svg>
+                                      {classItem.location}
+                                    </div>
+                                  )}
+                                  {classItem.studios?.name && (
+                                    <div className="flex items-center gap-1">
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                      </svg>
+                                      {classItem.studios.name}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    {classItem.enrolled_count || 0}{classItem.max_capacity ? `/${classItem.max_capacity}` : ''} enrolled
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* DESKTOP VIEW - Calendar Grid (Month View) */}
+            {viewType === 'month' && (
+              <div className="hidden md:block pb-8">
+                <Calendar
+                  events={classes}
+                  onEventClick={handleEventClick}
+                  onDateChange={handleDateChange}
+                />
+              </div>
+            )}
 
             {/* MOBILE VIEW - Apple Calendar Style */}
             <div className="flex md:hidden flex-col flex-1 min-h-0 overflow-hidden -mx-4 sm:-mx-6">

@@ -193,7 +193,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
             {hours.map(hour => (
               <div
                 key={hour}
-                className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 text-[10px] sm:text-xs text-gray-500 text-right pr-1 sm:pr-2 flex items-start"
+                className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 text-[10px] sm:text-xs text-gray-500 text-right pr-1 sm:pr-2 flex items-start min-h-[50px] sm:min-h-[70px]"
               >
                 {hour % 12 || 12} {hour < 12 ? 'AM' : 'PM'}
               </div>
@@ -212,7 +212,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
                 return (
                   <div
                     key={hour}
-                    className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 relative min-h-[32px] sm:min-h-[40px]"
+                    className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 relative min-h-[50px] sm:min-h-[70px]"
                   >
                     {dayEvents.map(event => (
                       <div
@@ -278,14 +278,14 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
         </div>
 
         {/* Calendar grid - dynamically sized rows */}
-        <div className={`grid grid-cols-7 flex-1 min-h-0`} style={{ gridTemplateRows: `repeat(${numRows}, minmax(0, 1fr))` }}>
+        <div className={`grid grid-cols-7 flex-1 min-h-0`} style={{ gridTemplateRows: `repeat(${numRows}, minmax(150px, 1fr))` }}>
           {days.map((day, index) => {
             if (!day) {
               return <div key={index} className="border-r border-b border-gray-200 bg-gray-50"></div>
             }
 
             const dayEvents = getEventsForDate(day)
-            const maxEventsToShow = 2 // Reduced for better fit
+            const maxEventsToShow = 4 // Increased due to taller rows
 
             return (
               <div
