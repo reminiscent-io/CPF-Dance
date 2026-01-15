@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
 
         if (hasNewReplies) {
           console.log(`[Refresh] Updating inquiry ${inquiry.id} - New messages found. Unread: ${hasUnreadReply}`);
+          await supabase
             .from('studio_inquiries')
             .update({
               email_count: newEmailCount,
