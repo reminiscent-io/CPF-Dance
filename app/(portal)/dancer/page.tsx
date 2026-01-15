@@ -359,13 +359,23 @@ export default function DancerPortalPage() {
 
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>{viewingNote.is_personal ? '📝' : '🎓'} {viewingNote.author_name}</span>
-              {viewingNote.classes && (
-                <>
-                  <span>•</span>
-                  <span>{viewingNote.classes.title}</span>
-                </>
-              )}
             </div>
+
+            {viewingNote.tags && viewingNote.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 py-2">
+                {viewingNote.tags.map((tag, idx) => (
+                  <Badge key={idx} variant={getTagColor(tag)}>
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {viewingNote.classes && (
+              <div className="text-sm text-gray-500">
+                {viewingNote.classes.title}
+              </div>
+            )}
 
             <div className="border-t border-gray-200 pt-4">
               <div className="prose prose-sm max-w-none">
@@ -375,16 +385,6 @@ export default function DancerPortalPage() {
                 />
               </div>
             </div>
-
-            {viewingNote.tags && viewingNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
-                {viewingNote.tags.map((tag, idx) => (
-                  <Badge key={idx} variant={getTagColor(tag)}>
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
               <span>
