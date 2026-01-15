@@ -84,35 +84,32 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ],
       groups: [
         {
-          label: 'Teaching & Schedule',
+          label: 'Schedule',
           links: [
-            {
-              label: 'Schedule',
-              href: '/instructor/schedule',
-              icon: <CalendarIcon className="w-5 h-5" />,
-              children: [
-                { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
-                { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> }
-              ]
-            },
-            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> },
-            { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
+            { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
+            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
           ]
         },
         {
-          label: 'Admin & Logistics',
+          label: 'Dancers',
+          links: [
+            { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> },
+            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Payments',
+          links: [
+            { href: '/instructor/payments', label: 'Earnings', icon: <CreditCardIcon className="w-5 h-5" /> },
+            { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Admin',
           links: [
             { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
-            {
-              label: 'Payments',
-              icon: <CreditCardIcon className="w-5 h-5" />,
-              children: [
-                { href: '/instructor/payments', label: 'Overview', icon: <CreditCardIcon className="w-5 h-5" /> },
-                { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> }
-              ]
-            },
-            { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
+            { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> }
           ]
         }
       ]
