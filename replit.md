@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+- **January 15, 2026**: Added Gmail email integration for studio inquiries - admins can reply via Gmail with pre-filled templates, view email threads, and check for replies with "Refresh Inbox" button
 - **January 15, 2026**: Replaced Tremor UI with Recharts and custom Shadcn-style components in admin dashboard for React 19 compatibility
 - **December 24, 2025**: Added zoom functionality to mobile calendar with Month/Week/Day view modes, segmented control for view switching, hourly timeline views, and double-tap to zoom gesture
 - **December 23, 2025**: Replaced mobile schedule view with Apple Calendar-style interface featuring month grid, swipe navigation, day selection with event dots, and day timeline panel (MobileCalendar component)
@@ -61,12 +62,23 @@ Enables dancers to purchase pre-packaged lessons at discounted rates. Features i
 
 Integrated into the instructor payments page, this dashboard calculates expected class value based on pricing models and enrollment, distinguishing between collected and outstanding payments. It offers breakdowns by class type and date range filtering.
 
+### Gmail Email Integration (Admin)
+
+Studio inquiries now support direct email replies via Gmail integration:
+- **Email Compose Modal**: Pre-filled template with "Hi [Name], Thank you for reaching out!" and original inquiry quoted at bottom
+- **Subject Format**: "CPF Dance Inquiry | [Studio Name]"
+- **Thread Tracking**: Stores Gmail thread IDs to maintain conversation history
+- **Refresh Inbox**: Button to check for new replies across all email threads
+- **Email Thread View**: Modal displaying full conversation history with sent/received message styling
+- **Unread Detection**: "New Reply" badge when contact responds to an email
+
 ## External Dependencies
 
 ### Third-Party Services
 
 1.  **Supabase**: Primary backend for PostgreSQL database, Authentication, Row-Level Security, and Storage.
 2.  **Google Places API**: (Optional) Used for address autocomplete in studio forms.
+3.  **Gmail API**: Connected via Replit integration for sending and tracking email responses to studio inquiries.
 
 ### Environment Variables Required
 
