@@ -17,6 +17,7 @@
     "@tiptap/extension-placeholder": "^3.11.0",
     "@tiptap/react": "^3.11.0",
     "@tiptap/starter-kit": "^3.11.0",
+    "@tremor/react": "^3.18.7",
     "@types/dompurify": "^3.0.5",
     "autoprefixer": "^10.4.22",
     "dompurify": "^3.3.1",

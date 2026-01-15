@@ -22,7 +22,9 @@ import {
   ClipboardDocumentListIcon,
   MusicalNoteIcon,
   DocumentIcon,
-  PhotoIcon
+  PhotoIcon,
+  UsersIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -34,7 +36,7 @@ export interface SidebarProps {
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Students']))
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
   const pathname = usePathname()
   const router = useRouter()
   
@@ -67,6 +69,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   const getCurrentPortal = () => {
     if (!pathname) return 'instructor'
+    if (pathname.startsWith('/admin')) return 'admin'
     if (pathname.startsWith('/instructor')) return 'instructor'
     if (pathname.startsWith('/dancer')) return 'dancer'
     return 'instructor'
@@ -83,21 +86,23 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         {
           label: 'Teaching & Schedule',
           links: [
-            { href: '/instructor/schedule', label: 'Schedule', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
             {
-              label: 'Students',
-              icon: <UserGroupIcon className="w-5 h-5" />,
+              label: 'Schedule',
+              href: '/instructor/schedule',
+              icon: <CalendarIcon className="w-5 h-5" />,
               children: [
-                { href: '/instructor/students', label: 'Overview', icon: <UserGroupIcon className="w-5 h-5" /> },
-                { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
+                { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
+                { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> }
               ]
-            }
+            },
+            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> },
+            { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
           ]
         },
         {
           label: 'Admin & Logistics',
           links: [
+            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
             {
               label: 'Payments',
               icon: <CreditCardIcon className="w-5 h-5" />,
@@ -107,7 +112,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               ]
             },
             { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
             { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
           ]
         }
@@ -139,9 +143,27 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ]
     }
 
+    const adminNav = {
+      ungrouped: [
+        { href: '/admin', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+      ],
+      groups: [
+        {
+          label: 'Management',
+          links: [
+            { href: '/admin/users', label: 'All Users', icon: <UsersIcon className="w-5 h-5" /> },
+            { href: '/admin/instructor-requests', label: 'Instructors', icon: <AcademicCapIcon className="w-5 h-5" /> },
+            { href: '/admin/studio-inquiries', label: 'Inquiries', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> }
+          ]
+        }
+      ]
+    }
+
     if (profile.role === 'admin') {
       const portal = getCurrentPortal()
       switch (portal) {
+        case 'admin':
+          return adminNav
         case 'instructor':
           return instructorNav
         case 'dancer':
@@ -162,6 +184,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   const navLinks = getNavigationLinks()
   const portalOptions = [
+    { value: 'admin', label: 'Admin', href: '/admin' },
     { value: 'instructor', label: 'Instructor', href: '/instructor' },
     { value: 'dancer', label: 'Dancer', href: '/dancer' },
   ]
@@ -227,7 +250,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
+            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'admin' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 CPF Dance
               </span>
@@ -315,7 +338,13 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                       return (
                         <div key={link.label}>
                           <button
-                            onClick={() => toggleParent(link.label)}
+                            onClick={() => {
+                              toggleParent(link.label)
+                              if (link.href) {
+                                setIsOpen(false)
+                                router.push(link.href)
+                              }
+                            }}
                             className={`
                               w-full text-left flex items-center justify-between px-4 py-3 rounded-lg font-medium text-sm transition-all
                               ${childIsActive

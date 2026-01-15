@@ -112,6 +112,17 @@ export default function InstructorPaymentsPage() {
   const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
   const [remindingClassId, setRemindingClassId] = useState<string | null>(null)
   const [remindMessage, setRemindMessage] = useState('')
+  const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false)
+  const [recordingPayment, setRecordingPayment] = useState(false)
+  const [recordPaymentData, setRecordPaymentData] = useState({
+    student_id: '',
+    class_id: '',
+    studio_id: '',
+    amount: '',
+    payment_method: 'cash',
+    transaction_date: new Date().toISOString().split('T')[0],
+    notes: ''
+  })
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -351,6 +362,55 @@ export default function InstructorPaymentsPage() {
       outstanding: cls.calculated_value - cls.collected_amount
     }))
 
+  const handleOpenRecordPaymentModal = () => {
+    setShowRecordPaymentModal(true)
+    fetchStudentsAndStudios()
+  }
+
+  const handleCloseRecordPaymentModal = () => {
+    setShowRecordPaymentModal(false)
+    setRecordPaymentData({
+      student_id: '',
+      class_id: '',
+      studio_id: '',
+      amount: '',
+      payment_method: 'cash',
+      transaction_date: new Date().toISOString().split('T')[0],
+      notes: ''
+    })
+  }
+
+  const handleRecordPayment = async () => {
+    if (!recordPaymentData.student_id || !recordPaymentData.amount) {
+      alert('Please select a student and enter an amount')
+      return
+    }
+
+    setRecordingPayment(true)
+    try {
+      const response = await fetch('/api/instructor/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(recordPaymentData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to record payment')
+      }
+
+      alert('Payment recorded successfully!')
+      handleCloseRecordPaymentModal()
+      await fetchPayments()
+      await fetchClassEarnings()
+    } catch (error) {
+      console.error('Error recording payment:', error)
+      alert(error instanceof Error ? error.message : 'Failed to record payment')
+    } finally {
+      setRecordingPayment(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -373,9 +433,14 @@ export default function InstructorPaymentsPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
           <p className="text-gray-600">View payments for your classes</p>
         </div>
-        <Button variant="primary" onClick={handleOpenRequestModal}>
-          + Request Payment
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleOpenRecordPaymentModal}>
+            + Record Payment
+          </Button>
+          <Button variant="primary" onClick={handleOpenRequestModal}>
+            + Request Payment
+          </Button>
+        </div>
       </div>
 
       {/* Class Earnings Dashboard */}
@@ -804,6 +869,151 @@ export default function InstructorPaymentsPage() {
               className="flex-1"
             >
               {submittingRequest ? 'Submitting...' : 'Create Request'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Record Payment Modal */}
+      <Modal
+        isOpen={showRecordPaymentModal}
+        onClose={handleCloseRecordPaymentModal}
+        title="Record Payment"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Record a cash or check payment that you've already received from a student.
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Student *
+            </label>
+            <select
+              value={recordPaymentData.student_id}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, student_id: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="">-- Select Student --</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.profile.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Amount * (USD)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={recordPaymentData.amount}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, amount: e.target.value })}
+              placeholder="0.00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Method *
+            </label>
+            <select
+              value={recordPaymentData.payment_method}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, payment_method: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Date *
+            </label>
+            <input
+              type="date"
+              value={recordPaymentData.transaction_date}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, transaction_date: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Class (Optional)
+            </label>
+            <select
+              value={recordPaymentData.class_id}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, class_id: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="">-- None --</option>
+              {classEarnings.map(cls => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.title} - {new Date(cls.start_time).toLocaleDateString()}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Link this payment to a specific class
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Studio (Optional)
+            </label>
+            <select
+              value={recordPaymentData.studio_id}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, studio_id: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="">-- None --</option>
+              {studios.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes (Optional)
+            </label>
+            <textarea
+              value={recordPaymentData.notes}
+              onChange={(e) => setRecordPaymentData({ ...recordPaymentData, notes: e.target.value })}
+              placeholder="Additional notes about this payment..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseRecordPaymentModal}
+              disabled={recordingPayment}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleRecordPayment}
+              disabled={recordingPayment}
+              className="flex-1"
+            >
+              {recordingPayment ? 'Recording...' : 'Record Payment'}
             </Button>
           </div>
         </div>

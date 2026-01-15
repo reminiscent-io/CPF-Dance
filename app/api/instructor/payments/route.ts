@@ -132,3 +132,108 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const profile = await requireInstructor()
+    const supabase = await createClient()
+    const body = await request.json()
+
+    const {
+      student_id,
+      class_id,
+      studio_id,
+      amount,
+      payment_method,
+      transaction_date,
+      notes
+    } = body
+
+    // Validate required fields
+    if (!student_id || !amount || !payment_method) {
+      return NextResponse.json(
+        { error: 'Missing required fields: student_id, amount, payment_method' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the student exists and belongs to this instructor (or admin)
+    if (profile.role !== 'admin') {
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, instructor_id')
+        .eq('id', student_id)
+        .single()
+
+      if (studentError || !student) {
+        return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+      }
+
+      if (student.instructor_id !== profile.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      }
+    }
+
+    // If class_id is provided, verify the class belongs to this instructor
+    if (class_id && profile.role !== 'admin') {
+      const { data: classData, error: classError } = await supabase
+        .from('classes')
+        .select('id, instructor_id')
+        .eq('id', class_id)
+        .single()
+
+      if (classError || !classData) {
+        return NextResponse.json({ error: 'Class not found' }, { status: 404 })
+      }
+
+      if (classData.instructor_id !== profile.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      }
+    }
+
+    // Create the payment record
+    const paymentData: any = {
+      student_id,
+      amount: parseFloat(amount),
+      payment_method,
+      payment_status: 'confirmed', // Manual payments are immediately confirmed
+      transaction_date: transaction_date || new Date().toISOString(),
+      confirmed_by_instructor_at: new Date().toISOString(),
+      notes
+    }
+
+    if (class_id) {
+      paymentData.class_id = class_id
+    }
+
+    if (studio_id) {
+      paymentData.studio_id = studio_id
+    }
+
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .insert(paymentData)
+      .select()
+      .single()
+
+    if (paymentError) {
+      console.error('Error creating payment:', paymentError)
+      return NextResponse.json({ error: paymentError.message }, { status: 500 })
+    }
+
+    // Create a payment event for audit trail
+    await supabase
+      .from('payment_events')
+      .insert({
+        payment_id: payment.id,
+        event_type: 'created',
+        actor_id: profile.id,
+        notes: `Manual payment recorded by ${profile.role}`
+      })
+
+    return NextResponse.json({ payment }, { status: 201 })
+  } catch (error) {
+    console.error('Error in instructor payments POST API:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

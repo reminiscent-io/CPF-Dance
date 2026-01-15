@@ -6,9 +6,10 @@ export default async function proxy(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
                      request.nextUrl.pathname.startsWith('/signup')
+  const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
   const isInstructorPage = request.nextUrl.pathname.startsWith('/instructor')
   const isDancerPage = request.nextUrl.pathname.startsWith('/dancer')
-  const isPortalPage = isInstructorPage || isDancerPage
+  const isPortalPage = isAdminPage || isInstructorPage || isDancerPage
 
   if (isPortalPage) {
     const cookies = request.cookies.getAll()
@@ -31,6 +32,13 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (user && profile && isPortalPage) {
+    // Only admin can access admin portal
+    if (isAdminPage && profile.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = profile.role === 'instructor' ? '/instructor' : '/dancer'
+      return NextResponse.redirect(url)
+    }
+
     // Admin role has access to all portals
     if (profile.role === 'admin') {
       return response
@@ -51,7 +59,9 @@ export default async function proxy(request: NextRequest) {
 
   if (user && isAuthPage && profile) {
     const url = request.nextUrl.clone()
-    if (profile.role === 'instructor' || profile.role === 'admin') {
+    if (profile.role === 'admin') {
+      url.pathname = '/admin'
+    } else if (profile.role === 'instructor') {
       url.pathname = '/instructor'
     } else {
       url.pathname = '/dancer'

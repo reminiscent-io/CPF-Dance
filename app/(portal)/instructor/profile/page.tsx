@@ -8,6 +8,7 @@ import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { signOut } from '@/lib/auth/actions'
 
 interface ProfileData {
   id: string
@@ -200,19 +201,39 @@ export default function InstructorProfilePage() {
           <Card>
             <CardTitle className="p-6 pb-4">Account Security</CardTitle>
             <CardContent className="px-6 pb-6">
-              <p className="text-gray-600 mb-4">
-                Keep your account secure by using a strong password.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  alert(
-                    'Password change functionality coming soon! Please contact support if you need to change your password.'
-                  )
-                }}
-              >
-                Change Password
-              </Button>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Password</p>
+                  <p className="text-gray-600 mb-3">
+                    Keep your account secure by using a strong password.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      alert(
+                        'Password change functionality coming soon! Please contact support if you need to change your password.'
+                      )
+                    }}
+                  >
+                    Change Password
+                  </Button>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Sign Out</p>
+                  <p className="text-gray-600 mb-3">
+                    Sign out of your account on this device.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      await signOut()
+                    }}
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
