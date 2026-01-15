@@ -124,18 +124,28 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ],
       groups: [
         {
-          label: 'Schedule',
+          label: 'Feedback',
           links: [
-            { href: '/dancer/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
-            { href: '/dancer/available-classes', label: 'Available Classes', icon: <MagnifyingGlassIcon className="w-5 h-5" /> },
-            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-5 h-5" /> }
+            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
           ]
         },
         {
-          label: 'My Progress',
+          label: 'Schedule',
           links: [
-            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> },
+            { href: '/dancer/schedule', label: 'My Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
+            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Book',
+          links: [
+            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-5 h-5" /> },
+            { href: '/dancer/available-classes', label: 'Open Classes', icon: <MagnifyingGlassIcon className="w-5 h-5" /> }
+          ]
+        },
+        {
+          label: 'Other',
+          links: [
             { href: '/dancer/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
             { href: '/dancer/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
           ]
