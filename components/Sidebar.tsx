@@ -327,8 +327,10 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             {navLinks.groups?.map((group: any, groupIndex: number) => (
               <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-6' : ''}>
                 {/* Group Header */}
-                <div className="px-4 text-xs font-semibold text-rose-200 uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-family-sans)' }}>
-                  {group.label}
+                <div className="px-4 mb-2">
+                  <div className="text-xs font-semibold text-rose-200 uppercase tracking-wider pb-1.5 border-b border-rose-500/50" style={{ fontFamily: 'var(--font-family-sans)' }}>
+                    {group.label}
+                  </div>
                 </div>
 
                 {/* Group Links */}
