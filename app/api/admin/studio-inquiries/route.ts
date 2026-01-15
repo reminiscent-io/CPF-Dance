@@ -50,14 +50,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData: any = {
-      status,
-      updated_at: new Date().toISOString()
+      status
     }
 
     if (status === 'responded') {
       updateData.responded_at = new Date().toISOString()
       updateData.is_responded = true
     } else if (status === 'new') {
+      updateData.responded_at = null
       updateData.is_responded = false
     }
 
