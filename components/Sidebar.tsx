@@ -234,7 +234,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   if (!mounted) {
     return (
-      <aside className="fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-700 to-rose-900 text-white shadow-lg z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-screen">
+      <aside className="fixed top-0 left-0 h-screen w-64 bg-rose-800 text-white shadow-lg z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-screen">
         <div className="flex flex-col h-full">
           <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
             <span className="text-2xl font-bold text-white">CPF Dance</span>
@@ -249,7 +249,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       <div className="fixed inset-0 z-40 md:hidden" style={{ display: isOpen ? 'block' : 'none' }} onClick={() => setIsOpen(false)} />
       
       <aside className={`
-        fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-700 to-rose-900 text-white shadow-lg z-50
+        fixed top-0 left-0 h-screen w-64 bg-rose-800 text-white shadow-lg z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:static md:relative md:translate-x-0 md:h-screen
