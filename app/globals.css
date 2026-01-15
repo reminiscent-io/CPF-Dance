@@ -381,3 +381,76 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-rose-600);
   text-decoration: underline;
 }
+
+/* Prose styles for rich text editor (TipTap) */
+.prose {
+  line-height: 1.6;
+}
+
+.prose p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.375em;
+  margin-bottom: 0.375em;
+}
+
+.prose li > p {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--color-charcoal-900);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--color-rose-400);
+  padding-left: 1em;
+  margin: 0.75em 0;
+  font-style: italic;
+  color: var(--color-charcoal-700);
+}
+
+.prose h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.prose h3 {
+  font-size: 1.125em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
