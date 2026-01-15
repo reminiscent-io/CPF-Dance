@@ -14,6 +14,7 @@ export default async function proxy(request: NextRequest) {
   if (isPortalPage) {
     const cookies = request.cookies.getAll()
     const supabaseCookies = cookies.filter(c => c.name.includes('supabase'))
+    /*
     console.log('Proxy check:', {
       path: request.nextUrl.pathname,
       hasUser: !!user,
@@ -22,6 +23,7 @@ export default async function proxy(request: NextRequest) {
       cookieCount: cookies.length,
       supabaseCookieCount: supabaseCookies.length
     })
+    */
   }
 
   if (!user && isPortalPage) {
