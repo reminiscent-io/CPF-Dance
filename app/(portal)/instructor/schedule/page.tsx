@@ -28,6 +28,8 @@ interface ClassEvent {
   is_cancelled: boolean
   cancellation_reason?: string
   enrolled_count?: number
+  has_notes?: boolean
+  notes_count?: number
   studios?: {
     name: string
     address: string
@@ -420,6 +422,12 @@ export default function InstructorSchedulePage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h3 className="text-lg font-semibold text-gray-900">{classItem.title}</h3>
+                                  {classItem.has_notes && (
+                                    <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"/>
+                                      <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                                    </svg>
+                                  )}
                                   <Badge className={getClassTypeClassName(classItem.class_type)}>
                                     {getClassTypeLabel(classItem.class_type)}
                                   </Badge>

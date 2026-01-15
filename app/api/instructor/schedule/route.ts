@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
     const classIds = classes?.map(c => c.id) || []
 
     let enrollmentCounts: Record<string, number> = {}
+    let noteCounts: Record<string, number> = {}
+
     if (classIds.length > 0) {
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from('enrollments')
@@ -68,12 +70,30 @@ export async function GET(request: NextRequest) {
           return acc
         }, {} as Record<string, number>)
       }
+
+      // Get note counts for each class
+      const { data: notes, error: notesError } = await supabase
+        .from('notes')
+        .select('class_id')
+        .in('class_id', classIds)
+        .not('class_id', 'is', null)
+
+      if (!notesError && notes) {
+        noteCounts = notes.reduce((acc, note) => {
+          if (note.class_id) {
+            acc[note.class_id] = (acc[note.class_id] || 0) + 1
+          }
+          return acc
+        }, {} as Record<string, number>)
+      }
     }
 
-    // Add enrollment count to each class
+    // Add enrollment count and note count to each class
     const classesWithEnrollments = classes?.map(classItem => ({
       ...classItem,
-      enrolled_count: enrollmentCounts[classItem.id] || 0
+      enrolled_count: enrollmentCounts[classItem.id] || 0,
+      has_notes: (noteCounts[classItem.id] || 0) > 0,
+      notes_count: noteCounts[classItem.id] || 0
     }))
 
     return NextResponse.json({ data: classesWithEnrollments })
