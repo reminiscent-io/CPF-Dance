@@ -11,6 +11,10 @@ import { NoteSearchBar } from '@/components/notes/NoteSearchBar'
 import { FloatingActionButton } from '@/components/notes/FloatingActionButton'
 import { Note } from '@/lib/utils/date-helpers'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
 interface ClassOption {
   id: string
@@ -31,6 +35,8 @@ export default function DancerNotesPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [focusModeOpen, setFocusModeOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
+  const [viewingNote, setViewingNote] = useState<Note | null>(null)
+  const [showViewModal, setShowViewModal] = useState(false)
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [loadingClasses, setLoadingClasses] = useState(false)
   const [classId, setClassId] = useState('')
@@ -148,10 +154,13 @@ export default function DancerNotesPage() {
 
   const handleOpenFocusMode = (note?: Note) => {
     if (note) {
-      // Only allow editing personal notes
+      // If it's an instructor note, open in view-only modal
       if (!note.is_personal) {
-        return // Can't edit instructor notes
+        setViewingNote(note)
+        setShowViewModal(true)
+        return
       }
+      // For personal notes, open in edit mode
       setEditingNote(note)
       const noteClassId = (note as any).class_id || (note as any).personal_class_id || ''
       const noteClassType = (note as any).class_id ? 'enrolled' : (note as any).personal_class_id ? 'personal' : ''
@@ -165,6 +174,24 @@ export default function DancerNotesPage() {
       setIsPrivate(false)
     }
     setFocusModeOpen(true)
+  }
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false)
+    setViewingNote(null)
+  }
+
+  const getTagColor = (tag: string) => {
+    const colors: Record<string, any> = {
+      technique: 'primary',
+      performance: 'secondary',
+      improvement: 'success',
+      strength: 'warning',
+      flexibility: 'default',
+      musicality: 'primary',
+      choreography: 'secondary'
+    }
+    return colors[tag.toLowerCase()] || 'default'
   }
 
   const handleCloseFocusMode = () => {
@@ -400,6 +427,86 @@ export default function DancerNotesPage() {
 
         </>
       )}
+
+      {/* Read-only modal for instructor notes */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={handleCloseViewModal}
+        title="Instructor Feedback"
+      >
+        {viewingNote && (
+          <div className="space-y-4">
+            {viewingNote.title && (
+              <h3 className="text-2xl font-bold text-gray-900">
+                {viewingNote.title}
+              </h3>
+            )}
+
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>📝 {(viewingNote as any).author_name || 'Instructor'}</span>
+              {((viewingNote as any).classes || (viewingNote as any).personal_classes) && (
+                <>
+                  <span>•</span>
+                  <span>
+                    {(viewingNote as any).classes?.title || (viewingNote as any).personal_classes?.title}
+                  </span>
+                  {((viewingNote as any).classes?.start_time || (viewingNote as any).personal_classes?.start_time) && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        {new Date(
+                          (viewingNote as any).classes?.start_time || (viewingNote as any).personal_classes?.start_time
+                        ).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <div className="prose prose-sm max-w-none">
+                <div
+                  className="text-gray-700"
+                  dangerouslySetInnerHTML={createSanitizedHtml(viewingNote.content)}
+                />
+              </div>
+            </div>
+
+            {viewingNote.tags && viewingNote.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
+                {viewingNote.tags.map((tag, idx) => (
+                  <Badge key={idx} variant={getTagColor(tag)}>
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
+              <span>
+                Created: {new Date(viewingNote.created_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleCloseViewModal}>
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </PortalLayout>
   )
 }
