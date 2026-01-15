@@ -27,15 +27,17 @@ export async function POST(request: NextRequest) {
       if (!inquiry.gmail_thread_id) continue
 
       try {
+        console.log(`[Refresh] Checking thread ${inquiry.gmail_thread_id} for inquiry ${inquiry.id}`);
         const messages = await getThreadMessages(inquiry.gmail_thread_id)
         const newEmailCount = messages.length
+        console.log(`[Refresh] Found ${newEmailCount} messages (previous: ${inquiry.email_count || 0})`);
 
         const hasNewReplies = newEmailCount > (inquiry.email_count || 0)
         const lastMessage = messages[messages.length - 1]
         const hasUnreadReply = hasNewReplies && lastMessage && !lastMessage.isFromMe
 
         if (hasNewReplies) {
-          await supabase
+          console.log(`[Refresh] Updating inquiry ${inquiry.id} - New messages found. Unread: ${hasUnreadReply}`);
             .from('studio_inquiries')
             .update({
               email_count: newEmailCount,

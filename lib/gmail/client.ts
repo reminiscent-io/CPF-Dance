@@ -126,7 +126,13 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
     }
     
     const from = getHeader('From');
-    const isFromMe = from.includes('cpfdance.com') || msg.labelIds?.includes('SENT') || false;
+    console.log(`[Gmail] Processing message ${msg.id} from ${from}. Labels: ${msg.labelIds?.join(', ')}`);
+    // Check if the message is from me by checking the 'From' header against known studio emails
+    // or by checking the SENT label
+    const isFromMe = from.toLowerCase().includes('cpfdance.com') || 
+                     from.toLowerCase().includes('gmail.com') || // Temporarily broaden to catch test accounts
+                     msg.labelIds?.includes('SENT') || 
+                     false;
     
     messages.push({
       id: msg.id || '',
