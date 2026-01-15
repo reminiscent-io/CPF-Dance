@@ -477,70 +477,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Instructor Portal Section - Secondary */}
-      <section id="instructor-portal" className="relative py-16 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2"
-            alt="Dance instructor"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* White Opaque Overlay */}
-        <div className="absolute inset-0 bg-white/60 z-10"></div>
-
-        {/* Content */}
-        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Card className="bg-gradient-to-br from-champagne-50/90 to-ballet-pink-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
-              <div className="text-center mb-6">
-                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-                  For Instructors
-                </h2>
-                <p className="text-lg text-charcoal-800 leading-relaxed">
-                  Professional tools to manage your studio, track student progress, and streamline your teaching
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
-                {instructorFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm">
-                    <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
-                    <div>
-                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
-                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/login?portal=instructor" className="block" onClick={handleLoginClick}>
-                <Button size="lg" variant="outline" className="w-full text-lg py-3 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
-                  {loginLoading ? (
-                    <>
-                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span>Loading...</span>
-                    </>
-                  ) : (
-                    'Request Access'
-                  )}
-                </Button>
-              </Link>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-
+      {/* Learn from the Best Section - About Courtney */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -550,16 +487,16 @@ export default function HomePage() {
               </h2>
               <div className="space-y-4 text-lg text-charcoal-800 leading-relaxed">
                 <p>
-                  With over a decade of professional experience, including performances with the world-renowned 
-                  <span className="font-semibold text-rose-700"> Radio City Rockettes</span>, Courtney brings 
+                  With over a decade of professional experience, including performances with the world-renowned
+                  <span className="font-semibold text-rose-700"> Radio City Rockettes</span>, Courtney brings
                   unparalleled expertise to every lesson.
                 </p>
                 <p>
-                  Her precision-based approach focuses on technique, artistry, and personal growth, ensuring 
+                  Her precision-based approach focuses on technique, artistry, and personal growth, ensuring
                   each dancer reaches their full potential while developing confidence and grace.
                 </p>
                 <p>
-                  Whether you're a beginner discovering your passion or an advanced dancer refining your skills, 
+                  Whether you're a beginner discovering your passion or an advanced dancer refining your skills,
                   you'll receive personalized instruction tailored to your goals.
                 </p>
               </div>
@@ -638,6 +575,70 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Instructor Portal Section - Secondary */}
+      <section id="instructor-portal" className="relative py-16 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2"
+            alt="Dance instructor"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* White Opaque Overlay */}
+        <div className="absolute inset-0 bg-white/60 z-10"></div>
+
+        {/* Content */}
+        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <Card className="bg-gradient-to-br from-champagne-50/90 to-ballet-pink-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
+              <div className="text-center mb-6">
+                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  For Instructors
+                </h2>
+                <p className="text-lg text-charcoal-800 leading-relaxed">
+                  Professional tools to manage your studio, track student progress, and streamline your teaching
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                {instructorFeatures.map((feature) => (
+                  <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm">
+                    <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
+                    <div>
+                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
+                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/login?portal=instructor" className="block" onClick={handleLoginClick}>
+                <Button size="lg" variant="outline" className="w-full text-lg py-3 border-2 border-mauve-600 text-mauve-700 hover:bg-mauve-50 flex items-center justify-center gap-2" disabled={loginLoading}>
+                  {loginLoading ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    'Request Access'
+                  )}
+                </Button>
+              </Link>
+            </Card>
+          </motion.div>
         </div>
       </section>
 
