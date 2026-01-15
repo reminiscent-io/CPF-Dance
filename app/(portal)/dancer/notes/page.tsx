@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { NoteFeedList } from '@/components/notes/NoteFeedList'
 import { NoteFocusMode } from '@/components/notes/NoteFocusMode'
 import { NoteSearchBar } from '@/components/notes/NoteSearchBar'
-import { FloatingActionButton } from '@/components/notes/FloatingActionButton'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { Note } from '@/lib/utils/date-helpers'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -327,13 +327,18 @@ export default function DancerNotesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Notes
-        </h1>
-        <p className="text-gray-600">
-          Track your progress with instructor feedback and personal reflections
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Notes
+          </h1>
+          <p className="text-gray-600">
+            Track your progress with instructor feedback and personal reflections
+          </p>
+        </div>
+        <Button onClick={() => handleOpenFocusMode()} aria-label="Add Note">
+          <PlusIcon className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* Tabs */}
@@ -401,11 +406,6 @@ export default function DancerNotesPage() {
             onEdit={handleOpenFocusMode}
             onDelete={handleDelete}
             onPin={handlePin}
-          />
-
-          {/* Floating action button */}
-          <FloatingActionButton
-            onClick={() => handleOpenFocusMode()}
           />
 
           {/* Focus mode for creating/editing personal notes */}
