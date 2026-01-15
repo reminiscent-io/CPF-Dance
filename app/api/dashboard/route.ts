@@ -111,27 +111,37 @@ export async function GET(request: NextRequest) {
       .limit(5)
 
     const recentActivity = [
-      ...(recentEnrollments || []).map(e => ({
-        id: e.id,
-        type: 'enrollment' as const,
-        description: `${(e.student as any)?.[0]?.profile?.[0]?.full_name} enrolled in ${(e.class as any)?.[0]?.title}`,
-        timestamp: e.enrolled_at,
-        student_name: (e.student as any)?.[0]?.profile?.[0]?.full_name
-      })),
-      ...(recentNotes || []).map(n => ({
-        id: n.id,
-        type: 'note' as const,
-        description: `Note added for ${(n.student as any)?.[0]?.profile?.[0]?.full_name}${n.title ? `: ${n.title}` : ''}`,
-        timestamp: n.created_at,
-        student_name: (n.student as any)?.[0]?.profile?.[0]?.full_name
-      })),
-      ...(recentPayments || []).map(p => ({
-        id: p.id,
-        type: 'payment' as const,
-        description: `Payment ${p.payment_status} from ${(p.student as any)?.[0]?.profile?.[0]?.full_name}: $${p.amount}`,
-        timestamp: p.transaction_date,
-        student_name: (p.student as any)?.[0]?.profile?.[0]?.full_name
-      }))
+      ...(recentEnrollments || []).map(e => {
+        const studentName = (e.student as any)?.profile?.full_name || 'Unknown Student'
+        const className = (e.class as any)?.title || 'Unknown Class'
+        return {
+          id: e.id,
+          type: 'enrollment' as const,
+          description: `${studentName} enrolled in ${className}`,
+          timestamp: e.enrolled_at,
+          student_name: studentName
+        }
+      }),
+      ...(recentNotes || []).map(n => {
+        const studentName = (n.student as any)?.profile?.full_name || 'Unknown Student'
+        return {
+          id: n.id,
+          type: 'note' as const,
+          description: `Note added for ${studentName}${n.title ? `: ${n.title}` : ''}`,
+          timestamp: n.created_at,
+          student_name: studentName
+        }
+      }),
+      ...(recentPayments || []).map(p => {
+        const studentName = (p.student as any)?.profile?.full_name || 'Unknown Student'
+        return {
+          id: p.id,
+          type: 'payment' as const,
+          description: `Payment ${p.payment_status} from ${studentName}: $${p.amount}`,
+          timestamp: p.transaction_date,
+          student_name: studentName
+        }
+      })
     ]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 10)
