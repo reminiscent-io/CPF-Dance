@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { UsersIcon } from '@heroicons/react/24/outline'
 
 interface User {
   id: string
@@ -186,69 +187,82 @@ export default function AdminUsersPage() {
               Showing {filteredUsers.length} of {users.length} users
             </div>
 
-            {/* Users List */}
-            <div className="space-y-3">
+            {/* Users Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredUsers.map((userItem) => (
-                <Card key={userItem.id} hover>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 truncate">
-                            {userItem.full_name}
-                          </h3>
-                          <Badge variant={getRoleBadgeVariant(userItem.role)}>
-                            {userItem.role}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>{userItem.email}</p>
-                          <p>
-                            Joined: {new Date(userItem.created_at).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </p>
+                <Card key={userItem.id} hover className="flex flex-col h-full">
+                  <CardContent className="p-6 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                        <UsersIcon className="w-6 h-6 text-rose-500" />
+                      </div>
+                      <Badge variant={getRoleBadgeVariant(userItem.role)}>
+                        {userItem.role.toUpperCase()}
+                      </Badge>
+                    </div>
+
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 leading-tight">
+                        {userItem.full_name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4 truncate" title={userItem.email}>
+                        {userItem.email}
+                      </p>
+
+                      <div className="pt-4 border-t border-gray-100">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">
+                          Member Since
+                        </p>
+                        <p className="text-sm text-gray-700 font-medium">
+                          {new Date(userItem.created_at).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Lesson Pack Info (for dancers) */}
+                    {userItem.role === 'dancer' && userItem.student_id && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-xl">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-2">
+                          Lesson Credits
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-rose-600">{userItem.lessons_available}</p>
+                            <p className="text-[10px] text-gray-500 uppercase">Avail</p>
+                          </div>
+                          <div className="text-center border-x border-gray-200">
+                            <p className="text-lg font-bold text-gray-600">{userItem.lessons_used}</p>
+                            <p className="text-[10px] text-gray-500 uppercase">Used</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-gray-400">{userItem.lessons_purchased}</p>
+                            <p className="text-[10px] text-gray-500 uppercase">Total</p>
+                          </div>
                         </div>
                       </div>
+                    )}
 
-                      {/* Lesson Pack Info (for dancers) */}
-                      {userItem.role === 'dancer' && userItem.student_id && (
-                        <div className="flex-shrink-0 grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-3">
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-green-600">{userItem.lessons_purchased}</p>
-                            <p className="text-xs text-gray-600">Purchased</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600">{userItem.lessons_used}</p>
-                            <p className="text-xs text-gray-600">Used</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-purple-600">{userItem.lessons_available}</p>
-                            <p className="text-xs text-gray-600">Available</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {userItem.role === 'dancer' && !userItem.student_id && (
-                        <div className="flex-shrink-0 text-sm text-gray-500 italic">
-                          No student record
-                        </div>
-                      )}
-                    </div>
+                    {userItem.role === 'dancer' && !userItem.student_id && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-xs text-gray-500 italic">No associated student record</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
-
-              {filteredUsers.length === 0 && (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <p className="text-gray-600">No users found matching your search.</p>
-                  </CardContent>
-                </Card>
-              )}
             </div>
+
+            {filteredUsers.length === 0 && (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <p className="text-gray-600">No users found matching your search.</p>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
