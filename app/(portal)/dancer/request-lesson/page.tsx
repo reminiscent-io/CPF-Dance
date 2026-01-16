@@ -281,36 +281,8 @@ export default function RequestPrivateLessonPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <LessonPackInfo instructorId={formData.instructor_id || null} />
             
-            {loadingInstructors ? (
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded text-gray-600">
-                Loading instructors...
-              </div>
-            ) : instructors.length === 0 ? (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
-                No instructors available. Please contact your studio.
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Select an Instructor *
-                </label>
-                <select
-                  value={formData.instructor_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, instructor_id: e.target.value })
-                  }
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                >
-                  <option value="">-- Choose an instructor --</option>
-                  {instructors.map((instructor) => (
-                    <option key={instructor.id} value={instructor.id}>
-                      {instructor.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Instructor selection hidden - defaulting to Courtney Lowe */}
+            <input type="hidden" name="instructor_id" value={formData.instructor_id} />
 
             <Textarea
               label="What would you like to focus on? *"
