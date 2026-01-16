@@ -204,8 +204,8 @@ export default function InstructorProfilePage() {
         <div className="space-y-6">
           {/* Headshot Section */}
           <Card>
-            <CardTitle className="p-6 pb-4">Profile Photo</CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Profile Photo</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <HeadshotUpload
                 userId={profileData?.id || ''}
                 currentUrl={profileData?.avatar_url || null}
@@ -220,8 +220,8 @@ export default function InstructorProfilePage() {
           </Card>
 
           <Card>
-            <CardTitle className="p-6 pb-4">Personal Information</CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Personal Information</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Full Name"
@@ -251,8 +251,8 @@ export default function InstructorProfilePage() {
           </Card>
 
           <Card>
-            <CardTitle className="p-6 pb-4">Account Security</CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Account Security</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">Password</p>
