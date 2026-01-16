@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { requested_focus, preferred_dates, additional_notes, instructor_id } = body
+    const { requested_focus, preferred_dates, additional_notes } = body
 
     if (!requested_focus) {
       return NextResponse.json(
@@ -42,18 +42,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!instructor_id) {
-      return NextResponse.json(
-        { error: 'Please select an instructor' },
-        { status: 400 }
-      )
-    }
-
     const { data: lessonRequest, error: insertError } = await supabase
       .from('private_lesson_requests')
       .insert({
         student_id: student.id,
-        instructor_id,
         requested_focus,
         preferred_dates: preferred_dates || [],
         additional_notes,
