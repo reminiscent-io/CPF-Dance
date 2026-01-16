@@ -9,6 +9,7 @@ export interface ProfileWithRole {
   phone: string | null
   role: UserRole
   date_of_birth: string | null
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }

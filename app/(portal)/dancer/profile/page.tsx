@@ -8,6 +8,7 @@ import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { HeadshotUpload } from '@/components/HeadshotUpload'
 import { signOut } from '@/lib/auth/actions'
 
 interface ProfileData {
@@ -16,6 +17,7 @@ interface ProfileData {
   email: string | null
   phone: string | null
   date_of_birth: string | null
+  avatar_url: string | null
   role: string
 }
 
@@ -178,6 +180,23 @@ export default function DancerProfilePage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Headshot Section */}
+          <Card>
+            <CardTitle className="p-6 pb-4">Profile Photo</CardTitle>
+            <CardContent className="px-6 pb-6">
+              <HeadshotUpload
+                userId={profileData?.id || ''}
+                currentUrl={profileData?.avatar_url || null}
+                userName={profileData?.full_name || 'User'}
+                onUploadComplete={(url) => {
+                  if (profileData) {
+                    setProfileData({ ...profileData, avatar_url: url })
+                  }
+                }}
+              />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardTitle className="p-6 pb-4 flex items-center justify-between">
               <span>Personal Information</span>

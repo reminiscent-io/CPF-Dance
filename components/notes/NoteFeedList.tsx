@@ -13,15 +13,24 @@ interface NoteFeedListProps {
   notes: Note[]
   onEdit: (note: Note) => void
   onDelete: (noteId: string) => void
-  onPin: (noteId: string) => void
+  onChangeVisibility?: (noteId: string) => void
+  currentUserName?: string
 }
 
-export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListProps) {
+export function NoteFeedList({
+  notes,
+  onEdit,
+  onDelete,
+  onChangeVisibility,
+  currentUserName
+}: NoteFeedListProps) {
   const groupedNotes = groupNotesByDate(notes)
   const groupKeys = getDateGroupKeys(groupedNotes)
 
-  // Filter out empty groups
-  const nonEmptyGroups = groupKeys.filter(key => groupedNotes[key]?.length > 0)
+  // Filter out empty groups and the pinned group (no longer used)
+  const nonEmptyGroups = groupKeys.filter(
+    key => key !== 'pinned' && groupedNotes[key]?.length > 0
+  )
 
   if (nonEmptyGroups.length === 0) {
     return (
@@ -65,7 +74,6 @@ export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListPro
 
                 {/* Date group title */}
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  {groupKey === 'pinned' && <span className="text-xl">📌</span>}
                   {groupTitle}
                   <span className="text-sm font-normal text-gray-500">
                     ({groupNotes.length})
@@ -74,16 +82,16 @@ export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListPro
               </div>
 
               {/* Notes in this group */}
-              <div className="sm:pl-20 space-y-0">
+              <div className="sm:pl-20 space-y-3">
                 {groupNotes.map((note) => (
-                  <div key={note.id} className="relative group">
-                    <NoteFeedItem
-                      note={note}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onPin={onPin}
-                    />
-                  </div>
+                  <NoteFeedItem
+                    key={note.id}
+                    note={note}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onChangeVisibility={onChangeVisibility}
+                    currentUserName={currentUserName}
+                  />
                 ))}
               </div>
             </div>
