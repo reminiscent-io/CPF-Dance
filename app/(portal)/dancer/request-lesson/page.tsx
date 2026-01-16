@@ -276,8 +276,8 @@ export default function RequestPrivateLessonPage() {
       )}
 
       <Card className="mb-8">
-        <CardTitle className="p-6 pb-4">Request a Private Lesson</CardTitle>
-        <CardContent className="px-6 pb-6">
+        <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Request a Private Lesson</CardTitle>
+        <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <LessonPackInfo instructorId={formData.instructor_id || null} />
             
@@ -359,7 +359,7 @@ export default function RequestPrivateLessonPage() {
         <div className="space-y-4">
           {requests.map((request) => (
             <Card key={request.id}>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{getStatusIcon(request.status)}</span>
@@ -413,7 +413,7 @@ export default function RequestPrivateLessonPage() {
                   )}
 
                   {request.instructor_response && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 bg-rose-50 -m-6 mt-4 p-6 rounded-b-lg">
+                    <div className="mt-4 pt-4 border-t border-gray-200 bg-rose-50 -mx-4 md:-mx-6 -mb-4 md:-mb-6 mt-4 p-4 md:p-6 rounded-b-lg">
                       <h4 className="font-medium text-rose-900 mb-2 flex items-center gap-2">
                         <span>💬</span>
                         Instructor Response:
@@ -428,7 +428,7 @@ export default function RequestPrivateLessonPage() {
         </div>
       ) : (
         <Card>
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-8 md:p-12 text-center">
             <div className="text-6xl mb-4">🌟</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No Requests Yet
