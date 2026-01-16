@@ -257,7 +257,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'admin' : profile.role}` : '/'} className="flex items-center justify-between w-full">
+            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 CPF Dance
               </span>
@@ -426,18 +426,30 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-rose-500 p-6 space-y-4">
+          <div className="border-t border-rose-500 p-4 space-y-3">
             <button
               onClick={() => {
                 setIsOpen(false)
                 router.push(getProfileUrl())
               }}
-              className="w-full text-left block hover:opacity-90 transition-opacity"
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-rose-700/50 hover:bg-rose-700 border border-rose-500/50 hover:border-rose-400 transition-all group"
             >
-              <p className="text-sm font-semibold text-white">{profile?.full_name}</p>
-              <p className="text-xs text-rose-200 capitalize">
-                {profile?.role}
-              </p>
+              {/* Avatar circle */}
+              <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-400 transition-colors">
+                <span className="text-white font-semibold text-sm">
+                  {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
+                </span>
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{profile?.full_name}</p>
+                <p className="text-xs text-rose-200 capitalize">
+                  {profile?.role}
+                </p>
+              </div>
+              {/* Chevron indicator */}
+              <svg className="w-4 h-4 text-rose-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
             <button
               onClick={handleSignOut}

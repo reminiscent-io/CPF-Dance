@@ -53,6 +53,9 @@ export function NoteFeedItem({
   // Get author name for display
   const authorName = (note as any).author_name || (note.is_personal ? currentUserName : 'Instructor') || 'Unknown'
 
+  // Get author avatar URL
+  const authorAvatarUrl = (note as any).author_avatar_url || null
+
   // Determine if note is shared (visible to others)
   const isShared = !note.is_personal ||
     (note.visibility !== 'private' && note.visibility !== undefined)
@@ -95,7 +98,7 @@ export function NoteFeedItem({
       {/* Header Row: Avatar + Author + Date + Menu */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <Avatar name={authorName} size="md" />
+          <Avatar src={authorAvatarUrl} name={authorName} size="md" />
           <div>
             <div className="font-medium text-gray-900 text-sm">
               {authorName}

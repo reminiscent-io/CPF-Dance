@@ -46,11 +46,11 @@ export async function GET(request: NextRequest) {
     const authorIds = [...new Set(notes?.map(n => n.author_id) || [])]
     const { data: authors } = await supabase
       .from('profiles')
-      .select('id, full_name, role')
+      .select('id, full_name, role, avatar_url')
       .in('id', authorIds)
 
     const authorMap = new Map(
-      authors?.map(a => [a.id, { full_name: a.full_name, role: a.role }]) || []
+      authors?.map(a => [a.id, { full_name: a.full_name, role: a.role, avatar_url: a.avatar_url }]) || []
     )
 
     const notesWithAuthors = notes?.map(note => {
@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         ...note,
         author_name: author?.full_name || 'Unknown',
         author_role: author?.role || 'unknown',
+        author_avatar_url: author?.avatar_url || null,
         is_personal: note.author_id === profile.id,
         is_shared: note.visibility !== 'private'
       }
