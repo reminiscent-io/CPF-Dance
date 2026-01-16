@@ -152,6 +152,7 @@ CREATE TABLE private_lesson_requests (
   additional_notes TEXT,
   status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'scheduled', 'declined'
   instructor_response TEXT,
+  instructor_id UUID REFERENCES profiles(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
