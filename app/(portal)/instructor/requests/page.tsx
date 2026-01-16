@@ -47,7 +47,6 @@ export default function InstructorRequestsPage() {
   const [showCreateClassModal, setShowCreateClassModal] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<PrivateLessonRequest | null>(null)
   const [studios, setStudios] = useState<Studio[]>([])
-  const [creatingClass, setCreatingClass] = useState(false)
 
   useEffect(() => {
     if (!loading && profile && (profile.role === 'instructor' || profile.role === 'admin')) {
@@ -128,6 +127,8 @@ export default function InstructorRequestsPage() {
         return <Badge variant="success">Approved</Badge>
       case 'confirmed':
         return <Badge variant="success">Confirmed</Badge>
+      case 'scheduled':
+        return <Badge variant="primary">Scheduled</Badge>
       case 'declined':
         return <Badge variant="default">Declined</Badge>
       case 'completed':
