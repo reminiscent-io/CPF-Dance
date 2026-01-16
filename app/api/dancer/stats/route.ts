@@ -160,16 +160,18 @@ export async function GET(request: NextRequest) {
     if (authorIds.length > 0) {
       const { data: authors } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, avatar_url')
         .in('id', authorIds)
-      
-      authorMap = new Map(authors?.map(a => [a.id, a.full_name]) || [])
+
+      authorMap = new Map(authors?.map(a => [a.id, { full_name: a.full_name, avatar_url: a.avatar_url }]) || [])
     }
 
     instructorNotes?.forEach(note => {
+      const author = authorMap.get(note.author_id)
       allNotes.push({
         ...note,
-        author_name: authorMap.get(note.author_id) || 'Instructor',
+        author_name: author?.full_name || 'Instructor',
+        author_avatar_url: author?.avatar_url || null,
         is_personal: false
       })
     })
@@ -180,15 +182,16 @@ export async function GET(request: NextRequest) {
         ...note,
         author_id: profile.id,
         author_name: profile.full_name,
+        author_avatar_url: profile.avatar_url || null,
         is_personal: true,
         class_id: null,
         classes: null
       })
     })
 
-    // Sort by created_at and take the most recent
+    // Sort by created_at and take the most recent (limit to 3)
     allNotes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    const recentNotesWithType = allNotes.slice(0, 5)
+    const recentNotesWithType = allNotes.slice(0, 3)
 
     return NextResponse.json({
       stats: {

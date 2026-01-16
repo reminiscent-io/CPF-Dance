@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent, Button, Badge, Spinner } from '@/components/ui'
+import { Avatar } from '@/components/ui/Avatar'
 import type { DashboardStats, RecentActivity } from '@/lib/types'
 import {
   UserGroupIcon,
@@ -33,11 +34,25 @@ interface TodaysClass {
   studio_name: string
 }
 
+interface RecentNote {
+  id: string
+  title: string | null
+  content: string
+  tags: string[] | null
+  created_at: string
+  author_id: string
+  author_name: string
+  author_avatar_url: string | null
+  student_name: string
+  student_avatar_url: string | null
+}
+
 export default function InstructorPortalPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
+  const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
   const [nextClass, setNextClass] = useState<NextClass | null>(null)
   const [todaysClasses, setTodaysClasses] = useState<TodaysClass[]>([])
   const [loadingData, setLoadingData] = useState(true)
@@ -58,17 +73,26 @@ export default function InstructorPortalPage() {
     try {
       const response = await fetch('/api/dashboard')
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      
+
       const data = await response.json()
       setStats(data.stats)
       setNextClass(data.next_class)
       setTodaysClasses(data.todays_classes || [])
       setRecentActivity(data.recent_activity || [])
+      setRecentNotes(data.recent_notes || [])
     } catch (error) {
       console.error('Error fetching dashboard:', error)
     } finally {
       setLoadingData(false)
     }
+  }
+
+  const getContentPreview = (html: string, maxLength: number = 150): string => {
+    if (!html) return ''
+    const text = html.replace(/<[^>]*>/g, '')
+    if (text.length <= maxLength) return text
+    const truncated = text.substring(0, maxLength)
+    return truncated + '...'
   }
 
   if (loading) {
@@ -287,6 +311,108 @@ export default function InstructorPortalPage() {
               </div>
             </div>
           </div>
+
+          {/* Recent Notes Section */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
+                Recent Notes
+              </h2>
+              <button
+                onClick={() => router.push('/instructor/notes')}
+                className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+              >
+                View all
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {recentNotes.length > 0 ? (
+              <div className="space-y-3">
+                {recentNotes.map((note) => (
+                  <Card
+                    key={note.id}
+                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => router.push('/instructor/notes')}
+                  >
+                    <CardContent className="p-4">
+                      {/* Header: Avatar + Author + Date */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            src={note.author_avatar_url}
+                            name={note.author_name}
+                            size="md"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-900 text-sm">
+                              {note.author_name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(note.created_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Student badge */}
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            src={note.student_avatar_url}
+                            name={note.student_name}
+                            size="sm"
+                          />
+                          <span className="text-xs text-gray-600">
+                            {note.student_name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      {note.title && (
+                        <h3 className="font-semibold text-base text-gray-900 mb-2">
+                          {note.title}
+                        </h3>
+                      )}
+
+                      {/* Content preview */}
+                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                        {getContentPreview(note.content, 120)}
+                      </p>
+
+                      {/* Tags */}
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {note.tags.slice(0, 3).map((tag, idx) => (
+                            <Badge key={idx} variant="default" size="sm">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gray-50 border-dashed">
+                <CardContent className="p-6 text-center">
+                  <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="font-medium text-gray-900 mb-1 text-base">No notes yet</h3>
+                  <p className="text-sm text-gray-500 mb-4">Start tracking student progress</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/instructor/notes')}
+                  >
+                    Add a note
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </section>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <Card>

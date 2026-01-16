@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/ui/Avatar'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 import {
   CalendarIcon,
@@ -46,6 +47,7 @@ interface RecentNote {
   created_at: string
   author_id: string
   author_name: string
+  author_avatar_url: string | null
   is_personal: boolean
   class_id: string | null
   classes: {
@@ -191,42 +193,58 @@ export default function DancerPortalPage() {
 
                 {recentNotes.length > 0 ? (
                   <div className="space-y-3">
-                    {recentNotes.slice(0, 5).map((note) => (
+                    {recentNotes.map((note) => (
                       <Card
                         key={note.id}
                         className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                         onClick={() => handleNoteClick(note)}
                       >
                         <CardContent className="p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <span className={`text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${
-                                note.is_personal 
-                                  ? 'bg-gray-100 text-gray-500' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {note.is_personal ? 'Personal' : 'Instructor'}
-                              </span>
-                              {note.title && (
-                                <h3 className="font-semibold text-gray-900 text-base truncate">
-                                  {note.title}
-                                </h3>
-                              )}
+                          {/* Header: Avatar + Author + Date */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar
+                                src={note.author_avatar_url}
+                                name={note.author_name}
+                                size="md"
+                              />
+                              <div>
+                                <div className="font-medium text-gray-900 text-sm">
+                                  {note.author_name}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {new Date(note.created_at).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-sm text-gray-500 flex-shrink-0">
-                              {new Date(note.created_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </span>
+                            {/* Status badge */}
+                            <Badge
+                              variant={note.is_personal ? 'default' : 'success'}
+                              size="sm"
+                            >
+                              {note.is_personal ? 'Personal' : 'Shared'}
+                            </Badge>
                           </div>
-                          <p className="text-base text-gray-600 line-clamp-2 leading-relaxed">
+
+                          {/* Title */}
+                          {note.title && (
+                            <h3 className="font-semibold text-base text-gray-900 mb-2">
+                              {note.title}
+                            </h3>
+                          )}
+
+                          {/* Content preview */}
+                          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                             {getContentPreview(note.content, 120)}
                           </p>
-                          {!note.is_personal && (
-                            <p className="text-sm text-gray-400 mt-2">
-                              {note.author_name}
-                              {note.classes && ` · ${note.classes.title}`}
+
+                          {/* Class info */}
+                          {note.classes && (
+                            <p className="text-xs text-gray-400 mt-2">
+                              {note.classes.title}
                             </p>
                           )}
                         </CardContent>
