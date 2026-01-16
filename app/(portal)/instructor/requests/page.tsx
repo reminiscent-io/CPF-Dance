@@ -109,6 +109,30 @@ export default function InstructorRequestsPage() {
     }
   }
 
+  const updateStatusWithClass = async (id: string, newStatus: string, classId: string) => {
+    setUpdatingId(id)
+    try {
+      const response = await fetch('/api/instructor/requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus, scheduled_class_id: classId })
+      })
+
+      if (response.ok) {
+        // Refresh requests to get the updated class info
+        await fetchRequests()
+        addToast('Class scheduled successfully!', 'success')
+      } else {
+        addToast('Failed to update request', 'error')
+      }
+    } catch (err) {
+      console.error('Error updating request:', err)
+      addToast('An error occurred', 'error')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   const handleOpenCreateClassModal = (request: PrivateLessonRequest) => {
     setSelectedRequest(request)
     setShowCreateClassModal(true)
@@ -351,9 +375,9 @@ export default function InstructorRequestsPage() {
           request={selectedRequest}
           studios={studios}
           onClose={handleCloseCreateClassModal}
-          onSuccess={() => {
+          onSuccess={(classId: string) => {
             handleCloseCreateClassModal()
-            updateStatus(selectedRequest.id, 'scheduled')
+            updateStatusWithClass(selectedRequest.id, 'approved', classId)
           }}
         />
       )}
@@ -365,7 +389,7 @@ interface CreatePrivateLessonClassModalProps {
   request: PrivateLessonRequest
   studios: Studio[]
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (classId: string) => void
 }
 
 function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }: CreatePrivateLessonClassModalProps) {
@@ -477,8 +501,9 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         throw new Error(errorData.error || 'Failed to create class')
       }
 
+      const { class: newClass } = await response.json()
       addToast('Private lesson class created successfully!', 'success')
-      onSuccess()
+      onSuccess(newClass.id)
     } catch (error) {
       console.error('Error creating class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create class'

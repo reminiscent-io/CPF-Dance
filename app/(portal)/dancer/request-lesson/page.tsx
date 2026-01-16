@@ -17,6 +17,13 @@ interface Instructor {
   email: string | null
 }
 
+interface ScheduledClass {
+  id: string
+  title: string
+  start_time: string
+  end_time: string
+}
+
 interface LessonRequest {
   id: string
   requested_focus: string | null
@@ -25,6 +32,8 @@ interface LessonRequest {
   status: string
   instructor_response: string | null
   instructor_id: string | null
+  scheduled_class_id: string | null
+  scheduled_class: ScheduledClass | null
   created_at: string
   updated_at: string
 }
@@ -384,7 +393,32 @@ export default function RequestPrivateLessonPage() {
                     </div>
                   )}
 
-                  {request.instructor_response && (
+                  {request.scheduled_class && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 bg-green-50 -mx-4 md:-mx-6 p-4 md:p-6 rounded-b-lg">
+                      <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                        <span>📅</span>
+                        Scheduled Lesson:
+                      </h4>
+                      <p className="text-green-800 font-medium">{request.scheduled_class.title}</p>
+                      <p className="text-green-700">
+                        {new Date(request.scheduled_class.start_time).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        {' at '}
+                        {new Date(request.scheduled_class.start_time).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZone: 'America/New_York'
+                        })}
+                        {' ET'}
+                      </p>
+                    </div>
+                  )}
+
+                  {request.instructor_response && !request.scheduled_class && (
                     <div className="mt-4 pt-4 border-t border-gray-200 bg-rose-50 -mx-4 md:-mx-6 -mb-4 md:-mb-6 mt-4 p-4 md:p-6 rounded-b-lg">
                       <h4 className="font-medium text-rose-900 mb-2 flex items-center gap-2">
                         <span>💬</span>

@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
-- **January 16, 2026**: Added "Create Class" button to Private Lesson Requests page - instructors can click to open a modal pre-filled with the student and "private lesson" class type, streamlining the process of scheduling lessons from requests
+- **January 16, 2026**: Added "Create Class" button to Private Lesson Requests page - instructors can click to open a modal pre-filled with the student and "private lesson" class type, streamlining the process of scheduling lessons from requests. When a class is created, the request status changes to "Approved" and the scheduled date/time is displayed on both instructor and dancer views
 - **January 15, 2026**: Redesigned Dancer Dashboard - features Recent Notes prominently at the top (showing both personal and instructor notes), followed by Upcoming Classes list, then quick stats. Clicking items navigates to the relevant tab
 - **January 15, 2026**: Added "Format with AI" button to both Add Note and Edit Note modals (Instructor and Dancer portals) - uses OpenAI to tighten formatting and fix spelling while preserving names and dance terminology, includes undo functionality. Updated AI prompt to use bullet points sparingly and keep logically connected sentences together in paragraphs
 - **January 15, 2026**: Added Gmail email integration for studio inquiries - admins can reply via Gmail with pre-filled templates, view email threads, and check for replies with "Refresh Inbox" button

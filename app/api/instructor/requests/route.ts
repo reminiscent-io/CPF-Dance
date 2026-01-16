@@ -18,6 +18,12 @@ export async function GET(request: NextRequest) {
           email,
           phone,
           profile:profiles!students_profile_id_fkey(full_name, email, phone)
+        ),
+        scheduled_class:classes!private_lesson_requests_scheduled_class_id_fkey(
+          id,
+          title,
+          start_time,
+          end_time
         )
       `)
       .order('created_at', { ascending: false })
@@ -40,15 +46,20 @@ export async function PUT(request: NextRequest) {
     
     const supabase = await createClient()
     const body = await request.json()
-    const { id, status } = body
+    const { id, status, scheduled_class_id } = body
 
     if (!id || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    const updateData: { status: string; scheduled_class_id?: string } = { status }
+    if (scheduled_class_id) {
+      updateData.scheduled_class_id = scheduled_class_id
+    }
+
     const { data: updatedRequest, error } = await supabase
       .from('private_lesson_requests')
-      .update({ status })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
