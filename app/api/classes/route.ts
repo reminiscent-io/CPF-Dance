@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         studio:studios(name, city, state),
-        instructor:profiles(full_name)
+        instructor:profiles(full_name),
+        asset:assets(id, title, file_url, file_type)
       `)
       .order('start_time', { ascending: true })
 
@@ -95,7 +96,8 @@ export async function POST(request: NextRequest) {
       tiered_additional_cost,
       external_signup_url,
       is_public,
-      student_id // For automatically enrolling a student (private lessons)
+      student_id, // For automatically enrolling a student (private lessons)
+      asset_id // Optional promotional asset
     } = body
 
     // Determine instructor_id based on role
@@ -161,7 +163,9 @@ export async function POST(request: NextRequest) {
       price: price || null, // Legacy field for backwards compatibility
       // Public features
       external_signup_url: external_signup_url || null,
-      is_public: is_public || false
+      is_public: is_public || false,
+      // Asset
+      asset_id: asset_id || null
     }
 
     console.log('Attempting to insert class:', insertData)
@@ -171,7 +175,8 @@ export async function POST(request: NextRequest) {
       .insert(insertData)
       .select(`
         *,
-        studio:studios(name, city, state)
+        studio:studios(name, city, state),
+        asset:assets(id, title, file_url, file_type)
       `)
       .single()
 

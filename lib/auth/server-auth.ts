@@ -12,27 +12,46 @@ export interface ProfileWithRole {
   avatar_url: string | null
   created_at: string
   updated_at: string
+  linked_profile_id?: string | null
 }
 
 export async function getCurrentUserWithRole(): Promise<ProfileWithRole | null> {
   const supabase = await createClient()
-  
+
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  
+
   if (authError || !user) {
     return null
   }
-  
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
-  
+
   if (profileError || !profile) {
     return null
   }
-  
+
+  // Check if this profile is linked to a primary profile
+  if (profile.linked_profile_id) {
+    // Fetch the primary profile
+    const { data: primaryProfile, error: primaryError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', profile.linked_profile_id)
+      .single()
+
+    // If primary profile exists, use it instead
+    if (!primaryError && primaryProfile) {
+      return primaryProfile as ProfileWithRole
+    }
+
+    // If primary profile fetch failed, fall back to current profile
+    console.warn(`Linked profile ${profile.linked_profile_id} not found for user ${user.id}`)
+  }
+
   return profile as ProfileWithRole
 }
 

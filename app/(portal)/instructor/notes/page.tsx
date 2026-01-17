@@ -367,46 +367,111 @@ export default function NotesPage() {
       ) : displayNotes.length === 0 ? (
         <Card>
           <div className="text-center py-12 text-gray-600">
-            {activeTab === 'student-notes' 
-              ? 'No student notes shared with you yet' 
-              : 'No notes found'}
+            <div className="text-6xl mb-4">📝</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {activeTab === 'student-notes'
+                ? 'No Student Notes Yet'
+                : 'No Notes Found'}
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              {activeTab === 'student-notes'
+                ? 'Students haven\'t shared any notes with you yet.'
+                : filterStudent || filterVisibility || filterTag
+                  ? 'Try adjusting your filters to see more results.'
+                  : 'Create your first note to start tracking student progress.'}
+            </p>
+            {activeTab === 'my-notes' && (filterStudent || filterVisibility || filterTag) && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFilterStudent('')
+                  setFilterVisibility('')
+                  setFilterTag('')
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
           </div>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {displayNotes.map((note: any) => (
-            <Card key={note.id} hover className="p-4 sm:p-6">
-              <div className="flex justify-between items-start gap-2 mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{note.title || 'Untitled Note'}</h3>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-sm text-gray-600">
-                    <span className="truncate">{note.student?.profile?.full_name}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <span>{new Date(note.created_at).toLocaleDateString()}</span>
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
-                      {note.visibility.replace(/_/g, ' ')}
-                    </span>
+        <div className="relative">
+          {/* Timeline vertical line */}
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-rose-300 via-purple-300 to-mauve-300"></div>
+
+          <div className="space-y-8">
+            {displayNotes.map((note: any, index: number) => (
+              <div key={note.id} className="relative pl-16">
+                {/* Timeline dot */}
+                <div className="absolute left-5 top-6 w-6 h-6 bg-rose-500 rounded-full border-4 border-white shadow-md flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+
+                <Card hover className="ml-4">
+                  <div className="p-4 sm:p-6">
+                    <div className="flex justify-between items-start gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        {note.title && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg
+                              className="w-5 h-5 flex-shrink-0 text-purple-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              aria-label="Note"
+                            >
+                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                            </svg>
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                              {note.title}
+                            </h3>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
+                          <span className="truncate">👤 {note.student?.profile?.full_name || 'No student'}</span>
+                          {note.classes && (
+                            <>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="truncate">{note.classes.title}</span>
+                            </>
+                          )}
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap">
+                            {new Date(note.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
+                            {note.visibility.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      </div>
+                      {activeTab === 'my-notes' && (
+                        <NoteActionsMenu
+                          onEdit={() => handleEditNote(note)}
+                          onDelete={() => handleDeleteNote(note.id)}
+                        />
+                      )}
+                    </div>
+
+                    <div className="prose prose-sm max-w-none mb-4">
+                      <RichTextDisplay content={note.content} className="text-gray-700 text-sm sm:text-base" />
+                    </div>
+
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {note.tags.map((tag: string, idx: number) => (
+                          <Badge key={idx} variant="primary" size="sm">{tag}</Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-                {activeTab === 'my-notes' && (
-                  <NoteActionsMenu
-                    onEdit={() => handleEditNote(note)}
-                    onDelete={() => handleDeleteNote(note.id)}
-                  />
-                )}
+                </Card>
               </div>
-
-              <RichTextDisplay content={note.content} className="text-gray-700 mb-3 text-sm sm:text-base" />
-
-              {note.tags && note.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {note.tags.map((tag: string, idx: number) => (
-                    <Badge key={idx} variant="primary" size="sm">{tag}</Badge>
-                  ))}
-                </div>
-              )}
-            </Card>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

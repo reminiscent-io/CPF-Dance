@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import { Modal } from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 
@@ -144,6 +145,7 @@ export default function HomePage() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
+  const [showInquiryModal, setShowInquiryModal] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
 
@@ -195,6 +197,11 @@ export default function HomePage() {
         message: ''
       })
       setFormStep(0)
+      // Close modal after a delay to show success message
+      setTimeout(() => {
+        setShowInquiryModal(false)
+        setSubmitSuccess(false)
+      }, 3000)
     } catch (error: any) {
       setSubmitError(error.message || 'Failed to submit inquiry. Please try again.')
     } finally {
@@ -268,8 +275,8 @@ export default function HomePage() {
     }
   }
 
-  const scrollToInquiry = () => {
-    document.getElementById('studio-inquiry')?.scrollIntoView({ behavior: 'smooth' })
+  const openInquiryModal = () => {
+    setShowInquiryModal(true)
   }
 
   const handleLoginClick = () => {
@@ -342,11 +349,11 @@ export default function HomePage() {
                 'Login'
               )}
             </Link>
-            <button 
-              onClick={scrollToInquiry}
+            <button
+              onClick={openInquiryModal}
               className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
             >
-              Inquiry
+              Studio Inquiry
             </button>
           </div>
         </div>
@@ -642,120 +649,120 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="studio-inquiry" className="py-20 bg-champagne-50">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-              Studio Partnership Inquiry
-            </h2>
-            <p className="text-lg text-charcoal-800 leading-relaxed">
-              Interested in bringing our expertise to your studio? Let's connect.
+      {/* Studio Inquiry Modal */}
+      <Modal
+        isOpen={showInquiryModal}
+        onClose={() => {
+          setShowInquiryModal(false)
+          setSubmitSuccess(false)
+          setFormStep(0)
+        }}
+        title="Studio Partnership Inquiry"
+        size="lg"
+      >
+        <div className="mb-4">
+          <p className="text-charcoal-700 leading-relaxed">
+            Interested in bringing our expertise to your studio? Let's connect.
+          </p>
+        </div>
+
+        {submitSuccess ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</div>
+            <p className="text-charcoal-800 leading-relaxed">
+              We've received your inquiry and will be in touch shortly.
             </p>
           </div>
+        ) : (
+          <form onSubmit={handleFormStepSubmit} className="space-y-6">
+            {/* Progress Indicator */}
+            <div className="flex gap-2 justify-center">
+              {[0, 1, 2, 3, 4].map((step) => (
+                <div
+                  key={step}
+                  className={`h-2 w-12 rounded-full transition-all ${
+                    step <= formStep ? 'bg-rose-600' : 'bg-charcoal-200'
+                  }`}
+                />
+              ))}
+            </div>
 
-          <Card padding="lg">
-            {submitSuccess ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</div>
-                <p className="text-charcoal-800 mb-6 leading-relaxed">
-                  We've received your inquiry and will be in touch shortly.
+            {/* Conversational Form Step */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-lg text-charcoal-800 mb-4">
+                  <span className="font-semibold">{getStepContent()?.label}</span>
                 </p>
-                <Button onClick={() => { setSubmitSuccess(false); setFormStep(0); }}>
-                  Submit Another Inquiry
-                </Button>
+                {getStepContent()?.isTextarea ? (
+                  <Textarea
+                    name={getStepContent()?.inputName || ''}
+                    rows={4}
+                    required
+                    value={getStepContent()?.value || ''}
+                    onChange={handleInputChange}
+                    placeholder={getStepContent()?.placeholder}
+                    className="w-full text-center"
+                  />
+                ) : (
+                  <Input
+                    name={getStepContent()?.inputName || ''}
+                    type={getStepContent()?.type || 'text'}
+                    required
+                    value={getStepContent()?.value || ''}
+                    onChange={handleInputChange}
+                    placeholder={getStepContent()?.placeholder}
+                    className="w-full text-center"
+                  />
+                )}
               </div>
-            ) : (
-              <form onSubmit={handleFormStepSubmit} className="space-y-8">
-                {/* Progress Indicator */}
-                <div className="flex gap-2 justify-center">
-                  {[0, 1, 2, 3, 4].map((step) => (
-                    <div
-                      key={step}
-                      className={`h-2 w-12 rounded-full transition-all ${
-                        step <= formStep ? 'bg-rose-600' : 'bg-charcoal-200'
-                      }`}
-                    />
-                  ))}
+
+              {submitError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-center">{submitError}</p>
                 </div>
+              )}
 
-                {/* Conversational Form Step */}
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <p className="text-lg text-charcoal-800 mb-4">
-                      <span className="font-semibold">{getStepContent()?.label}</span>
-                    </p>
-                    {getStepContent()?.isTextarea ? (
-                      <Textarea
-                        name={getStepContent()?.inputName || ''}
-                        rows={4}
-                        required
-                        value={getStepContent()?.value || ''}
-                        onChange={handleInputChange}
-                        placeholder={getStepContent()?.placeholder}
-                        className="w-full text-center"
-                      />
-                    ) : (
-                      <Input
-                        name={getStepContent()?.inputName || ''}
-                        type={getStepContent()?.type || 'text'}
-                        required
-                        value={getStepContent()?.value || ''}
-                        onChange={handleInputChange}
-                        placeholder={getStepContent()?.placeholder}
-                        className="w-full text-center"
-                      />
-                    )}
-                  </div>
-
-                  {submitError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-red-700 text-center">{submitError}</p>
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="flex gap-3 justify-center">
-                    {formStep > 0 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleFormStepPrev}
-                      >
-                        ← Back
-                      </Button>
-                    )}
-                    {formStep === 4 ? (
-                      <Button
-                        type="submit"
-                        size="lg"
-                        disabled={isSubmitting || !getStepContent()?.value}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="lg"
-                        onClick={handleFormStepNext}
-                        disabled={!getStepContent()?.value}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        Next
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </form>
-            )}
-          </Card>
-        </div>
-      </section>
+              {/* Navigation Buttons */}
+              <div className="flex gap-3 justify-center">
+                {formStep > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleFormStepPrev}
+                  >
+                    ← Back
+                  </Button>
+                )}
+                {formStep === 4 ? (
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isSubmitting || !getStepContent()?.value}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="lg"
+                    onClick={handleFormStepNext}
+                    disabled={!getStepContent()?.value}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    Next
+                  </Button>
+                )}
+              </div>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       <footer className="bg-mauve-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
@@ -775,7 +782,7 @@ export default function HomePage() {
                     </Link>
                   </li>
                   <li>
-                    <button onClick={scrollToInquiry} className="text-white hover:text-rose-400 transition-colors">
+                    <button onClick={openInquiryModal} className="text-white hover:text-rose-400 transition-colors">
                       Studio Inquiry
                     </button>
                   </li>

@@ -236,80 +236,86 @@ export default function InstructorPortalPage() {
             )}
           </div>
 
-          {/* Stats Section - Magazine Layout */}
-          <div className="space-y-0 mb-8">
+          {/* Stats Section - Dashboard Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {/* Total Students */}
-            <div
+            <Card
+              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
               onClick={() => router.push('/instructor/students')}
-              className="w-full text-left py-6 px-2 border-b border-gray-200 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
+              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
                 <div className="flex-1">
-                  <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  <div className="text-sm font-medium text-gray-600 mb-1">
+                    Total Students
+                  </div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.total_students || 0}
                   </div>
-                  <div className="text-sm text-gray-600">Total Students</div>
-                  <div className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 mt-1">
                     {stats?.active_students || 0} active
-                  </div>
+                  </p>
                 </div>
-                <UserGroupIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
-              </div>
-            </div>
+                <UserGroupIcon className="h-4 w-4 text-gray-400" />
+              </CardContent>
+            </Card>
 
             {/* Pending Requests */}
-            <div
+            <Card
+              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
               onClick={() => router.push('/instructor/requests')}
-              className="w-full text-left py-6 px-2 border-b border-gray-200 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
+              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
                 <div className="flex-1">
-                  <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  <div className="text-sm font-medium text-gray-600 mb-1">
+                    Pending Requests
+                  </div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.pending_requests || 0}
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">Pending Requests</div>
                   {(stats?.pending_requests || 0) > 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         router.push('/instructor/requests')
                       }}
-                      className="text-xs px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded transition-colors"
+                      className="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
                     >
-                      Review
+                      Review →
                     </button>
                   )}
                 </div>
-                <HandRaisedIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
-              </div>
-            </div>
+                <HandRaisedIcon className="h-4 w-4 text-gray-400" />
+              </CardContent>
+            </Card>
 
             {/* Unpaid Invoices */}
-            <div
+            <Card
+              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
               onClick={() => router.push('/instructor/payments')}
-              className="w-full text-left py-6 px-2 hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
+              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
                 <div className="flex-1">
-                  <div className="text-2xl md:text-3xl font-bold text-charcoal-700 mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
+                  <div className="text-sm font-medium text-gray-600 mb-1">
+                    Unpaid Invoices
+                  </div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
                     {stats?.unpaid_invoices || 0}
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">Unpaid Invoices</div>
                   {(stats?.unpaid_invoices || 0) > 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         router.push('/instructor/payments')
                       }}
-                      className="text-xs px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded transition-colors"
+                      className="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
                     >
-                      Follow up
+                      Follow up →
                     </button>
                   )}
                 </div>
-                <CreditCardIcon className="w-8 h-8 text-charcoal-400 flex-shrink-0 ml-4" />
-              </div>
-            </div>
+                <CreditCardIcon className="h-4 w-4 text-gray-400" />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Recent Notes Section */}
@@ -330,24 +336,24 @@ export default function InstructorPortalPage() {
             </div>
 
             {recentNotes.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentNotes.map((note) => (
                   <Card
                     key={note.id}
-                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
+                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer h-full"
                     onClick={() => router.push('/instructor/notes')}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 flex flex-col h-full">
                       {/* Header: Avatar + Author + Date */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start justify-between mb-3 gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <Avatar
                             src={note.author_avatar_url}
                             name={note.author_name}
-                            size="md"
+                            size="sm"
                           />
-                          <div>
-                            <div className="font-medium text-gray-900 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900 text-xs truncate">
                               {note.author_name}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -359,38 +365,45 @@ export default function InstructorPortalPage() {
                           </div>
                         </div>
                         {/* Student badge */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Avatar
                             src={note.student_avatar_url}
                             name={note.student_name}
                             size="sm"
                           />
-                          <span className="text-xs text-gray-600">
-                            {note.student_name}
-                          </span>
                         </div>
+                      </div>
+
+                      {/* Student name */}
+                      <div className="text-xs text-gray-600 mb-2 truncate">
+                        For: {note.student_name}
                       </div>
 
                       {/* Title */}
                       {note.title && (
-                        <h3 className="font-semibold text-base text-gray-900 mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2">
                           {note.title}
                         </h3>
                       )}
 
                       {/* Content preview */}
-                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                        {getContentPreview(note.content, 120)}
+                      <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed flex-1">
+                        {getContentPreview(note.content, 100)}
                       </p>
 
                       {/* Tags */}
                       {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {note.tags.slice(0, 3).map((tag, idx) => (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                          {note.tags.slice(0, 2).map((tag, idx) => (
                             <Badge key={idx} variant="default" size="sm">
                               {tag}
                             </Badge>
                           ))}
+                          {note.tags.length > 2 && (
+                            <Badge variant="default" size="sm">
+                              +{note.tags.length - 2}
+                            </Badge>
+                          )}
                         </div>
                       )}
                     </CardContent>

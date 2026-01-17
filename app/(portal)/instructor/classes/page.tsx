@@ -9,6 +9,7 @@ import { PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
+import { AssetSelector } from '@/components/AssetSelector'
 
 // Helper function to parse currency values and round to 2 decimal places
 const parseCurrency = (value: string): number | undefined => {
@@ -452,7 +453,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; actual_attendance_count?: number; instructor_id?: string }>({
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; actual_attendance_count?: number; instructor_id?: string; asset_id?: string | null }>({
     studio_id: classData.studio_id || '',
     class_type: classData.class_type,
     title: classData.title,
@@ -472,7 +473,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     external_signup_url: classData.external_signup_url || '',
     is_public: classData.is_public || false,
     newStudioName: '',
-    instructor_id: (classData as any).instructor_id || undefined
+    instructor_id: (classData as any).instructor_id || undefined,
+    asset_id: (classData as any).asset_id || null
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
 
@@ -1159,6 +1161,14 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               </>
             )}
           </div>
+
+          {/* Asset Selection */}
+          <AssetSelector
+            selectedAssetId={formData.asset_id}
+            onSelect={(assetId) => setFormData({ ...formData, asset_id: assetId })}
+            label="Promotional Image/Document (Optional)"
+            showUploadButton={true}
+          />
         </div>
 
         <ModalFooter className="mt-6">
@@ -1202,7 +1212,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     return student.email || student.profile?.email || ''
   }
 
-  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string; student_id?: string }>({
+  const [formData, setFormData] = useState<CreateClassData & { newStudioName?: string; instructor_id?: string; student_id?: string; asset_id?: string | null }>({
     studio_id: '',
     class_type: 'group',
     title: '',
@@ -1222,7 +1232,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     is_public: false,
     newStudioName: '',
     instructor_id: undefined,
-    student_id: undefined
+    student_id: undefined,
+    asset_id: null
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
@@ -1817,6 +1828,14 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               />
             </div>
           )}
+
+          {/* Asset Selection */}
+          <AssetSelector
+            selectedAssetId={formData.asset_id}
+            onSelect={(assetId) => setFormData({ ...formData, asset_id: assetId })}
+            label="Promotional Image/Document (Optional)"
+            showUploadButton={true}
+          />
         </div>
 
         <ModalFooter className="mt-6">
@@ -1824,8 +1843,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             Cancel
           </Button>
           <Button type="submit">
-            {isRecurring && recurringDates.length > 1 
-              ? `Create ${recurringDates.length} Classes` 
+            {isRecurring && recurringDates.length > 1
+              ? `Create ${recurringDates.length} Classes`
               : 'Create Class'}
           </Button>
         </ModalFooter>
