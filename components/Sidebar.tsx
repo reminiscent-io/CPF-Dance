@@ -80,36 +80,36 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
     const instructorNav = {
       ungrouped: [
-        { href: '/instructor', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+        { href: '/instructor', label: 'Dashboard', icon: <ChartBarIcon className="w-4 h-4" /> }
       ],
       groups: [
         {
           label: 'Schedule',
           links: [
-            { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-5 h-5" /> },
-            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-5 h-5" /> }
+            { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4" /> },
+            { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-4 h-4" /> },
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Dancers',
           links: [
-            { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> },
-            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-5 h-5" /> }
+            { href: '/instructor/notes', label: 'Notes', icon: <DocumentTextIcon className="w-4 h-4" /> },
+            { href: '/instructor/students', label: 'Students', icon: <UserGroupIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Payments',
           links: [
-            { href: '/instructor/payments', label: 'Earnings', icon: <CreditCardIcon className="w-5 h-5" /> },
-            { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-5 h-5" /> }
+            { href: '/instructor/payments', label: 'Earnings', icon: <CreditCardIcon className="w-4 h-4" /> },
+            { href: '/instructor/payments/invoices', label: 'Invoices', icon: <DocumentIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Admin',
           links: [
-            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
-            { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> }
+            { href: '/instructor/studios', label: 'Studios', icon: <BuildingOfficeIcon className="w-4 h-4" /> },
+            { href: '/instructor/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" /> }
           ]
         }
       ]
@@ -117,34 +117,34 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
     const dancerNav = {
       ungrouped: [
-        { href: '/dancer', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+        { href: '/dancer', label: 'Dashboard', icon: <ChartBarIcon className="w-4 h-4" /> }
       ],
       groups: [
         {
           label: 'Feedback',
           links: [
-            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-5 h-5" /> }
+            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Schedule',
           links: [
-            { href: '/dancer/schedule', label: 'My Calendar', icon: <CalendarIcon className="w-5 h-5" /> },
-            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-5 h-5" /> }
+            { href: '/dancer/schedule', label: 'My Calendar', icon: <CalendarIcon className="w-4 h-4" /> },
+            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Book',
           links: [
-            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-5 h-5" /> },
-            { href: '/dancer/available-classes', label: 'Open Classes', icon: <MagnifyingGlassIcon className="w-5 h-5" /> }
+            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-4 h-4" /> },
+            { href: '/dancer/available-classes', label: 'Open Classes', icon: <MagnifyingGlassIcon className="w-4 h-4" /> }
           ]
         },
         {
           label: 'Other',
           links: [
-            { href: '/dancer/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
-            { href: '/dancer/payments', label: 'Payments', icon: <CreditCardIcon className="w-5 h-5" /> }
+            { href: '/dancer/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" /> },
+            { href: '/dancer/payments', label: 'Payments', icon: <CreditCardIcon className="w-4 h-4" /> }
           ]
         }
       ]
@@ -152,15 +152,15 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
     const adminNav = {
       ungrouped: [
-        { href: '/admin', label: 'Dashboard', icon: <ChartBarIcon className="w-5 h-5" /> }
+        { href: '/admin', label: 'Dashboard', icon: <ChartBarIcon className="w-4 h-4" /> }
       ],
       groups: [
         {
           label: 'Management',
           links: [
-            { href: '/admin/users', label: 'All Users', icon: <UsersIcon className="w-5 h-5" /> },
-            { href: '/admin/instructor-requests', label: 'Instructors', icon: <AcademicCapIcon className="w-5 h-5" /> },
-            { href: '/admin/studio-inquiries', label: 'Inquiries', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> }
+            { href: '/admin/users', label: 'All Users', icon: <UsersIcon className="w-4 h-4" /> },
+            { href: '/admin/instructor-requests', label: 'Instructors', icon: <AcademicCapIcon className="w-4 h-4" /> },
+            { href: '/admin/studio-inquiries', label: 'Inquiries', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> }
           ]
         }
       ]
@@ -213,10 +213,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-  }
-
   const toggleParent = (label: string) => {
     const newExpanded = new Set(expandedParents)
     if (newExpanded.has(label)) {
@@ -257,7 +253,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'admin' : profile.role}` : '/'} className="flex items-center justify-between w-full">
+            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 CPF Dance
               </span>
@@ -295,7 +291,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           )}
 
           {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
             {/* Ungrouped Items (Dashboard) */}
             {navLinks.ungrouped?.map((link: any) => {
               const isExactMatch = pathname === link.href
@@ -310,7 +306,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                     router.push(link.href)
                   }}
                   className={`
-                    w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                    w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
                     ${isActive
                       ? 'bg-rose-400 text-white shadow-md'
                       : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -325,10 +321,10 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
             {/* Grouped Items */}
             {navLinks.groups?.map((group: any, groupIndex: number) => (
-              <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-6' : ''}>
+              <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-4' : ''}>
                 {/* Group Header */}
-                <div className="px-4 mb-2">
-                  <div className="text-xs font-semibold text-rose-200 uppercase tracking-wider pb-1.5 border-b border-rose-500/50" style={{ fontFamily: 'var(--font-family-sans)' }}>
+                <div className="px-4 mb-1.5">
+                  <div className="text-xs font-semibold text-rose-200 uppercase tracking-wider pb-1 border-b border-rose-500/50" style={{ fontFamily: 'var(--font-family-sans)' }}>
                     {group.label}
                   </div>
                 </div>
@@ -355,7 +351,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                               }
                             }}
                             className={`
-                              w-full text-left flex items-center justify-between px-4 py-3 rounded-lg font-medium text-sm transition-all
+                              w-full text-left flex items-center justify-between px-4 py-2 rounded-lg font-medium text-sm transition-all
                               ${childIsActive
                                 ? 'bg-rose-400 text-white shadow-md'
                                 : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -382,7 +378,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                                       router.push(child.href)
                                     }}
                                     className={`
-                                      w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                                      w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
                                       ${childIsActiveItem
                                         ? 'bg-rose-400 text-white shadow-md'
                                         : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -408,7 +404,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                           router.push(link.href)
                         }}
                         className={`
-                          w-full text-left flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all
+                          w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
                           ${isActive
                             ? 'bg-rose-400 text-white shadow-md'
                             : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
@@ -426,26 +422,38 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-rose-500 p-6 space-y-4">
+          <div className="border-t border-rose-500 p-4">
             <button
               onClick={() => {
                 setIsOpen(false)
                 router.push(getProfileUrl())
               }}
-              className="w-full text-left block hover:opacity-90 transition-opacity"
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-rose-700/50 hover:bg-rose-700 border border-rose-500/50 hover:border-rose-400 transition-all group"
             >
-              <p className="text-sm font-semibold text-white">{profile?.full_name}</p>
-              <p className="text-xs text-rose-200 capitalize">
-                {profile?.role}
-              </p>
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-rose-100 hover:bg-white hover:bg-opacity-10 transition-colors"
-              aria-label="Sign Out"
-            >
-              <ArrowRightOnRectangleIcon className="h-4 w-4" />
-              Sign Out
+              {/* Avatar circle or photo */}
+              <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-400 transition-colors overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-semibold text-sm">
+                    {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{profile?.full_name}</p>
+                <p className="text-xs text-rose-200 capitalize">
+                  {profile?.role}
+                </p>
+              </div>
+              {/* Chevron indicator */}
+              <svg className="w-4 h-4 text-rose-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>

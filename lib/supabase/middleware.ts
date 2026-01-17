@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
   if (user) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, role')
+      .select('id, role, linked_profile_id')
       .eq('id', user.id)
       .single()
 
@@ -48,6 +48,22 @@ export async function updateSession(request: NextRequest) {
       }
     } else {
       profile = data
+
+      // Check if this profile is linked to a primary profile
+      if (profile.linked_profile_id) {
+        const { data: primaryProfile, error: primaryError } = await supabase
+          .from('profiles')
+          .select('id, role, linked_profile_id')
+          .eq('id', profile.linked_profile_id)
+          .single()
+
+        // If primary profile exists, use it instead
+        if (!primaryError && primaryProfile) {
+          profile = primaryProfile
+        } else {
+          console.warn(`Middleware: Linked profile ${profile.linked_profile_id} not found for user ${user.id}`)
+        }
+      }
     }
   }
 

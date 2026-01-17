@@ -527,6 +527,497 @@ const description = getPricingModelDescription('per_person', { pricePerPerson: 5
 // Returns: "$50 per person"
 ```
 
+### Creating a new portal page:
+
+```typescript
+// app/(portal)/instructor/new-page/page.tsx
+import { createClient } from '@/lib/supabase/server'
+import { requireInstructor } from '@/lib/auth/server-auth'
+import PortalLayout from '@/components/PortalLayout'
+
+export default async function NewInstructorPage() {
+  // Always require appropriate role first
+  await requireInstructor()
+  const supabase = await createClient()
+
+  // Fetch data needed for the page
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data } = await supabase
+    .from('your_table')
+    .select('*')
+
+  return (
+    <PortalLayout role="instructor">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Page Title</h1>
+        {/* Your page content */}
+      </div>
+    </PortalLayout>
+  )
+}
+```
+
+### Adding a new database table with RLS:
+
+```sql
+-- Create the table
+CREATE TABLE IF NOT EXISTS public.your_table (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  instructor_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.your_table ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+-- Allow instructors to view their own records
+CREATE POLICY "Instructors can view own records"
+  ON public.your_table
+  FOR SELECT
+  USING (
+    auth.uid() = instructor_id OR
+    auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin')
+  );
+
+-- Allow instructors to insert their own records
+CREATE POLICY "Instructors can insert own records"
+  ON public.your_table
+  FOR INSERT
+  WITH CHECK (auth.uid() = instructor_id);
+
+-- Allow instructors to update their own records
+CREATE POLICY "Instructors can update own records"
+  ON public.your_table
+  FOR UPDATE
+  USING (auth.uid() = instructor_id)
+  WITH CHECK (auth.uid() = instructor_id);
+
+-- Allow instructors to delete their own records
+CREATE POLICY "Instructors can delete own records"
+  ON public.your_table
+  FOR DELETE
+  USING (auth.uid() = instructor_id);
+
+-- Create updated_at trigger
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.your_table
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+```
+
+### Using the RichTextEditor component:
+
+```typescript
+'use client'
+
+import { useState } from 'react'
+import RichTextEditor from '@/components/RichTextEditor'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
+
+export default function MyForm() {
+  const [content, setContent] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Content is already HTML from TipTap
+    const response = await fetch('/api/your-endpoint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <RichTextEditor
+        value={content}
+        onChange={setContent}
+        placeholder="Enter your content here..."
+      />
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+
+// When displaying the content later:
+function DisplayContent({ htmlContent }: { htmlContent: string }) {
+  return (
+    <div
+      className="prose max-w-none"
+      dangerouslySetInnerHTML={createSanitizedHtml(htmlContent)}
+    />
+  )
+}
+```
+
+### Working with enrollments:
+
+```typescript
+// Enroll a student in a class (API route)
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+
+export async function POST(request: NextRequest) {
+  try {
+    const student = await getCurrentDancerStudent()
+    const supabase = await createClient()
+    const { classId } = await request.json()
+
+    // Check if already enrolled
+    const { data: existing } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('student_id', student.id)
+      .eq('class_id', classId)
+      .single()
+
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Already enrolled in this class' },
+        { status: 400 }
+      )
+    }
+
+    // Create enrollment
+    const { data, error } = await supabase
+      .from('enrollments')
+      .insert({
+        student_id: student.id,
+        class_id: classId
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ data })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to enroll' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Using Toast notifications:
+
+```typescript
+'use client'
+
+import { useState } from 'react'
+import Toast from '@/components/ui/Toast'
+
+export default function MyComponent() {
+  const [toast, setToast] = useState<{
+    message: string
+    type: 'success' | 'error' | 'info'
+  } | null>(null)
+
+  const handleAction = async () => {
+    try {
+      const response = await fetch('/api/endpoint', { method: 'POST' })
+
+      if (!response.ok) throw new Error('Failed')
+
+      setToast({
+        message: 'Action completed successfully!',
+        type: 'success'
+      })
+    } catch (error) {
+      setToast({
+        message: 'Something went wrong. Please try again.',
+        type: 'error'
+      })
+    }
+  }
+
+  return (
+    <>
+      <button onClick={handleAction}>Perform Action</button>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
+  )
+}
+```
+
+### Using Modal dialogs:
+
+```typescript
+'use client'
+
+import { useState } from 'react'
+import Modal from '@/components/ui/Modal'
+import Button from '@/components/ui/Button'
+
+export default function MyComponent() {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [formData, setFormData] = useState({ name: '', email: '' })
+
+  const handleSubmit = async () => {
+    const response = await fetch('/api/endpoint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+
+    if (response.ok) {
+      setIsModalOpen(false)
+      setFormData({ name: '', email: '' })
+    }
+  }
+
+  return (
+    <>
+      <Button onClick={() => setIsModalOpen(true)}>
+        Open Form
+      </Button>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Item"
+      >
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Name"
+            className="w-full px-3 py-2 border rounded"
+          />
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="Email"
+            className="w-full px-3 py-2 border rounded"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              Save
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  )
+}
+```
+
+### Error handling in API routes:
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { requireInstructor } from '@/lib/auth/server-auth'
+
+export async function POST(request: NextRequest) {
+  try {
+    // Auth guard - throws error if unauthorized
+    await requireInstructor()
+
+    const supabase = await createClient()
+    const body = await request.json()
+
+    // Validate input
+    if (!body.name || typeof body.name !== 'string') {
+      return NextResponse.json(
+        { error: 'Name is required and must be a string' },
+        { status: 400 }
+      )
+    }
+
+    // Database operation
+    const { data, error } = await supabase
+      .from('your_table')
+      .insert(body)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json(
+        { error: 'Database operation failed' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ data }, { status: 201 })
+
+  } catch (error) {
+    // Catch auth errors and other unexpected errors
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    console.error('Unexpected error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Handling file uploads (for waiver PDFs):
+
+```typescript
+'use client'
+
+import { useState } from 'react'
+
+export default function FileUploadForm() {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile && selectedFile.type === 'application/pdf') {
+      setFile(selectedFile)
+    } else {
+      alert('Please select a PDF file')
+    }
+  }
+
+  const handleUpload = async () => {
+    if (!file) return
+
+    setUploading(true)
+    try {
+      // Convert file to base64
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+
+      reader.onload = async () => {
+        const base64 = reader.result as string
+
+        const response = await fetch('/api/waiver-templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: file.name,
+            content_type: 'pdf',
+            pdf_data: base64
+          })
+        })
+
+        if (response.ok) {
+          alert('Upload successful!')
+          setFile(null)
+        }
+      }
+    } catch (error) {
+      console.error('Upload failed:', error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div>
+      <input
+        type="file"
+        accept=".pdf"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
+      <button
+        onClick={handleUpload}
+        disabled={!file || uploading}
+      >
+        {uploading ? 'Uploading...' : 'Upload PDF'}
+      </button>
+    </div>
+  )
+}
+```
+
+### Fetching related data with joins:
+
+```typescript
+// Fetch classes with enrollment count and instructor details
+const { data: classes } = await supabase
+  .from('classes')
+  .select(`
+    *,
+    instructor:profiles!classes_instructor_id_fkey(
+      id,
+      full_name,
+      email
+    ),
+    enrollments(count),
+    studio:studios(
+      id,
+      name,
+      address
+    )
+  `)
+  .order('start_time', { ascending: true })
+
+// Access the data
+classes?.forEach(classItem => {
+  console.log(classItem.title)
+  console.log(classItem.instructor.full_name)
+  console.log(classItem.enrollments[0].count) // enrollment count
+  console.log(classItem.studio.name)
+})
+```
+
+### Date/time formatting:
+
+```typescript
+// Format dates consistently across the app
+export function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+export function formatTime(date: string | Date): string {
+  return new Date(date).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+export function formatDateTime(date: string | Date): string {
+  return new Date(date).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+// Usage
+<p>Class Date: {formatDate(classData.start_time)}</p>
+<p>Start Time: {formatTime(classData.start_time)}</p>
+<p>Created: {formatDateTime(classData.created_at)}</p>
+```
+
 ## Design System
 
 **Color Palette:**

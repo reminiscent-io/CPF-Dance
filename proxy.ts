@@ -62,7 +62,7 @@ export default async function proxy(request: NextRequest) {
   if (user && isAuthPage && profile) {
     const url = request.nextUrl.clone()
     if (profile.role === 'admin') {
-      url.pathname = '/admin'
+      url.pathname = '/instructor'
     } else if (profile.role === 'instructor') {
       url.pathname = '/instructor'
     } else {

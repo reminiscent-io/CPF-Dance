@@ -150,8 +150,9 @@ CREATE TABLE private_lesson_requests (
   requested_focus TEXT,
   preferred_dates TEXT[],
   additional_notes TEXT,
-  status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'scheduled', 'declined'
+  status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'declined'
   instructor_response TEXT,
+  scheduled_class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

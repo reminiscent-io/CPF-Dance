@@ -13,15 +13,24 @@ interface NoteFeedListProps {
   notes: Note[]
   onEdit: (note: Note) => void
   onDelete: (noteId: string) => void
-  onPin: (noteId: string) => void
+  onChangeVisibility?: (noteId: string) => void
+  currentUserName?: string
 }
 
-export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListProps) {
+export function NoteFeedList({
+  notes,
+  onEdit,
+  onDelete,
+  onChangeVisibility,
+  currentUserName
+}: NoteFeedListProps) {
   const groupedNotes = groupNotesByDate(notes)
   const groupKeys = getDateGroupKeys(groupedNotes)
 
-  // Filter out empty groups
-  const nonEmptyGroups = groupKeys.filter(key => groupedNotes[key]?.length > 0)
+  // Filter out empty groups and the pinned group (no longer used)
+  const nonEmptyGroups = groupKeys.filter(
+    key => key !== 'pinned' && groupedNotes[key]?.length > 0
+  )
 
   if (nonEmptyGroups.length === 0) {
     return (
@@ -38,58 +47,36 @@ export function NoteFeedList({ notes, onEdit, onDelete, onPin }: NoteFeedListPro
   }
 
   return (
-    <div className="relative">
-      {/* Timeline visual - vertical gradient line */}
-      <div
-        className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-rose-300 via-purple-300 to-mauve-300 hidden sm:block"
-        aria-hidden="true"
-      />
+    <div className="space-y-8">
+      {nonEmptyGroups.map((groupKey) => {
+        const groupNotes = groupedNotes[groupKey]
+        const groupTitle = getDateGroupTitle(groupKey)
 
-      {/* Date-grouped notes */}
-      <div className="space-y-6">
-        {nonEmptyGroups.map((groupKey) => {
-          const groupNotes = groupedNotes[groupKey]
-          const groupTitle = getDateGroupTitle(groupKey)
-
-          return (
-            <div key={groupKey} className="relative">
-              {/* Date header with timeline marker */}
-              <div className="sticky top-0 z-10 bg-white py-3 mb-2 sm:pl-20">
-                {/* Timeline circle marker (hidden on mobile) */}
-                <div
-                  className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 bg-rose-500 rounded-full border-4 border-white shadow-md hidden sm:flex items-center justify-center"
-                  aria-hidden="true"
-                >
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                </div>
-
-                {/* Date group title */}
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  {groupKey === 'pinned' && <span className="text-xl">📌</span>}
-                  {groupTitle}
-                  <span className="text-sm font-normal text-gray-500">
-                    ({groupNotes.length})
-                  </span>
-                </h2>
-              </div>
-
-              {/* Notes in this group */}
-              <div className="sm:pl-20 space-y-0">
-                {groupNotes.map((note) => (
-                  <div key={note.id} className="relative group">
-                    <NoteFeedItem
-                      note={note}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onPin={onPin}
-                    />
-                  </div>
-                ))}
-              </div>
+        return (
+          <div key={groupKey}>
+            {/* Date header - simple italic text */}
+            <div className="mb-4">
+              <h2 className="text-base italic text-gray-500">
+                {groupTitle}
+              </h2>
             </div>
-          )
-        })}
-      </div>
+
+            {/* Notes in this group */}
+            <div className="space-y-3">
+              {groupNotes.map((note) => (
+                <NoteFeedItem
+                  key={note.id}
+                  note={note}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onChangeVisibility={onChangeVisibility}
+                  currentUserName={currentUserName}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

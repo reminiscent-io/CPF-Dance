@@ -2,12 +2,13 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { HeadshotUpload } from '@/components/HeadshotUpload'
 import { signOut } from '@/lib/auth/actions'
 
 interface ProfileData {
@@ -16,6 +17,7 @@ interface ProfileData {
   email: string | null
   phone: string | null
   date_of_birth: string | null
+  avatar_url: string | null
   role: string
 }
 
@@ -35,6 +37,8 @@ interface GuardianData {
   phone: string | null
 }
 
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
 export default function DancerProfilePage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
@@ -42,9 +46,7 @@ export default function DancerProfilePage() {
   const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [guardianData, setGuardianData] = useState<GuardianData | null>(null)
   const [loadingData, setLoadingData] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -53,7 +55,12 @@ export default function DancerProfilePage() {
     emergency_contact_name: '',
     emergency_contact_phone: ''
   })
+
+  // Track if this is initial load vs user edit
+  const isInitialLoad = useRef(true)
   const hasFetched = useRef(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -76,7 +83,7 @@ export default function DancerProfilePage() {
         setProfileData(data.profile)
         setStudentData(data.student)
         setGuardianData(data.guardian)
-        
+
         setFormData({
           full_name: data.profile.full_name || '',
           phone: data.profile.phone || '',
@@ -90,58 +97,85 @@ export default function DancerProfilePage() {
       console.error('Error fetching profile:', error)
     } finally {
       setLoadingData(false)
+      // Mark initial load complete after a short delay
+      setTimeout(() => {
+        isInitialLoad.current = false
+      }, 100)
     }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
+  const saveProfile = useCallback(async (data: typeof formData) => {
+    setSaveStatus('saving')
     try {
       const response = await fetch('/api/dancer/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profile: {
-            full_name: formData.full_name,
-            phone: formData.phone,
-            date_of_birth: formData.date_of_birth || null
+            full_name: data.full_name,
+            phone: data.phone,
+            date_of_birth: data.date_of_birth || null
           },
           student: {
-            goals: formData.goals,
-            emergency_contact_name: formData.emergency_contact_name,
-            emergency_contact_phone: formData.emergency_contact_phone
+            goals: data.goals,
+            emergency_contact_name: data.emergency_contact_name,
+            emergency_contact_phone: data.emergency_contact_phone
           }
         })
       })
 
       if (response.ok) {
-        await fetchProfileData()
-        setEditing(false)
-        setSuccessMessage('Profile updated successfully! 🎉')
-        setTimeout(() => setSuccessMessage(''), 3000)
+        setSaveStatus('saved')
+        // Clear "Saved" status after 2 seconds
+        if (statusTimeoutRef.current) {
+          clearTimeout(statusTimeoutRef.current)
+        }
+        statusTimeoutRef.current = setTimeout(() => {
+          setSaveStatus('idle')
+        }, 2000)
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to update profile')
+        setSaveStatus('error')
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Failed to update profile')
-    } finally {
-      setSaving(false)
+      setSaveStatus('error')
     }
-  }
+  }, [])
 
-  const handleCancel = () => {
-    if (profileData && studentData) {
-      setFormData({
-        full_name: profileData.full_name || '',
-        phone: profileData.phone || '',
-        date_of_birth: profileData.date_of_birth || '',
-        goals: studentData.goals || '',
-        emergency_contact_name: studentData.emergency_contact_name || '',
-        emergency_contact_phone: studentData.emergency_contact_phone || ''
-      })
+  // Auto-save with debounce when form data changes
+  useEffect(() => {
+    // Skip auto-save on initial load
+    if (isInitialLoad.current || loadingData) {
+      return
     }
-    setEditing(false)
+
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    // Debounce save by 800ms
+    saveTimeoutRef.current = setTimeout(() => {
+      saveProfile(formData)
+    }, 800)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [formData, loadingData, saveProfile])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current)
+    }
+  }, [])
+
+  const handleFieldChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   if (loading) {
@@ -161,16 +195,41 @@ export default function DancerProfilePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile ⚙️</h1>
-        <p className="text-gray-600">Manage your personal information and dance goals</p>
-      </div>
-
-      {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-          {successMessage}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
+          <p className="text-gray-600">Manage your personal information and dance goals</p>
         </div>
-      )}
+
+        {/* Save status indicator */}
+        <div className="flex items-center gap-2 text-sm">
+          {saveStatus === 'saving' && (
+            <span className="text-gray-500 flex items-center gap-1.5">
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Saving...
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="text-green-600 flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Saved
+            </span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-red-600 flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Error saving
+            </span>
+          )}
+        </div>
+      </div>
 
       {loadingData ? (
         <div className="flex justify-center py-12">
@@ -178,24 +237,31 @@ export default function DancerProfilePage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Headshot Section */}
           <Card>
-            <CardTitle className="p-6 pb-4 flex items-center justify-between">
-              <span>Personal Information</span>
-              {!editing && (
-                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                  Edit Profile
-                </Button>
-              )}
-            </CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Profile Photo</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+              <HeadshotUpload
+                userId={profileData?.id || ''}
+                currentUrl={profileData?.avatar_url || null}
+                userName={profileData?.full_name || 'User'}
+                onUploadComplete={(url) => {
+                  if (profileData) {
+                    setProfileData({ ...profileData, avatar_url: url })
+                  }
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Personal Information</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Full Name"
                   value={formData.full_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, full_name: e.target.value })
-                  }
-                  disabled={!editing}
+                  onChange={(e) => handleFieldChange('full_name', e.target.value)}
                 />
                 <Input
                   label="Email"
@@ -207,39 +273,22 @@ export default function DancerProfilePage() {
                   label="Phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  disabled={!editing}
+                  onChange={(e) => handleFieldChange('phone', e.target.value)}
                 />
                 <Input
                   label="Date of Birth"
                   type="date"
                   value={formData.date_of_birth}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date_of_birth: e.target.value })
-                  }
-                  disabled={!editing}
+                  onChange={(e) => handleFieldChange('date_of_birth', e.target.value)}
                 />
               </div>
-
-              {editing && (
-                <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
-                  <Button variant="outline" onClick={handleCancel} disabled={saving}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={handleSave} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
 
           {studentData && (
             <Card>
-              <CardTitle className="p-6 pb-4">Dance Information</CardTitle>
-              <CardContent className="px-6 pb-6">
+              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Dance Information</CardTitle>
+              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {studentData.age_group && (
                     <div>
@@ -263,10 +312,7 @@ export default function DancerProfilePage() {
                   placeholder="What do you want to achieve in your dance journey?"
                   rows={4}
                   value={formData.goals}
-                  onChange={(e) =>
-                    setFormData({ ...formData, goals: e.target.value })
-                  }
-                  disabled={!editing}
+                  onChange={(e) => handleFieldChange('goals', e.target.value)}
                   helperText="Share your aspirations and what you're working towards"
                 />
               </CardContent>
@@ -275,31 +321,19 @@ export default function DancerProfilePage() {
 
           {studentData && (
             <Card>
-              <CardTitle className="p-6 pb-4">Emergency Contact</CardTitle>
-              <CardContent className="px-6 pb-6">
+              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Emergency Contact</CardTitle>
+              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     label="Emergency Contact Name"
                     value={formData.emergency_contact_name}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        emergency_contact_name: e.target.value
-                      })
-                    }
-                    disabled={!editing}
+                    onChange={(e) => handleFieldChange('emergency_contact_name', e.target.value)}
                   />
                   <Input
                     label="Emergency Contact Phone"
                     type="tel"
                     value={formData.emergency_contact_phone}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        emergency_contact_phone: e.target.value
-                      })
-                    }
-                    disabled={!editing}
+                    onChange={(e) => handleFieldChange('emergency_contact_phone', e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -308,8 +342,8 @@ export default function DancerProfilePage() {
 
           {guardianData && (
             <Card>
-              <CardTitle className="p-6 pb-4">Guardian Information</CardTitle>
-              <CardContent className="px-6 pb-6">
+              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Guardian Information</CardTitle>
+              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -342,8 +376,8 @@ export default function DancerProfilePage() {
           )}
 
           <Card>
-            <CardTitle className="p-6 pb-4">Account Security</CardTitle>
-            <CardContent className="px-6 pb-6">
+            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Account Security</CardTitle>
+            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">Password</p>

@@ -22,7 +22,8 @@ export async function GET(
       .select(`
         *,
         studio:studios(name, city, state),
-        enrollments(id, student_id)
+        enrollments(id, student_id),
+        asset:assets(id, title, file_url, file_type)
       `)
       .eq('id', id)
       .single()
@@ -83,7 +84,8 @@ export async function PATCH(
       cancellation_reason,
       actual_attendance_count,
       external_signup_url,
-      is_public
+      is_public,
+      asset_id // Optional promotional asset
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -148,6 +150,8 @@ export async function PATCH(
     // Public features
     if (external_signup_url !== undefined) updateData.external_signup_url = external_signup_url || null
     if (is_public !== undefined) updateData.is_public = is_public
+    // Asset
+    if (asset_id !== undefined) updateData.asset_id = asset_id || null
 
     // Build query - admins can update any class, instructors only their own
     let query = supabase
@@ -163,7 +167,8 @@ export async function PATCH(
     const { data: classData, error } = await query
       .select(`
         *,
-        studio:studios(name, city, state)
+        studio:studios(name, city, state),
+        asset:assets(id, title, file_url, file_type)
       `)
       .single()
 

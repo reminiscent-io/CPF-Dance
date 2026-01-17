@@ -9,7 +9,15 @@ export async function GET(request: NextRequest) {
 
     const { data: requests, error: requestsError } = await supabase
       .from('private_lesson_requests')
-      .select('*')
+      .select(`
+        *,
+        scheduled_class:classes!private_lesson_requests_scheduled_class_id_fkey(
+          id,
+          title,
+          start_time,
+          end_time
+        )
+      `)
       .eq('student_id', student.id)
       .order('created_at', { ascending: false })
 
@@ -42,18 +50,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!instructor_id) {
-      return NextResponse.json(
-        { error: 'Please select an instructor' },
-        { status: 400 }
-      )
-    }
-
     const { data: lessonRequest, error: insertError } = await supabase
       .from('private_lesson_requests')
       .insert({
         student_id: student.id,
-        instructor_id,
+        instructor_id: instructor_id || null,
         requested_focus,
         preferred_dates: preferred_dates || [],
         additional_notes,

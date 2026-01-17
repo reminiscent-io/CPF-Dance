@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
+import { NoteListSkeleton } from '@/components/ui/Skeleton'
 import { NoteFeedList } from '@/components/notes/NoteFeedList'
 import { NoteFocusMode } from '@/components/notes/NoteFocusMode'
 import { NoteSearchBar } from '@/components/notes/NoteSearchBar'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { Note } from '@/lib/utils/date-helpers'
-import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -271,44 +271,8 @@ export default function DancerNotesPage() {
     }
   }
 
-  const handlePin = async (noteId: string) => {
-    const note = notes.find(n => n.id === noteId)
-    if (!note || !note.is_personal) {
-      // Can only pin personal notes
-      return
-    }
-
-    // Optimistic update
-    setNotes(prev => prev.map(n =>
-      n.id === noteId
-        ? { ...n, is_pinned: !n.is_pinned }
-        : n
-    ))
-
-    try {
-      const response = await fetch('/api/dancer/notes/pin', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: noteId, is_pinned: !note.is_pinned })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to pin note')
-      }
-
-      // Refresh notes to get correct ordering
-      await fetchNotes()
-    } catch (error) {
-      // Rollback optimistic update
-      setNotes(prev => prev.map(n =>
-        n.id === noteId
-          ? { ...n, is_pinned: note.is_pinned }
-          : n
-      ))
-      console.error('Error pinning note:', error)
-      alert('Failed to pin note')
-    }
-  }
+  // Get current user's full name for avatar display
+  const currentUserName = profile?.full_name || user?.email || 'User'
 
   if (loading) {
     return (
@@ -386,8 +350,8 @@ export default function DancerNotesPage() {
       </div>
 
       {loadingNotes ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+        <div className="py-6">
+          <NoteListSkeleton count={3} />
         </div>
       ) : (
         <>
@@ -405,7 +369,7 @@ export default function DancerNotesPage() {
             notes={filteredNotes}
             onEdit={handleOpenFocusMode}
             onDelete={handleDelete}
-            onPin={handlePin}
+            currentUserName={currentUserName}
           />
 
           {/* Focus mode for creating/editing personal notes */}
@@ -443,7 +407,7 @@ export default function DancerNotesPage() {
             )}
 
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>📝 {(viewingNote as any).author_name || 'Instructor'}</span>
+              <span>{(viewingNote as any).author_name || 'Instructor'}</span>
               {((viewingNote as any).classes || (viewingNote as any).personal_classes) && (
                 <>
                   <span>•</span>

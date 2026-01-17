@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Fetch the full profile data
     const { data: profileData, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, phone, date_of_birth, role')
+      .select('id, full_name, email, phone, date_of_birth, role, avatar_url')
       .eq('id', profile.id)
       .single()
 

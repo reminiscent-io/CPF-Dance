@@ -96,6 +96,54 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(5)
 
+    // Get detailed recent notes for display (limit to 3 most recent)
+    const { data: detailedRecentNotes } = await supabase
+      .from('notes')
+      .select(`
+        id,
+        title,
+        content,
+        tags,
+        created_at,
+        author_id,
+        student:students(
+          id,
+          profile:profiles!students_profile_id_fkey(full_name, avatar_url)
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    // Get author info for detailed notes
+    const authorIds = [...new Set(detailedRecentNotes?.map(n => n.author_id) || [])]
+    let authorMap = new Map()
+
+    if (authorIds.length > 0) {
+      const { data: authors } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', authorIds)
+
+      authorMap = new Map(authors?.map(a => [a.id, { full_name: a.full_name, avatar_url: a.avatar_url }]) || [])
+    }
+
+    const detailedNotesWithAuthors = detailedRecentNotes?.map(note => {
+      const author = authorMap.get(note.author_id)
+      const student = note.student as any
+      return {
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+        created_at: note.created_at,
+        author_id: note.author_id,
+        author_name: author?.full_name || 'Instructor',
+        author_avatar_url: author?.avatar_url || null,
+        student_name: student?.profile?.full_name || 'Unknown Student',
+        student_avatar_url: student?.profile?.avatar_url || null
+      }
+    }) || []
+
     const { data: recentPayments } = await supabase
       .from('payments')
       .select(`
@@ -170,11 +218,12 @@ export async function GET(request: NextRequest) {
       studio_name: (c.studio as any)?.name || 'Studio TBA'
     }))
 
-    return NextResponse.json({ 
-      stats, 
-      recent_activity: recentActivity, 
+    return NextResponse.json({
+      stats,
+      recent_activity: recentActivity,
       next_class: nextClassData,
-      todays_classes: todaysClassesData
+      todays_classes: todaysClassesData,
+      recent_notes: detailedNotesWithAuthors
     })
   } catch (error) {
     console.error('Unexpected error:', error)
