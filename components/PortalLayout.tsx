@@ -42,7 +42,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
 
   if (!mounted) {
     return (
-      <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
+      <div className="h-[100dvh] bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
         <div
           className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-10"
           style={{
@@ -50,7 +50,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
             height: 'calc(2.5rem + env(safe-area-inset-top))'
           }}
         />
-        <aside className="hidden md:block fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50 md:static md:relative md:translate-x-0 md:h-screen">
+        <aside className="hidden md:block fixed top-0 left-0 h-[100dvh] w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50 md:static md:relative md:translate-x-0 md:h-[100dvh]">
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-rose-500">
               <span className="text-2xl font-bold text-white">CPF Dance</span>
@@ -74,7 +74,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
+    <div className="h-[100dvh] bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
       <MobileHeader onMenuToggle={handleToggleSidebar} />
       <Sidebar profile={profile} isOpen={isOpen} setIsOpen={setIsOpen} />
 
