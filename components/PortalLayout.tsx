@@ -43,7 +43,13 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
   if (!mounted) {
     return (
       <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
-        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-10" />
+        <div
+          className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-10"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top), 0px)',
+            height: 'calc(2.5rem + env(safe-area-inset-top))'
+          }}
+        />
         <aside className="hidden md:block fixed top-0 left-0 h-screen w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50 md:static md:relative md:translate-x-0 md:h-screen">
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-rose-500">
@@ -51,7 +57,12 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
             </div>
           </div>
         </aside>
-        <div className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0">
+        <div
+          className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0"
+          style={{
+            paddingTop: 'calc(2.5rem + env(safe-area-inset-top))'
+          }}
+        >
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {children}
@@ -67,14 +78,24 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
       <MobileHeader onMenuToggle={handleToggleSidebar} />
       <Sidebar profile={profile} isOpen={isOpen} setIsOpen={setIsOpen} />
 
-      <div className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0">
-        <main className="flex-1 overflow-y-auto">
+      <div
+        className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0"
+        style={{
+          paddingTop: 'calc(2.5rem + env(safe-area-inset-top))', // 2.5rem = 40px mobile header height
+        }}
+      >
+        <main className="flex-1 overflow-y-auto md:pt-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </div>
         </main>
 
-        <footer className="bg-white border-t border-gray-200 flex-shrink-0">
+        <footer
+          className="bg-white border-t border-gray-200 flex-shrink-0"
+          style={{
+            paddingBottom: 'env(safe-area-inset-bottom)'
+          }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="text-center text-sm text-gray-600">
               <p>&copy; {currentYear} CPF Dance LLC. All rights reserved.</p>
