@@ -395,19 +395,10 @@ export default function NotesPage() {
           </div>
         </Card>
       ) : (
-        <div className="relative">
-          {/* Timeline vertical line */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-rose-300 via-purple-300 to-mauve-300"></div>
-
-          <div className="space-y-8">
-            {displayNotes.map((note: any, index: number) => (
-              <div key={note.id} className="relative pl-16">
-                {/* Timeline dot */}
-                <div className="absolute left-5 top-6 w-6 h-6 bg-rose-500 rounded-full border-4 border-white shadow-md flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-
-                <Card hover className="ml-4">
+        <div className="space-y-3">
+          {displayNotes.map((note: any, index: number) => (
+            <div key={note.id}>
+              <Card hover>
                   <div className="p-4 sm:p-6">
                     <div className="flex justify-between items-start gap-2 mb-3">
                       <div className="flex-1 min-w-0">
@@ -471,7 +462,6 @@ export default function NotesPage() {
                 </Card>
               </div>
             ))}
-          </div>
         </div>
       )}
 
