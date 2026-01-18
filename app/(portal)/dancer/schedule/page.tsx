@@ -319,7 +319,7 @@ export default function DancerSchedulePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="flex flex-col h-[calc(100vh-15rem)] md:h-[calc(100vh-11rem)]">
+      <div className="flex flex-col h-[calc(100dvh-15rem)] md:h-[calc(100dvh-11rem)]">
         {/* Header */}
         <div className="hidden md:block mb-6 flex-shrink-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>

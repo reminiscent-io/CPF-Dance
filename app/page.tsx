@@ -318,13 +318,14 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white marketing-page">
       {/* Navigation Bar */}
-      <nav 
+      <nav
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
         style={{
           opacity: showNav ? 1 : 0,
           transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
-          pointerEvents: showNav ? 'auto' : 'none'
+          pointerEvents: showNav ? 'auto' : 'none',
+          paddingTop: 'max(env(safe-area-inset-top), 0px)'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
