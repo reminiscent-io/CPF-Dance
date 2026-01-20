@@ -41,8 +41,10 @@ DROP POLICY IF EXISTS "Instructors can manage all requests" ON public.private_le
 -- AND INTEGRATE STUDENT CLASS VIEWING FUNCTIONALITY
 -- =====================================================
 
--- First, update the can_user_view_class function to use (select auth.uid()) pattern
--- Even though it's SECURITY DEFINER, good practice to be consistent
+-- First, drop the existing function (required because we can't change parameter names)
+DROP FUNCTION IF EXISTS can_user_view_class(UUID, UUID);
+
+-- Recreate the can_user_view_class function
 CREATE OR REPLACE FUNCTION can_user_view_class(p_class_id UUID, p_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
