@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
@@ -77,6 +77,7 @@ type EarningsDateRange = 'all' | 'this_month' | 'last_month' | 'this_year'
 export default function InstructorPaymentsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [payments, setPayments] = useState<PaymentData[]>([])
   const [stats, setStats] = useState<PaymentStats | null>(null)
   const [loadingPayments, setLoadingPayments] = useState(true)
@@ -129,6 +130,15 @@ export default function InstructorPaymentsPage() {
       router.push('/dancer')
     }
   }, [loading, profile, router])
+
+  // Auto-open request modal if coming from invoices page
+  useEffect(() => {
+    if (searchParams.get('request') === 'true') {
+      handleOpenRequestModal()
+      // Clear the query param
+      router.replace('/instructor/payments', { scroll: false })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (!loading && user && profile) {
@@ -433,14 +443,14 @@ export default function InstructorPaymentsPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
           <p className="text-gray-600">View payments for your classes</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleOpenRecordPaymentModal}>
-            + Record Payment
-          </Button>
-          <Button variant="primary" onClick={handleOpenRequestModal}>
-            + Request Payment
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          onClick={handleOpenRecordPaymentModal}
+          className="w-10 h-10 p-0 flex items-center justify-center text-xl font-bold rounded-full"
+          title="Record Payment"
+        >
+          +
+        </Button>
       </div>
 
       {/* Class Earnings Dashboard */}

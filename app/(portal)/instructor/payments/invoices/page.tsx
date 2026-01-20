@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Invoices | Dance Studio',
@@ -25,12 +26,11 @@ export default async function InvoicesPage() {
       ),
       class:classes (
         id,
-        name,
-        date
+        title,
+        start_time
       )
     `)
-    .eq('classes.instructor_id', user.id)
-    .order('payment_date', { ascending: false })
+    .order('transaction_date', { ascending: false })
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -40,9 +40,12 @@ export default async function InvoicesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
             <p className="mt-2 text-gray-600">Manage student invoices and billing</p>
           </div>
-          <button className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors font-medium">
-            Create Invoice
-          </button>
+          <Link
+            href="/instructor/payments?request=true"
+            className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors font-medium"
+          >
+            + Request Payment
+          </Link>
         </div>
 
         {error ? (
@@ -77,9 +80,10 @@ export default async function InvoicesPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {payments.map((payment) => {
                   const statusColors = {
-                    paid: 'bg-green-100 text-green-800',
+                    confirmed: 'bg-green-100 text-green-800',
                     pending: 'bg-yellow-100 text-yellow-800',
-                    failed: 'bg-red-100 text-red-800',
+                    disputed: 'bg-red-100 text-red-800',
+                    cancelled: 'bg-gray-100 text-gray-800',
                   }
 
                   return (
@@ -90,22 +94,22 @@ export default async function InvoicesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{payment.class?.name || 'N/A'}</div>
-                        {payment.class?.date && (
+                        <div className="text-sm text-gray-900">{payment.class?.title || 'N/A'}</div>
+                        {payment.class?.start_time && (
                           <div className="text-sm text-gray-500">
-                            {new Date(payment.class.date).toLocaleDateString()}
+                            {new Date(payment.class.start_time).toLocaleDateString()}
                           </div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'Not set'}
+                        {payment.transaction_date ? new Date(payment.transaction_date).toLocaleDateString() : 'Not set'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         ${payment.amount?.toFixed(2) || '0.00'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[payment.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}`}>
-                          {payment.status}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[payment.payment_status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}`}>
+                          {payment.payment_status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
