@@ -294,13 +294,107 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      <Table
-        data={filteredStudents}
-        columns={columns}
-        onRowClick={(student) => router.push(`/instructor/students/${student.id}`)}
-        loading={loading}
-        emptyMessage="No students found"
-      />
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <Table
+          data={filteredStudents}
+          columns={columns}
+          onRowClick={(student) => router.push(`/instructor/students/${student.id}`)}
+          loading={loading}
+          emptyMessage="No students found"
+        />
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {loading ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">
+            No students found
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredStudents.map((student) => (
+              <div
+                key={student.id}
+                onClick={() => router.push(`/instructor/students/${student.id}`)}
+                className="bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-gray-900 truncate">
+                        {student.full_name || student.profile?.full_name || 'N/A'}
+                      </h3>
+                      {!student.profile_id && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                          Not Linked
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+                      {student.age_group && (
+                        <span className="inline-flex items-center">
+                          <span className="text-gray-400 mr-1">Age:</span>
+                          {student.age_group}
+                        </span>
+                      )}
+                      {student.skill_level && (
+                        <span className="inline-flex items-center">
+                          <span className="text-gray-400 mr-1">Level:</span>
+                          {student.skill_level}
+                        </span>
+                      )}
+                    </div>
+                    {profile?.role === 'admin' && (
+                      <div className="mt-2">
+                        {getStudentInstructors(student.id).length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {getStudentInstructors(student.id).map((instructor: any) => (
+                              <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {instructor.full_name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No instructors tagged</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      student.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {student.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                    {profile?.role === 'admin' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedStudent(student)
+                          setShowTagModal(true)
+                        }}
+                        className="text-xs"
+                      >
+                        Tag
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {showAddModal && (
         <AddStudentModal

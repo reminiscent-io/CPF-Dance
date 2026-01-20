@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -74,7 +74,7 @@ interface EarningsSummary {
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 type EarningsDateRange = 'all' | 'this_month' | 'last_month' | 'this_year'
 
-export default function InstructorPaymentsPage() {
+function InstructorPaymentsContent() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1153,5 +1153,17 @@ export default function InstructorPaymentsPage() {
         )}
       </Modal>
     </PortalLayout>
+  )
+}
+
+export default function InstructorPaymentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <InstructorPaymentsContent />
+    </Suspense>
   )
 }

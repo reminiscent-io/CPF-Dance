@@ -66,6 +66,18 @@ function ClassesContent() {
     }
   }, [searchParams, classes, showEditModal, router])
 
+  // Check for create query parameter to auto-open create modal
+  useEffect(() => {
+    if (!searchParams) return
+
+    const shouldCreate = searchParams.get('create')
+    if (shouldCreate === 'true' && !showCreateModal) {
+      setShowCreateModal(true)
+      // Clear the query parameter after opening modal
+      router.replace('/instructor/classes', { scroll: false })
+    }
+  }, [searchParams, showCreateModal, router])
+
   const fetchClasses = async () => {
     try {
       const params = new URLSearchParams()

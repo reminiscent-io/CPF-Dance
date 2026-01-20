@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
+import { InstructorBottomNav } from './InstructorBottomNav'
+import { DancerBottomNav } from './DancerBottomNav'
 import type { Profile } from '@/lib/auth/types'
 
 export interface PortalLayoutProps {
@@ -11,9 +14,14 @@ export interface PortalLayoutProps {
 }
 
 export function PortalLayout({ children, profile }: PortalLayoutProps) {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const currentYear = new Date().getFullYear()
+
+  // Determine which portal we're in based on the current path
+  const isInstructorPortal = pathname?.startsWith('/instructor')
+  const isDancerPortal = pathname?.startsWith('/dancer')
 
   // Initialize sidebar state from localStorage and screen size
   useEffect(() => {
@@ -85,13 +93,15 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
         }}
       >
         <main className="flex-1 overflow-y-auto md:pt-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${
+            profile?.role ? 'pb-24 md:pb-8' : ''
+          }`}>
             {children}
           </div>
         </main>
 
         <footer
-          className="bg-white border-t border-gray-200 flex-shrink-0"
+          className="bg-white border-t border-gray-200 flex-shrink-0 hidden md:block"
           style={{
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
@@ -103,6 +113,10 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
           </div>
         </footer>
       </div>
+
+      {/* Bottom nav based on current portal path */}
+      {isInstructorPortal && <InstructorBottomNav />}
+      {isDancerPortal && <DancerBottomNav />}
     </div>
   )
 }

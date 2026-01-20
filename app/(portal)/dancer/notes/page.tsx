@@ -1,8 +1,8 @@
 'use client'
 
 import { useUser } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
 import { NoteListSkeleton } from '@/components/ui/Skeleton'
@@ -25,9 +25,10 @@ interface ClassOption {
 
 type TabType = 'all' | 'instructor' | 'personal'
 
-export default function DancerNotesPage() {
+function DancerNotesContent() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [notes, setNotes] = useState<Note[]>([])
   const [loadingNotes, setLoadingNotes] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('all')
@@ -49,6 +50,18 @@ export default function DancerNotesPage() {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
     }
   }, [loading, profile, router])
+
+  // Check for create query parameter to auto-open focus mode
+  useEffect(() => {
+    if (!searchParams) return
+
+    const shouldCreate = searchParams.get('create')
+    if (shouldCreate === 'true' && !focusModeOpen) {
+      setFocusModeOpen(true)
+      // Clear the query parameter after opening
+      router.replace('/dancer/notes', { scroll: false })
+    }
+  }, [searchParams, focusModeOpen, router])
 
   useEffect(() => {
     if (!loading && user && profile && !hasFetched.current) {
@@ -472,5 +485,17 @@ export default function DancerNotesPage() {
         )}
       </Modal>
     </PortalLayout>
+  )
+}
+
+export default function DancerNotesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <DancerNotesContent />
+    </Suspense>
   )
 }

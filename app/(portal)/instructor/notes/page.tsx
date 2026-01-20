@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } from '@/components/ui'
@@ -78,11 +78,12 @@ function NoteActionsMenu({ onEdit, onDelete }: NoteActionsMenuProps) {
   )
 }
 
-export default function NotesPage() {
+function NotesContent() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { addToast } = useToast()
-  
+
   const [notes, setNotes] = useState<Note[]>([])
   const [studentNotes, setStudentNotes] = useState<Note[]>([])
   const [students, setStudents] = useState<Student[]>([])
@@ -102,6 +103,18 @@ export default function NotesPage() {
       router.push('/dancer')
     }
   }, [authLoading, profile, router])
+
+  // Check for create query parameter to auto-open add modal
+  useEffect(() => {
+    if (!searchParams) return
+
+    const shouldCreate = searchParams.get('create')
+    if (shouldCreate === 'true' && !showAddModal) {
+      setShowAddModal(true)
+      // Clear the query parameter after opening modal
+      router.replace('/instructor/notes', { scroll: false })
+    }
+  }, [searchParams, showAddModal, router])
 
   useEffect(() => {
     if (user) {
@@ -748,5 +761,17 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
         </ModalFooter>
       </form>
     </Modal>
+  )
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <NotesContent />
+    </Suspense>
   )
 }
