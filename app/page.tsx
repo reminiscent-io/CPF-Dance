@@ -361,8 +361,36 @@ export default function HomePage() {
       </nav>
 
       <section
-        className="relative flex flex-col justify-center bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
+        className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
       >
+        {/* Background Images */}
+        {/* Mobile: First image only */}
+        <div className="absolute inset-0 md:hidden">
+          <img
+            src={learnFromTheBestImages[0]}
+            alt=""
+            className="w-full h-full object-cover"
+            aria-hidden="true"
+          />
+        </div>
+
+        {/* Desktop: All 4 images side by side */}
+        <div className="absolute inset-0 hidden md:flex">
+          {learnFromTheBestImages.map((image, idx) => (
+            <div key={idx} className="flex-1 h-full">
+              <img
+                src={image}
+                alt=""
+                className="w-full h-full object-cover"
+                aria-hidden="true"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* White opaque overlay for readability */}
+        <div className="absolute inset-0 bg-white/75"></div>
+
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
