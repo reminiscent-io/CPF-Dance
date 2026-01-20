@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
+import { PlusIcon } from '@heroicons/react/24/outline'
 
 interface ClassData {
   id: string
@@ -436,8 +437,8 @@ export default function DancerClassesPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Classes</h1>
           <p className="text-gray-600">Track all your dance classes in one place</p>
         </div>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Add Class
+        <Button variant="primary" onClick={() => handleOpenModal()} aria-label="Add Class">
+          <PlusIcon className="w-5 h-5" />
         </Button>
       </div>
 

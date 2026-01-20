@@ -49,7 +49,7 @@ export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
         >
           ← Back
         </Button>
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <h4 className="font-semibold text-blue-900 mb-2">🎓 Available Lesson Packs</h4>
           <p className="text-sm text-blue-700 mb-3">
             Purchase a pack to use when requesting private lessons
@@ -68,23 +68,23 @@ export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-2">
         <button
           onClick={() => setHistoryOpen(true)}
-          className="w-full p-3 md:p-5 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
+          className="w-full p-2 md:p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
         >
           <div className="flex items-center justify-between">
             <div className="text-left">
-              <p className="text-xs md:text-sm font-medium text-blue-700 mb-0.5 md:mb-1">Available Lessons</p>
-              <p className="text-2xl md:text-4xl font-bold text-blue-900">{totalRemaining}</p>
-              <p className="text-xs text-blue-600 mt-1 md:mt-2">Click to view history & usage</p>
+              <p className="text-xs font-medium text-blue-700 mb-0.5">Available Lessons</p>
+              <p className="text-xl md:text-3xl font-bold text-blue-900">{totalRemaining}</p>
+              <p className="text-xs text-blue-600 mt-1">Click to view history</p>
             </div>
-            <div className="text-2xl md:text-4xl">📦</div>
+            <div className="text-xl md:text-3xl">📦</div>
           </div>
         </button>
 
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
           onClick={() => setShowPurchaseOptions(true)}
           className="w-full"
         >

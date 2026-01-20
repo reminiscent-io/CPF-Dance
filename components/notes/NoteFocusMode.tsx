@@ -214,7 +214,7 @@ export function NoteFocusMode({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-50 bg-white md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-3xl md:w-full md:max-h-[90vh] md:rounded-lg md:shadow-2xl overflow-hidden flex flex-col"
+            className="mobile-safe-modal fixed z-[60] bg-white md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-3xl md:w-full md:max-h-[90vh] md:rounded-lg md:shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
@@ -242,7 +242,7 @@ export function NoteFocusMode({
             </div>
 
             {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
               {/* Title input */}
               <Input
                 label="Title (optional)"

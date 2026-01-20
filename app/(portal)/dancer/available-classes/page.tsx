@@ -227,19 +227,18 @@ export default function AvailableClassesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Available Classes</h1>
-          <p className="text-gray-600">
-            Browse and enroll in upcoming public classes
-          </p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Available Classes</h1>
+        <p className="text-gray-600">
+          Browse and enroll in upcoming public classes
+        </p>
+      </div>
 
-        {upcomingClasses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingClasses.map(cls => (
-              <Card key={cls.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
+      {upcomingClasses.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {upcomingClasses.map(cls => (
+            <Card key={cls.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{cls.title}</h3>
                     <Badge variant={cls.class_type === 'private' ? 'warning' : 'default'}>
@@ -332,7 +331,6 @@ export default function AvailableClassesPage() {
             </CardContent>
           </Card>
         )}
-      </div>
 
       {/* Enrollment Confirmation Modal */}
       <Modal

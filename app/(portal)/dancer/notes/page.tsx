@@ -321,42 +321,45 @@ function DancerNotesContent() {
       {/* Tabs */}
       <div className="mb-6">
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-2 sm:space-x-4 md:space-x-8">
             <button
               onClick={() => setActiveTab('all')}
               className={`
-                py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
+                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
                 ${activeTab === 'all'
                   ? 'border-rose-500 text-rose-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }
               `}
             >
-              All Notes ({notes.length})
+              <span className="sm:hidden">All ({notes.length})</span>
+              <span className="hidden sm:inline">All Notes ({notes.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('instructor')}
               className={`
-                py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
+                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
                 ${activeTab === 'instructor'
                   ? 'border-rose-500 text-rose-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }
               `}
             >
-              Instructor Feedback ({instructorNotesCount})
+              <span className="sm:hidden">Instructor ({instructorNotesCount})</span>
+              <span className="hidden sm:inline">Instructor Feedback ({instructorNotesCount})</span>
             </button>
             <button
               onClick={() => setActiveTab('personal')}
               className={`
-                py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
+                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
                 ${activeTab === 'personal'
                   ? 'border-rose-500 text-rose-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }
               `}
             >
-              Personal Notes ({personalNotesCount})
+              <span className="sm:hidden">Personal ({personalNotesCount})</span>
+              <span className="hidden sm:inline">Personal Notes ({personalNotesCount})</span>
             </button>
           </nav>
         </div>

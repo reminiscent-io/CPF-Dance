@@ -23,35 +23,41 @@ export function Modal({
     } else {
       document.body.style.overflow = 'unset'
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset'
     }
   }, [isOpen])
-  
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         onClose()
       }
     }
-    
+
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
-  
+
   if (!isOpen) return null
-  
+
   const sizes = {
-    sm: 'sm:max-w-md max-w-sm',
-    md: 'sm:max-w-lg max-w-sm',
-    lg: 'sm:max-w-2xl max-w-sm',
-    xl: 'sm:max-w-4xl max-w-sm'
+    sm: 'sm:max-w-md max-w-[calc(100%-1.5rem)]',
+    md: 'sm:max-w-lg max-w-[calc(100%-1.5rem)]',
+    lg: 'sm:max-w-2xl max-w-[calc(100%-1.5rem)]',
+    xl: 'sm:max-w-4xl max-w-[calc(100%-1.5rem)]'
   }
-  
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top), 12px)',
+        paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 56px), 68px)', // Account for bottom nav (40px) + safe area + padding
+        paddingLeft: 'max(env(safe-area-inset-left), 12px)',
+        paddingRight: 'max(env(safe-area-inset-right), 12px)'
+      }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -61,18 +67,18 @@ export function Modal({
         className={`
           bg-white rounded-lg shadow-xl w-full ${sizes[size]}
           transform transition-all duration-200 animate-slideUp
-          max-h-[90vh] flex flex-col
+          max-h-full flex flex-col
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
-            <h2 id="modal-title" className="text-2xl font-semibold text-gray-900">
+            <h2 id="modal-title" className="text-xl sm:text-2xl font-semibold text-gray-900">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors ml-4"
               aria-label="Close modal"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,7 +87,7 @@ export function Modal({
             </button>
           </div>
         )}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
           {children}
         </div>
       </div>
