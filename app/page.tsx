@@ -39,7 +39,7 @@ const dancerFeatures = [
   {
     id: 'lessons',
     title: 'Private Lessons',
-    description: 'Request personalized one-on-one instruction',
+    description: 'Request and pay for personalized one-on-one instruction',
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -53,26 +53,6 @@ const dancerFeatures = [
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    )
-  },
-  {
-    id: 'payments',
-    title: 'Easy Payments',
-    description: 'View payment history and manage transactions',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-      </svg>
-    )
-  },
-  {
-    id: 'waivers',
-    title: 'Digital Waivers',
-    description: 'Sign and manage your waivers electronically',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     )
   }
@@ -122,8 +102,9 @@ const instructorFeatures = [
 ]
 
 const learnFromTheBestImages = [
-  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpeg', 'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563_medium.jpg',  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565_medium.jpg',
-'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579_medium.jpg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6579_medium.jpg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6563_medium.jpg',
+  'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/IMG_6565_medium.jpg',
 ]
 
 export default function HomePage() {
@@ -316,7 +297,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-white marketing-page">
+    <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
       {/* Navigation Bar */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
@@ -364,10 +345,10 @@ export default function HomePage() {
         className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
       >
         {/* Background Images */}
-        {/* Mobile: First image only */}
+        {/* Mobile: Single hero image */}
         <div className="absolute inset-0 md:hidden">
           <img
-            src={learnFromTheBestImages[0]}
+            src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
             alt=""
             className="w-full h-full object-cover"
             aria-hidden="true"
@@ -498,14 +479,43 @@ export default function HomePage() {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-                {dancerFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 hover:bg-white/80 transition-colors shadow-sm">
-                    <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
+                {dancerFeatures.map((feature, index) => (
+                  <motion.div
+                    key={feature.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.1,
+                      ease: [0.25, 0.46, 0.45, 0.94]
+                    }}
+                    whileHover={{
+                      scale: 1.02,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      transition: { duration: 0.2 }
+                    }}
+                    className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 shadow-sm cursor-default"
+                  >
+                    <motion.div
+                      className="flex-shrink-0 mt-0.5"
+                      initial={{ scale: 0, rotate: -180 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1 + 0.2,
+                        type: "spring",
+                        stiffness: 200
+                      }}
+                    >
+                      {feature.icon}
+                    </motion.div>
                     <div>
                       <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
                       <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </Card>
@@ -644,17 +654,55 @@ export default function HomePage() {
                 <p className="text-lg text-charcoal-800 leading-relaxed">
                   Professional tools to manage your studio, track student progress, and streamline your teaching
                 </p>
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="inline-block mt-3 px-4 py-1.5 bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold rounded-full shadow-md"
+                >
+                  Coming Soon
+                </motion.span>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
-                {instructorFeatures.map((feature) => (
-                  <div key={feature.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm">
-                    <div className="flex-shrink-0 mt-0.5">{feature.icon}</div>
+                {instructorFeatures.map((feature, index) => (
+                  <motion.div
+                    key={feature.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.1,
+                      ease: [0.25, 0.46, 0.45, 0.94]
+                    }}
+                    whileHover={{
+                      scale: 1.02,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      transition: { duration: 0.2 }
+                    }}
+                    className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 shadow-sm cursor-default"
+                  >
+                    <motion.div
+                      className="flex-shrink-0 mt-0.5"
+                      initial={{ scale: 0, rotate: -180 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1 + 0.2,
+                        type: "spring",
+                        stiffness: 200
+                      }}
+                    >
+                      {feature.icon}
+                    </motion.div>
                     <div>
                       <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
                       <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 

@@ -115,6 +115,11 @@
   border-color: var(--color-champagne-200);
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   background-color: var(--color-champagne-50);
   color: var(--color-charcoal-900);

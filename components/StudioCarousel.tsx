@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface StudioLogo {
@@ -13,16 +13,7 @@ export default function StudioCarousel() {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number | null>(null)
-  const isDraggingRef = useRef(false)
-  const startXRef = useRef(0)
-  const scrollLeftRef = useRef(0)
-  const velocityRef = useRef(0)
-  const lastXRef = useRef(0)
-  const lastTimeRef = useRef(0)
-  const momentumRef = useRef<number | null>(null)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -105,127 +96,9 @@ export default function StudioCarousel() {
     fetchLogos()
   }, [mounted])
 
-  const autoScroll = useCallback(() => {
-    const container = scrollContainerRef.current
-    if (!container || isDraggingRef.current) {
-      animationRef.current = requestAnimationFrame(autoScroll)
-      return
-    }
-
-    container.scrollLeft += 0.5
-    
-    const halfWidth = container.scrollWidth / 2
-    if (container.scrollLeft >= halfWidth) {
-      container.scrollLeft = 0
-    }
-
-    animationRef.current = requestAnimationFrame(autoScroll)
-  }, [])
-
-  useEffect(() => {
-    if (studios.length > 0) {
-      animationRef.current = requestAnimationFrame(autoScroll)
-    }
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-      if (momentumRef.current) {
-        cancelAnimationFrame(momentumRef.current)
-      }
-    }
-  }, [studios, autoScroll])
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    isDraggingRef.current = true
-    startXRef.current = e.clientX
-    scrollLeftRef.current = container.scrollLeft
-    lastXRef.current = e.clientX
-    lastTimeRef.current = Date.now()
-    velocityRef.current = 0
-
-    if (momentumRef.current) {
-      cancelAnimationFrame(momentumRef.current)
-      momentumRef.current = null
-    }
-
-    container.setPointerCapture(e.pointerId)
-    container.style.cursor = 'grabbing'
-  }
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return
-    
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const currentTime = Date.now()
-    const deltaTime = currentTime - lastTimeRef.current
-    const deltaX = e.clientX - lastXRef.current
-
-    if (deltaTime > 0) {
-      velocityRef.current = deltaX / deltaTime
-    }
-
-    lastXRef.current = e.clientX
-    lastTimeRef.current = currentTime
-
-    const dx = e.clientX - startXRef.current
-    container.scrollLeft = scrollLeftRef.current - dx
-
-    const halfWidth = container.scrollWidth / 2
-    if (container.scrollLeft >= halfWidth) {
-      container.scrollLeft -= halfWidth
-      scrollLeftRef.current -= halfWidth
-    } else if (container.scrollLeft < 0) {
-      container.scrollLeft += halfWidth
-      scrollLeftRef.current += halfWidth
-    }
-  }
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return
-
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    isDraggingRef.current = false
-    container.releasePointerCapture(e.pointerId)
-    container.style.cursor = 'grab'
-
-    const velocity = velocityRef.current * 15
-
-    if (Math.abs(velocity) > 0.5) {
-      const applyMomentum = () => {
-        if (!container) return
-        
-        velocityRef.current *= 0.95
-        container.scrollLeft -= velocityRef.current * 15
-
-        const halfWidth = container.scrollWidth / 2
-        if (container.scrollLeft >= halfWidth) {
-          container.scrollLeft -= halfWidth
-        } else if (container.scrollLeft < 0) {
-          container.scrollLeft += halfWidth
-        }
-
-        if (Math.abs(velocityRef.current) > 0.01) {
-          momentumRef.current = requestAnimationFrame(applyMomentum)
-        } else {
-          momentumRef.current = null
-        }
-      }
-      
-      momentumRef.current = requestAnimationFrame(applyMomentum)
-    }
-  }
-
   const studiosWithImages = studios.filter(studio => studio.image)
-  const extendedStudios = [...studiosWithImages, ...studiosWithImages]
+  // Triple the logos for seamless infinite scroll
+  const extendedStudios = [...studiosWithImages, ...studiosWithImages, ...studiosWithImages]
 
   if (!mounted || loading) {
     return null
@@ -240,6 +113,9 @@ export default function StudioCarousel() {
     return null
   }
 
+  // Calculate animation duration based on number of logos (slower = smoother)
+  const animationDuration = studiosWithImages.length * 5
+
   return (
     <section className="py-6 sm:py-8 bg-white border-t border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -249,22 +125,20 @@ export default function StudioCarousel() {
           </h3>
         </div>
 
-        <div 
-          ref={scrollContainerRef}
-          className="overflow-x-auto scrollbar-hide touch-pan-x select-none"
-          style={{ 
-            cursor: 'grab',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+        <div
+          className="overflow-hidden select-none"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
         >
-          <div className="flex gap-8 w-max">
+          <div
+            className="flex gap-8 w-max"
+            style={{
+              animation: `scroll ${animationDuration}s linear infinite`,
+              animationPlayState: isPaused ? 'paused' : 'running'
+            }}
+          >
             {extendedStudios.map((studio, index) => (
               <div
                 key={index}
@@ -274,7 +148,7 @@ export default function StudioCarousel() {
                   height: '70px'
                 }}
               >
-                <div className="relative w-full h-full p-2 flex items-center justify-center pointer-events-none">
+                <div className="relative w-full h-full p-2 flex items-center justify-center">
                   {studio.image && (
                     <>
                       <img
@@ -296,8 +170,13 @@ export default function StudioCarousel() {
       </div>
 
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-33.333%);
+          }
         }
       `}</style>
     </section>
