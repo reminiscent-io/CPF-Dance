@@ -342,27 +342,27 @@ export default function HomePage() {
       </nav>
 
       <section
-        className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[55vh]"
+        className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[70vh] lg:min-h-[75vh]"
       >
         {/* Background Images */}
-        {/* Mobile: Single hero image */}
-        <div className="absolute inset-0 md:hidden">
+        {/* Mobile: Single hero image - top offset for nav bar */}
+        <div className="absolute inset-x-0 bottom-0 top-14 md:hidden">
           <img
             src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
             alt=""
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
             aria-hidden="true"
           />
         </div>
 
-        {/* Desktop: All 4 images side by side */}
-        <div className="absolute inset-0 hidden md:flex">
+        {/* Desktop: All 4 images side by side - top offset for nav bar */}
+        <div className="absolute inset-x-0 bottom-0 top-14 hidden md:flex">
           {learnFromTheBestImages.map((image, idx) => (
             <div key={idx} className="flex-1 h-full">
               <img
                 src={image}
                 alt=""
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 aria-hidden="true"
               />
             </div>
@@ -547,15 +547,28 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
-                <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
-                  <span className="text-sm font-medium text-charcoal-900">Radio City Rockettes</span>
-                </div>
+                <a
+                  href="https://www.longislandpress.com/2023/12/01/a-day-in-the-life-of-a-radio-city-rockette/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-rose-50 rounded-full shadow-sm border border-rose-300 hover:bg-rose-100 hover:border-rose-400 transition-colors"
+                >
+                  <span className="text-sm font-medium text-rose-700">Radio City Rockettes →</span>
+                </a>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
                   <span className="text-sm font-medium text-charcoal-900">Professional Performer</span>
                 </div>
                 <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
                   <span className="text-sm font-medium text-charcoal-900">Precision Technique</span>
                 </div>
+                <a
+                  href="https://broadwaydancecenter.com/faculty/courtney-file"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-rose-50 rounded-full shadow-sm border border-rose-300 hover:bg-rose-100 hover:border-rose-400 transition-colors"
+                >
+                  <span className="text-sm font-medium text-rose-700">Broadway Dance Center Instructor →</span>
+                </a>
               </div>
             </div>
             <div className="order-2 lg:order-2">
