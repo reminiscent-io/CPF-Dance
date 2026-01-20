@@ -232,7 +232,10 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     return (
       <aside className="fixed top-0 left-0 h-[100dvh] w-64 bg-rose-800 text-white shadow-lg z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-[100dvh]">
         <div className="flex flex-col h-full">
-          <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
+          <div
+            className="px-4 py-1 md:p-6 border-b border-rose-500 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
+            style={{ paddingTop: 'max(0.25rem, env(safe-area-inset-top))' }}
+          >
             <span className="text-2xl font-bold text-white">CPF Dance</span>
           </div>
         </div>
@@ -251,8 +254,11 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
         md:static md:relative md:translate-x-0 md:h-[100dvh]
       `}>
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="px-4 py-1 md:p-6 border-b border-rose-500 h-10 md:h-auto flex items-center md:block">
+          {/* Header - with safe area for notch on mobile */}
+          <div
+            className="px-4 py-1 md:p-6 border-b border-rose-500 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
+            style={{ paddingTop: 'max(0.25rem, env(safe-area-inset-top))' }}
+          >
             <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
               <span className="text-2xl font-bold text-white">
                 CPF Dance
@@ -421,8 +427,8 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             ))}
           </nav>
 
-          {/* Footer */}
-          <div className="border-t border-rose-500 p-4">
+          {/* Footer - with safe area for home indicator + bottom nav on mobile */}
+          <div className="border-t border-rose-500 p-4 pb-[calc(1rem+env(safe-area-inset-bottom)+2.5rem)] md:!pb-4">
             <button
               onClick={() => {
                 setIsOpen(false)
