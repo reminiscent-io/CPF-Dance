@@ -3,6 +3,15 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import {
+  ET_TIMEZONE,
+  formatTimeET,
+  getHourInET,
+  isSameDateET,
+  isTodayET,
+  getDayOfMonthET,
+  formatWeekdayET
+} from '@/lib/utils/et-timezone'
 
 interface CalendarEvent {
   id: string
@@ -70,7 +79,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
   }
 
   const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    return date.toLocaleDateString('en-US', { timeZone: ET_TIMEZONE, month: 'long', year: 'numeric' })
   }
 
   const formatWeekRange = (date: Date) => {
@@ -78,7 +87,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     const endOfWeek = new Date(startOfWeek)
     endOfWeek.setDate(endOfWeek.getDate() + 6)
 
-    return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    return `${startOfWeek.toLocaleDateString('en-US', { timeZone: ET_TIMEZONE, month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { timeZone: ET_TIMEZONE, month: 'short', day: 'numeric', year: 'numeric' })}`
   }
 
   const getStartOfWeek = (date: Date) => {
@@ -101,16 +110,12 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_time)
-      return eventDate.toDateString() === date.toDateString()
+      return isSameDateET(eventDate, date)
     })
   }
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
+    return formatTimeET(dateString)
   }
 
   const getClassTypeColor = (type: string) => {
