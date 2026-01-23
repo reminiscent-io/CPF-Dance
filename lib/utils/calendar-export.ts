@@ -1,3 +1,5 @@
+import { ET_TIMEZONE } from './et-timezone'
+
 interface ClassEvent {
   id: string
   title: string
@@ -11,7 +13,26 @@ export function generateICSContent(event: ClassEvent): string {
   const startDate = new Date(event.start_time)
   const endDate = new Date(event.end_time)
 
-  const formatDate = (date: Date): string => {
+  // Format date in Eastern Time for ICS with TZID (no Z suffix)
+  const formatDateET = (date: Date): string => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: ET_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+    const parts = formatter.formatToParts(date)
+    const p: Record<string, string> = {}
+    parts.forEach(part => { p[part.type] = part.value })
+    return `${p.year}${p.month}${p.day}T${p.hour}${p.minute}${p.second}`
+  }
+
+  // Format date in UTC for the DTSTAMP field
+  const formatDateUTC = (date: Date): string => {
     const year = date.getUTCFullYear()
     const month = String(date.getUTCMonth() + 1).padStart(2, '0')
     const day = String(date.getUTCDate()).padStart(2, '0')
@@ -46,9 +67,9 @@ export function generateICSContent(event: ClassEvent): string {
     'END:VTIMEZONE',
     'BEGIN:VEVENT',
     `UID:${event.id}@cpfdance.local`,
-    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace('.000', '')}`,
-    `DTSTART;TZID=America/New_York:${formatDate(startDate).slice(0, -1)}`,
-    `DTEND;TZID=America/New_York:${formatDate(endDate).slice(0, -1)}`,
+    `DTSTAMP:${formatDateUTC(new Date())}`,
+    `DTSTART;TZID=America/New_York:${formatDateET(startDate)}`,
+    `DTEND;TZID=America/New_York:${formatDateET(endDate)}`,
     `SUMMARY:${escapeICSText(event.title)}`,
     ...(event.description ? [`DESCRIPTION:${escapeICSText(event.description)}`] : []),
     ...(event.location ? [`LOCATION:${escapeICSText(event.location)}`] : []),
