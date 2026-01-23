@@ -854,9 +854,9 @@ export default function HomePage() {
         )}
       </Modal>
 
-      <footer className="bg-mauve-700 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
-          <div className="space-y-4 mb-8">
+      <footer className="bg-mauve-700 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-4 mb-6">
             <div className="grid md:grid-cols-2 gap-12">
               <div>
                 <div className="text-xl font-semibold text-white mb-4">Quick Links</div>
@@ -882,7 +882,14 @@ export default function HomePage() {
               <div>
                 <div className="text-xl font-semibold text-white mb-4">Contact</div>
                 <ul className="space-y-2 text-white">
-                  <li>Email: info@cpfdance.com</li>
+                  <li>
+                    <a
+                      href="mailto:info@cpfdance.com"
+                      className="hover:text-rose-400 transition-colors"
+                    >
+                      Email: info@cpfdance.com
+                    </a>
+                  </li>
                   <li>
                     <a 
                       href="https://instagram.com/courtneyfiledance" 
@@ -901,7 +908,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-700 pt-8 text-center text-white">
+          <div className="border-t border-gray-700 pt-6 text-center text-white">
             <p>&copy; {new Date().getFullYear()} CPF Dance LLC. All rights reserved.</p>
             <div className="mt-4 text-sm text-gray-400 space-x-4">
               <Link href="/terms-of-service" className="hover:text-rose-400 transition-colors">
