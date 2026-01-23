@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner } from '@/components/ui'
+import { Card, Button, Badge, Modal, ModalFooter, Input, useToast, Spinner, Avatar } from '@/components/ui'
 import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { AddNoteModal } from '@/components/AddNoteModal'
@@ -264,6 +264,65 @@ function NotesContent() {
   const displayNotes = activeTab === 'student-notes' ? studentNotes : notes
   const studentNotesCount = studentNotes.length
 
+  // Helper to get student name from note
+  const getStudentName = (note: any) => {
+    // Handle profile which may be an array or single object
+    const studentProfile = Array.isArray(note.student?.profile)
+      ? note.student.profile[0]
+      : note.student?.profile
+    return studentProfile?.full_name || note.student?.full_name || 'Unknown Student'
+  }
+
+  // Helper to get student avatar URL
+  const getStudentAvatarUrl = (note: any) => {
+    const studentProfile = Array.isArray(note.student?.profile)
+      ? note.student.profile[0]
+      : note.student?.profile
+    return studentProfile?.avatar_url || null
+  }
+
+  // Helper to get author name
+  const getAuthorName = (note: any) => {
+    return note.author?.full_name || 'Unknown'
+  }
+
+  // Helper to get author avatar URL
+  const getAuthorAvatarUrl = (note: any) => {
+    return note.author?.avatar_url || null
+  }
+
+  // Helper to format relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return 'just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  // Helper to get visibility label and color
+  const getVisibilityInfo = (visibility: string) => {
+    switch (visibility) {
+      case 'private':
+        return { label: 'Private', variant: 'default' as const }
+      case 'shared_with_student':
+        return { label: 'Shared with Student', variant: 'success' as const }
+      case 'shared_with_guardian':
+        return { label: 'Shared with Guardian', variant: 'warning' as const }
+      case 'shared_with_studio':
+        return { label: 'Shared with Studio', variant: 'secondary' as const }
+      case 'shared_with_instructor':
+        return { label: 'Shared with You', variant: 'primary' as const }
+      default:
+        return { label: visibility.replace(/_/g, ' '), variant: 'default' as const }
+    }
+  }
+
   return (
     <PortalLayout profile={profile}>
       <div className="mb-8 flex items-center justify-between">
@@ -342,7 +401,7 @@ function NotesContent() {
                 <option value="">All Students</option>
                 {students.map(student => (
                   <option key={student.id} value={student.id}>
-                    {student.profile?.full_name}
+                    {student.profile?.full_name || student.full_name || 'Unknown'}
                   </option>
                 ))}
               </select>
@@ -409,72 +468,142 @@ function NotesContent() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {displayNotes.map((note: any, index: number) => (
-            <div key={note.id}>
-              <Card hover>
-                  <div className="p-4 sm:p-6">
-                    <div className="flex justify-between items-start gap-2 mb-3">
-                      <div className="flex-1 min-w-0">
-                        {note.title && (
-                          <div className="flex items-center gap-2 mb-1">
-                            <svg
-                              className="w-5 h-5 flex-shrink-0 text-purple-500"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                              aria-label="Note"
-                            >
-                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                            </svg>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                              {note.title}
-                            </h3>
-                          </div>
-                        )}
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
-                          <span className="truncate">👤 {note.student?.profile?.full_name || 'No student'}</span>
-                          {note.classes && (
-                            <>
-                              <span className="hidden sm:inline">•</span>
-                              <span className="truncate">{note.classes.title}</span>
-                            </>
-                          )}
-                          <span className="hidden sm:inline">•</span>
-                          <span className="whitespace-nowrap">
-                            {new Date(note.created_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
-                            {note.visibility.replace(/_/g, ' ')}
-                          </span>
+          {displayNotes.map((note: any) => {
+            const studentName = getStudentName(note)
+            const studentAvatarUrl = getStudentAvatarUrl(note)
+            const authorName = getAuthorName(note)
+            const authorAvatarUrl = getAuthorAvatarUrl(note)
+            const visibilityInfo = getVisibilityInfo(note.visibility)
+            const isStudentNote = activeTab === 'student-notes'
+
+            return (
+              <div
+                key={note.id}
+                className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:shadow-sm transition-all"
+              >
+                {/* Header Row: Avatars + Author/Student info + Time + Menu */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {/* Avatar section */}
+                    {isStudentNote ? (
+                      /* Student notes: show student avatar (they wrote it) */
+                      <Avatar
+                        src={studentAvatarUrl}
+                        name={studentName}
+                        size="md"
+                      />
+                    ) : (
+                      /* My notes: show both author and student avatars */
+                      <div className="flex items-center">
+                        <Avatar
+                          src={authorAvatarUrl}
+                          name={authorName}
+                          size="md"
+                        />
+                        <div className="flex items-center -ml-2">
+                          <svg className="w-4 h-4 text-gray-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                          <Avatar
+                            src={studentAvatarUrl}
+                            name={studentName}
+                            size="md"
+                          />
                         </div>
                       </div>
-                      {activeTab === 'my-notes' && (
-                        <NoteActionsMenu
-                          onEdit={() => handleEditNote(note)}
-                          onDelete={() => handleDeleteNote(note.id)}
-                        />
+                    )}
+
+                    {/* Name and time */}
+                    <div>
+                      {isStudentNote ? (
+                        <>
+                          <div className="font-medium text-gray-900 text-sm">
+                            {studentName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            shared with you • {getRelativeTime(note.created_at)}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-medium text-gray-900 text-sm">
+                            Note for {studentName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {getRelativeTime(note.created_at)}
+                          </div>
+                        </>
                       )}
                     </div>
-
-                    <div className="prose prose-sm max-w-none mb-4">
-                      <RichTextDisplay content={note.content} className="text-gray-700 text-sm sm:text-base" />
-                    </div>
-
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {note.tags.map((tag: string, idx: number) => (
-                          <Badge key={idx} variant="primary" size="sm">{tag}</Badge>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                </Card>
+
+                  {/* Actions menu (only for my-notes) */}
+                  {activeTab === 'my-notes' && (
+                    <NoteActionsMenu
+                      onEdit={() => handleEditNote(note)}
+                      onDelete={() => handleDeleteNote(note.id)}
+                    />
+                  )}
+                </div>
+
+                {/* Title */}
+                {note.title && (
+                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                    {note.title}
+                  </h3>
+                )}
+
+                {/* Linked class info */}
+                {(note.class || note.classes) && (
+                  <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-500">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>
+                      {(note.class || note.classes)?.title}
+                      {(note.class || note.classes)?.start_time && (
+                        <span className="text-gray-400 ml-1">
+                          ({new Date((note.class || note.classes).start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Content preview */}
+                <div className="prose prose-sm max-w-none mb-3">
+                  <RichTextDisplay
+                    content={note.content}
+                    className="text-gray-600 text-sm line-clamp-3"
+                  />
+                </div>
+
+                {/* Footer Row: Visibility Badge + Tags */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  {/* Visibility badge */}
+                  <Badge variant={visibilityInfo.variant} size="sm">
+                    {visibilityInfo.label}
+                  </Badge>
+
+                  {/* Tags */}
+                  {note.tags && note.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 justify-end">
+                      {note.tags.slice(0, 3).map((tag: string, idx: number) => (
+                        <Badge key={idx} variant="default" size="sm">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {note.tags.length > 3 && (
+                        <Badge variant="default" size="sm">
+                          +{note.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+            )
+          })}
         </div>
       )}
 
