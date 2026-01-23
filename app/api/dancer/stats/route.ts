@@ -31,19 +31,30 @@ export async function GET(request: NextRequest) {
     // Total upcoming classes (enrolled + personal)
     const upcomingClassesCount = (upcomingEnrolledCount || 0) + (upcomingPersonalCount || 0)
 
-    const { count: totalClassesCount } = await supabase
+    // Count past enrolled classes (where class start_time is in the past)
+    const { count: pastEnrolledCount } = await supabase
       .from('enrollments')
+      .select('id, classes!inner(start_time)', { count: 'exact', head: true })
+      .eq('student_id', student.id)
+      .lt('classes.start_time', now)
+
+    // Count past personal classes
+    const { count: pastPersonalCount } = await supabase
+      .from('personal_classes')
       .select('id', { count: 'exact', head: true })
       .eq('student_id', student.id)
-      .eq('attendance_status', 'present')
+      .lt('start_time', now)
 
-    const { count: recentNotesCount } = await supabase
+    // Total past classes (enrolled + personal)
+    const totalClassesCount = (pastEnrolledCount || 0) + (pastPersonalCount || 0)
+
+    // Count all instructor notes shared with student (no time limit)
+    const { count: instructorNotesCount } = await supabase
       .from('notes')
       .select('id', { count: 'exact', head: true })
       .eq('student_id', student.id)
       .neq('author_id', profile.id)
       .in('visibility', ['shared_with_student', 'shared_with_guardian'])
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
     // Get upcoming enrolled classes (next 5)
     const { data: upcomingEnrolledClasses } = await supabase
@@ -197,7 +208,7 @@ export async function GET(request: NextRequest) {
       stats: {
         upcoming_classes: upcomingClassesCount,
         total_classes_attended: totalClassesCount || 0,
-        recent_notes: recentNotesCount || 0
+        recent_notes: instructorNotesCount || 0
       },
       upcoming_classes: upcomingClasses,
       recent_notes: recentNotesWithType
