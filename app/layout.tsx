@@ -3,6 +3,7 @@ import Script from 'next/script'
 import './globals.css'
 import { ToastProvider } from '@/components/ui'
 import { RegisterServiceWorker } from './register-sw'
+import CookieConsentBanner from '@/components/CookieConsentBanner'
 
 export const metadata: Metadata = {
   title: 'Dance Teaching Schedule',
@@ -44,10 +45,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Dance Schedule" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Google Analytics with Consent Mode - defaults to denied, updated by CookieConsentBanner */}
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JYEPWDHDW0" />
         <Script id="google-analytics">
           {`window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    'analytics_storage': 'denied'
+  });
   gtag('js', new Date());
   gtag('config', 'G-JYEPWDHDW0');`}
         </Script>
@@ -56,6 +61,7 @@ export default function RootLayout({
         <ToastProvider>
           {children}
         </ToastProvider>
+        <CookieConsentBanner />
         <RegisterServiceWorker />
       </body>
     </html>
