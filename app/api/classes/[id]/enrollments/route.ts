@@ -66,7 +66,8 @@ export async function GET(
         students (
           id,
           full_name,
-          email
+          email,
+          profile:profiles!students_profile_id_fkey(full_name, email)
         )
       `)
       .eq('class_id', id)
@@ -77,11 +78,17 @@ export async function GET(
     }
 
     // Transform the data to flatten the students object
-    const transformedEnrollments = (enrollments || []).map((enrollment: any) => ({
-      id: enrollment.students?.id || '',
-      full_name: enrollment.students?.full_name || 'Unknown',
-      email: enrollment.students?.email || ''
-    }))
+    // Use profile name as priority (for portal users), fallback to student's direct name (for manually added students)
+    const transformedEnrollments = (enrollments || []).map((enrollment: any) => {
+      const student = enrollment.students
+      // Handle profile which may be an array or single object due to Supabase join behavior
+      const profile = Array.isArray(student?.profile) ? student.profile[0] : student?.profile
+      return {
+        id: student?.id || '',
+        full_name: profile?.full_name || student?.full_name || 'Unknown',
+        email: profile?.email || student?.email || ''
+      }
+    })
 
     return NextResponse.json({ enrollments: transformedEnrollments })
   } catch (error) {

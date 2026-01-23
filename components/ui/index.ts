@@ -24,3 +24,6 @@ export type { PlaceDetails } from './GooglePlacesInput'
 
 export { ToastProvider, useToast } from './Toast'
 export type { ToastType, Toast } from './Toast'
+
+export { Avatar, AvatarImage, AvatarFallback } from './Avatar'
+export type { AvatarProps } from './Avatar'

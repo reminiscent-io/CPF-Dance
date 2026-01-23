@@ -24,9 +24,10 @@ export async function GET(request: NextRequest) {
         *,
         student:students!notes_student_id_fkey(
           id,
-          profile:profiles!students_profile_id_fkey(full_name)
+          full_name,
+          profile:profiles!students_profile_id_fkey(full_name, avatar_url)
         ),
-        author:profiles!notes_author_id_fkey(full_name),
+        author:profiles!notes_author_id_fkey(full_name, avatar_url),
         class:classes(title, start_time)
       `)
       .order('created_at', { ascending: false })
@@ -101,9 +102,10 @@ export async function POST(request: NextRequest) {
         *,
         student:students!notes_student_id_fkey(
           id,
-          profile:profiles!students_profile_id_fkey(full_name)
+          full_name,
+          profile:profiles!students_profile_id_fkey(full_name, avatar_url)
         ),
-        author:profiles!notes_author_id_fkey(full_name),
+        author:profiles!notes_author_id_fkey(full_name, avatar_url),
         class:classes(title, start_time)
       `)
       .single()
