@@ -17,8 +17,10 @@ import {
   ClockIcon,
   MapPinIcon,
   ChevronRightIcon,
-  SparklesIcon
+  SparklesIcon,
+  CameraIcon
 } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 interface DancerStats {
   upcoming_classes: number
@@ -167,6 +169,32 @@ export default function DancerPortalPage() {
           </h1>
           <p className="text-gray-600 text-base md:text-lg">Here's what's happening with your dance journey</p>
         </div>
+
+        {/* Profile Photo Prompt Banner */}
+        {!profile.avatar_url && (
+          <div className="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-lg p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
+                <CameraIcon className="w-5 h-5 text-rose-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">
+                  Complete your profile
+                </p>
+                <p className="text-sm text-gray-600">
+                  Add a profile photo so your instructors can easily recognize you.
+                </p>
+              </div>
+              <Link
+                href="/dancer/profile"
+                className="flex-shrink-0 text-sm font-medium text-rose-600 hover:text-rose-700 flex items-center gap-1"
+              >
+                Go to Profile
+                <ChevronRightIcon className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         {loadingData ? (
           <div className="flex justify-center py-12">

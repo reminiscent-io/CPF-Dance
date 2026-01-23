@@ -72,6 +72,7 @@ export async function PUT(request: NextRequest) {
           .from('students')
           .update({
             goals: studentUpdates.goals,
+            skill_level: studentUpdates.skill_level,
             emergency_contact_name: studentUpdates.emergency_contact_name,
             emergency_contact_phone: studentUpdates.emergency_contact_phone
           })

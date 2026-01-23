@@ -158,10 +158,10 @@ export function HeadshotUpload({
   const displayUrl = previewUrl || currentUrl
 
   return (
-    <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+    <div className="flex flex-col items-start gap-4">
       {/* Avatar display */}
       <div className="relative">
-        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
           {displayUrl ? (
             <img
               src={displayUrl}
@@ -170,7 +170,7 @@ export function HeadshotUpload({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Avatar name={userName} size="lg" className="w-full h-full text-4xl" />
+              <Avatar name={userName} size="lg" className="w-full h-full text-5xl" />
             </div>
           )}
         </div>
@@ -184,15 +184,12 @@ export function HeadshotUpload({
       </div>
 
       {/* Upload controls */}
-      <div className="flex flex-col gap-3 text-center sm:text-left">
-        <div>
-          <h3 className="font-medium text-gray-900">Profile Photo</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Upload a headshot to personalize your profile
-          </p>
-        </div>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-gray-500">
+          Upload a headshot to personalize your profile
+        </p>
 
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"

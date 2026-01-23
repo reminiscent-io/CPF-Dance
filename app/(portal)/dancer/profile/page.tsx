@@ -52,9 +52,32 @@ export default function DancerProfilePage() {
     phone: '',
     date_of_birth: '',
     goals: '',
+    skill_level: '',
     emergency_contact_name: '',
     emergency_contact_phone: ''
   })
+
+  const skillLevelOptions = [
+    { value: '', label: 'Select skill level' },
+    { value: 'Beginner', label: 'Beginner' },
+    { value: 'Intermediate', label: 'Intermediate' },
+    { value: 'Advanced', label: 'Advanced' },
+    { value: 'Professional', label: 'Professional' }
+  ]
+
+  // Format phone number as (###) ###-####
+  const formatPhoneNumber = (value: string): string => {
+    const digits = value.replace(/\D/g, '')
+    if (digits.length === 0) return ''
+    if (digits.length <= 3) return `(${digits}`
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+  }
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value)
+    handleFieldChange('phone', formatted)
+  }
 
   // Track if this is initial load vs user edit
   const isInitialLoad = useRef(true)
@@ -84,11 +107,22 @@ export default function DancerProfilePage() {
         setStudentData(data.student)
         setGuardianData(data.guardian)
 
+        // Format phone number on load
+        const formatPhone = (value: string): string => {
+          if (!value) return ''
+          const digits = value.replace(/\D/g, '')
+          if (digits.length === 0) return ''
+          if (digits.length <= 3) return `(${digits}`
+          if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+          return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+        }
+
         setFormData({
           full_name: data.profile.full_name || '',
-          phone: data.profile.phone || '',
+          phone: formatPhone(data.profile.phone || ''),
           date_of_birth: data.profile.date_of_birth || '',
           goals: data.student?.goals || '',
+          skill_level: data.student?.skill_level || '',
           emergency_contact_name: data.student?.emergency_contact_name || '',
           emergency_contact_phone: data.student?.emergency_contact_phone || ''
         })
@@ -118,6 +152,7 @@ export default function DancerProfilePage() {
           },
           student: {
             goals: data.goals,
+            skill_level: data.skill_level || null,
             emergency_contact_name: data.emergency_contact_name,
             emergency_contact_phone: data.emergency_contact_phone
           }
@@ -237,27 +272,29 @@ export default function DancerProfilePage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Headshot Section */}
-          <Card>
-            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Profile Photo</CardTitle>
-            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-              <HeadshotUpload
-                userId={profileData?.id || ''}
-                currentUrl={profileData?.avatar_url || null}
-                userName={profileData?.full_name || 'User'}
-                onUploadComplete={(url) => {
-                  if (profileData) {
-                    setProfileData({ ...profileData, avatar_url: url })
-                  }
-                }}
-              />
-            </CardContent>
-          </Card>
+          {/* Profile Photo + Personal Info - Side by side on larger screens */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Headshot Section */}
+            <Card>
+              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Profile Photo</CardTitle>
+              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+                <HeadshotUpload
+                  userId={profileData?.id || ''}
+                  currentUrl={profileData?.avatar_url || null}
+                  userName={profileData?.full_name || 'User'}
+                  onUploadComplete={(url) => {
+                    if (profileData) {
+                      setProfileData({ ...profileData, avatar_url: url })
+                    }
+                  }}
+                />
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Personal Information</CardTitle>
-            <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Personal Information</CardTitle>
+              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+                <div className="grid grid-cols-1 gap-4">
                 <Input
                   label="Full Name"
                   value={formData.full_name}
@@ -273,7 +310,8 @@ export default function DancerProfilePage() {
                   label="Phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => handleFieldChange('phone', e.target.value)}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  placeholder="(555) 123-4567"
                 />
                 <Input
                   label="Date of Birth"
@@ -284,60 +322,72 @@ export default function DancerProfilePage() {
               </div>
             </CardContent>
           </Card>
+          </div>
 
           {studentData && (
-            <Card>
-              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Dance Information</CardTitle>
-              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {studentData.age_group && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Age Group
-                      </label>
-                      <p className="text-gray-900">{studentData.age_group}</p>
-                    </div>
-                  )}
-                  {studentData.skill_level && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Dance Information</CardTitle>
+                <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+                  <div className="space-y-4">
+                    {studentData.age_group && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Age Group
+                        </label>
+                        <p className="text-gray-900">{studentData.age_group}</p>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Skill Level
                       </label>
-                      <p className="text-gray-900">{studentData.skill_level}</p>
+                      <select
+                        value={formData.skill_level}
+                        onChange={(e) => handleFieldChange('skill_level', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                      >
+                        {skillLevelOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Select your current dance experience level
+                      </p>
                     </div>
-                  )}
-                </div>
-                <Textarea
-                  label="Your Dance Goals"
-                  placeholder="What do you want to achieve in your dance journey?"
-                  rows={4}
-                  value={formData.goals}
-                  onChange={(e) => handleFieldChange('goals', e.target.value)}
-                  helperText="Share your aspirations and what you're working towards"
-                />
-              </CardContent>
-            </Card>
-          )}
+                    <Textarea
+                      label="Your Dance Goals"
+                      placeholder="What do you want to achieve in your dance journey?"
+                      rows={3}
+                      value={formData.goals}
+                      onChange={(e) => handleFieldChange('goals', e.target.value)}
+                      helperText="Share your aspirations and what you're working towards"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-          {studentData && (
-            <Card>
-              <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Emergency Contact</CardTitle>
-              <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Emergency Contact Name"
-                    value={formData.emergency_contact_name}
-                    onChange={(e) => handleFieldChange('emergency_contact_name', e.target.value)}
-                  />
-                  <Input
-                    label="Emergency Contact Phone"
-                    type="tel"
-                    value={formData.emergency_contact_phone}
-                    onChange={(e) => handleFieldChange('emergency_contact_phone', e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Emergency Contact</CardTitle>
+                <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+                  <div className="space-y-4">
+                    <Input
+                      label="Emergency Contact Name"
+                      value={formData.emergency_contact_name}
+                      onChange={(e) => handleFieldChange('emergency_contact_name', e.target.value)}
+                    />
+                    <Input
+                      label="Emergency Contact Phone"
+                      type="tel"
+                      value={formData.emergency_contact_phone}
+                      onChange={(e) => handleFieldChange('emergency_contact_phone', e.target.value)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {guardianData && (
@@ -378,7 +428,7 @@ export default function DancerProfilePage() {
           <Card>
             <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Account Security</CardTitle>
             <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">Password</p>
                   <p className="text-gray-600 mb-3">
@@ -396,7 +446,7 @@ export default function DancerProfilePage() {
                   </Button>
                 </div>
 
-                <div className="border-t border-gray-200 pt-4">
+                <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">Sign Out</p>
                   <p className="text-gray-600 mb-3">
                     Sign out of your account on this device.
