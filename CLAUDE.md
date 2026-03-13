@@ -21,7 +21,14 @@ npm run build
 npm start
 
 # Linting
-npm lint
+npm run lint
+
+# Testing
+npm test              # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run test:coverage # Run with coverage report
+npm run test:ui       # Run with Vitest UI
+npm run test:watch    # Explicit watch mode
 ```
 
 **Important Notes:**
@@ -40,7 +47,7 @@ npm lint
 
 The schema defines:
 - User roles: `instructor`, `dancer`, `guardian`, `admin`
-- Core tables: profiles, students, classes, enrollments, notes, payments, studios, waivers, waiver_templates
+- Core tables: profiles, students, classes, enrollments, notes, payments, studios, waivers, waiver_templates, lesson_packs, assets, instructor_access_requests
 - Row-level security (RLS) policies for data isolation
 - Automatic `updated_at` triggers
 - Custom types for enums (user_role, payment_status, note_visibility, class_type, pricing_model)
@@ -54,7 +61,7 @@ The schema defines:
 1. **Middleware Proxy** (`proxy.ts`): Portal-level routing protection
    - **CRITICAL**: Must use `export default async function proxy()` (Next.js 16 requirement)
    - Redirects unauthenticated users to `/login`
-   - Enforces role-based portal access (`/instructor`, `/dancer`)
+   - Enforces role-based portal access (`/instructor`, `/dancer`, `/admin`)
    - Redirects users to their correct portal based on role
    - **Admin role** can access all portals via sidebar switcher
    - Matcher pattern excludes `_next/`, `api/`, and static assets
@@ -62,6 +69,7 @@ The schema defines:
 2. **API Route Guards** (`lib/auth/server-auth.ts`):
    - `requireInstructor()` - Ensures instructor role
    - `requireDancer()` - Ensures dancer role
+   - `requireAdmin()` - Ensures admin role
    - `requireRole(role)` - Generic role checker with **admin override**
    - `getCurrentDancerStudent()` - Gets authenticated dancer's student record
    - `getCurrentUserWithRole()` - Gets current user with profile
@@ -102,59 +110,114 @@ The schema defines:
 ```
 app/
 ├── (portal)/              # Route group for authenticated portals
-│   ├── instructor/        # Instructor portal (9 pages)
+│   ├── admin/             # Admin portal (4 pages)
+│   │   ├── page.tsx       # Admin dashboard with statistics
+│   │   ├── instructor-requests/  # Manage access requests
+│   │   ├── studio-inquiries/     # Manage studio inquiries
+│   │   └── users/         # User management
+│   ├── instructor/        # Instructor portal (18 pages)
 │   │   ├── page.tsx       # Dashboard
-│   │   ├── students/      # Student roster & details
+│   │   ├── assets/        # Choreography & file management
 │   │   ├── classes/       # Class management
-│   │   ├── schedule/      # Calendar view
-│   │   ├── studios/       # Studio locations
-│   │   ├── notes/         # Progress notes
+│   │   │   ├── page.tsx   # Class list
+│   │   │   ├── attendance/    # Attendance tracking
+│   │   │   └── choreography/  # Choreography files
+│   │   ├── inquiries/     # Studio inquiry responses
+│   │   ├── notes/         # Progress notes (with focus mode)
 │   │   ├── payments/      # Payment tracking
+│   │   │   ├── page.tsx   # Payment list
+│   │   │   └── invoices/  # Invoice generation
+│   │   ├── profile/       # Instructor profile management
+│   │   ├── requests/      # Lesson request management
+│   │   ├── schedule/      # Calendar view
+│   │   ├── students/      # Student roster & details
+│   │   ├── studios/       # Studio locations
 │   │   └── waivers/       # Waiver management & templates
-│   ├── dancer/            # Dancer portal (10 pages)
+│   ├── dancer/            # Dancer portal (11 pages)
 │   │   ├── page.tsx       # Dashboard
 │   │   ├── available-classes/  # Browse public classes
 │   │   ├── classes/       # Enrolled classes
-│   │   ├── my-notes/      # Personal journal
-│   │   ├── progress/      # Instructor feedback timeline
-│   │   ├── request-lesson/# Private lesson requests
+│   │   ├── notes/         # Personal journal (renamed from my-notes)
 │   │   ├── payments/      # Payment history
 │   │   ├── profile/       # Profile management
+│   │   ├── progress/      # Instructor feedback timeline
+│   │   ├── request-lesson/# Private lesson requests
+│   │   ├── schedule/      # Class schedule view
 │   │   └── waivers/       # View & sign waivers
 │   ├── login/             # Login page
 │   └── signup/            # Signup with role selection
-├── api/                   # API routes (45+ endpoints)
+├── api/                   # API routes (67 endpoints)
+│   ├── admin/             # Admin-only endpoints
+│   │   ├── instructor-requests/  # Access request management
+│   │   ├── seed-lesson-packs/    # Initialize lesson packs
+│   │   ├── stats/         # Admin dashboard statistics
+│   │   ├── studio-inquiries/     # Inquiry management & Gmail integration
+│   │   │   ├── route.ts   # List/create inquiries
+│   │   │   ├── refresh-inbox/    # Gmail sync
+│   │   │   ├── send-email/       # Send email responses
+│   │   │   └── thread/    # Email threading
+│   │   └── users/         # User management
+│   ├── assets/            # Asset/file management
+│   │   ├── route.ts       # List and upload assets
+│   │   └── [id]/          # Delete and manage assets
 │   ├── auth/              # Authentication (signup, signin, signout)
-│   ├── students/          # Student CRUD operations
 │   ├── classes/           # Class management
-│   ├── notes/             # Notes management
-│   ├── studios/           # Studio locations
-│   ├── dashboard/         # Instructor dashboard stats
-│   ├── instructors/       # Instructor listing
-│   ├── profiles/          # Profile management
-│   ├── relationships/     # Instructor-student relationships
-│   ├── instructor/        # Instructor-specific routes
-│   │   ├── notes/         # Instructor notes
-│   │   ├── schedule/      # Schedule view
-│   │   ├── payments/      # Payment management
-│   │   └── payment-requests/  # Payment requests
+│   │   ├── route.ts       # CRUD operations
+│   │   ├── bulk/          # Bulk class operations
+│   │   └── [id]/          # Individual class & enrollments
 │   ├── dancer/            # Dancer-specific endpoints
 │   │   ├── classes/       # View enrolled classes
-│   │   ├── personal-classes/  # Personal class history
-│   │   ├── public-classes/    # Browse available public classes
 │   │   ├── enroll/        # Class enrollment
-│   │   ├── notes/         # Personal notes
+│   │   ├── instructors/   # View instructors
+│   │   ├── lesson-packs/  # Lesson pack system
+│   │   │   ├── route.ts   # List available packs
+│   │   │   ├── history/   # Purchase history
+│   │   │   ├── purchase/  # Purchase a pack
+│   │   │   └── spend/     # Use lesson credits
 │   │   ├── lesson-requests/   # Private lesson requests
+│   │   ├── notes/         # Personal notes & pinning
 │   │   ├── payments/      # Payment history
+│   │   ├── personal-classes/  # Personal class history
 │   │   ├── profile/       # Profile management
+│   │   ├── public-classes/    # Browse available public classes
 │   │   └── stats/         # Dashboard statistics
-│   ├── waivers/           # Waiver management
-│   │   └── [id]/          # Individual waiver operations & signing
-│   ├── waiver-templates/  # Waiver template CRUD
+│   ├── dashboard/         # Instructor dashboard stats
+│   ├── instructor/        # Instructor-specific routes
+│   │   ├── class-earnings/    # Earnings calculations
+│   │   ├── notes/         # Instructor notes
+│   │   ├── payments/      # Payment management
+│   │   ├── payment-requests/  # Payment requests
+│   │   ├── profile/       # Profile management
+│   │   ├── requests/      # Lesson request management
+│   │   ├── schedule/      # Schedule view
+│   │   └── send-payment-reminder/  # Payment reminders
+│   ├── instructor-access-request/  # Submit access request
+│   ├── instructors/       # Instructor listing
+│   ├── notes/             # Notes management
+│   │   ├── route.ts       # CRUD operations
+│   │   └── format/        # AI note formatting (GPT-4o-mini)
+│   ├── places/            # Google Places integration
+│   │   ├── search/        # Autocomplete
+│   │   └── details/       # Place details
+│   ├── profiles/          # Profile management
+│   ├── relationships/     # Instructor-student relationships
+│   ├── stripe/            # Stripe payment integration
+│   │   ├── create-checkout-session/  # Create payment session
+│   │   └── webhook/       # Handle payment webhooks
+│   ├── students/          # Student CRUD operations
+│   │   ├── route.ts       # List/create students
+│   │   ├── linked/        # Profile-linked students
+│   │   └── [id]/          # Individual student operations
+│   │       ├── route.ts   # Get/update/delete
+│   │       ├── link/      # Link to profile
+│   │       └── merge/     # Merge student records
+│   ├── studios/           # Studio locations
 │   ├── studio-inquiries/  # Public inquiry form & management
-│   └── places/            # Google Places integration
-│       ├── search/        # Autocomplete
-│       └── details/       # Place details
+│   ├── voice-to-notes/    # OpenAI Whisper transcription
+│   ├── waivers/           # Waiver management
+│   │   ├── route.ts       # List/create waivers
+│   │   └── [id]/          # Individual waiver operations & signing
+│   └── waiver-templates/  # Waiver template CRUD
 ├── auth/callback/         # OAuth callback handler
 ├── dev/                   # Development test page
 ├── privacy-policy/        # Privacy policy page
@@ -167,7 +230,13 @@ lib/
 ├── auth/
 │   ├── server-auth.ts     # Role guards and auth helpers
 │   ├── waiver-access.ts   # Waiver access control helpers
-│   └── privileges.ts      # Role privilege checking utilities
+│   ├── privileges.ts      # Role privilege checking utilities
+│   ├── actions.ts         # Server actions for authentication
+│   ├── hooks.ts           # React hooks for auth state
+│   ├── types.ts           # TypeScript type definitions
+│   └── mock-profiles.ts   # Test utilities
+├── gmail/
+│   └── client.ts          # Gmail API integration
 ├── supabase/
 │   ├── client.ts          # Browser client
 │   ├── server.ts          # Server client
@@ -176,41 +245,99 @@ lib/
 │   ├── database.types.ts  # Supabase generated types
 │   └── index.ts           # Custom types
 └── utils/
+    ├── calendar-export.ts # iCal export functionality
+    ├── date-helpers.ts    # Date manipulation utilities
+    ├── et-timezone.ts     # Eastern Time zone support
     ├── pricing.ts         # Pricing calculation utilities
-    └── sanitize.ts        # HTML sanitization (XSS prevention)
+    ├── sanitize.ts        # HTML sanitization (XSS prevention)
+    └── timezone.ts        # Timezone utilities
 
 components/
 ├── ui/                    # Reusable UI components
+│   ├── Avatar.tsx         # User avatars
 │   ├── Badge.tsx          # Status badges
 │   ├── Button.tsx         # Button variants
 │   ├── Card.tsx           # Card container
+│   ├── DropdownMenu.tsx   # Dropdown menus
 │   ├── GooglePlacesInput.tsx  # Google Places autocomplete
 │   ├── Input.tsx          # Form inputs
 │   ├── Modal.tsx          # Modal dialogs
+│   ├── Skeleton.tsx       # Loading skeletons
 │   ├── Spinner.tsx        # Loading spinners
 │   ├── Table.tsx          # Data tables
 │   └── Toast.tsx          # Notification toasts
+├── notes/                 # Note-related components
+│   ├── NoteFeedItem.tsx   # Individual note display
+│   ├── NoteFeedList.tsx   # Note list rendering
+│   ├── NoteFocusMode.tsx  # Focused note editing
+│   └── NoteSearchBar.tsx  # Note search interface
+├── AddNoteModal.tsx       # Instructor note creation
+├── AssetSelector.tsx      # File selection for classes
 ├── Calendar.tsx           # Class scheduling calendar
 ├── CommunicationsSection.tsx  # Communication hub
+├── CookieConsentBanner.tsx    # Privacy compliance
 ├── CreateWaiverTemplateDialog.tsx  # Waiver template creator
+├── DancerAddNoteModal.tsx # Dancer note creation
+├── DancerBottomNav.tsx    # Mobile dancer navigation
+├── EarningsProgressWidget.tsx  # Earnings display
+├── HeadshotUpload.tsx     # Profile photo upload
+├── InstructorBottomNav.tsx    # Mobile instructor navigation
 ├── IssueWaiverDialog.tsx  # Waiver issuer
+├── LessonPackHistory.tsx  # Purchase history UI
+├── LessonPackInfo.tsx     # Pack details display
+├── LessonPackSelector.tsx # Purchase interface
+├── MobileCalendar.tsx     # Responsive calendar
+├── MobileHeader.tsx       # Mobile header
 ├── Navigation.tsx         # Legacy navigation (replaced by Sidebar)
+├── NotesRichTextEditor.tsx    # Enhanced TipTap editor with sanitization
 ├── PortalLayout.tsx       # Shared portal layout wrapper
 ├── RichTextEditor.tsx     # TipTap-based rich text editor
 ├── Sidebar.tsx            # Unified sidebar with admin portal switcher
 ├── SignaturePad.tsx       # Digital signature capture
-└── StudioCarousel.tsx     # Studio showcase carousel
+├── StripePaymentDialog.tsx    # Payment UI
+├── StudioCarousel.tsx     # Studio showcase carousel
+├── UploadAssetModal.tsx   # Asset upload dialog
+└── VoiceRecorder.tsx      # Audio recording for voice-to-notes
 
-migrations/                # Database migrations (13 files)
+migrations/                # Database migrations (32 files)
 ├── 05-add-studio-id-to-inquiries.sql
 ├── 06-add-response-tracking.sql
 ├── 07-add-waivers-table.sql
+├── 08-add-instructor-id-to-private-lessons.sql
 ├── 08-add-studio-inquiry-tracking.sql
 ├── 09-add-waiver-templates.sql
 ├── 10-update-waiver-access-control.sql
 ├── 11-add-student-id-to-waivers.sql
 ├── 12-add-actual-attendance-column.sql
-└── 13-add-public-classes-features.sql
+├── 13-add-public-classes-features.sql
+├── 13a-create-instructor-student-relationships.sql
+├── 14-add-asset-to-classes.sql
+├── 14-fix-notes-rls-instructor-access.sql
+├── 15-add-profile-linking.sql
+├── 15-add-timezone-support.sql
+├── 16-remove-studio-portal.sql
+├── 17-add-assets-table.sql
+├── 18-add-assets-storage-policies.sql
+├── 19-add-note-pinning.sql
+├── 20-remove-duplicate-indexes.sql
+├── 21-fix-auth-rls-performance.sql
+├── 22-consolidate-rls-policies.sql
+├── 23-add-instructor-access-requests.sql
+├── 24-add-admin-access-to-students-classes.sql
+├── 25-add-headshots-storage.sql
+├── 26-add-scheduled-class-to-lesson-requests.sql
+├── 27-fix-private-lesson-class-visibility.sql
+├── 28-add-admin-access-to-students.sql
+├── 29-fix-classes-policy-recursion.sql
+├── 30-fix-recursion-with-functions.sql
+├── 31-fix-rls-performance-issues.sql
+├── 32-add-dancer-student-update-policy.sql
+└── get-profile-ids.sql    # Utility function
+
+tests/                     # Test infrastructure
+├── setup.ts               # Test setup with mocks
+├── setup.test.ts          # Setup verification
+└── utils.tsx              # Test utilities
 ```
 
 ### Data Model Relationships
@@ -220,16 +347,21 @@ migrations/                # Database migrations (13 files)
 - `students` (1) → (N) `notes` - Students can have many notes from instructors or themselves
 - `students` (1) → (N) `enrollments` - Students enroll in multiple classes
 - `students` (1) → (N) `waivers` - Students can have multiple waivers assigned
+- `students` (1) → (N) `lesson_pack_purchases` - Students can purchase lesson packs
 - `classes` (1) → (N) `enrollments` - Classes have multiple enrolled students
+- `classes` (1) → (0..1) `assets` - Classes can have attached choreography files
 - `profiles` (1) → (N) `classes` as instructor - Instructors create multiple classes
 - `profiles` (1) → (N) `waiver_templates` as creator - Instructors create waiver templates
+- `profiles` (1) → (N) `assets` as uploader - Instructors upload choreography files
 - `students` (1) → (N) `payments` - Students have payment history
 - `students` (1) → (N) `private_lesson_requests` - Students can request private lessons
+- `lesson_packs` (1) → (N) `lesson_pack_purchases` - Packs can be purchased multiple times
+- `lesson_pack_purchases` (1) → (N) `lesson_pack_usage` - Track credit usage
 
 **Important notes:**
 - When a user signs up with `role='dancer'`, a corresponding `students` record is automatically created with `profile_id` linking to their profile
 - **Students can exist without linked profiles** - useful for instructors managing non-portal students (direct storage of student info: full_name, email, phone)
-- **Admin role** has access to all portals via sidebar switcher (no separate admin portal route)
+- **Admin role** has dedicated portal at `/admin` with dashboard, user management, and inquiry handling
 
 ### API Route Patterns
 
@@ -255,6 +387,16 @@ export async function GET(request: NextRequest) {
     .from('notes')
     .select('*')
     .eq('student_id', student.id) // Critical: prevents cross-dancer access
+}
+```
+
+**Admin routes** (prefix: `/api/admin/`):
+```typescript
+// Require admin role
+export async function GET(request: NextRequest) {
+  await requireAdmin()
+  const supabase = await createClient()
+  // Admin can access all data
 }
 ```
 
@@ -329,21 +471,147 @@ Complete digital waiver management with templates and signatures.
 - RLS policies enforce waiver visibility
 - Admin can view all waivers (except private notes context)
 
-### 2. Admin Role & Portal Switching
+### 2. Admin Portal
 
-**Admin role** (`admin`) has special privileges:
+**Admin role** (`admin`) has a dedicated portal with special privileges:
 
-- Access to both portals (Instructor and Dancer) via sidebar switcher dropdown
+**Portal pages (`/admin`):**
+- Dashboard with platform statistics
+- User management (view/manage all users)
+- Instructor access request management
+- Studio inquiry management with Gmail integration
+
+**Capabilities:**
+- Access to both Instructor and Dancer portals via sidebar switcher
 - Bypass most RLS restrictions (respects private notes)
 - Can view all data across instructors and dancers
-- No separate admin portal route - uses existing portals
+- Manage instructor access requests
 
 **Implementation:**
 - Sidebar component has portal switcher dropdown for admin users
+- `requireAdmin()` function for admin-only API routes
 - `requireRole()` function checks for admin override
 - RLS policies have `OR auth.uid() IN (SELECT id FROM profiles WHERE role = 'admin')` clauses
 
-### 3. Public Classes
+### 3. Stripe Payment Integration
+
+Full Stripe integration for lesson pack purchases.
+
+**Components:**
+- `StripePaymentDialog.tsx` - Payment UI with Stripe Checkout
+- `LessonPackSelector.tsx` - Browse and select lesson packs
+
+**API routes:**
+- `/api/stripe/create-checkout-session` - Create Stripe checkout session
+- `/api/stripe/webhook` - Handle Stripe webhooks (payment success, etc.)
+
+**Environment variables:**
+- `STRIPE_SECRET_KEY` - Server-side Stripe API key
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Client-side Stripe key
+
+**Workflow:**
+1. Dancer selects lesson pack to purchase
+2. StripePaymentDialog creates checkout session
+3. User redirected to Stripe Checkout
+4. Webhook updates `lesson_pack_purchases` on successful payment
+5. Credits available for booking lessons
+
+### 4. Lesson Pack System
+
+Pre-purchased lesson credits for dancers.
+
+**Database tables:**
+- `lesson_packs` - Available packages (e.g., "5 Private Lessons")
+- `lesson_pack_purchases` - Student purchase records with remaining credits
+- `lesson_pack_usage` - Credit usage tracking
+
+**Components:**
+- `LessonPackSelector.tsx` - Purchase interface
+- `LessonPackInfo.tsx` - Display pack details and remaining credits
+- `LessonPackHistory.tsx` - View purchase and usage history
+
+**API routes:**
+- `/api/dancer/lesson-packs` - List available packs
+- `/api/dancer/lesson-packs/purchase` - Purchase a pack
+- `/api/dancer/lesson-packs/spend` - Use lesson credits
+- `/api/dancer/lesson-packs/history` - View purchase history
+- `/api/admin/seed-lesson-packs` - Initialize default packs
+
+### 5. Voice-to-Notes & AI Formatting
+
+OpenAI integration for transcription and note formatting.
+
+**Components:**
+- `VoiceRecorder.tsx` - Audio capture component
+
+**API routes:**
+- `/api/voice-to-notes` - Whisper transcription with dance-specific prompts
+- `/api/notes/format` - GPT-4o-mini formatting for note improvement
+
+**Features:**
+- Preserves dance terminology (pirouette, grand jeté, etc.)
+- Fixes grammar while maintaining meaning
+- Dance-specific prompt engineering for accuracy
+
+**Environment variable:**
+- `OPENAI_API_KEY` - OpenAI API key
+
+### 6. Asset Management System
+
+File storage for choreography, music, and instructional materials.
+
+**Database tables:**
+- `assets` - File metadata with Supabase Storage bucket reference
+
+**Components:**
+- `AssetSelector.tsx` - Select files to attach to classes
+- `UploadAssetModal.tsx` - Upload new assets
+- `HeadshotUpload.tsx` - Profile photo upload
+
+**API routes:**
+- `/api/assets` - List and upload assets
+- `/api/assets/[id]` - Delete and manage individual assets
+
+**Features:**
+- Instructors can upload choreography files
+- Attach assets to classes for students to access
+- Student headshot storage for profiles
+
+### 7. Gmail Integration for Studio Inquiries
+
+Gmail API integration for managing studio inquiry responses.
+
+**Library:** `lib/gmail/client.ts`
+
+**API routes:**
+- `/api/admin/studio-inquiries/send-email` - Send email responses
+- `/api/admin/studio-inquiries/refresh-inbox` - Sync emails from Gmail
+- `/api/admin/studio-inquiries/thread` - Manage email threads
+
+**Features:**
+- Reply to studio inquiries directly from admin portal
+- Email thread management
+- Automatic email synchronization
+
+**Environment variables (Replit-specific):**
+- `REPLIT_CONNECTORS_HOSTNAME` - Gmail connector hostname
+- Gmail OAuth configured through Replit Connectors
+
+### 8. Instructor Access Request System
+
+Allow potential instructors to request platform access.
+
+**Database table:**
+- `instructor_access_requests` - Request tracking
+
+**API routes:**
+- `/api/instructor-access-request` - Submit access request (public)
+- `/api/admin/instructor-requests` - Admin management
+
+**Portal page:**
+- `/admin/instructor-requests` - Review and approve/deny requests
+
+### 9. Public Classes
 
 Classes can be marked as public for external visibility.
 
@@ -359,7 +627,7 @@ Classes can be marked as public for external visibility.
 - Special events
 - Integration with external booking platforms
 
-### 4. Google Places Integration
+### 10. Google Places Integration
 
 Google Places API integration for address autocomplete.
 
@@ -372,10 +640,10 @@ Google Places API integration for address autocomplete.
 - `/api/places/search` - Autocomplete search
 - `/api/places/details` - Get place details
 
-**Environment variables:**
-Required: `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY`
+**Environment variable:**
+- `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY` (optional)
 
-### 5. Actual Attendance Tracking
+### 11. Actual Attendance Tracking
 
 Manual override for class attendance when using external booking systems.
 
@@ -390,11 +658,44 @@ Manual override for class attendance when using external booking systems.
 - Instructor manually sets `actual_attendance_count = 12`
 - Payment calculated based on actual attendance
 
+### 12. Calendar Export
+
+iCal export functionality for class schedules.
+
+**Utility:** `lib/utils/calendar-export.ts`
+- Export classes to iCal format
+- Compatible with Google Calendar, Apple Calendar, Outlook
+
+## Testing Infrastructure
+
+Comprehensive test setup using Vitest and Testing Library.
+
+**Configuration:**
+- `vitest.config.ts` - Vitest configuration with jsdom environment
+- `tests/setup.ts` - Mocks for Next.js, ResizeObserver, IntersectionObserver
+
+**Test files:**
+- `lib/utils/__tests__/pricing.test.ts` - Pricing calculations (48 tests)
+- `lib/utils/__tests__/sanitize.test.ts` - XSS prevention (57 tests)
+- `lib/utils/__tests__/date-helpers.test.ts` - Date utilities (25 tests)
+- `lib/auth/__tests__/privileges.test.ts` - Permission testing (72 tests)
+- `app/api/__tests__/auth.test.ts` - Authentication routes (13 tests)
+- `app/api/__tests__/instructor-notes.test.ts` - Instructor notes API (18 tests)
+- `app/api/__tests__/dancer-notes.test.ts` - Dancer notes API (12 tests)
+- `tests/setup.test.ts` - Setup verification (5 tests)
+
+**Running tests:**
+```bash
+npm test              # Watch mode
+npm run test:run      # Single run
+npm run test:coverage # With coverage
+```
+
 ## Security Checklist
 
 When adding new features:
 
-1. ✅ Add API route guard (`requireInstructor()`, `requireDancer()`, etc.)
+1. ✅ Add API route guard (`requireInstructor()`, `requireDancer()`, `requireAdmin()`)
 2. ✅ Filter queries by appropriate scope (student_id for dancers, instructor_id for instructors)
 3. ✅ Add RLS policy in `supabase-schema.sql` or create migration if adding new tables
 4. ✅ Update proxy.ts if adding new portal routes
@@ -476,6 +777,34 @@ export async function GET(request: NextRequest) {
     await requireInstructor()
     const supabase = await createClient()
 
+    const { data, error } = await supabase
+      .from('your_table')
+      .select('*')
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ data })
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+```
+
+### Creating a new API route for admin:
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/server-auth'
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    // Admin can access all data without filtering
     const { data, error } = await supabase
       .from('your_table')
       .select('*')
@@ -877,142 +1206,12 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-### Handling file uploads (for waiver PDFs):
-
-```typescript
-'use client'
-
-import { useState } from 'react'
-
-export default function FileUploadForm() {
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile)
-    } else {
-      alert('Please select a PDF file')
-    }
-  }
-
-  const handleUpload = async () => {
-    if (!file) return
-
-    setUploading(true)
-    try {
-      // Convert file to base64
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-
-      reader.onload = async () => {
-        const base64 = reader.result as string
-
-        const response = await fetch('/api/waiver-templates', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: file.name,
-            content_type: 'pdf',
-            pdf_data: base64
-          })
-        })
-
-        if (response.ok) {
-          alert('Upload successful!')
-          setFile(null)
-        }
-      }
-    } catch (error) {
-      console.error('Upload failed:', error)
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <div>
-      <input
-        type="file"
-        accept=".pdf"
-        onChange={handleFileChange}
-        disabled={uploading}
-      />
-      <button
-        onClick={handleUpload}
-        disabled={!file || uploading}
-      >
-        {uploading ? 'Uploading...' : 'Upload PDF'}
-      </button>
-    </div>
-  )
-}
-```
-
-### Fetching related data with joins:
-
-```typescript
-// Fetch classes with enrollment count and instructor details
-const { data: classes } = await supabase
-  .from('classes')
-  .select(`
-    *,
-    instructor:profiles!classes_instructor_id_fkey(
-      id,
-      full_name,
-      email
-    ),
-    enrollments(count),
-    studio:studios(
-      id,
-      name,
-      address
-    )
-  `)
-  .order('start_time', { ascending: true })
-
-// Access the data
-classes?.forEach(classItem => {
-  console.log(classItem.title)
-  console.log(classItem.instructor.full_name)
-  console.log(classItem.enrollments[0].count) // enrollment count
-  console.log(classItem.studio.name)
-})
-```
-
 ### Date/time formatting:
 
 ```typescript
+import { formatDate, formatTime, formatDateTime } from '@/lib/utils/date-helpers'
+
 // Format dates consistently across the app
-export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-export function formatTime(date: string | Date): string {
-  return new Date(date).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
-}
-
-export function formatDateTime(date: string | Date): string {
-  return new Date(date).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
-}
-
-// Usage
 <p>Class Date: {formatDate(classData.start_time)}</p>
 <p>Start Time: {formatTime(classData.start_time)}</p>
 <p>Created: {formatDateTime(classData.created_at)}</p>
@@ -1035,22 +1234,40 @@ export function formatDateTime(date: string | Date): string {
 - Built with Tailwind CSS v4
 
 **Key UI Components:**
+- `Avatar` - User profile images
+- `Badge` - Status indicators with color variants
 - `Button` - Primary, secondary, outline, destructive variants
 - `Card` - Container with optional header and footer
+- `DropdownMenu` - Dropdown menus for actions
+- `GooglePlacesInput` - Address autocomplete with Places API
+- `Input` - Form inputs
 - `Modal` - Dialog overlay with backdrop
-- `Badge` - Status indicators with color variants
+- `Skeleton` - Loading placeholder animations
+- `Spinner` - Loading indicators
 - `Table` - Data table with sorting and filtering
 - `Toast` - Notification system
-- `Spinner` - Loading indicators
-- `GooglePlacesInput` - Address autocomplete with Places API
 
 ## Environment Variables
 
 Required in Replit Secrets or `.env.local`:
 ```
+# Supabase (Required)
 NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
+
+# Stripe (Required for payments)
+STRIPE_SECRET_KEY=sk_live_or_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_or_test_...
+
+# OpenAI (Required for voice-to-notes and AI formatting)
+OPENAI_API_KEY=sk-...
+
+# Google Places (Optional)
+NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key
+
+# Gmail Integration (Replit-specific, optional)
+REPLIT_CONNECTORS_HOSTNAME=connector-hostname
+# Gmail OAuth configured through Replit Connectors
 ```
 
 ## Dependencies
@@ -1059,6 +1276,7 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 - next: ^16.0.3
 - react: ^19.2.0
 - react-dom: ^19.2.0
+- typescript: 5.9.3
 
 **Database & Auth:**
 - @supabase/ssr: ^0.7.0
@@ -1067,50 +1285,69 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 **Styling:**
 - tailwindcss: ^4.0.15 (v4)
 - @tailwindcss/postcss: ^4.1.17
+- class-variance-authority: ^0.7.1
+- clsx: ^2.1.1
+- tailwind-merge: ^3.4.0
 
 **Rich Text Editor:**
 - @tiptap/react: ^3.11.0
 - @tiptap/starter-kit: ^3.11.0
 - @tiptap/extension-placeholder: ^3.11.0
 
+**Payments:**
+- stripe: ^20.1.0
+- @stripe/stripe-js: ^8.5.3
+
+**AI/ML:**
+- openai: ^6.10.0
+
+**Icons:**
+- @heroicons/react: ^2.2.0
+- lucide-react: ^0.562.0
+
+**Charts:**
+- recharts: ^3.6.0
+
+**Animations:**
+- framer-motion: ^12.23.24
+
+**Gmail Integration:**
+- googleapis: ^170.0.0
+
+**Security:**
+- dompurify: ^3.3.1
+
+**Dev Dependencies:**
+- vitest: ^4.0.18
+- @testing-library/react: ^16.3.2
+- @testing-library/jest-dom: ^6.9.1
+- jsdom: ^27.3.0
+
 ## Known Issues & Future Work
 
 **Completed features:**
 - ✅ Waiver system with digital signatures
-- ✅ Admin role with portal switching
+- ✅ Admin portal with dedicated pages
 - ✅ Public classes with external signup URLs
 - ✅ Google Places integration
 - ✅ Advanced pricing models
 - ✅ Actual attendance tracking
 - ✅ Rich text editor for waivers and notes
+- ✅ Stripe payment integration
+- ✅ Lesson pack system
+- ✅ Voice-to-notes with OpenAI Whisper
+- ✅ AI note formatting with GPT-4o-mini
+- ✅ Asset management for choreography files
+- ✅ Gmail integration for studio inquiries
+- ✅ Instructor access request system
+- ✅ Calendar export (iCal)
+- ✅ Comprehensive test suite (250+ tests)
 
 **Future enhancements:**
-- Stripe payment integration (currently manual tracking)
 - Guardian portal (role exists but no dedicated portal pages)
 - Email notifications for class reminders and waiver requests
 - SMS notifications via Twilio
-- Calendar export (iCal/Google Calendar)
 - Bulk operations (bulk waiver issuance, bulk payment entry)
-
-## Testing Approach
-
-**Manual testing checklist:**
-1. Create test accounts for each role (instructor, dancer, guardian, admin)
-2. Verify portal access redirects correctly
-3. Test admin portal switcher functionality
-4. Test cross-role API access (should be denied except for admin)
-5. Verify data isolation (dancers shouldn't see other dancers' data)
-6. Test note visibility filtering
-7. Test waiver creation, issuance, and signing workflow
-8. Test pricing calculations with different models
-9. Test public class visibility and enrollment
-10. Verify RLS policies in Supabase dashboard
-
-**Database testing:**
-- All tables have RLS enabled
-- Test queries with different user roles
-- Verify admin bypass works correctly
-- Check waiver access control
 
 ## Important Files
 
@@ -1130,10 +1367,14 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 - `lib/auth/server-auth.ts` - Role guard utilities
 - `lib/auth/waiver-access.ts` - Waiver access helpers
 - `lib/auth/privileges.ts` - Role privilege checking
+- `lib/gmail/client.ts` - Gmail API integration
 - `lib/utils/pricing.ts` - Pricing calculation utilities
 - `lib/utils/sanitize.ts` - HTML sanitization for XSS prevention
+- `lib/utils/date-helpers.ts` - Date formatting utilities
+- `lib/utils/calendar-export.ts` - iCal export
 - `components/Sidebar.tsx` - Unified navigation with admin switcher
 - `components/NotesRichTextEditor.tsx` - TipTap editor with sanitization
+- `vitest.config.ts` - Test configuration
 
 ## Best Practices
 
@@ -1148,6 +1389,7 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 9. **Handle errors gracefully** - Return appropriate error messages and status codes
 10. **Document new features** - Update this file when adding major features or changes
 11. **Apply migrations carefully** - Test migrations on development database first
+12. **Write tests** - Add tests for new utilities and API routes
 
 ## Critical Gotchas
 
@@ -1173,3 +1415,8 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your-google-api-key (optional)
 - Server components: `@/lib/supabase/server`
 - Client components: `@/lib/supabase/client`
 - Middleware: `@/lib/supabase/middleware`
+
+### RLS Policy Recursion
+**Problem**: RLS policies checking profiles table can cause infinite recursion
+**Symptom**: Database queries hang or timeout, "stack depth limit exceeded" errors
+**Solution**: Use security definer functions (see migrations 29-31) or avoid nested profile checks
