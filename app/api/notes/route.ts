@@ -40,9 +40,10 @@ export async function GET(request: NextRequest) {
       query = query.eq('visibility', visibility)
     }
 
-    // SECURITY: Dancers should only see notes shared with them for their own student record
+    // SECURITY: Dancers should only see notes shared with them, or notes they authored themselves.
+    // They must NOT see instructors' private notes.
     if (profile.role === 'dancer') {
-      query = query.in('visibility', ['shared_with_student', 'shared_with_guardian'])
+      query = query.or(`visibility.in.(shared_with_student,shared_with_guardian,shared_with_instructor),author_id.eq.${profile.id}`)
     }
 
     const { data: notes, error } = await query
