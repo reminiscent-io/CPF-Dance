@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching classes:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 })
     }
 
     const classesWithCount = (classes || []).map(cls => ({
@@ -183,9 +183,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Supabase error creating class:', error)
       return NextResponse.json({
-        error: error.message,
-        details: error.details,
-        hint: error.hint
+        error: 'Failed to create class'
       }, { status: 500 })
     }
 

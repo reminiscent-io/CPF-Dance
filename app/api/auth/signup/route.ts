@@ -7,6 +7,15 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password, fullName, phone, role, isAtLeast13, guardianEmail, portal } = body
 
+    // SECURITY: Prevent role escalation - users cannot self-register as admin
+    const allowedSignupRoles = ['instructor', 'dancer', 'guardian']
+    if (!role || !allowedSignupRoles.includes(role)) {
+      return NextResponse.json(
+        { error: 'Invalid role. Allowed roles: instructor, dancer, guardian' },
+        { status: 400 }
+      )
+    }
+
     const supabase = await createClient()
 
     let guardianId = null

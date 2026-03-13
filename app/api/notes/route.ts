@@ -40,11 +40,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('visibility', visibility)
     }
 
+    // SECURITY: Dancers should only see notes shared with them, or notes they authored themselves.
+    // They must NOT see instructors' private notes.
+    if (profile.role === 'dancer') {
+      query = query.or(`visibility.in.(shared_with_student,shared_with_guardian,shared_with_instructor),author_id.eq.${profile.id}`)
+    }
+
     const { data: notes, error } = await query
 
     if (error) {
       console.error('Error fetching notes:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
     }
 
     let filteredNotes = notes || []
@@ -112,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating note:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
     }
 
     return NextResponse.json({ note }, { status: 201 })

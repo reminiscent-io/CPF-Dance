@@ -89,20 +89,9 @@ export async function getCurrentDancerStudent() {
     return student
   }
   
-  // If admin and no direct student record, get first available student for testing
-  if (profile.role === 'admin') {
-    const { data: testStudent, error: testError } = await supabase
-      .from('students')
-      .select('id, profile_id')
-      .limit(1)
-      .single()
-    
-    if (!testError && testStudent) {
-      return testStudent
-    }
-  }
-  
-  throw new Error('Student record not found for this dancer')
+  // SECURITY: Admins accessing dancer routes must have their own student record.
+  // Previously this returned the first arbitrary student, allowing admin impersonation.
+  throw new Error('Student record not found for this user')
 }
 
 export async function requireInstructor(): Promise<ProfileWithRole> {

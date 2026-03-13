@@ -35,12 +35,14 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('student_id', student.id)
+      // SECURITY: Dancers see notes they authored OR notes shared with them, but NOT instructors' private notes
+      .or(`author_id.eq.${profile.id},visibility.in.(shared_with_student,shared_with_guardian,shared_with_instructor)`)
       .order('is_pinned', { ascending: false, nullsFirst: false })
       .order('pin_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (notesError) {
-      return NextResponse.json({ error: notesError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
     }
 
     const authorIds = [...new Set(notes?.map(n => n.author_id) || [])]
