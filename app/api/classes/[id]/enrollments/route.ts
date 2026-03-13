@@ -39,7 +39,7 @@ export async function POST(
 
     if (error) {
       console.error('Error enrolling student:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to enroll student' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
@@ -74,7 +74,7 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching enrollments:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch enrollments' }, { status: 500 })
     }
 
     // Transform the data to flatten the students object

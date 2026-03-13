@@ -1,16 +1,37 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { setMockUserRole } from '@/lib/auth/mock-profiles'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 
 export default function DevPage() {
   const router = useRouter()
+  const [allowed, setAllowed] = useState(false)
+
+  useEffect(() => {
+    // SECURITY: Only allow dev page in development mode
+    if (process.env.NODE_ENV !== 'development') {
+      router.replace('/login')
+      return
+    }
+    setAllowed(true)
+  }, [router])
+
+  if (!allowed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Redirecting...</p>
+      </div>
+    )
+  }
 
   const selectRole = (role: string, path: string) => {
-    setMockUserRole(role)
-    router.push(path)
+    // Dynamic import to avoid bundling mock-profiles in production
+    import('@/lib/auth/mock-profiles').then(({ setMockUserRole }) => {
+      setMockUserRole(role)
+      router.push(path)
+    })
   }
 
   return (
@@ -61,7 +82,7 @@ export default function DevPage() {
 
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>Note:</strong> This is a development page for testing. Authentication is disabled. 
+            <strong>Note:</strong> This is a development page for testing. Authentication is disabled.
             Click any profile above to access that portal without logging in.
           </p>
         </div>

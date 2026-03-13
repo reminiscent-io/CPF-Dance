@@ -7,8 +7,6 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password, portal } = body
 
-    console.log('Signin attempt for:', email, 'portal:', portal)
-
     const supabase = await createClient()
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -49,8 +47,6 @@ export async function POST(request: Request) {
       // Non-admin users go to their role-specific portal regardless of selection
       redirectUrl = roleRedirects[userRole] || '/dancer'
     }
-
-    console.log('Signin successful for:', authData.user.email, 'role:', userRole, 'redirecting to:', redirectUrl)
 
     return NextResponse.json({
       success: true,

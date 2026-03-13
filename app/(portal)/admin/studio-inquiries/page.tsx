@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -297,7 +298,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
                 </div>
                 <div
                   className="text-sm text-gray-700 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: msg.body }}
+                  dangerouslySetInnerHTML={createSanitizedHtml(msg.body)}
                 />
               </div>
             ))

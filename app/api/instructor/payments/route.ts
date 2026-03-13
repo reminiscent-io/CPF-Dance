@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching payments:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
     }
 
     // Filter to only include payments for this instructor's classes
@@ -157,6 +157,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // SECURITY: Validate payment amount
+    const parsedAmount = parseFloat(amount)
+    if (isNaN(parsedAmount) || parsedAmount <= 0 || parsedAmount > 100000) {
+      return NextResponse.json(
+        { error: 'Invalid amount. Must be between $0.01 and $100,000' },
+        { status: 400 }
+      )
+    }
+
     // Verify the student exists and belongs to this instructor (or admin)
     if (profile.role !== 'admin') {
       const { data: student, error: studentError } = await supabase
@@ -194,7 +203,7 @@ export async function POST(request: NextRequest) {
     // Create the payment record
     const paymentData: any = {
       student_id,
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       payment_method,
       payment_status: 'confirmed', // Manual payments are immediately confirmed
       transaction_date: transaction_date || new Date().toISOString(),
@@ -218,7 +227,7 @@ export async function POST(request: NextRequest) {
 
     if (paymentError) {
       console.error('Error creating payment:', paymentError)
-      return NextResponse.json({ error: paymentError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create payment record' }, { status: 500 })
     }
 
     // Create a payment event for audit trail
