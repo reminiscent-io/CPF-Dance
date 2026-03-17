@@ -18,9 +18,11 @@ import {
   MapPinIcon,
   ChevronRightIcon,
   SparklesIcon,
-  CameraIcon
+  CameraIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import ReviewModal from '@/components/ReviewModal'
 
 interface DancerStats {
   upcoming_classes: number
@@ -66,6 +68,7 @@ export default function DancerPortalPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [viewingNote, setViewingNote] = useState<RecentNote | null>(null)
   const [showViewModal, setShowViewModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -195,6 +198,30 @@ export default function DancerPortalPage() {
             </div>
           </div>
         )}
+
+        {/* Leave a Review Banner */}
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <StarIcon className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">
+                Enjoying your classes?
+              </p>
+              <p className="text-sm text-gray-600">
+                Leave a review to let your instructor know how they're doing.
+              </p>
+            </div>
+            <Button
+              variant="gold"
+              size="sm"
+              onClick={() => setShowReviewModal(true)}
+            >
+              Leave a Review
+            </Button>
+          </div>
+        </div>
 
         {loadingData ? (
           <div className="flex justify-center py-12">
@@ -388,6 +415,12 @@ export default function DancerPortalPage() {
           </>
         )}
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+      />
 
       {/* Note View Modal */}
       <Modal
