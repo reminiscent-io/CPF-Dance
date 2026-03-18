@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     "localhost",
     "127.0.0.1",
     "*.replit.dev",
+    "*.riker.replit.dev",
     "cpfdance.com",
     "www.cpfdance.com",
     "cpfdance.replit.app"
