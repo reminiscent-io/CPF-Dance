@@ -7,14 +7,34 @@ export async function GET() {
     const student = await getCurrentDancerStudent()
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data: reviews, error } = await supabase
       .from('reviews')
-      .select('*, profiles:instructor_id(full_name, avatar_url)')
+      .select('*')
       .eq('student_id', student.id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Fetch instructor profiles separately since reviews.instructor_id references auth.users, not profiles
+    const instructorIds = [...new Set((reviews || []).map(r => r.instructor_id))]
+    let instructorMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {}
+
+    if (instructorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', instructorIds)
+
+      for (const p of profiles || []) {
+        instructorMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }
+      }
+    }
+
+    const data = (reviews || []).map(r => ({
+      ...r,
+      profiles: instructorMap[r.instructor_id] || { full_name: null, avatar_url: null }
+    }))
 
     return NextResponse.json({ data })
   } catch {
@@ -28,7 +48,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const body = await request.json()
 
-    const { instructor_id, rating, content } = body
+    const { instructor_id, rating, content, show_name } = body
 
     if (!instructor_id || typeof instructor_id !== 'string') {
       return NextResponse.json({ error: 'instructor_id is required' }, { status: 400 })
@@ -43,7 +63,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('id')
       .eq('id', instructor_id)
-      .eq('role', 'instructor')
+      .in('role', ['instructor', 'admin'])
       .single()
 
     if (instructorError || !instructor) {
@@ -59,6 +79,7 @@ export async function POST(request: NextRequest) {
           instructor_id,
           rating,
           content: content?.trim() || null,
+          show_name: show_name === true,
         },
         { onConflict: 'student_id,instructor_id' }
       )

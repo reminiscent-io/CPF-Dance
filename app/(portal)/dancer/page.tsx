@@ -21,6 +21,7 @@ import {
   CameraIcon,
   StarIcon
 } from '@heroicons/react/24/outline'
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import ReviewModal from '@/components/ReviewModal'
 
@@ -69,6 +70,7 @@ export default function DancerPortalPage() {
   const [viewingNote, setViewingNote] = useState<RecentNote | null>(null)
   const [showViewModal, setShowViewModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [hasReviews, setHasReviews] = useState(false)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -86,12 +88,19 @@ export default function DancerPortalPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/dancer/stats')
-      if (response.ok) {
-        const data = await response.json()
+      const [statsRes, reviewsRes] = await Promise.all([
+        fetch('/api/dancer/stats'),
+        fetch('/api/dancer/reviews'),
+      ])
+      if (statsRes.ok) {
+        const data = await statsRes.json()
         setStats(data.stats)
         setUpcomingClasses(data.upcoming_classes || [])
         setRecentNotes(data.recent_notes || [])
+      }
+      if (reviewsRes.ok) {
+        const data = await reviewsRes.json()
+        setHasReviews((data.data || []).length > 0)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -200,28 +209,41 @@ export default function DancerPortalPage() {
         )}
 
         {/* Leave a Review Banner */}
-        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-              <StarIcon className="w-5 h-5 text-amber-600" />
+        {hasReviews ? (
+          <button
+            onClick={() => setShowReviewModal(true)}
+            className="w-full text-left bg-amber-50/60 border border-amber-100 rounded-lg px-4 py-2.5 flex items-center gap-3 hover:bg-amber-50 transition-colors"
+          >
+            <StarIconSolid className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <span className="text-sm text-gray-600">
+              Thanks for your review! You can update it or leave another anytime.
+            </span>
+            <ChevronRightIcon className="w-4 h-4 text-gray-400 ml-auto flex-shrink-0" />
+          </button>
+        ) : (
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <StarIcon className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">
+                  Enjoying your classes?
+                </p>
+                <p className="text-sm text-gray-600">
+                  Your reviews are incredibly helpful and go a long way in helping your instructor build her business. It only takes a moment!
+                </p>
+              </div>
+              <Button
+                variant="gold"
+                size="sm"
+                onClick={() => setShowReviewModal(true)}
+              >
+                Leave a Review
+              </Button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">
-                Enjoying your classes?
-              </p>
-              <p className="text-sm text-gray-600">
-                Leave a review to let your instructor know how they're doing.
-              </p>
-            </div>
-            <Button
-              variant="gold"
-              size="sm"
-              onClick={() => setShowReviewModal(true)}
-            >
-              Leave a Review
-            </Button>
           </div>
-        </div>
+        )}
 
         {loadingData ? (
           <div className="flex justify-center py-12">
@@ -420,6 +442,7 @@ export default function DancerPortalPage() {
       <ReviewModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
+        onReviewSubmitted={() => setHasReviews(true)}
       />
 
       {/* Note View Modal */}

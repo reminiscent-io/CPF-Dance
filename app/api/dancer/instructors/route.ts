@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       const { data: allInstructors, error: allError } = await supabase
         .from('profiles')
         .select('id, full_name, email')
-        .eq('role', 'instructor')
+        .in('role', ['instructor', 'admin'])
 
       if (allError) {
         return NextResponse.json({ error: allError.message }, { status: 500 })
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('id, full_name, email')
       .in('id', instructorIds)
-      .eq('role', 'instructor')
+      .in('role', ['instructor', 'admin'])
 
     if (instructorsError) {
       return NextResponse.json({ error: instructorsError.message }, { status: 500 })

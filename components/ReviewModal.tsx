@@ -17,20 +17,23 @@ interface ExistingReview {
   instructor_id: string
   rating: number
   content: string | null
+  show_name: boolean
 }
 
 interface ReviewModalProps {
   isOpen: boolean
   onClose: () => void
+  onReviewSubmitted?: () => void
 }
 
-export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
+export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: ReviewModalProps) {
   const [instructors, setInstructors] = useState<Instructor[]>([])
   const [existingReviews, setExistingReviews] = useState<ExistingReview[]>([])
   const [selectedInstructorId, setSelectedInstructorId] = useState('')
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [content, setContent] = useState('')
+  const [showName, setShowName] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [success, setSuccess] = useState(false)
@@ -51,9 +54,11 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
       if (existing) {
         setRating(existing.rating)
         setContent(existing.content || '')
+        setShowName(existing.show_name ?? false)
       } else {
         setRating(0)
         setContent('')
+        setShowName(false)
       }
     }
   }, [selectedInstructorId, existingReviews])
@@ -107,6 +112,7 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
           instructor_id: selectedInstructorId,
           rating,
           content,
+          show_name: showName,
         }),
       })
 
@@ -116,6 +122,7 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
       }
 
       setSuccess(true)
+      onReviewSubmitted?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -128,6 +135,7 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
     setRating(0)
     setHoveredRating(0)
     setContent('')
+    setShowName(false)
     setError('')
     setSuccess(false)
     onClose()
@@ -154,6 +162,13 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
         </div>
       ) : (
         <div className="space-y-5">
+          {/* Encouraging message */}
+          <div className="bg-rose-50 border border-rose-100 rounded-lg p-3">
+            <p className="text-sm text-gray-700">
+              Your review is incredibly helpful! Honest feedback from dancers like you helps your instructor grow her business and reach new students. It only takes a moment and makes a big difference.
+            </p>
+          </div>
+
           {/* Instructor selection */}
           {instructors.length > 1 ? (
             <div>
@@ -228,6 +243,20 @@ export default function ReviewModal({ isOpen, onClose }: ReviewModalProps) {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{content.length}/1000</p>
           </div>
+
+          {/* Name opt-in */}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showName}
+              onChange={(e) => setShowName(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span className="text-sm text-gray-600">
+              Display my first name and last initial with this review.
+              <span className="text-gray-400"> Otherwise your review will be kept anonymous.</span>
+            </span>
+          </label>
 
           {error && (
             <p className="text-sm text-red-600">{error}</p>

@@ -27,7 +27,9 @@
       "Bash(git push:*)",
       "Bash(test:*)",
       "Bash(curl:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__execute_sql"
     ],
     "deny": [],
     "ask": []
