@@ -47,7 +47,7 @@ npm run test:watch    # Explicit watch mode
 
 The schema defines:
 - User roles: `instructor`, `dancer`, `guardian`, `admin`
-- Core tables: profiles, students, classes, enrollments, notes, payments, studios, waivers, waiver_templates, lesson_packs, assets, instructor_access_requests
+- Core tables: profiles, students, classes, enrollments, notes, payments, studios, waivers, waiver_templates, lesson_packs, assets, instructor_access_requests, reviews
 - Row-level security (RLS) policies for data isolation
 - Automatic `updated_at` triggers
 - Custom types for enums (user_role, payment_status, note_visibility, class_type, pricing_model)
@@ -143,10 +143,11 @@ app/
 │   │   ├── progress/      # Instructor feedback timeline
 │   │   ├── request-lesson/# Private lesson requests
 │   │   ├── schedule/      # Class schedule view
+│   │   ├── reviews/       # Leave reviews for instructors
 │   │   └── waivers/       # View & sign waivers
 │   ├── login/             # Login page
 │   └── signup/            # Signup with role selection
-├── api/                   # API routes (67 endpoints)
+├── api/                   # API routes (69 endpoints)
 │   ├── admin/             # Admin-only endpoints
 │   │   ├── instructor-requests/  # Access request management
 │   │   ├── seed-lesson-packs/    # Initialize lesson packs
@@ -180,6 +181,7 @@ app/
 │   │   ├── personal-classes/  # Personal class history
 │   │   ├── profile/       # Profile management
 │   │   ├── public-classes/    # Browse available public classes
+│   │   ├── reviews/       # Dancer reviews for instructors
 │   │   └── stats/         # Dashboard statistics
 │   ├── dashboard/         # Instructor dashboard stats
 │   ├── instructor/        # Instructor-specific routes
@@ -222,6 +224,7 @@ app/
 ├── dev/                   # Development test page
 ├── privacy-policy/        # Privacy policy page
 ├── terms-of-service/      # Terms of service page
+├── register-sw.tsx        # Service Worker registration component
 ├── layout.tsx             # Root layout
 ├── page.tsx               # Public landing page
 └── globals.css            # Global styles
@@ -291,6 +294,7 @@ components/
 ├── Navigation.tsx         # Legacy navigation (replaced by Sidebar)
 ├── NotesRichTextEditor.tsx    # Enhanced TipTap editor with sanitization
 ├── PortalLayout.tsx       # Shared portal layout wrapper
+├── ReviewModal.tsx        # Star rating and review submission
 ├── RichTextEditor.tsx     # TipTap-based rich text editor
 ├── Sidebar.tsx            # Unified sidebar with admin portal switcher
 ├── SignaturePad.tsx       # Digital signature capture
@@ -299,7 +303,7 @@ components/
 ├── UploadAssetModal.tsx   # Asset upload dialog
 └── VoiceRecorder.tsx      # Audio recording for voice-to-notes
 
-migrations/                # Database migrations (32 files)
+migrations/                # Database migrations (33 files)
 ├── 05-add-studio-id-to-inquiries.sql
 ├── 06-add-response-tracking.sql
 ├── 07-add-waivers-table.sql
@@ -332,12 +336,23 @@ migrations/                # Database migrations (32 files)
 ├── 30-fix-recursion-with-functions.sql
 ├── 31-fix-rls-performance-issues.sql
 ├── 32-add-dancer-student-update-policy.sql
+├── 33-add-dancer-reviews.sql
 └── get-profile-ids.sql    # Utility function
 
 tests/                     # Test infrastructure
+├── __mocks__/
+│   ├── supabase.ts        # Supabase client mocks
+│   └── api-helpers.ts     # API test helpers
 ├── setup.ts               # Test setup with mocks
 ├── setup.test.ts          # Setup verification
 └── utils.tsx              # Test utilities
+
+public/                    # Static assets
+├── sw.js                  # Service Worker (network-first caching)
+├── offline.html           # Offline fallback page
+├── manifest.json          # PWA manifest
+├── icon-192x192.png       # PWA icon (small)
+└── icon-512x512.png       # PWA icon (large)
 ```
 
 ### Data Model Relationships
@@ -350,6 +365,8 @@ tests/                     # Test infrastructure
 - `students` (1) → (N) `lesson_pack_purchases` - Students can purchase lesson packs
 - `classes` (1) → (N) `enrollments` - Classes have multiple enrolled students
 - `classes` (1) → (0..1) `assets` - Classes can have attached choreography files
+- `students` (1) → (N) `reviews` - Students can review instructors (1 per instructor)
+- `profiles` (1) → (N) `reviews` as instructor - Instructors receive reviews
 - `profiles` (1) → (N) `classes` as instructor - Instructors create multiple classes
 - `profiles` (1) → (N) `waiver_templates` as creator - Instructors create waiver templates
 - `profiles` (1) → (N) `assets` as uploader - Instructors upload choreography files
@@ -665,6 +682,60 @@ iCal export functionality for class schedules.
 **Utility:** `lib/utils/calendar-export.ts`
 - Export classes to iCal format
 - Compatible with Google Calendar, Apple Calendar, Outlook
+
+### 13. Dancer Reviews
+
+Star rating and written review system for dancers to review instructors.
+
+**Component:** `ReviewModal.tsx`
+- 1-5 star rating with optional written review (max 1000 chars)
+- Upsert pattern: dancers can update their review for an instructor
+
+**Database:**
+- `reviews` table with student_id, instructor_id, rating, content
+- Unique constraint on (student_id, instructor_id) — one review per instructor per dancer
+- Migration: `33-add-dancer-reviews.sql`
+
+**API routes:**
+- `GET /api/dancer/reviews` - List current dancer's reviews
+- `POST /api/dancer/reviews` - Create or update a review
+
+**Access control:**
+- Dancers can CRUD their own reviews
+- Instructors can view reviews about themselves
+- Admin can view all reviews
+
+### 14. Progressive Web App (PWA)
+
+Installable PWA with offline support.
+
+**Files:**
+- `app/register-sw.tsx` - Service Worker registration component
+- `public/sw.js` - Service Worker with network-first caching strategy
+- `public/offline.html` - Offline fallback page
+- `public/manifest.json` - PWA manifest with icons and shortcuts
+
+**Features:**
+- Network-first fetch strategy with cache fallback
+- Cache versioning (`CACHE_NAME = 'dance-schedule-v1'`)
+- Automatic cache cleanup on activation
+- App shortcuts for Private Lesson and Classes
+- Theme color: `#c75a6d`
+
+### 15. Security Headers
+
+Production security headers configured in `next.config.ts`.
+
+**Headers:**
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- `Strict-Transport-Security: max-age=31536000`
+
+**Also configured:**
+- `allowedDevOrigins` for Replit dev domains
+- Server Actions restricted to specific trusted origins (no wildcards)
 
 ## Testing Infrastructure
 
@@ -1236,7 +1307,7 @@ import { formatDate, formatTime, formatDateTime } from '@/lib/utils/date-helpers
 **Key UI Components:**
 - `Avatar` - User profile images
 - `Badge` - Status indicators with color variants
-- `Button` - Primary, secondary, outline, destructive variants
+- `Button` - Primary, secondary, outline, destructive, gold variants
 - `Card` - Container with optional header and footer
 - `DropdownMenu` - Dropdown menus for actions
 - `GooglePlacesInput` - Address autocomplete with Places API
@@ -1341,6 +1412,10 @@ REPLIT_CONNECTORS_HOSTNAME=connector-hostname
 - ✅ Gmail integration for studio inquiries
 - ✅ Instructor access request system
 - ✅ Calendar export (iCal)
+- ✅ Dancer reviews with star ratings
+- ✅ Progressive Web App (PWA) with offline support
+- ✅ Security headers (HSTS, X-Frame-Options, etc.)
+- ✅ GDPR cookie consent with Google Analytics consent mode
 - ✅ Comprehensive test suite (250+ tests)
 
 **Future enhancements:**
@@ -1374,6 +1449,10 @@ REPLIT_CONNECTORS_HOSTNAME=connector-hostname
 - `lib/utils/calendar-export.ts` - iCal export
 - `components/Sidebar.tsx` - Unified navigation with admin switcher
 - `components/NotesRichTextEditor.tsx` - TipTap editor with sanitization
+- `components/ReviewModal.tsx` - Star rating and review modal
+- `app/register-sw.tsx` - Service Worker registration
+- `public/sw.js` - Service Worker implementation
+- `next.config.ts` - Next.js config with security headers
 - `vitest.config.ts` - Test configuration
 
 ## Best Practices
