@@ -182,25 +182,8 @@ describe('Auth API Routes', () => {
       expect(data.success).toBe(true)
     })
 
-    it('should allow admin to choose portal', async () => {
-      const adminUser = {
-        id: 'admin-id',
-        email: 'admin@test.com',
-        user_metadata: { full_name: 'Admin User', role: 'admin' },
-      }
-
-      mockSignUp.mockResolvedValue({
-        data: { user: adminUser, session: null },
-        error: null,
-      })
-
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })
-
-      // Admin choosing dancer portal
+    it('should reject admin self-registration for security', async () => {
+      // Admin role cannot be self-registered - must be assigned by existing admin
       const request = new NextRequest('http://localhost:5000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -217,8 +200,8 @@ describe('Auth API Routes', () => {
       const response = await signupHandler(request)
       const data = await response.json()
 
-      expect(response.status).toBe(200)
-      expect(data.redirectUrl).toBe('/dancer')
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Invalid role')
     })
   })
 

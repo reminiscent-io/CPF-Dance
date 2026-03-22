@@ -27,6 +27,7 @@ const createChainableMock = () => {
   chain.eq = vi.fn(() => chain)
   chain.neq = vi.fn(() => chain)
   chain.in = vi.fn(() => chain)
+  chain.or = vi.fn(() => chain)
   chain.order = vi.fn(() => chain)
   chain.limit = vi.fn(() => chain)
   chain.single = mockSingle
@@ -110,6 +111,7 @@ describe('Dancer Notes API Routes', () => {
       notesChain.select = vi.fn(() => notesChain)
       notesChain.eq = vi.fn(() => notesChain)
       notesChain.in = vi.fn(() => notesChain)
+      notesChain.or = vi.fn(() => notesChain)
       notesChain.order = vi.fn(() => notesChain)
       notesChain.then = vi.fn((resolve) => {
         callCount++
@@ -366,6 +368,7 @@ describe('Dancer Notes API Routes', () => {
       notesChain.select = vi.fn(() => notesChain)
       notesChain.eq = vi.fn(() => notesChain)
       notesChain.in = vi.fn(() => notesChain)
+      notesChain.or = vi.fn(() => notesChain)
       notesChain.order = vi.fn(() => notesChain)
       notesChain.then = vi.fn((resolve) => resolve({ data: [], error: null }))
 
