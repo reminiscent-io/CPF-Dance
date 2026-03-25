@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Signin error:', error)
-      return NextResponse.json({ error: error.message }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
     if (!authData.user) {

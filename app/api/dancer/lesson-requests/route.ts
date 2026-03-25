@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (requestsError) {
-      return NextResponse.json({ error: requestsError.message }, { status: 500 })
+      console.error('Error fetching lesson requests:', requestsError)
+      return NextResponse.json({ error: 'Failed to fetch lesson requests' }, { status: 500 })
     }
 
     return NextResponse.json({ requests: requests || [] })
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+      console.error('Error creating lesson request:', insertError)
+      return NextResponse.json({ error: 'Failed to create lesson request' }, { status: 500 })
     }
 
     return NextResponse.json({ request: lessonRequest }, { status: 201 })
@@ -120,7 +122,8 @@ export async function DELETE(request: NextRequest) {
       .eq('id', id)
 
     if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+      console.error('Error deleting lesson request:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete lesson request' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

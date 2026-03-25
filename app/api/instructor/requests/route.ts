@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching requests:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch lesson requests' }, { status: 500 })
     }
 
     return NextResponse.json({ requests: requests || [] })
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Error updating request:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update lesson request' }, { status: 500 })
     }
 
     return NextResponse.json({ request: updatedRequest })

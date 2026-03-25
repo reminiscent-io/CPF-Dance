@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
       .order('purchased_at', { ascending: false })
 
     if (purchasesError) {
-      return NextResponse.json({ error: purchasesError.message }, { status: 500 })
+      console.error('Error fetching lesson pack history:', purchasesError)
+      return NextResponse.json({ error: 'Failed to fetch lesson pack history' }, { status: 500 })
     }
 
     // Get all usage records for this student's packs

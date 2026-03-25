@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       if (error) {
         console.error('Error creating class:', error)
         return NextResponse.json({ 
-          error: `Failed to create class: ${error.message}`,
+          error: 'Failed to create class',
           created: createdClasses.length 
         }, { status: 500 })
       }

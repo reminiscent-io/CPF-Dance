@@ -49,7 +49,7 @@ export async function PATCH(
 
     if (error) {
       console.error('Error updating inquiry:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update inquiry' }, { status: 500 })
     }
 
     if (!inquiry) {

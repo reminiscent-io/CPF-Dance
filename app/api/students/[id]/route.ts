@@ -24,7 +24,7 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching student:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch student' }, { status: 500 })
     }
 
     if (!student) {
@@ -120,9 +120,26 @@ export async function PUT(
 
     const body = await request.json()
 
+    // Whitelist allowed fields to prevent mass assignment
+    const allowedFields: Record<string, any> = {}
+    const ALLOWED_STUDENT_FIELDS = [
+      'full_name', 'email', 'phone', 'age_group', 'skill_level',
+      'goals', 'medical_notes', 'emergency_contact_name',
+      'emergency_contact_phone', 'is_active'
+    ]
+    for (const field of ALLOWED_STUDENT_FIELDS) {
+      if (body[field] !== undefined) {
+        allowedFields[field] = body[field]
+      }
+    }
+
+    if (Object.keys(allowedFields).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
     const { data: student, error } = await supabase
       .from('students')
-      .update(body)
+      .update(allowedFields)
       .eq('id', id)
       .select(`
         *,
@@ -133,7 +150,7 @@ export async function PUT(
 
     if (error) {
       console.error('Error updating student:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update student' }, { status: 500 })
     }
 
     return NextResponse.json({ student })
@@ -160,7 +177,7 @@ export async function DELETE(
 
     if (error) {
       console.error('Error deleting student:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to delete student' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

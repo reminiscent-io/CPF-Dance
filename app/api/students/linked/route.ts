@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching linked students:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch linked students' }, { status: 500 })
     }
 
     return NextResponse.json({ students: students || [] })

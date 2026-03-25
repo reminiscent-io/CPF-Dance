@@ -40,7 +40,7 @@ export async function POST(
 
     if (profileError) {
       console.error('Error finding dancer profile:', profileError)
-      return NextResponse.json({ error: profileError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to find dancer profile' }, { status: 500 })
     }
 
     if (!dancerProfile) {
@@ -60,7 +60,7 @@ export async function POST(
 
     if (existingError) {
       console.error('Error checking existing student:', existingError)
-      return NextResponse.json({ error: existingError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to verify student link' }, { status: 500 })
     }
 
     if (existingStudent) {
@@ -85,7 +85,7 @@ export async function POST(
 
     if (updateError) {
       console.error('Error linking student:', updateError)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to link student account' }, { status: 500 })
     }
 
     // If there was an old unlinked profile (one created by instructor without auth),

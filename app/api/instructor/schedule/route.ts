@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
     const { data: classes, error: classesError } = await query
 
     if (classesError) {
-      return NextResponse.json({ error: classesError.message }, { status: 500 })
+      console.error('Error fetching schedule:', classesError)
+      return NextResponse.json({ error: 'Failed to fetch schedule' }, { status: 500 })
     }
 
     // Get enrollment counts for each class
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: classesWithEnrollments })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

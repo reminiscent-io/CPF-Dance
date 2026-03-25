@@ -13,7 +13,8 @@ export async function GET() {
       .eq('student_id', student.id)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching reviews:', error)
+      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 })
     }
 
     // Fetch instructor profiles separately since reviews.instructor_id references auth.users, not profiles
@@ -87,7 +88,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error saving review:', error)
+      return NextResponse.json({ error: 'Failed to save review' }, { status: 500 })
     }
 
     return NextResponse.json({ data }, { status: 201 })

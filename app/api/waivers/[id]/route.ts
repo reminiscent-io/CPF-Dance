@@ -34,7 +34,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching waiver:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch waiver' },
+      { error: 'Failed to fetch waiver' },
       { status: 500 }
     )
   }
@@ -124,7 +124,7 @@ export async function PATCH(
   } catch (error: any) {
     console.error('Error updating waiver:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to update waiver' },
+      { error: 'Failed to update waiver' },
       { status: 500 }
     )
   }
@@ -192,7 +192,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Error deleting waiver:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to delete waiver' },
+      { error: 'Failed to delete waiver' },
       { status: 500 }
     )
   }

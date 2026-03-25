@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching waivers:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch waivers' },
+      { error: 'Failed to fetch waivers' },
       { status: 500 }
     )
   }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating waiver:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create waiver' },
+      { error: 'Failed to create waiver' },
       { status: 500 }
     )
   }

@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     if (classError) {
       console.error('Error fetching classes:', classError)
-      return NextResponse.json({ error: classError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch class earnings' }, { status: 500 })
     }
 
     const { data: enrollments, error: enrollmentError } = await supabase
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     if (enrollmentError) {
       console.error('Error fetching enrollments:', enrollmentError)
-      return NextResponse.json({ error: enrollmentError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch class earnings' }, { status: 500 })
     }
 
     const enrollmentCounts = new Map<string, number>()
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     if (paymentError) {
       console.error('Error fetching payments:', paymentError)
-      return NextResponse.json({ error: paymentError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch class earnings' }, { status: 500 })
     }
 
     const collectedByClass = new Map<string, number>()

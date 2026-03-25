@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       .select('role, created_at')
 
     if (profilesError) {
-      return NextResponse.json({ error: profilesError.message }, { status: 500 })
+      console.error('Error fetching profiles for stats:', profilesError)
+      return NextResponse.json({ error: 'Failed to fetch admin stats' }, { status: 500 })
     }
 
     const usersByRole = profiles?.reduce((acc, profile) => {

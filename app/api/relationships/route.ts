@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching relationships:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch relationships' }, { status: 500 })
     }
 
     return NextResponse.json({ data })
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Relationship already exists' }, { status: 409 })
       }
       console.error('Error creating relationship:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create relationship' }, { status: 500 })
     }
 
     return NextResponse.json({ data, success: true })
@@ -170,7 +170,7 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error('Error deleting relationship:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to delete relationship' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

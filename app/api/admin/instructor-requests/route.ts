@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching instructors:', error)
+      return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
     }
 
     // Get student count for each instructor

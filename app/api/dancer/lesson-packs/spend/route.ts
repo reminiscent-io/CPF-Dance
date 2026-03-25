@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (usageError) {
-      return NextResponse.json({ error: usageError.message }, { status: 500 })
+      console.error('Error creating lesson usage record:', usageError)
+      return NextResponse.json({ error: 'Failed to spend lesson' }, { status: 500 })
     }
 
     // Decrement remaining_lessons
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      console.error('Error updating lesson pack balance:', updateError)
+      return NextResponse.json({ error: 'Failed to update lesson pack' }, { status: 500 })
     }
 
     return NextResponse.json({ usage, purchase: updatedPurchase })

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     
     if (profilesError) {
       console.error('[Admin Users] Error fetching profiles:', profilesError)
-      return NextResponse.json({ error: profilesError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
     }
 
     const { data: studentsData, error: studentsError } = await supabase

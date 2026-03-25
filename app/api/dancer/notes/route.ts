@@ -106,7 +106,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+      console.error('Error creating note:', insertError)
+      return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
     }
 
     return NextResponse.json({ note }, { status: 201 })
@@ -147,7 +148,8 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      console.error('Error updating note:', updateError)
+      return NextResponse.json({ error: 'Failed to update note' }, { status: 500 })
     }
 
     return NextResponse.json({ note })
@@ -179,7 +181,8 @@ export async function DELETE(request: NextRequest) {
       .eq('author_id', profile.id)
 
     if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+      console.error('Error deleting note:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete note' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

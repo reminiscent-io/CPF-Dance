@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     if (enrollmentError) {
       console.error('Error creating enrollment:', enrollmentError)
-      return NextResponse.json({ error: enrollmentError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to enroll in class' }, { status: 500 })
     }
 
     return NextResponse.json({ enrollment }, { status: 201 })

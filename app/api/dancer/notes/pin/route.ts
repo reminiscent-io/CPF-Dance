@@ -27,7 +27,8 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      console.error('Error updating note pin status:', updateError)
+      return NextResponse.json({ error: 'Failed to update note' }, { status: 500 })
     }
 
     if (!note) {

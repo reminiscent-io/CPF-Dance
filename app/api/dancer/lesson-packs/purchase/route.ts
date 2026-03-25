@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+      console.error('Error creating lesson pack purchase:', insertError)
+      return NextResponse.json({ error: 'Failed to purchase lesson pack' }, { status: 500 })
     }
 
     return NextResponse.json({ purchase }, { status: 201 })

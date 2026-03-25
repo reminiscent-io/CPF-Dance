@@ -27,11 +27,16 @@ export async function GET(
       return NextResponse.json({ error: 'Template not found' }, { status: 404 })
     }
 
+    // Ownership check: non-admin users can only view their own or shared templates
+    if (profile.role !== 'admin' && template.created_by !== profile.id && !template.is_shared) {
+      return NextResponse.json({ error: 'Not authorized to view this template' }, { status: 403 })
+    }
+
     return NextResponse.json({ template })
   } catch (error: any) {
     console.error('Error fetching template:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch template' },
+      { error: 'Failed to fetch template' },
       { status: 500 }
     )
   }
@@ -51,6 +56,20 @@ export async function PATCH(
     }
 
     const supabase = await createClient()
+
+    // Ownership check: non-admin users can only update their own templates
+    if (profile.role !== 'admin') {
+      const { data: existing } = await supabase
+        .from('waiver_templates')
+        .select('created_by')
+        .eq('id', id)
+        .single()
+
+      if (!existing || existing.created_by !== profile.id) {
+        return NextResponse.json({ error: 'Not authorized to update this template' }, { status: 403 })
+      }
+    }
+
     const body = await request.json()
 
     const {
@@ -93,7 +112,7 @@ export async function PATCH(
   } catch (error: any) {
     console.error('Error updating template:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to update template' },
+      { error: 'Failed to update template' },
       { status: 500 }
     )
   }
@@ -114,6 +133,19 @@ export async function DELETE(
 
     const supabase = await createClient()
 
+    // Ownership check: non-admin users can only delete their own templates
+    if (profile.role !== 'admin') {
+      const { data: existing } = await supabase
+        .from('waiver_templates')
+        .select('created_by')
+        .eq('id', id)
+        .single()
+
+      if (!existing || existing.created_by !== profile.id) {
+        return NextResponse.json({ error: 'Not authorized to delete this template' }, { status: 403 })
+      }
+    }
+
     // Soft delete - set is_active to false
     const { error } = await supabase
       .from('waiver_templates')
@@ -128,7 +160,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Error deleting template:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to delete template' },
+      { error: 'Failed to delete template' },
       { status: 500 }
     )
   }

@@ -30,7 +30,7 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching class:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch class' }, { status: 500 })
     }
 
     if (!classData) {
@@ -174,11 +174,7 @@ export async function PATCH(
 
     if (error) {
       console.error('Supabase error updating class:', error)
-      return NextResponse.json({
-        error: error.message,
-        details: error.details,
-        hint: error.hint
-      }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update class' }, { status: 500 })
     }
 
     if (!classData) {
@@ -188,8 +184,7 @@ export async function PATCH(
     return NextResponse.json({ class: classData })
   } catch (error) {
     console.error('Unexpected error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -226,7 +221,7 @@ export async function DELETE(
 
     if (error) {
       console.error('Error deleting class:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to delete class' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

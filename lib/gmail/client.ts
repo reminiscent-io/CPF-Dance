@@ -56,20 +56,25 @@ export interface EmailMessage {
   references?: string;
 }
 
+// Strip CRLF sequences to prevent email header injection
+function sanitizeHeaderValue(value: string): string {
+  return value.replace(/[\r\n]/g, '').trim()
+}
+
 export async function sendEmail(message: EmailMessage): Promise<{ threadId: string; messageId: string }> {
   const gmail = await getGmailClient();
-  
+
   const headers = [
-    `To: ${message.to}`,
-    `Subject: ${message.subject}`,
+    `To: ${sanitizeHeaderValue(message.to)}`,
+    `Subject: ${sanitizeHeaderValue(message.subject)}`,
     'Content-Type: text/html; charset=utf-8',
   ];
-  
+
   if (message.inReplyTo) {
-    headers.push(`In-Reply-To: ${message.inReplyTo}`);
+    headers.push(`In-Reply-To: ${sanitizeHeaderValue(message.inReplyTo)}`);
   }
   if (message.references) {
-    headers.push(`References: ${message.references}`);
+    headers.push(`References: ${sanitizeHeaderValue(message.references)}`);
   }
   
   const emailContent = [...headers, '', message.body].join('\r\n');

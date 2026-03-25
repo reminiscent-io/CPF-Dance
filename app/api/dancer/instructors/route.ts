@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
       .eq('student_id', student.id)
 
     if (relError) {
-      return NextResponse.json({ error: relError.message }, { status: 500 })
+      console.error('Error fetching relationships:', relError)
+      return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
     }
 
     const instructorIds = (relationships || []).map(r => r.instructor_id)
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest) {
         .in('role', ['instructor', 'admin'])
 
       if (allError) {
-        return NextResponse.json({ error: allError.message }, { status: 500 })
+        console.error('Error fetching all instructors:', allError)
+        return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
       }
 
       return NextResponse.json({ instructors: allInstructors || [] })
@@ -40,7 +42,8 @@ export async function GET(request: NextRequest) {
       .in('role', ['instructor', 'admin'])
 
     if (instructorsError) {
-      return NextResponse.json({ error: instructorsError.message }, { status: 500 })
+      console.error('Error fetching instructors by ID:', instructorsError)
+      return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
     }
 
     return NextResponse.json({ instructors: instructors || [] })
