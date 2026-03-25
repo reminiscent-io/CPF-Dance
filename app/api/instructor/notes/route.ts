@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { hasInstructorPrivileges } from '@/lib/auth/privileges'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 
 export async function POST(request: Request) {
   try {
@@ -41,8 +42,8 @@ export async function POST(request: Request) {
       .insert({
         author_id: user.id,
         student_id: student_id || null,
-        title: title || null,
-        content: content.trim(),
+        title: title ? sanitizeHtml(title) : null,
+        content: sanitizeHtml(content.trim()),
         tags: tags || [],
         class_id: class_id || null,
         visibility: visibility || 'shared_with_student',
@@ -63,9 +64,7 @@ export async function POST(request: Request) {
     if (noteError) {
       console.error('Supabase error creating note:', noteError)
       return NextResponse.json({
-        error: noteError.message,
-        details: noteError.details,
-        hint: noteError.hint
+        error: 'Failed to save note'
       }, { status: 500 })
     }
 
@@ -114,10 +113,10 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
-    // Build update object
+    // Build update object - sanitize HTML content server-side
     const updateData: Record<string, unknown> = {
-      title: title || null,
-      content: content.trim(),
+      title: title ? sanitizeHtml(title) : null,
+      content: sanitizeHtml(content.trim()),
       tags: tags || [],
       class_id: class_id || null,
       visibility: visibility || 'shared_with_student',
@@ -143,9 +142,7 @@ export async function PUT(request: Request) {
     if (noteError) {
       console.error('Supabase error updating note:', noteError)
       return NextResponse.json({
-        error: noteError.message,
-        details: noteError.details,
-        hint: noteError.hint
+        error: 'Failed to save note'
       }, { status: 500 })
     }
 

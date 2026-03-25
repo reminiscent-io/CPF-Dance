@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication to prevent API quota abuse
+    const profile = await getCurrentUserWithRole()
+    if (!profile) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { query } = await request.json()
 
     if (!query || query.length < 3) {

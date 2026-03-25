@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/server-auth'
 import { sendEmail } from '@/lib/gmail/client'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,14 +24,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 })
     }
 
+    // Sanitize user-provided content to prevent HTML injection
+    const sanitizedBody = sanitizeHtml(body)
+    const sanitizedContactName = sanitizeHtml(contactName || '')
+    const sanitizedOriginalMessage = sanitizeHtml(originalMessage || '')
+
     const fullBody = `
       <div style="font-family: Arial, sans-serif;">
-        ${body}
+        ${sanitizedBody}
         <br><br>
         <hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
         <div style="color: #666; font-size: 12px;">
-          <strong>Original Inquiry from ${contactName}:</strong><br>
-          ${originalMessage}
+          <strong>Original Inquiry from ${sanitizedContactName}:</strong><br>
+          ${sanitizedOriginalMessage}
         </div>
       </div>
     `

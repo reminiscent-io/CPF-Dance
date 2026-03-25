@@ -24,6 +24,24 @@ export async function POST(
       )
     }
 
+    // Validate signature image: must be a PNG data URL and under 500KB
+    if (typeof signature_image !== 'string' || !signature_image.startsWith('data:image/png;base64,')) {
+      return NextResponse.json(
+        { error: 'Invalid signature format. Must be a PNG image.' },
+        { status: 400 }
+      )
+    }
+    const base64Prefix = 'data:image/png;base64,'
+    const base64Length = signature_image.length - base64Prefix.length
+    const estimatedBytes = Math.ceil(base64Length * 3 / 4)
+    const MAX_SIGNATURE_SIZE = 500 * 1024 // 500KB
+    if (estimatedBytes > MAX_SIGNATURE_SIZE) {
+      return NextResponse.json(
+        { error: 'Signature image too large. Maximum size is 500KB.' },
+        { status: 400 }
+      )
+    }
+
     // Verify user has permission to sign this waiver
     const { data: waiver, error: fetchError } = await supabase
       .from('waivers')
@@ -114,7 +132,7 @@ export async function POST(
   } catch (error: any) {
     console.error('Error signing waiver:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to sign waiver' },
+      { error: 'Failed to sign waiver' },
       { status: 500 }
     )
   }

@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching studio inquiries:', error)
+      return NextResponse.json({ error: 'Failed to fetch studio inquiries' }, { status: 500 })
     }
 
     return NextResponse.json({ inquiries })
@@ -73,7 +74,8 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error updating studio inquiry:', error)
+      return NextResponse.json({ error: 'Failed to update studio inquiry' }, { status: 500 })
     }
 
     return NextResponse.json({ inquiry: data })

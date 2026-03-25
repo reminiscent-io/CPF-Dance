@@ -56,7 +56,8 @@ export async function PUT(request: NextRequest) {
         .eq('id', profile.id)
 
       if (profileError) {
-        return NextResponse.json({ error: profileError.message }, { status: 500 })
+        console.error('Error updating dancer profile:', profileError)
+        return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
       }
     }
 
@@ -79,7 +80,8 @@ export async function PUT(request: NextRequest) {
           .eq('id', student.id)
 
         if (studentError) {
-          return NextResponse.json({ error: studentError.message }, { status: 500 })
+          console.error('Error updating student record:', studentError)
+          return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
         }
       }
     }

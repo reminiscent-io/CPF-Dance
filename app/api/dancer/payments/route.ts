@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
       .order('transaction_date', { ascending: false })
 
     if (paymentsError) {
-      return NextResponse.json({ error: paymentsError.message }, { status: 500 })
+      console.error('Error fetching payments:', paymentsError)
+      return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
     }
 
     // Fetch lesson pack purchases

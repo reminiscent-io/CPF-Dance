@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
     if (signUpError) {
       console.error('Supabase signup error:', signUpError)
-      return NextResponse.json({ error: signUpError.message }, { status: 400 })
+      return NextResponse.json({ error: 'Failed to create account' }, { status: 400 })
     }
 
     if (!authData.user) {

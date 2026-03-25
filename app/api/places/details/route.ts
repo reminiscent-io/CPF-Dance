@@ -40,6 +40,13 @@ function parseAddressComponents(components: AddressComponent[]) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication to prevent API quota abuse
+    const { getCurrentUserWithRole } = await import('@/lib/auth/server-auth')
+    const profile = await getCurrentUserWithRole()
+    if (!profile) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { placeId } = await request.json()
 
     if (!placeId) {

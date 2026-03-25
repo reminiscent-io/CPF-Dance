@@ -20,7 +20,7 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching studio:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch studio' }, { status: 500 })
     }
 
     if (!studio) {
@@ -78,7 +78,7 @@ export async function PATCH(
 
     if (error) {
       console.error('Error updating studio:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update studio' }, { status: 500 })
     }
 
     if (!studio) {
@@ -127,7 +127,7 @@ export async function DELETE(
 
     if (error) {
       console.error('Error deleting studio:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to delete studio' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching students:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch students' }, { status: 500 })
     }
 
     return NextResponse.json({ students })
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating student:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create student' }, { status: 500 })
     }
 
     return NextResponse.json({ student }, { status: 201 })

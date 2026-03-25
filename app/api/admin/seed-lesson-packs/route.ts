@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireRole } from '@/lib/auth/server-auth'
 
 export async function POST(request: NextRequest) {
   try {
+    await requireRole('admin')
     const supabase = await createClient()
 
     const packs = [
@@ -29,7 +31,8 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error seeding lesson packs:', error)
+      return NextResponse.json({ error: 'Failed to seed lesson packs' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, created: data }, { status: 201 })

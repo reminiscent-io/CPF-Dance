@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
       .order('lesson_count', { ascending: true })
 
     if (packsError) {
-      return NextResponse.json({ error: packsError.message }, { status: 500 })
+      console.error('Error fetching lesson packs:', packsError)
+      return NextResponse.json({ error: 'Failed to fetch lesson packs' }, { status: 500 })
     }
 
     // Get current student's purchases
@@ -26,7 +27,8 @@ export async function GET(request: NextRequest) {
       .order('purchased_at', { ascending: false })
 
     if (purchasesError) {
-      return NextResponse.json({ error: purchasesError.message }, { status: 500 })
+      console.error('Error fetching lesson pack purchases:', purchasesError)
+      return NextResponse.json({ error: 'Failed to fetch lesson pack purchases' }, { status: 500 })
     }
 
     return NextResponse.json({ packs, purchases })

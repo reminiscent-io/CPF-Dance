@@ -133,7 +133,7 @@ export async function POST(request: Request) {
     if (paymentError) {
       console.error('Error creating payment:', paymentError)
       return NextResponse.json(
-        { error: paymentError.message },
+        { error: 'Failed to create payment request' },
         { status: 500 }
       )
     }

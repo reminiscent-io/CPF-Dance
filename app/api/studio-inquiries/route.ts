@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
       if (studiosError) {
         console.error('Error fetching instructor studios:', studiosError)
-        return NextResponse.json({ error: studiosError.message }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to fetch studio inquiries' }, { status: 500 })
       }
 
       const studioIds = [...new Set((instructorStudios || []).map(c => c.studio_id))]
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         console.error('Error fetching inquiries:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to fetch studio inquiries' }, { status: 500 })
       }
 
       const enrichedInquiries = (inquiries || []).map((inquiry: any) => ({
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching inquiries:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch studio inquiries' }, { status: 500 })
     }
 
     // Add default values for optional columns that may not exist yet

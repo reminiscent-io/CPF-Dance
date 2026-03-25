@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching templates:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch templates' },
+      { error: 'Failed to fetch templates' },
       { status: 500 }
     )
   }
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating template:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create template' },
+      { error: 'Failed to create template' },
       { status: 500 }
     )
   }

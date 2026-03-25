@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
       .order('classes(start_time)', { ascending: true })
 
     if (enrollmentsError) {
-      return NextResponse.json({ error: enrollmentsError.message }, { status: 500 })
+      console.error('Error fetching enrollments:', enrollmentsError)
+      return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 })
     }
 
     const { data: instructorProfiles, error: instructorError } = await supabase
