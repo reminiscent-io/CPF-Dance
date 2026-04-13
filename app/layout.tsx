@@ -6,13 +6,13 @@ import { RegisterServiceWorker } from './register-sw'
 import CookieConsentBanner from '@/components/CookieConsentBanner'
 
 export const metadata: Metadata = {
-  title: 'Dance Teaching Schedule',
-  description: 'Professional dance teaching schedule management system',
+  title: 'CPF Dance — Precision. Passion. Performance.',
+  description: 'Connect with a world-class instructor, receive detailed feedback after every lesson, and track your growth as a dancer.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Dance Schedule',
+    title: 'CPF Dance',
   },
   icons: [
     { rel: 'icon', url: '/favicon.ico' },
@@ -42,7 +42,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#c75a6d" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Dance Schedule" />
+        <meta name="apple-mobile-web-app-title" content="CPF Dance" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Google Analytics with Consent Mode - defaults to denied, updated by CookieConsentBanner */}

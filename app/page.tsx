@@ -19,7 +19,7 @@ const dancerFeatures = [
   {
     id: 'progress',
     title: 'Track Your Progress',
-    description: 'View detailed feedback from your instructor and watch your growth',
+    description: 'See detailed feedback from your instructor — lesson by lesson',
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -29,7 +29,7 @@ const dancerFeatures = [
   {
     id: 'classes',
     title: 'Browse Classes',
-    description: 'Discover and enroll in group classes and workshops',
+    description: 'Find group classes and workshops near you',
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -39,7 +39,7 @@ const dancerFeatures = [
   {
     id: 'lessons',
     title: 'Private Lessons',
-    description: 'Request and pay for personalized one-on-one instruction',
+    description: 'Book personalized one-on-one instruction',
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -49,7 +49,7 @@ const dancerFeatures = [
   {
     id: 'journal',
     title: 'Personal Journal',
-    description: 'Keep notes on your practice and set goals',
+    description: 'Capture your own notes, goals, and breakthroughs',
     icon: (
       <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -392,7 +392,7 @@ export default function HomePage() {
             animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            A free platform for dancers to track their progress, connect with world-class instructors, and elevate their craft
+            Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
@@ -418,6 +418,31 @@ export default function HomePage() {
 
       {/* Studio Carousel - Right after hero */}
       <StudioCarousel />
+
+      {/* Problem Statement */}
+      <section className="py-12 sm:py-16 bg-charcoal-900 text-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.p
+            className="text-xl sm:text-2xl leading-relaxed"
+            style={{ fontFamily: 'var(--font-family-display)' }}
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            In dance, real feedback is rare. Most dancers leave class with nothing written down, no notes on what to work on, no record of progress.
+          </motion.p>
+          <motion.p
+            className="mt-4 text-lg text-rose-300 font-medium"
+            initial={isMounted ? { opacity: 0 } : false}
+            whileInView={isMounted ? { opacity: 1 } : { opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            CPF Dance changes that.
+          </motion.p>
+        </div>
+      </section>
 
       {/* Dancer Portal Section - Primary Focus */}
       <section id="dancer-portal" className="relative py-16 overflow-hidden">
@@ -447,7 +472,7 @@ export default function HomePage() {
                   For Dancers
                 </h2>
                 <p className="text-lg text-charcoal-800 leading-relaxed">
-                  Everything you need to track your journey and reach your goals
+                  Built for dancers who take their training seriously
                 </p>
               </div>
 
@@ -538,8 +563,8 @@ export default function HomePage() {
                   unparalleled expertise to every lesson.
                 </p>
                 <p>
-                  Her precision-based approach focuses on technique, artistry, and personal growth, ensuring
-                  each dancer reaches their full potential while developing confidence and grace.
+                  Her precision-based approach focuses on technique, artistry, and personal growth, so
+                  every dancer can reach their full potential while developing confidence and grace.
                 </p>
                 <p>
                   Whether you're a beginner discovering your passion or an advanced dancer refining your skills,
@@ -674,7 +699,7 @@ export default function HomePage() {
                   transition={{ duration: 0.4, delay: 0.2 }}
                   className="inline-block mt-3 px-4 py-1.5 bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold rounded-full shadow-md"
                 >
-                  Coming Soon
+                  Available by Invitation
                 </motion.span>
               </div>
 
