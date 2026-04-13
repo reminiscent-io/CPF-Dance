@@ -6,6 +6,30 @@ Dance teaching schedule management platform. Roles: Instructor, Dancer, Guardian
 
 **Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, Supabase (PostgreSQL + Auth), Tailwind CSS v4
 
+**Key Integrations:** Stripe (payments/webhooks), TipTap (rich text editor), OpenAI (voice-to-notes, note formatting), Google Places API, Gmail (via Replit connectors), Recharts (dashboard charts)
+
+## Architecture
+
+```
+app/
+  (portal)/           # Route group — no URL segment
+    instructor/       # Instructor dashboard & management
+    dancer/           # Dancer portal (schedule, notes, waivers)
+    admin/            # Admin portal (all-access)
+    login/ signup/    # Auth pages
+  api/                # API routes (one folder per resource)
+  auth/               # Auth callback handler
+components/           # Shared UI components (flat, no nesting except ui/ and notes/)
+lib/
+  auth/               # server-auth.ts — role guards
+  supabase/           # client.ts, server.ts, middleware.ts
+  utils/              # pricing, sanitize, date helpers, calendar export
+  gmail/              # Gmail via Replit connectors
+proxy.ts              # Middleware — routing, auth session refresh
+migrations/           # Numbered SQL migrations (01–34)
+tests/                # Vitest setup and test utils
+```
+
 ## Commands
 
 ```bash
@@ -16,9 +40,24 @@ npm run lint         # Linting
 npm run test:run     # Run tests once
 npm test             # Tests in watch mode
 npm run test:coverage
+npm run test:ui       # Vitest UI
+npm run test:watch    # Watch mode (alias for npm test)
 ```
 
 Port 5000 maps to external port 80 on Replit. Dev server binds to `0.0.0.0`.
+
+## Environment Variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Stripe webhook | Admin-level Supabase access (webhook route only) |
+| `STRIPE_SECRET_KEY` | Payments | Stripe server-side key |
+| `STRIPE_WEBHOOK_SECRET` | Payments | Stripe webhook signature verification |
+| `NEXT_PUBLIC_BASE_URL` | Optional | Base URL for Stripe redirects (falls back to request origin) |
+| `OPENAI_API_KEY` | Voice/AI notes | Voice-to-notes transcription and note formatting |
+| `GOOGLE_PLACES_API_KEY` | Studio search | Google Places autocomplete and details |
 
 ## Critical Rules
 
@@ -76,6 +115,14 @@ Four models in `lib/utils/pricing.ts`: `per_person`, `per_class`, `per_hour`, `t
 4. Update `proxy.ts` if new portal routes
 5. Sanitize any user HTML with `createSanitizedHtml()`
 6. Consider admin access — admins should generally see the data
+
+## Testing
+
+Vitest with jsdom environment. `@` path alias resolves to project root. Setup file at `tests/setup.ts`. Tests co-located with source in `__tests__/` folders or alongside files as `*.test.ts`.
+
+## Database Migrations
+
+Numbered SQL files in `migrations/` (01–34). Applied manually via Supabase SQL editor — no automated migration runner. Schema reference: `supabase-schema.sql`.
 
 ## Deployment Gotcha
 
