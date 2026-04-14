@@ -883,68 +883,66 @@ export default function HomePage() {
         )}
       </Modal>
 
-      <footer className="bg-mauve-700 text-white py-8">
+      <footer className="bg-charcoal-950 text-white/80 py-6 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4 mb-6">
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
-                <div className="text-xl font-semibold text-white mb-4">Quick Links</div>
-                <ul className="space-y-2">
-                  <li>
-                    <Link href="/login" className="text-white hover:text-rose-400 transition-colors">
-                      Login
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/signup" className="text-white hover:text-rose-400 transition-colors">
-                      Sign Up
-                    </Link>
-                  </li>
-                  <li>
-                    <button onClick={openInquiryModal} className="text-white hover:text-rose-400 transition-colors">
-                      Studio Inquiry
-                    </button>
-                  </li>
-                </ul>
-              </div>
+          <div className="grid md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <div className="text-xs font-semibold text-gold-400 uppercase tracking-[0.2em] mb-2">Quick Links</div>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                <li>
+                  <Link href="/login" className="hover:text-gold-400 transition-colors">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="hover:text-gold-400 transition-colors">
+                    Sign Up
+                  </Link>
+                </li>
+                <li>
+                  <button onClick={openInquiryModal} className="hover:text-gold-400 transition-colors">
+                    Studio Inquiry
+                  </button>
+                </li>
+              </ul>
+            </div>
 
-              <div>
-                <div className="text-xl font-semibold text-white mb-4">Contact</div>
-                <ul className="space-y-2 text-white">
-                  <li>
-                    <a
-                      href="mailto:info@cpfdance.com"
-                      className="hover:text-rose-400 transition-colors"
-                    >
-                      Email: info@cpfdance.com
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="https://instagram.com/courtneyfiledance" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-rose-400 transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
-                      </svg>
-                      @courtneyfiledance
-                    </a>
-                  </li>
-                </ul>
-              </div>
+            <div className="md:text-right">
+              <div className="text-xs font-semibold text-gold-400 uppercase tracking-[0.2em] mb-2">Contact</div>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 md:justify-end">
+                <li>
+                  <a
+                    href="mailto:info@cpfdance.com"
+                    className="hover:text-gold-400 transition-colors"
+                  >
+                    info@cpfdance.com
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://instagram.com/courtneyfiledance"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-gold-400 transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
+                    </svg>
+                    @courtneyfiledance
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-700 pt-6 text-center text-white">
+          <div className="border-t border-white/10 pt-3 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-white/60">
             <p>&copy; {new Date().getFullYear()} CPF Dance LLC. All rights reserved.</p>
-            <div className="mt-4 text-sm text-gray-400 space-x-4">
-              <Link href="/terms-of-service" className="hover:text-rose-400 transition-colors">
+            <div className="space-x-3">
+              <Link href="/terms-of-service" className="hover:text-gold-400 transition-colors">
                 Terms of Service
               </Link>
               <span>•</span>
-              <Link href="/privacy-policy" className="hover:text-rose-400 transition-colors">
+              <Link href="/privacy-policy" className="hover:text-gold-400 transition-colors">
                 Privacy Policy
               </Link>
             </div>
