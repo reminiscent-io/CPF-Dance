@@ -665,7 +665,7 @@ export default function HomePage() {
       </section>
 
       {/* Instructor Portal Section - Secondary (temporarily hidden) */}
-      {/*
+      {false && (
       <section id="instructor-portal" className="relative py-16 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
@@ -766,7 +766,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      */}
+      )}
 
       {/* Studio Inquiry Modal */}
       <Modal
