@@ -126,6 +126,7 @@ export default function HomePage() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [heroImgLoaded, setHeroImgLoaded] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [showInquiryModal, setShowInquiryModal] = useState(false)
   const heroContentRef = useRef<HTMLDivElement>(null)
@@ -287,6 +288,14 @@ export default function HomePage() {
     setIsMounted(true)
   }, [])
 
+  // Safety fallback: if the hero image's onLoad never fires (cached image,
+  // desktop where the mobile <img> is display:none, etc.), unblock the reveal
+  // sequence after a short delay so copy never stays hidden.
+  useEffect(() => {
+    const t = setTimeout(() => setHeroImgLoaded(true), 400)
+    return () => clearTimeout(t)
+  }, [])
+
   // Scroll listener for parallax effect
   useEffect(() => {
     const handleScroll = () => {
@@ -296,6 +305,13 @@ export default function HomePage() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Hero reveal sequence: photo paints first, overlay fades in, then copy
+  // cascades. `revealActive` gates the animation target — until the hero
+  // image loads (or the 400ms fallback fires), elements stay hidden.
+  // Reduced-motion users skip the reveal.
+  const heroAnimateEnabled = isMounted && !prefersReducedMotion
+  const heroRevealActive = heroAnimateEnabled && heroImgLoaded
 
   return (
     <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
@@ -352,44 +368,58 @@ export default function HomePage() {
           <img
             src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
             alt=""
+            onLoad={() => setHeroImgLoaded(true)}
+            onError={() => setHeroImgLoaded(true)}
           />
-          <div className="lp-hero__mobile-overlay" />
+          <motion.div
+            className="lp-hero__mobile-overlay"
+            initial={heroAnimateEnabled ? { opacity: 0 } : false}
+            animate={{ opacity: heroRevealActive ? 1 : 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
         </div>
 
         <div className="lp-hero__grid">
           <div className="lp-hero__content" ref={heroContentRef}>
             <motion.span
               className="lp-eyebrow"
-              initial={isMounted ? { opacity: 0, y: 10 } : false}
-              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+              initial={heroAnimateEnabled ? { opacity: 0, y: 10 } : false}
+              animate={{ opacity: heroRevealActive ? 1 : 0, y: heroRevealActive ? 0 : 10 }}
+              transition={{ duration: 0.6, delay: heroRevealActive ? 0.85 : 0 }}
             >
               World-Class Dance Instruction
             </motion.span>
-            <motion.h1
-              className="lp-hero__title"
-              initial={isMounted ? { opacity: 0, y: -20 } : false}
-              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
-              Precision. Passion.
-              <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+            <h1 className="lp-hero__title">
+              <motion.span
+                className="block"
+                initial={heroAnimateEnabled ? { opacity: 0, y: -20 } : false}
+                animate={{ opacity: heroRevealActive ? 1 : 0, y: heroRevealActive ? 0 : -20 }}
+                transition={{ duration: 0.7, delay: heroRevealActive ? 0.95 : 0 }}
+              >
+                Precision. Passion.
+              </motion.span>
+              <motion.span
+                className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2"
+                initial={heroAnimateEnabled ? { opacity: 0, y: -20 } : false}
+                animate={{ opacity: heroRevealActive ? 1 : 0, y: heroRevealActive ? 0 : -20 }}
+                transition={{ duration: 0.7, delay: heroRevealActive ? 1.1 : 0 }}
+              >
                 Performance.
-              </span>
-            </motion.h1>
+              </motion.span>
+            </h1>
             <motion.p
               className="lp-hero__body"
-              initial={isMounted ? { opacity: 0 } : false}
-              animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
+              initial={heroAnimateEnabled ? { opacity: 0 } : false}
+              animate={{ opacity: heroRevealActive ? 1 : 0 }}
+              transition={{ duration: 0.7, delay: heroRevealActive ? 1.35 : 0 }}
             >
               Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
             </motion.p>
             <motion.div
               className="lp-hero__ctas"
-              initial={isMounted ? { opacity: 0, y: 20 } : false}
-              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
+              initial={heroAnimateEnabled ? { opacity: 0, y: 20 } : false}
+              animate={{ opacity: heroRevealActive ? 1 : 0, y: heroRevealActive ? 0 : 20 }}
+              transition={{ duration: 0.7, delay: heroRevealActive ? 1.55 : 0 }}
             >
               <Link href="/signup?role=dancer">
                 <Button variant="gold" size="lg" className="text-lg px-8 py-3">
