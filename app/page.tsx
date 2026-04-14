@@ -301,7 +301,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
       {/* Navigation Bar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-cream-50/90 backdrop-blur-md border-b border-charcoal-950/10 shadow-sm"
         style={{
           opacity: showNav ? 1 : 0,
           transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
@@ -311,13 +311,17 @@ export default function HomePage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <Link
+            href="/"
+            className="text-2xl font-semibold text-gold-600 hover:text-gold-700 transition-colors"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
             CPF Dance
           </Link>
-          <div className="flex gap-4">
-            <Link 
+          <div className="flex gap-4 sm:gap-6 items-center">
+            <Link
               href="/login?portal=dancer"
-              className="text-gray-700 hover:text-rose-600 transition-colors font-medium flex items-center gap-2"
+              className="text-charcoal-900 hover:text-gold-600 transition-colors font-medium text-sm uppercase tracking-wider flex items-center gap-2"
               onClick={handleLoginClick}
             >
               {loginLoading ? (
@@ -334,7 +338,7 @@ export default function HomePage() {
             </Link>
             <button
               onClick={openInquiryModal}
-              className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
+              className="text-charcoal-900 hover:text-gold-600 transition-colors font-medium text-sm uppercase tracking-wider"
             >
               Studio Inquiry
             </button>
