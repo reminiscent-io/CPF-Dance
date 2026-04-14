@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
+import './landing.css'
 
 const StudioCarousel = dynamic(() => import('@/components/StudioCarousel'), {
   loading: () => null,
@@ -341,78 +342,120 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <section
-        className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[70vh] lg:min-h-[75vh]"
-      >
-        {/* Background Images */}
-        {/* Mobile: Single hero image - top offset for nav bar */}
-        <div className="absolute inset-x-0 bottom-0 top-14 md:hidden">
-          <img
-            src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
-            alt=""
-            className="w-full h-full object-cover object-top"
-            aria-hidden="true"
-          />
-        </div>
+      <section className="lp lp-hero relative overflow-hidden" aria-label="Hero">
+        {/* Mobile: Single hero image background with centered text */}
+        <div className="md:hidden relative min-h-[100svh] flex flex-col justify-center">
+          <div className="absolute inset-x-0 bottom-0 top-14">
+            <img
+              src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
+              alt=""
+              className="w-full h-full object-cover object-top"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="absolute inset-0 bg-white/75"></div>
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
-        {/* Desktop: All 4 images side by side - top offset for nav bar */}
-        <div className="absolute inset-x-0 bottom-0 top-14 hidden md:flex">
-          {learnFromTheBestImages.map((image, idx) => (
-            <div key={idx} className="flex-1 h-full">
-              <img
-                src={image}
-                alt=""
-                className="w-full h-full object-cover object-top"
-                aria-hidden="true"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* White opaque overlay for readability */}
-        <div className="absolute inset-0 bg-white/75"></div>
-
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
-          <motion.h1
-            className="text-4xl sm:text-5xl lg:text-7xl font-bold text-charcoal-950 mb-6"
-            initial={isMounted ? { opacity: 0, y: -20 } : false}
-            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            Precision. Passion.
-            <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
-              Performance.
-            </span>
-          </motion.h1>
-          <motion.p
-            className="text-lg sm:text-xl lg:text-2xl text-charcoal-800 mb-8 max-w-3xl mx-auto leading-relaxed"
-            initial={isMounted ? { opacity: 0 } : false}
-            animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
-          </motion.p>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-          >
-            <Link href="/signup?role=dancer">
-              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
-                Get Started
-              </Button>
-            </Link>
-            <Link
-              href="/login?portal=dancer"
-              className="text-lg font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
-              onClick={handleLoginClick}
+          <div className="relative w-full px-4 sm:px-6 py-12 pt-24 text-center" ref={heroContentRef}>
+            <motion.h1
+              className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-6"
+              initial={isMounted ? { opacity: 0, y: -20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
             >
-              Already a member? Sign In →
-            </Link>
-          </motion.div>
+              Precision. Passion.
+              <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+                Performance.
+              </span>
+            </motion.h1>
+            <motion.p
+              className="text-lg sm:text-xl text-charcoal-800 mb-8 max-w-3xl mx-auto leading-relaxed"
+              initial={isMounted ? { opacity: 0 } : false}
+              animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
+            </motion.p>
+            <motion.div
+              className="flex flex-col gap-4 justify-center items-center"
+              initial={isMounted ? { opacity: 0, y: 20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+            >
+              <Link href="/signup?role=dancer">
+                <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                  Get Started
+                </Button>
+              </Link>
+              <Link
+                href="/login?portal=dancer"
+                className="text-lg font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
+                onClick={handleLoginClick}
+              >
+                Already a member? Sign In →
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Desktop: Left third text on cream background, right two-thirds two images */}
+        <div className="hidden md:grid lp-hero__grid">
+          <div className="lp-hero__content">
+            <motion.span
+              className="lp-eyebrow"
+              initial={isMounted ? { opacity: 0, y: 10 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              World-Class Dance Instruction
+            </motion.span>
+            <motion.h1
+              className="lp-hero__title"
+              initial={isMounted ? { opacity: 0, y: -20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              Precision. Passion.
+              <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+                Performance.
+              </span>
+            </motion.h1>
+            <motion.p
+              className="lp-hero__body"
+              initial={isMounted ? { opacity: 0 } : false}
+              animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
+            </motion.p>
+            <motion.div
+              className="lp-hero__ctas"
+              initial={isMounted ? { opacity: 0, y: 20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+            >
+              <Link href="/signup?role=dancer">
+                <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                  Get Started
+                </Button>
+              </Link>
+              <Link
+                href="/login?portal=dancer"
+                className="text-base font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
+                onClick={handleLoginClick}
+              >
+                Already a member? Sign In →
+              </Link>
+            </motion.div>
+          </div>
+
+          <div className="lp-hero__media-split" aria-hidden="true">
+            {learnFromTheBestImages.slice(1, 3).map((image, idx) => (
+              <div key={idx}>
+                <img src={image} alt="" loading="eager" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -441,110 +484,6 @@ export default function HomePage() {
           >
             CPF Dance changes that.
           </motion.p>
-        </div>
-      </section>
-
-      {/* Dancer Portal Section - Primary Focus */}
-      <section id="dancer-portal" className="relative py-16 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c"
-            alt="Dancer practicing"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* White Opaque Overlay */}
-        <div className="absolute inset-0 bg-white/60 z-10"></div>
-
-        {/* Content */}
-        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Card className="bg-gradient-to-br from-rose-50/90 to-mauve-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
-              <div className="text-center mb-6">
-                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-                  For Dancers
-                </h2>
-                <p className="text-lg text-charcoal-800 leading-relaxed">
-                  Built for dancers who take their training seriously
-                </p>
-              </div>
-
-              <Link href="/signup?role=dancer" className="block mb-4">
-                <Button size="lg" className="w-full text-lg py-3">
-                  Join Now
-                </Button>
-              </Link>
-
-              <div className="text-center mb-6">
-                <Link
-                  href="/login?portal=dancer"
-                  className="text-sm text-charcoal-700 hover:text-rose-600 transition-colors inline-flex items-center gap-1"
-                  onClick={handleLoginClick}
-                >
-                  Already a member?{' '}
-                  {loginLoading ? (
-                    <>
-                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span className="font-semibold">Logging in...</span>
-                    </>
-                  ) : (
-                    <span className="font-semibold">Log in</span>
-                  )}
-                </Link>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-                {dancerFeatures.map((feature, index) => (
-                  <motion.div
-                    key={feature.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{
-                      duration: 0.4,
-                      delay: index * 0.1,
-                      ease: [0.25, 0.46, 0.45, 0.94]
-                    }}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      transition: { duration: 0.2 }
-                    }}
-                    className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 shadow-sm cursor-default"
-                  >
-                    <motion.div
-                      className="flex-shrink-0 mt-0.5"
-                      initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 0.5,
-                        delay: index * 0.1 + 0.2,
-                        type: "spring",
-                        stiffness: 200
-                      }}
-                    >
-                      {feature.icon}
-                    </motion.div>
-                    <div>
-                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
-                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
         </div>
       </section>
 
@@ -658,6 +597,69 @@ export default function HomePage() {
                 <div className="absolute -top-6 -left-6 w-32 h-32 bg-mauve-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dancer Portal Section - Editorial card style */}
+      <section id="dancer-portal" className="lp lp-dancers">
+        <div className="lp-dancers__bg">
+          <img
+            src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c"
+            alt=""
+            aria-hidden="true"
+          />
+        </div>
+        <div className="lp-dancers__overlay" />
+
+        <div className="lp-dancers__inner">
+          <motion.div
+            className="lp-dancers__head"
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="lp-eyebrow">For Dancers</span>
+            <h2>Built for dancers who take their training seriously.</h2>
+          </motion.div>
+
+          <div className="lp-dancers__grid">
+            {dancerFeatures.map((feature, index) => (
+              <motion.article
+                key={feature.id}
+                className="lp-dancer-card"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+              >
+                <div className="lp-dancer-card__num">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+                <h3 className="lp-dancer-card__title">{feature.title}</h3>
+                <p className="lp-dancer-card__body">{feature.description}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="lp-dancers__ctas">
+            <Link href="/signup?role=dancer">
+              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                Join Now
+              </Button>
+            </Link>
+            <Link
+              href="/login?portal=dancer"
+              className="lp-link"
+              onClick={handleLoginClick}
+            >
+              {loginLoading ? 'Logging in…' : 'Already a member? Sign In →'}
+            </Link>
           </div>
         </div>
       </section>

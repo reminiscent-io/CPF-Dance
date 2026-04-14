@@ -1,0 +1,263 @@
+/* ============================================================
+   Landing page — scoped editorial accents for hero + dancers
+   Pulled from the new-look redesign, trimmed to what we use.
+   ============================================================ */
+
+.lp {
+  --lp-gold: #C4A055;
+  --lp-gold-light: #D4B76A;
+  --lp-gold-dark: #A8863E;
+  --lp-cream: #FAFAF8;
+  --lp-cream-warm: #F5F0E8;
+  --lp-hero-bg: #F0EFED;
+  --lp-charcoal: #1A1A1A;
+  --lp-charcoal-soft: #2D2D2D;
+  --lp-text-muted: #8A8580;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --lp-display: 'Cormorant Garamond', Georgia, serif;
+  --lp-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.lp * { box-sizing: border-box; }
+
+/* ---------- Eyebrow ---------- */
+.lp-eyebrow {
+  display: inline-block;
+  font-family: var(--lp-sans);
+  font-weight: 500;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--lp-gold);
+  margin-bottom: 24px;
+}
+
+/* ---------- Link underline accent ---------- */
+.lp-link {
+  position: relative;
+  display: inline-block;
+  font-family: var(--lp-sans);
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--lp-cream);
+  text-decoration: none;
+  padding-bottom: 4px;
+}
+.lp-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--lp-gold);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.4s var(--ease-out-soft);
+}
+.lp-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* ============================================================
+   Hero — left third (copy on cream) + right two-thirds (two images)
+   ============================================================ */
+.lp-hero {
+  background: var(--lp-hero-bg);
+  color: var(--lp-charcoal);
+  font-family: var(--lp-sans);
+}
+.lp-hero__grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0;
+  align-items: stretch;
+  min-height: 75vh;
+}
+.lp-hero__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 48px 120px 8vw;
+  max-width: 640px;
+}
+.lp-hero__content .lp-eyebrow {
+  margin-bottom: 20px;
+}
+.lp-hero__title {
+  font-family: var(--lp-display);
+  font-weight: 400;
+  color: var(--lp-charcoal);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  margin: 0 0 28px;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+}
+.lp-hero__body {
+  font-family: var(--lp-sans);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--lp-text-muted);
+  margin: 0 0 36px;
+  max-width: 480px;
+}
+.lp-hero__ctas {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.lp-hero__media-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 75vh;
+}
+.lp-hero__media-split > div {
+  flex: 1;
+  overflow: hidden;
+}
+.lp-hero__media-split img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+/* ============================================================
+   For Dancers — editorial cards over existing bg image
+   ============================================================ */
+.lp-dancers {
+  position: relative;
+  isolation: isolate;
+  color: var(--lp-cream);
+  overflow: hidden;
+  padding: 96px 8vw;
+  font-family: var(--lp-sans);
+}
+.lp-dancers__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+.lp-dancers__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.lp-dancers__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(rgba(26, 26, 26, 0.78), rgba(26, 26, 26, 0.86));
+}
+.lp-dancers::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(196, 160, 85, 0.22) 0%, rgba(196, 160, 85, 0) 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+.lp-dancers__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.lp-dancers__head {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 64px;
+}
+.lp-dancers__head .lp-eyebrow {
+  margin-bottom: 16px;
+}
+.lp-dancers__head h2 {
+  font-family: var(--lp-display);
+  color: var(--lp-cream);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  margin: 0;
+}
+
+.lp-dancers__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 56px;
+}
+@media (max-width: 768px) {
+  .lp-dancers__grid { grid-template-columns: 1fr; gap: 12px; }
+}
+
+.lp-dancer-card {
+  position: relative;
+  background: rgba(45, 45, 45, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 40px 32px;
+  border-bottom: 1px solid rgba(196, 160, 85, 0.18);
+  transition: background 0.3s ease;
+}
+.lp-dancer-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--lp-gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease-out-soft);
+}
+.lp-dancer-card:hover {
+  background: rgba(45, 45, 45, 0.85);
+}
+.lp-dancer-card:hover::after { transform: scaleX(1); }
+.lp-dancer-card__num {
+  font-family: var(--lp-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: var(--lp-gold);
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+.lp-dancer-card__title {
+  font-family: var(--lp-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+  color: var(--lp-cream);
+  margin: 0 0 12px;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+}
+.lp-dancer-card__body {
+  font-family: var(--lp-sans);
+  font-size: 0.95rem;
+  color: rgba(250, 250, 248, 0.72);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.lp-dancers__ctas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
