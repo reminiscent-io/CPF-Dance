@@ -65,26 +65,54 @@
 }
 
 /* ============================================================
-   Hero — left third (copy on cream) + right two-thirds (two images)
+   Hero
+   Mobile: single photo background + editorial text overlay
+   Desktop: left third (copy on cream) + right two-thirds (two images)
    ============================================================ */
 .lp-hero {
+  position: relative;
   background: var(--lp-hero-bg);
   color: var(--lp-charcoal);
   font-family: var(--lp-sans);
+  overflow: hidden;
 }
+
+/* Mobile-only photo background */
+.lp-hero__mobile-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.lp-hero__mobile-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.lp-hero__mobile-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(240, 239, 237, 0.82) 0%,
+    rgba(240, 239, 237, 0.62) 45%,
+    rgba(240, 239, 237, 0.92) 100%
+  );
+}
+
 .lp-hero__grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 0;
-  align-items: stretch;
-  min-height: 75vh;
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-height: 100svh;
 }
+
 .lp-hero__content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 120px 48px 120px 8vw;
+  padding: 120px 24px 72px;
   max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
 }
 .lp-hero__content .lp-eyebrow {
   margin-bottom: 20px;
@@ -103,51 +131,84 @@
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--lp-text-muted);
-  margin: 0 0 36px;
+  margin: 0 auto 36px;
   max-width: 480px;
 }
 .lp-hero__ctas {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
+/* Desktop-only media split */
 .lp-hero__media-split {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  min-height: 75vh;
+  display: none;
 }
-.lp-hero__media-split > div {
-  flex: 1;
-  overflow: hidden;
-  /* Soft-blend both vertical edges of each image into the hero background */
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(0, 0, 0, 0.4) 6%,
-    #000 14%,
-    #000 86%,
-    rgba(0, 0, 0, 0.4) 94%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(0, 0, 0, 0.4) 6%,
-    #000 14%,
-    #000 86%,
-    rgba(0, 0, 0, 0.4) 94%,
-    transparent 100%
-  );
-}
-.lp-hero__media-split img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
+
+@media (min-width: 768px) {
+  .lp-hero__mobile-bg { display: none; }
+
+  .lp-hero__grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0;
+    align-items: stretch;
+    min-height: 75vh;
+  }
+  .lp-hero__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 120px 8vw;
+    max-width: 640px;
+    margin: 0;
+    text-align: left;
+  }
+  .lp-hero__body { margin: 0 0 36px; }
+  .lp-hero__ctas {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .lp-hero__media-split {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 75vh;
+  }
+  .lp-hero__media-split > div {
+    flex: 1;
+    overflow: hidden;
+    /* Soft-blend both vertical edges of each image into the hero background */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.4) 6%,
+      #000 14%,
+      #000 86%,
+      rgba(0, 0, 0, 0.4) 94%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.4) 6%,
+      #000 14%,
+      #000 86%,
+      rgba(0, 0, 0, 0.4) 94%,
+      transparent 100%
+    );
+  }
+  .lp-hero__media-split img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
 }
 
 /* ============================================================

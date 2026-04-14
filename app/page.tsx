@@ -346,65 +346,18 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <section className="lp lp-hero relative overflow-hidden" aria-label="Hero">
-        {/* Mobile: Single hero image background with centered text */}
-        <div className="md:hidden relative min-h-[100svh] flex flex-col justify-center">
-          <div className="absolute inset-x-0 bottom-0 top-14">
-            <img
-              src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
-              alt=""
-              className="w-full h-full object-cover object-top"
-              aria-hidden="true"
-            />
-          </div>
-          <div className="absolute inset-0 bg-white/75"></div>
-          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-          <div className="relative w-full px-4 sm:px-6 py-12 pt-24 text-center" ref={heroContentRef}>
-            <motion.h1
-              className="text-4xl sm:text-5xl font-bold text-charcoal-950 mb-6"
-              initial={isMounted ? { opacity: 0, y: -20 } : false}
-              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
-              Precision. Passion.
-              <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
-                Performance.
-              </span>
-            </motion.h1>
-            <motion.p
-              className="text-lg sm:text-xl text-charcoal-800 mb-8 max-w-3xl mx-auto leading-relaxed"
-              initial={isMounted ? { opacity: 0 } : false}
-              animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-            >
-              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
-            </motion.p>
-            <motion.div
-              className="flex flex-col gap-4 justify-center items-center"
-              initial={isMounted ? { opacity: 0, y: 20 } : false}
-              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-            >
-              <Link href="/signup?role=dancer">
-                <Button variant="gold" size="lg" className="text-lg px-8 py-3">
-                  Get Started
-                </Button>
-              </Link>
-              <Link
-                href="/login?portal=dancer"
-                className="text-lg font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
-                onClick={handleLoginClick}
-              >
-                Already a member? Sign In →
-              </Link>
-            </motion.div>
-          </div>
+      <section className="lp lp-hero" aria-label="Hero">
+        {/* Mobile-only single-photo background */}
+        <div className="lp-hero__mobile-bg" aria-hidden="true">
+          <img
+            src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
+            alt=""
+          />
+          <div className="lp-hero__mobile-overlay" />
         </div>
 
-        {/* Desktop: Left third text on cream background, right two-thirds two images */}
-        <div className="hidden md:grid lp-hero__grid">
-          <div className="lp-hero__content">
+        <div className="lp-hero__grid">
+          <div className="lp-hero__content" ref={heroContentRef}>
             <motion.span
               className="lp-eyebrow"
               initial={isMounted ? { opacity: 0, y: 10 } : false}
