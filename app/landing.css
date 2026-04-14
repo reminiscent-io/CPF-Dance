@@ -118,6 +118,25 @@
   width: 100%;
   height: 100%;
   min-height: 75vh;
+  /* Soft-blend both vertical edges into the cream hero background */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 3%,
+    #000 10%,
+    #000 90%,
+    rgba(0, 0, 0, 0.35) 97%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 3%,
+    #000 10%,
+    #000 90%,
+    rgba(0, 0, 0, 0.35) 97%,
+    transparent 100%
+  );
 }
 .lp-hero__media-split > div {
   flex: 1;
