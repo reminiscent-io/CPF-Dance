@@ -109,10 +109,9 @@
 }
 
 .lp-hero__content {
-  padding: 120px 24px 72px;
+  padding: 120px 28px 72px;
   max-width: 640px;
-  margin: 0 auto;
-  text-align: center;
+  text-align: left;
 }
 .lp-hero__content .lp-eyebrow {
   margin-bottom: 20px;
@@ -131,13 +130,13 @@
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--lp-text-muted);
-  margin: 0 auto 36px;
+  margin: 0 0 36px;
   max-width: 480px;
 }
 .lp-hero__ctas {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   flex-wrap: wrap;
 }
