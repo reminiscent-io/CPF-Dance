@@ -19,6 +19,10 @@ deploymentTarget = "autoscale"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 5002
+externalPort = 3000
+
 [agent]
 expertMode = true
 integrations = ["stripe:1.0.0", "google-mail:1.0.0"]
