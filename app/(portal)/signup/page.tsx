@@ -78,8 +78,17 @@ function InstructorRequestForm() {
 
   if (submitted) {
     return (
-      <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4 py-8`}>
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+      <div
+        className="relative min-h-screen flex items-center justify-center px-4 py-8"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-charcoal-950/55" aria-hidden="true" />
+        <div className="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -103,8 +112,17 @@ function InstructorRequestForm() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4 py-8`}>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4 py-8"
+      style={{
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-charcoal-950/55" aria-hidden="true" />
+      <div className="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           {config.title}
         </h1>
@@ -312,8 +330,17 @@ function DancerSignupForm() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4 py-8`}>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4 py-8"
+      style={{
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-charcoal-950/55" aria-hidden="true" />
+      <div className="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           {config.title}
         </h1>

@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
+import './landing.css'
 
 const StudioCarousel = dynamic(() => import('@/components/StudioCarousel'), {
   loading: () => null,
@@ -300,7 +301,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
       {/* Navigation Bar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-cream-50/90 backdrop-blur-md border-b border-charcoal-950/10 shadow-sm"
         style={{
           opacity: showNav ? 1 : 0,
           transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
@@ -310,13 +311,17 @@ export default function HomePage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <Link
+            href="/"
+            className="text-2xl font-semibold text-gold-600 hover:text-gold-700 transition-colors"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
             CPF Dance
           </Link>
-          <div className="flex gap-4">
-            <Link 
+          <div className="flex gap-4 sm:gap-6 items-center">
+            <Link
               href="/login?portal=dancer"
-              className="text-gray-700 hover:text-rose-600 transition-colors font-medium flex items-center gap-2"
+              className="text-charcoal-900 hover:text-gold-600 transition-colors font-medium text-sm uppercase tracking-wider flex items-center gap-2"
               onClick={handleLoginClick}
             >
               {loginLoading ? (
@@ -333,7 +338,7 @@ export default function HomePage() {
             </Link>
             <button
               onClick={openInquiryModal}
-              className="text-gray-700 hover:text-rose-600 transition-colors font-medium"
+              className="text-charcoal-900 hover:text-gold-600 transition-colors font-medium text-sm uppercase tracking-wider"
             >
               Studio Inquiry
             </button>
@@ -341,78 +346,73 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <section
-        className="relative flex flex-col justify-center overflow-hidden min-h-[100svh] sm:min-h-[70vh] lg:min-h-[75vh]"
-      >
-        {/* Background Images */}
-        {/* Mobile: Single hero image - top offset for nav bar */}
-        <div className="absolute inset-x-0 bottom-0 top-14 md:hidden">
+      <section className="lp lp-hero" aria-label="Hero">
+        {/* Mobile-only single-photo background */}
+        <div className="lp-hero__mobile-bg" aria-hidden="true">
           <img
             src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
             alt=""
-            className="w-full h-full object-cover object-top"
-            aria-hidden="true"
           />
+          <div className="lp-hero__mobile-overlay" />
         </div>
 
-        {/* Desktop: All 4 images side by side - top offset for nav bar */}
-        <div className="absolute inset-x-0 bottom-0 top-14 hidden md:flex">
-          {learnFromTheBestImages.map((image, idx) => (
-            <div key={idx} className="flex-1 h-full">
-              <img
-                src={image}
-                alt=""
-                className="w-full h-full object-cover object-top"
-                aria-hidden="true"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* White opaque overlay for readability */}
-        <div className="absolute inset-0 bg-white/75"></div>
-
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 pt-24 sm:pt-32 text-center" ref={heroContentRef}>
-          <motion.h1
-            className="text-4xl sm:text-5xl lg:text-7xl font-bold text-charcoal-950 mb-6"
-            initial={isMounted ? { opacity: 0, y: -20 } : false}
-            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            Precision. Passion.
-            <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
-              Performance.
-            </span>
-          </motion.h1>
-          <motion.p
-            className="text-lg sm:text-xl lg:text-2xl text-charcoal-800 mb-8 max-w-3xl mx-auto leading-relaxed"
-            initial={isMounted ? { opacity: 0 } : false}
-            animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
-          </motion.p>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-          >
-            <Link href="/signup?role=dancer">
-              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
-                Get Started
-              </Button>
-            </Link>
-            <Link
-              href="/login?portal=dancer"
-              className="text-lg font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
-              onClick={handleLoginClick}
+        <div className="lp-hero__grid">
+          <div className="lp-hero__content" ref={heroContentRef}>
+            <motion.span
+              className="lp-eyebrow"
+              initial={isMounted ? { opacity: 0, y: 10 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
-              Already a member? Sign In →
-            </Link>
-          </motion.div>
+              World-Class Dance Instruction
+            </motion.span>
+            <motion.h1
+              className="lp-hero__title"
+              initial={isMounted ? { opacity: 0, y: -20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              Precision. Passion.
+              <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+                Performance.
+              </span>
+            </motion.h1>
+            <motion.p
+              className="lp-hero__body"
+              initial={isMounted ? { opacity: 0 } : false}
+              animate={isMounted ? { opacity: 1 } : { opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
+            </motion.p>
+            <motion.div
+              className="lp-hero__ctas"
+              initial={isMounted ? { opacity: 0, y: 20 } : false}
+              animate={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+            >
+              <Link href="/signup?role=dancer">
+                <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                  Get Started
+                </Button>
+              </Link>
+              <Link
+                href="/login?portal=dancer"
+                className="text-base font-semibold text-charcoal-700 hover:text-gold-700 transition-colors"
+                onClick={handleLoginClick}
+              >
+                Already a member? Sign In →
+              </Link>
+            </motion.div>
+          </div>
+
+          <div className="lp-hero__media-split" aria-hidden="true">
+            {learnFromTheBestImages.slice(1, 3).map((image, idx) => (
+              <div key={idx}>
+                <img src={image} alt="" loading="eager" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -441,110 +441,6 @@ export default function HomePage() {
           >
             CPF Dance changes that.
           </motion.p>
-        </div>
-      </section>
-
-      {/* Dancer Portal Section - Primary Focus */}
-      <section id="dancer-portal" className="relative py-16 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c"
-            alt="Dancer practicing"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* White Opaque Overlay */}
-        <div className="absolute inset-0 bg-white/60 z-10"></div>
-
-        {/* Content */}
-        <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Card className="bg-gradient-to-br from-rose-50/90 to-mauve-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
-              <div className="text-center mb-6">
-                <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
-                  For Dancers
-                </h2>
-                <p className="text-lg text-charcoal-800 leading-relaxed">
-                  Built for dancers who take their training seriously
-                </p>
-              </div>
-
-              <Link href="/signup?role=dancer" className="block mb-4">
-                <Button size="lg" className="w-full text-lg py-3">
-                  Join Now
-                </Button>
-              </Link>
-
-              <div className="text-center mb-6">
-                <Link
-                  href="/login?portal=dancer"
-                  className="text-sm text-charcoal-700 hover:text-rose-600 transition-colors inline-flex items-center gap-1"
-                  onClick={handleLoginClick}
-                >
-                  Already a member?{' '}
-                  {loginLoading ? (
-                    <>
-                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10" strokeWidth={2} stroke="currentColor" opacity="0.25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span className="font-semibold">Logging in...</span>
-                    </>
-                  ) : (
-                    <span className="font-semibold">Log in</span>
-                  )}
-                </Link>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-                {dancerFeatures.map((feature, index) => (
-                  <motion.div
-                    key={feature.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{
-                      duration: 0.4,
-                      delay: index * 0.1,
-                      ease: [0.25, 0.46, 0.45, 0.94]
-                    }}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      transition: { duration: 0.2 }
-                    }}
-                    className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 shadow-sm cursor-default"
-                  >
-                    <motion.div
-                      className="flex-shrink-0 mt-0.5"
-                      initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 0.5,
-                        delay: index * 0.1 + 0.2,
-                        type: "spring",
-                        stiffness: 200
-                      }}
-                    >
-                      {feature.icon}
-                    </motion.div>
-                    <div>
-                      <div className="font-semibold text-charcoal-950 text-base">{feature.title}</div>
-                      <p className="text-sm text-charcoal-700 mt-0.5">{feature.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
         </div>
       </section>
 
@@ -662,7 +558,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Instructor Portal Section - Secondary */}
+      {/* Dancer Portal Section - Editorial card style */}
+      <section id="dancer-portal" className="lp lp-dancers">
+        <div className="lp-dancers__bg">
+          <img
+            src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c"
+            alt=""
+            aria-hidden="true"
+          />
+        </div>
+        <div className="lp-dancers__overlay" />
+
+        <div className="lp-dancers__inner">
+          <motion.div
+            className="lp-dancers__head"
+            initial={isMounted ? { opacity: 0, y: 20 } : false}
+            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="lp-eyebrow">For Dancers</span>
+            <h2>Built for dancers who take their training seriously.</h2>
+          </motion.div>
+
+          <div className="lp-dancers__grid">
+            {dancerFeatures.map((feature, index) => (
+              <motion.article
+                key={feature.id}
+                className="lp-dancer-card"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+              >
+                <div className="lp-dancer-card__num">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+                <h3 className="lp-dancer-card__title">{feature.title}</h3>
+                <p className="lp-dancer-card__body">{feature.description}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="lp-dancers__ctas">
+            <Link href="/signup?role=dancer">
+              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
+                Join Now
+              </Button>
+            </Link>
+            <Link
+              href="/login?portal=dancer"
+              className="lp-link"
+              onClick={handleLoginClick}
+            >
+              {loginLoading ? 'Logging in…' : 'Already a member? Sign In →'}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Instructor Portal Section - Secondary (temporarily hidden) */}
+      {false && (
       <section id="instructor-portal" className="relative py-16 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
@@ -763,6 +723,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Studio Inquiry Modal */}
       <Modal
@@ -879,68 +840,66 @@ export default function HomePage() {
         )}
       </Modal>
 
-      <footer className="bg-mauve-700 text-white py-8">
+      <footer className="bg-charcoal-950 text-white/80 py-6 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4 mb-6">
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
-                <div className="text-xl font-semibold text-white mb-4">Quick Links</div>
-                <ul className="space-y-2">
-                  <li>
-                    <Link href="/login" className="text-white hover:text-rose-400 transition-colors">
-                      Login
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/signup" className="text-white hover:text-rose-400 transition-colors">
-                      Sign Up
-                    </Link>
-                  </li>
-                  <li>
-                    <button onClick={openInquiryModal} className="text-white hover:text-rose-400 transition-colors">
-                      Studio Inquiry
-                    </button>
-                  </li>
-                </ul>
-              </div>
+          <div className="grid md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <div className="text-xs font-semibold text-gold-400 uppercase tracking-[0.2em] mb-2">Quick Links</div>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                <li>
+                  <Link href="/login" className="hover:text-gold-400 transition-colors">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="hover:text-gold-400 transition-colors">
+                    Sign Up
+                  </Link>
+                </li>
+                <li>
+                  <button onClick={openInquiryModal} className="hover:text-gold-400 transition-colors">
+                    Studio Inquiry
+                  </button>
+                </li>
+              </ul>
+            </div>
 
-              <div>
-                <div className="text-xl font-semibold text-white mb-4">Contact</div>
-                <ul className="space-y-2 text-white">
-                  <li>
-                    <a
-                      href="mailto:info@cpfdance.com"
-                      className="hover:text-rose-400 transition-colors"
-                    >
-                      Email: info@cpfdance.com
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href="https://instagram.com/courtneyfiledance" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-rose-400 transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
-                      </svg>
-                      @courtneyfiledance
-                    </a>
-                  </li>
-                </ul>
-              </div>
+            <div className="md:text-right">
+              <div className="text-xs font-semibold text-gold-400 uppercase tracking-[0.2em] mb-2">Contact</div>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 md:justify-end">
+                <li>
+                  <a
+                    href="mailto:info@cpfdance.com"
+                    className="hover:text-gold-400 transition-colors"
+                  >
+                    info@cpfdance.com
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://instagram.com/courtneyfiledance"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-gold-400 transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
+                    </svg>
+                    @courtneyfiledance
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-700 pt-6 text-center text-white">
+          <div className="border-t border-white/10 pt-3 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-white/60">
             <p>&copy; {new Date().getFullYear()} CPF Dance LLC. All rights reserved.</p>
-            <div className="mt-4 text-sm text-gray-400 space-x-4">
-              <Link href="/terms-of-service" className="hover:text-rose-400 transition-colors">
+            <div className="space-x-3">
+              <Link href="/terms-of-service" className="hover:text-gold-400 transition-colors">
                 Terms of Service
               </Link>
               <span>•</span>
-              <Link href="/privacy-policy" className="hover:text-rose-400 transition-colors">
+              <Link href="/privacy-policy" className="hover:text-gold-400 transition-colors">
                 Privacy Policy
               </Link>
             </div>
