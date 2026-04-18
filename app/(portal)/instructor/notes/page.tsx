@@ -415,7 +415,6 @@ function NotesContent() {
                 <option value="private">Private</option>
                 <option value="shared_with_student">Shared with Student</option>
                 <option value="shared_with_guardian">Shared with Guardian</option>
-                <option value="shared_with_studio">Shared with Studio</option>
               </select>
 
               <select
@@ -875,7 +874,6 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
               <option value="private">Private (Only me)</option>
               <option value="shared_with_student">Shared with Student</option>
               <option value="shared_with_guardian">Shared with Guardian</option>
-              <option value="shared_with_studio">Shared with Studio</option>
             </select>
           </div>
         </div>
