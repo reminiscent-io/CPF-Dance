@@ -381,6 +381,10 @@ export default function HomePage() {
 
         <div className="lp-hero__grid">
           <div className="lp-hero__content" ref={heroContentRef}>
+            <div className="lp-hero__content-bg" aria-hidden="true">
+              <img src={learnFromTheBestImages[0]} alt="" loading="eager" />
+              <div className="lp-hero__content-overlay" />
+            </div>
             <motion.span
               className="lp-eyebrow"
               initial={heroAnimateEnabled ? { opacity: 0, y: 10 } : false}

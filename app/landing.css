@@ -113,6 +113,11 @@
   max-width: 640px;
   text-align: left;
 }
+
+/* Mobile: hide desktop-only content background image */
+.lp-hero__content-bg {
+  display: none;
+}
 .lp-hero__content .lp-eyebrow {
   margin-bottom: 20px;
 }
@@ -157,13 +162,43 @@
     min-height: 75vh;
   }
   .lp-hero__content {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 120px 48px 120px 8vw;
-    max-width: 640px;
+    max-width: none;
     margin: 0;
     text-align: left;
+    overflow: hidden;
+  }
+  .lp-hero__content > :not(.lp-hero__content-bg) {
+    position: relative;
+    z-index: 1;
+  }
+  .lp-hero__content-bg {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .lp-hero__content-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+  .lp-hero__content-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(250, 250, 248, 0.86) 0%,
+      rgba(250, 250, 248, 0.80) 50%,
+      rgba(250, 250, 248, 0.88) 100%
+    );
   }
   .lp-hero__body {
     margin: 0 0 36px;
@@ -184,25 +219,6 @@
   .lp-hero__media-split > div {
     flex: 1;
     overflow: hidden;
-    /* Soft-blend both vertical edges of each image into the hero background */
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(0, 0, 0, 0.4) 6%,
-      #000 14%,
-      #000 86%,
-      rgba(0, 0, 0, 0.4) 94%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(0, 0, 0, 0.4) 6%,
-      #000 14%,
-      #000 86%,
-      rgba(0, 0, 0, 0.4) 94%,
-      transparent 100%
-    );
   }
   .lp-hero__media-split img {
     width: 100%;
