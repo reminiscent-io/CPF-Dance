@@ -23,7 +23,7 @@ export async function GET() {
 
     if (instructorIds.length > 0) {
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, full_name, avatar_url')
         .in('id', instructorIds)
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the instructor exists and has instructor role
     const { data: instructor, error: instructorError } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id')
       .eq('id', instructor_id)
       .in('role', ['instructor', 'admin'])

@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: instructorProfiles, error: instructorError } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id, full_name')
       .eq('role', 'instructor')
 

@@ -14,7 +14,7 @@ import { LessonPackInfo } from '@/components/LessonPackInfo'
 interface Instructor {
   id: string
   full_name: string | null
-  email: string | null
+  avatar_url: string | null
 }
 
 interface ScheduledClass {
