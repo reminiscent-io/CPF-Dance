@@ -27,9 +27,8 @@ export function NoteFeedList({
   const groupedNotes = groupNotesByDate(notes)
   const groupKeys = getDateGroupKeys(groupedNotes)
 
-  // Filter out empty groups and the pinned group (no longer used)
   const nonEmptyGroups = groupKeys.filter(
-    key => key !== 'pinned' && groupedNotes[key]?.length > 0
+    key => groupedNotes[key]?.length > 0
   )
 
   if (nonEmptyGroups.length === 0) {

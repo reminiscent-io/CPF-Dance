@@ -98,8 +98,6 @@ describe('Dancer Notes API Routes', () => {
           created_at: '2024-02-01T00:00:00Z',
           classes: null,
           personal_classes: null,
-          is_pinned: false,
-          pin_order: null,
         },
       ]
 
@@ -347,8 +345,8 @@ describe('Dancer Notes API Routes', () => {
       // 4. Authenticated dancers can delete their own notes (tested above)
       //
       // The route implementation enforces isolation - see dancer/notes/route.ts lines:
-      // - Line 37: .eq('student_id', student.id) - filters GET by student
-      // - Line 143: .eq('author_id', profile.id) - filters PUT by author
+      // - Line 35: .eq('student_id', student.id) - filters GET by student
+      // - Line 142: .eq('author_id', profile.id) - filters PUT by author
       // - Line 177: .eq('author_id', profile.id) - filters DELETE by author
 
       expect(true).toBe(true) // Documentation test
