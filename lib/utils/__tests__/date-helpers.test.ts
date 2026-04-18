@@ -73,7 +73,6 @@ describe('date-helpers', () => {
     })
 
     it('should return false for static date group keys', () => {
-      expect(isMonthKey('pinned')).toBe(false)
       expect(isMonthKey('today')).toBe(false)
       expect(isMonthKey('yesterday')).toBe(false)
       expect(isMonthKey('thisWeek')).toBe(false)
@@ -107,25 +106,7 @@ describe('date-helpers', () => {
       updated_at: new Date().toISOString(),
       author_id: 'author-1',
       is_personal: true,
-      is_pinned: false,
-      pin_order: null,
       ...overrides
-    })
-
-    it('should group pinned notes separately', () => {
-      const notes: Note[] = [
-        createNote({ id: '1', is_pinned: true, created_at: '2024-02-15T10:00:00Z' }),
-        createNote({ id: '2', is_pinned: true, created_at: '2024-01-01T10:00:00Z' }),
-        createNote({ id: '3', is_pinned: false, created_at: '2024-02-15T10:00:00Z' })
-      ]
-
-      const grouped = groupNotesByDate(notes)
-
-      expect(grouped.pinned).toHaveLength(2)
-      expect(grouped.pinned.map(n => n.id)).toContain('1')
-      expect(grouped.pinned.map(n => n.id)).toContain('2')
-      expect(grouped.today).toHaveLength(1)
-      expect(grouped.today[0].id).toBe('3')
     })
 
     it('should group today notes', () => {
@@ -192,7 +173,6 @@ describe('date-helpers', () => {
     it('should return empty groups for no notes', () => {
       const grouped = groupNotesByDate([])
 
-      expect(grouped.pinned).toHaveLength(0)
       expect(grouped.today).toHaveLength(0)
       expect(grouped.yesterday).toHaveLength(0)
       expect(grouped.thisWeek).toHaveLength(0)
@@ -201,7 +181,6 @@ describe('date-helpers', () => {
 
     it('should handle mixed date notes correctly', () => {
       const notes: Note[] = [
-        createNote({ id: 'pinned', is_pinned: true, created_at: '2023-01-01T10:00:00Z' }),
         createNote({ id: 'today', created_at: '2024-02-15T08:00:00Z' }),
         createNote({ id: 'yesterday', created_at: '2024-02-14T10:00:00Z' }),
         createNote({ id: 'thisWeek', created_at: '2024-02-10T10:00:00Z' }),
@@ -211,7 +190,6 @@ describe('date-helpers', () => {
 
       const grouped = groupNotesByDate(notes)
 
-      expect(grouped.pinned.map(n => n.id)).toEqual(['pinned'])
       expect(grouped.today.map(n => n.id)).toEqual(['today'])
       expect(grouped.yesterday.map(n => n.id)).toEqual(['yesterday'])
       expect(grouped.thisWeek.map(n => n.id)).toEqual(['thisWeek'])
@@ -222,7 +200,6 @@ describe('date-helpers', () => {
 
   describe('getDateGroupTitle', () => {
     it('should return correct titles for static groups', () => {
-      expect(getDateGroupTitle('pinned')).toBe('Pinned')
       expect(getDateGroupTitle('today')).toBe('Today')
       expect(getDateGroupTitle('yesterday')).toBe('Yesterday')
       expect(getDateGroupTitle('thisWeek')).toBe('This Week')
@@ -245,18 +222,17 @@ describe('date-helpers', () => {
     it('should return static keys when no grouped notes provided', () => {
       const keys = getDateGroupKeys()
 
-      expect(keys).toEqual(['pinned', 'today', 'yesterday', 'thisWeek', 'lastMonth'])
+      expect(keys).toEqual(['today', 'yesterday', 'thisWeek', 'lastMonth'])
     })
 
     it('should return static keys when grouped notes is undefined', () => {
       const keys = getDateGroupKeys(undefined)
 
-      expect(keys).toEqual(['pinned', 'today', 'yesterday', 'thisWeek', 'lastMonth'])
+      expect(keys).toEqual(['today', 'yesterday', 'thisWeek', 'lastMonth'])
     })
 
     it('should include month keys after static keys', () => {
       const groupedNotes = {
-        pinned: [],
         today: [],
         yesterday: [],
         thisWeek: [],
@@ -268,14 +244,13 @@ describe('date-helpers', () => {
       const keys = getDateGroupKeys(groupedNotes)
 
       expect(keys).toEqual([
-        'pinned', 'today', 'yesterday', 'thisWeek', 'lastMonth',
+        'today', 'yesterday', 'thisWeek', 'lastMonth',
         'month-2024-01', 'month-2023-12' // Sorted newest first (reverse alphabetical)
       ])
     })
 
     it('should sort month keys newest first', () => {
       const groupedNotes = {
-        pinned: [],
         today: [],
         yesterday: [],
         thisWeek: [],
@@ -299,7 +274,6 @@ describe('date-helpers', () => {
 
     it('should handle grouped notes with no month keys', () => {
       const groupedNotes = {
-        pinned: [],
         today: [{ id: '1' }],
         yesterday: [],
         thisWeek: [],
@@ -308,7 +282,7 @@ describe('date-helpers', () => {
 
       const keys = getDateGroupKeys(groupedNotes)
 
-      expect(keys).toEqual(['pinned', 'today', 'yesterday', 'thisWeek', 'lastMonth'])
+      expect(keys).toEqual(['today', 'yesterday', 'thisWeek', 'lastMonth'])
     })
   })
 })
