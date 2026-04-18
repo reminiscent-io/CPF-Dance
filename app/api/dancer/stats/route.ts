@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
     
     if (authorIds.length > 0) {
       const { data: authors } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, full_name, avatar_url')
         .in('id', authorIds)
 

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const authorIds = [...new Set(notes?.map(n => n.author_id) || [])]
     const { data: authors } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id, full_name, role, avatar_url')
       .in('id', authorIds)
 

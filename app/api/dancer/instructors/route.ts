@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     if (instructorIds.length === 0) {
       // Fallback: return all instructors if no relationships exist
       const { data: allInstructors, error: allError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
+        .from('public_profiles')
+        .select('id, full_name, avatar_url')
         .in('role', ['instructor', 'admin'])
 
       if (allError) {
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: instructors, error: instructorsError } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
+      .from('public_profiles')
+      .select('id, full_name, avatar_url')
       .in('id', instructorIds)
       .in('role', ['instructor', 'admin'])
 
