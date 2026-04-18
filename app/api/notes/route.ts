@@ -71,19 +71,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const profile = await getCurrentUserWithRole()
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     if (!hasInstructorPrivileges(profile)) {
       return NextResponse.json({ error: 'Forbidden: Only instructors and admins can create notes for students' }, { status: 403 })
     }
-    
+
     const supabase = await createClient()
 
+    // author_id must equal auth.uid() to satisfy the notes_insert_policy RLS
+    // check. profile.id follows linked_profile_id, so it can diverge from the
+    // authenticated user id for linked accounts — use user.id directly.
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
-    
+
     const {
       student_id,
       class_id,
@@ -96,13 +104,13 @@ export async function POST(request: NextRequest) {
     const { data: note, error } = await supabase
       .from('notes')
       .insert({
-        author_id: profile.id,
+        author_id: user.id,
         student_id,
         class_id,
         title,
         content,
         tags,
-        visibility
+        visibility: visibility || 'shared_with_student'
       })
       .select(`
         *,
