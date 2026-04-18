@@ -37,6 +37,7 @@ RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
 STABLE
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_uid UUID := auth.uid();
@@ -138,6 +139,13 @@ FROM public.profiles;
 -- bypassing the profiles RLS policy above so that directory-style
 -- joins (instructor names on classes, author avatars on notes) work
 -- for any authenticated user — without ever exposing PII columns.
+--
+-- This will trigger the Supabase `security_definer_view` linter (0010).
+-- That lint is the correct default warning for views that bypass RLS,
+-- but here the bypass is deliberate and the column set is non-sensitive
+-- by construction. If we switched to `security_invoker = on`, the view
+-- would inherit the restrictive profiles RLS and dancers would no
+-- longer be able to resolve instructor names on their class lists.
 GRANT SELECT ON public.public_profiles TO authenticated;
 
 COMMENT ON VIEW public.public_profiles IS
