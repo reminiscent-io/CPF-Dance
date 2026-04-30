@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-30T00:00:00Z",
+  "title": "Design System: CPF Dance",
+  "extensions": {
+    "colorMeta": {
+      "stage-rose": {
+        "role": "primary",
+        "displayName": "Stage Rose",
+        "canonical": "#b06472",
+        "tonalRamp": ["#3a2328", "#5f3a43", "#7a4652", "#945563", "#b06472", "#d19ba3", "#ebd2d6", "#faf5f6"]
+      },
+      "stage-rose-deep": {
+        "role": "primary",
+        "displayName": "Stage Rose Deep",
+        "canonical": "#945563",
+        "tonalRamp": ["#3a2328", "#5f3a43", "#7a4652", "#945563", "#b06472", "#d19ba3", "#ebd2d6", "#faf5f6"]
+      },
+      "stage-rose-soft": {
+        "role": "primary",
+        "displayName": "Stage Rose Soft",
+        "canonical": "#f5e8ea",
+        "tonalRamp": ["#3a2328", "#5f3a43", "#945563", "#c27d88", "#ddb5bb", "#ebd2d6", "#f5e8ea", "#faf5f6"]
+      },
+      "curtain-gilt": {
+        "role": "secondary",
+        "displayName": "Curtain Gilt",
+        "canonical": "#b89651",
+        "tonalRamp": ["#3b2d1c", "#685234", "#7d633d", "#997a45", "#b89651", "#d0af67", "#e8dbb8", "#faf8f0"]
+      },
+      "curtain-gilt-deep": {
+        "role": "secondary",
+        "displayName": "Curtain Gilt Deep",
+        "canonical": "#997a45",
+        "tonalRamp": ["#3b2d1c", "#685234", "#7d633d", "#997a45", "#b89651", "#d0af67", "#e8dbb8", "#faf8f0"]
+      },
+      "champagne-silk": {
+        "role": "neutral",
+        "displayName": "Champagne Silk",
+        "canonical": "#faf8f5",
+        "tonalRamp": ["#2f2920", "#584d3d", "#87745a", "#a8906f", "#c3ac8d", "#dfd4c3", "#f5f1ea", "#faf8f5"]
+      },
+      "champagne-page": {
+        "role": "neutral",
+        "displayName": "Champagne Page",
+        "canonical": "#f5f1ea",
+        "tonalRamp": ["#2f2920", "#584d3d", "#87745a", "#a8906f", "#c3ac8d", "#dfd4c3", "#ebe4d8", "#f5f1ea"]
+      },
+      "champagne-stroke": {
+        "role": "neutral",
+        "displayName": "Champagne Stroke",
+        "canonical": "#ebe4d8",
+        "tonalRamp": ["#2f2920", "#584d3d", "#87745a", "#a8906f", "#dfd4c3", "#ebe4d8", "#f5f1ea", "#faf8f5"]
+      },
+      "champagne-mute": {
+        "role": "neutral",
+        "displayName": "Champagne Mute",
+        "canonical": "#dfd4c3",
+        "tonalRamp": ["#2f2920", "#584d3d", "#87745a", "#a8906f", "#c3ac8d", "#dfd4c3", "#ebe4d8", "#f5f1ea"]
+      },
+      "stage-black": {
+        "role": "neutral",
+        "displayName": "Stage Black",
+        "canonical": "#0a0a0a",
+        "tonalRamp": ["#0a0a0a", "#1a1a1a", "#2d2d2d", "#404040", "#666666", "#999999", "#cccccc", "#f8f8f8"]
+      },
+      "stage-ink": {
+        "role": "neutral",
+        "displayName": "Stage Ink",
+        "canonical": "#1a1a1a",
+        "tonalRamp": ["#0a0a0a", "#1a1a1a", "#2d2d2d", "#404040", "#666666", "#999999", "#cccccc", "#f8f8f8"]
+      },
+      "stage-graphite": {
+        "role": "neutral",
+        "displayName": "Stage Graphite",
+        "canonical": "#4d4d4d",
+        "tonalRamp": ["#0a0a0a", "#2d2d2d", "#404040", "#4d4d4d", "#666666", "#999999", "#cccccc", "#e5e5e5"]
+      },
+      "ash-veil": {
+        "role": "neutral",
+        "displayName": "Ash Veil",
+        "canonical": "#999999",
+        "tonalRamp": ["#0a0a0a", "#2d2d2d", "#4d4d4d", "#666666", "#999999", "#cccccc", "#e5e5e5", "#f8f8f8"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headlines on the marketing landing only. Cormorant Garamond at 600, tracked tight."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section openers on landing, page titles in portals at desktop sizes."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, dialog titles, dashboard widget titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All paragraph text. Manrope 400, line-height 1.6, max 65–75ch in long-form."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, nav links, form labels. Slight positive tracking signals interactivity."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-soft",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.06)",
+        "purpose": "Default card shadow at rest. Reads as paper-on-paper, not paper-on-floor."
+      },
+      {
+        "name": "shadow-soft-lg",
+        "value": "0 6px 16px rgba(0, 0, 0, 0.08)",
+        "purpose": "Hover state for elevated cards and resting modal lift."
+      },
+      {
+        "name": "shadow-modal",
+        "value": "0 20px 60px rgba(10, 10, 10, 0.18)",
+        "purpose": "Modal dialog shadow when sitting over a blurred backdrop. The only theatrical shadow in the system."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Default exponential ease-out for state transitions. Replaces the looser linear ease-out on existing animations."
+      },
+      {
+        "name": "duration-fade",
+        "value": "300ms",
+        "purpose": "fadeIn, slideUp, slideDown standard duration."
+      },
+      {
+        "name": "duration-state",
+        "value": "200ms",
+        "purpose": "Button and link hover/focus state transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Stage Rose CTA. The default action button across the platform.",
+      "html": "<button class=\"ds-btn-primary\">Save Note</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #b06472; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: #945563; } .ds-btn-primary:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; } .ds-btn-primary:active { background: #7a4652; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action. 2px Stage Rose stroke on Champagne Silk.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; background: #faf8f5; color: #b06472; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: 2px solid #b06472; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), border-color 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-outline:hover { background: #f5e8ea; border-color: #945563; color: #945563; } .ds-btn-outline:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; }"
+    },
+    {
+      "name": "Gold Button",
+      "kind": "button",
+      "refersTo": "button-gold",
+      "description": "Premium CTA. Reserved for paid actions and gold-tier moments. Rare, never doubled on a screen.",
+      "html": "<button class=\"ds-btn-gold\">Confirm Payment</button>",
+      "css": ".ds-btn-gold { display: inline-flex; align-items: center; justify-content: center; background: #b89651; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-gold:hover { background: #997a45; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); } .ds-btn-gold:focus-visible { outline: 2px solid #b89651; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Champagne paper artifact. Soft shadow at rest, hairline champagne border via the global stroke rule.",
+      "html": "<article class=\"ds-card\"><h3 class=\"ds-card-title\">Today's Lesson</h3><p class=\"ds-card-body\">Pirouettes from fifth, then variation work. Bring pointe shoes.</p></article>",
+      "css": ".ds-card { background: #faf8f5; color: #1a1a1a; border: 1px solid #ebe4d8; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); } .ds-card-title { font-family: 'Cormorant Garamond', Georgia, Garamond, serif; font-size: 1.5rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; color: #0a0a0a; margin: 0 0 0.5rem 0; } .ds-card-body { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 400; line-height: 1.6; letter-spacing: 0.01em; color: #1a1a1a; margin: 0; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline border, champagne fill, rose ring on focus.",
+      "html": "<label class=\"ds-input-wrap\"><span class=\"ds-input-label\">Studio</span><input class=\"ds-input\" type=\"text\" placeholder=\"Search studios\" /></label>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; } .ds-input-label { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; color: #4d4d4d; } .ds-input { background: #faf8f5; color: #1a1a1a; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; line-height: 1.6; letter-spacing: 0.01em; padding: 0.5rem 1rem; border: 1px solid #ebe4d8; border-radius: 0.5rem; transition: border-color 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #999999; } .ds-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 2px #b06472; } .ds-input:disabled { background: #dfd4c3; color: #999999; cursor: not-allowed; }"
+    },
+    {
+      "name": "Rose Chip",
+      "kind": "chip",
+      "refersTo": "chip-rose",
+      "description": "Selected filter, active status. Rose-on-rose tint, no border.",
+      "html": "<span class=\"ds-chip-rose\">Active</span>",
+      "css": ".ds-chip-rose { display: inline-flex; align-items: center; background: #f5e8ea; color: #945563; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.04em; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }"
+    },
+    {
+      "name": "Active Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Sidebar or bottom-nav item in its active state. Rose-soft fill, rose-deep text. No marker pill.",
+      "html": "<a class=\"ds-nav-link-active\" href=\"#\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7h18\"></path><path d=\"M3 12h18\"></path><path d=\"M3 17h18\"></path></svg><span>Notes</span></a>",
+      "css": ".ds-nav-link-active { display: inline-flex; align-items: center; gap: 0.5rem; background: #f5e8ea; color: #945563; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; padding: 0.5rem 0.75rem; border-radius: 0.5rem; text-decoration: none; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-nav-icon { width: 16px; height: 16px; flex-shrink: 0; }"
+    },
+    {
+      "name": "Modal Dialog",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Champagne surface over a charcoal-tinted backdrop with backdrop-filter blur. The only place a theatrical shadow lives.",
+      "html": "<div class=\"ds-modal-backdrop\"><div class=\"ds-modal\"><header class=\"ds-modal-header\"><h2 class=\"ds-modal-title\">New Note</h2><button class=\"ds-modal-close\" aria-label=\"Close\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 6 18 18\"></path><path d=\"M18 6 6 18\"></path></svg></button></header><div class=\"ds-modal-body\"><p>Write a note for the dancer. Notes can be private, shared with the student, or shared with the guardian.</p></div></div></div>",
+      "css": ".ds-modal-backdrop { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(10, 10, 10, 0.5); backdrop-filter: blur(4px); animation: ds-fadeIn 300ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-modal { background: #faf8f5; color: #1a1a1a; border-radius: 0.5rem; box-shadow: 0 20px 60px rgba(10, 10, 10, 0.18); width: 100%; max-width: 32rem; animation: ds-slideUp 300ms cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; } .ds-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #ebe4d8; } .ds-modal-title { font-family: 'Cormorant Garamond', Georgia, Garamond, serif; font-size: 1.5rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; color: #0a0a0a; margin: 0; } .ds-modal-close { background: transparent; border: none; color: #4d4d4d; cursor: pointer; padding: 0.25rem; border-radius: 0.25rem; display: inline-flex; align-items: center; justify-content: center; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), color 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-modal-close svg { width: 18px; height: 18px; } .ds-modal-close:hover { background: #f5f1ea; color: #1a1a1a; } .ds-modal-body { padding: 1.5rem; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; line-height: 1.6; letter-spacing: 0.01em; overflow-y: auto; } @keyframes ds-fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes ds-slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ballet Noir Program",
+    "overview": "A printed program book from a serious classical season: champagne-paper stock, charcoal serif headlines, a single rose accent that reads as a velvet curtain ribbon, gilt detailing reserved for premium acts. The interface treats every screen as a page in that program. Generous margins. Considered hierarchy. Nothing shouts. The visual language is borrowed from Lincoln Center programs and editorial dance journals, not from SaaS marketing pages. The system is restrained but not austere. Warmth comes from the champagne paper tone (off-white tinted toward gold) rather than from playful color or rounded geometry. Precision comes from typography: a single confident serif for display, a humanist sans for body, both tracked tightly. The aesthetic is feminine in the way classical performance is feminine, not in the way a stock-photo template is. There is no gradient, no glow, no glassmorphism. This system explicitly rejects the SaaS dashboard idiom, the heavy promotional landing page, and the low-end dance-studio website family.",
+    "keyCharacteristics": [
+      "Champagne paper as the surface, never #fff white.",
+      "Stage rose as a single confident accent, never a gradient.",
+      "Cormorant Garamond carries every heading; Manrope carries every paragraph.",
+      "Soft shadows or none; depth is rare and quiet.",
+      "Borders are champagne stroke at 1px; never a colored side stripe."
+    ],
+    "rules": [
+      { "name": "The One Ribbon Rule", "body": "Stage Rose is the ribbon, not the wallpaper. It appears on no more than ~10% of any screen at rest. Curtain Gilt is similarly rare; the two never compete for attention on the same surface.", "section": "colors" },
+      { "name": "The No-White Rule", "body": "#fff is forbidden anywhere a surface or text is intended to be neutral. Champagne Silk is white. Component code that says bg-white or text-white against a colored background is tech debt, not a design choice.", "section": "colors" },
+      { "name": "The No-Black Rule", "body": "#000 is forbidden. Modal scrims use rgba(10, 10, 10, 0.5) with backdrop-blur, not rgba(0,0,0,0.5). Stage Black is the deepest ink available.", "section": "colors" },
+      { "name": "The No Side-Stripe Rule", "body": "Colored border-left greater than 1px is forbidden as a card or alert affordance. Rich-text blockquotes inside the editor are the single sanctioned exception.", "section": "colors" },
+      { "name": "The Serif-For-Headings Rule", "body": "Every h1 through h6 uses Cormorant Garamond, in every component, in every portal. No exceptions.", "section": "typography" },
+      { "name": "The Tight-Tracking Rule", "body": "Display and Headline are negatively tracked. Body is slightly positively tracked. Labels are positively tracked further. The tracking ladder is part of the hierarchy; do not flatten it.", "section": "typography" },
+      { "name": "The No-All-Caps Rule", "body": "Headings are never set in ALL CAPS. The display serif does not survive uppercase.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "A surface with no shadow is the correct default. Add shadow-soft only when a card needs to read as a discrete paper artifact against the champagne page; otherwise let the border carry it.", "section": "elevation" },
+      { "name": "The No-Drop-Shadow-On-Buttons Rule", "body": "Buttons do not carry shadows at rest. The gold button variant is the single exception, because Curtain Gilt is itself a premium signal and the shadow underlines that.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Champagne Silk (#faf8f5) as the page surface and Champagne Page (#f5f1ea) for any raised area.",
+      "Do apply the global border-color: champagne-stroke rule. Borders are 1px Champagne Stroke unless a component spec overrides.",
+      "Do set every heading in Cormorant Garamond, every paragraph and label in Manrope.",
+      "Do reserve Stage Rose for one accent role per screen, used on <=10% of the surface.",
+      "Do use Curtain Gilt only on premium-gated affordances. Never as decoration.",
+      "Do swap surfaces by tonal layer (Silk on Page, Page on Silk) instead of by adding shadows.",
+      "Do respect prefers-reduced-motion on every animation declared in globals.css.",
+      "Do maintain 44px minimum touch targets on dancer-facing mobile UI."
+    ],
+    "donts": [
+      "Don't use #fff or #000. Champagne Silk replaces white; Stage Black replaces black.",
+      "Don't ship the SaaS dashboard idiom: KPI-card grids, gradient hero metrics, sidebar with monochrome icons, 'Welcome back' greetings.",
+      "Don't ship the heavy promotional site idiom on the landing: parallax, testimonial carousels, 'Trusted by' rows, gradient mesh hero, sticky CTA bars.",
+      "Don't ship the low-end dance studio idiom: script fonts, stock dancer silhouettes, autoplay music, pink-on-pink with no contrast, ribbon dividers, 'Welcome to our family!' copy.",
+      "Don't ship gamification chrome: streaks, badges, levels, 'you crushed it!', confetti.",
+      "Don't use a colored border-left greater than 1px as a card or alert accent. The TipTap blockquote rule is the single sanctioned exception.",
+      "Don't use gradient text. Solid color, weight contrast for emphasis.",
+      "Don't use glassmorphism as decoration. The modal backdrop's blur is purposeful; do not reach for blurred-glass cards in resting UI.",
+      "Don't nest cards. A card inside a card is always wrong.",
+      "Don't rely on raw Tailwind grays (gray-50..gray-900) when a Charcoal or Champagne family value is available.",
+      "Don't add a 'modal as first thought' pattern. Try inline reveal, slide-over, or in-page editing first.",
+      "Don't use uppercase set in Cormorant Garamond for headings.",
+      "Don't introduce any color outside the four families (Champagne, Charcoal, Ballet Pink/Rose, Gold) without naming it as a new system role."
+    ]
+  }
+}
