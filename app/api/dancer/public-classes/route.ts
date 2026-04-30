@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
         base_cost,
         cost_per_hour,
         external_signup_url,
+        instructor_id,
         studio:studios(name, city, state),
-        instructor:profiles!classes_instructor_id_fkey(full_name),
         enrollments(id)
       `)
       .eq('is_public', true)
@@ -40,10 +40,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch public classes' }, { status: 500 })
     }
 
+    const instructorIds = [...new Set((classes || []).map(c => c.instructor_id).filter(Boolean))]
+    const instructorMap = new Map<string, { full_name: string | null }>()
+    if (instructorIds.length > 0) {
+      const { data: instructors } = await supabase
+        .from('public_profiles')
+        .select('id, full_name')
+        .in('id', instructorIds)
+      for (const p of instructors || []) {
+        instructorMap.set(p.id, { full_name: p.full_name })
+      }
+    }
+
     // Add enrolled count to each class
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
-      instructor: Array.isArray(cls.instructor) ? cls.instructor[0] : cls.instructor,
+      instructor: instructorMap.get(cls.instructor_id) ?? { full_name: null },
       enrolled_count: cls.enrollments?.length || 0
     }))
 

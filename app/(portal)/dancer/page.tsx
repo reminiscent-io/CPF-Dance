@@ -300,9 +300,9 @@ export default function DancerPortalPage() {
                         className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
                         onClick={() => handleNoteClick(note)}
                       >
-                        <CardContent className="p-3 md:p-4">
+                        <CardContent className="p-2.5 md:p-4">
                           {/* Header: Avatar + Author + Date */}
-                          <div className="flex items-center justify-between mb-2 md:mb-3">
+                          <div className="flex items-center justify-between mb-1.5 md:mb-3">
                             <div className="flex items-center gap-2 md:gap-3">
                               <Avatar
                                 src={note.author_avatar_url}
@@ -332,19 +332,19 @@ export default function DancerPortalPage() {
 
                           {/* Title */}
                           {note.title && (
-                            <h3 className="font-semibold text-base text-gray-900 mb-1 md:mb-2">
+                            <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-0.5 md:mb-2">
                               {note.title}
                             </h3>
                           )}
 
                           {/* Content preview */}
-                          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                          <p className="text-sm text-gray-600 line-clamp-2 leading-snug md:leading-relaxed">
                             {getContentPreview(note.content, 120)}
                           </p>
 
                           {/* Class info */}
                           {note.classes && (
-                            <p className="text-xs text-gray-400 mt-1.5 md:mt-2">
+                            <p className="text-xs text-gray-400 mt-1 md:mt-2">
                               {note.classes.title}
                             </p>
                           )}

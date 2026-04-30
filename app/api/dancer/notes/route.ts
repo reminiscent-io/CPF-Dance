@@ -21,14 +21,7 @@ export async function GET(request: NextRequest) {
         author_id,
         class_id,
         personal_class_id,
-        is_pinned,
-        pin_order,
         classes (
-          id,
-          title,
-          start_time
-        ),
-        personal_classes (
           id,
           title,
           start_time
@@ -37,8 +30,6 @@ export async function GET(request: NextRequest) {
       .eq('student_id', student.id)
       // SECURITY: Dancers see notes they authored OR notes shared with them, but NOT instructors' private notes
       .or(`author_id.eq.${profile.id},visibility.in.(shared_with_student,shared_with_guardian,shared_with_instructor)`)
-      .order('is_pinned', { ascending: false, nullsFirst: false })
-      .order('pin_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (notesError) {
@@ -47,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     const authorIds = [...new Set(notes?.map(n => n.author_id) || [])]
     const { data: authors } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id, full_name, role, avatar_url')
       .in('id', authorIds)
 
@@ -55,10 +46,28 @@ export async function GET(request: NextRequest) {
       authors?.map(a => [a.id, { full_name: a.full_name, role: a.role, avatar_url: a.avatar_url }]) || []
     )
 
+    // Fetch personal_classes separately rather than via PostgREST embed:
+    // the FK from notes.personal_class_id was added directly in production
+    // and isn't reliably present in PostgREST's schema cache, which silently
+    // breaks the whole query when requested as an embed.
+    const personalClassIds = [...new Set(
+      notes?.map(n => n.personal_class_id).filter((id): id is string => !!id) || []
+    )]
+    const personalClassMap = new Map<string, { id: string; title: string; start_time: string }>()
+    if (personalClassIds.length > 0) {
+      const { data: personalClasses } = await supabase
+        .from('personal_classes')
+        .select('id, title, start_time')
+        .in('id', personalClassIds)
+      personalClasses?.forEach(pc => personalClassMap.set(pc.id, pc))
+    }
+
     const notesWithAuthors = notes?.map(note => {
       const author = authorMap.get(note.author_id)
+      const personalClass = note.personal_class_id ? personalClassMap.get(note.personal_class_id) : null
       return {
         ...note,
+        personal_classes: personalClass || null,
         author_name: author?.full_name || 'Unknown',
         author_role: author?.role || 'unknown',
         author_avatar_url: author?.avatar_url || null,

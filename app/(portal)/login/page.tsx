@@ -81,8 +81,17 @@ function LoginForm() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${config.gradient} px-4`}>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4"
+      style={{
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-charcoal-950/55" aria-hidden="true" />
+      <div className="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           {config.title}
         </h1>

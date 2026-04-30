@@ -105,7 +105,7 @@ Three-layer security: proxy routing → API route guards → database RLS.
 ## Key Patterns
 
 ### Note Visibility
-Notes have `visibility`: `private`, `shared_with_student`, `shared_with_guardian`, `shared_with_studio`. Dancer queries filter by `.in('visibility', ['shared_with_student', 'shared_with_guardian'])`.
+Notes have `visibility`: `private`, `shared_with_student`, `shared_with_guardian`, `shared_with_instructor`. Dancer queries filter by `.in('visibility', ['shared_with_student', 'shared_with_guardian', 'shared_with_instructor'])` (instructor-visibility is included so dancers can read their own instructor-directed notes).
 
 ### Students Without Profiles
 Students can exist without linked user profiles — instructors can manage non-portal students directly. When `role='dancer'` signs up, a `students` record is auto-created with `profile_id`.

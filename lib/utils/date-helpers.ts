@@ -1,5 +1,5 @@
 // Static date groups
-export type StaticDateGroup = 'pinned' | 'today' | 'yesterday' | 'thisWeek' | 'lastMonth'
+export type StaticDateGroup = 'today' | 'yesterday' | 'thisWeek' | 'lastMonth'
 
 // DateGroup can be static groups or dynamic month keys (e.g., "month-2024-12")
 export type DateGroup = StaticDateGroup | string
@@ -14,13 +14,10 @@ export interface Note {
   updated_at: string
   author_id: string
   is_personal: boolean
-  is_pinned?: boolean
-  pin_order?: number | null
   [key: string]: any
 }
 
 export interface NotesGroupedByDate {
-  pinned: Note[]
   today: Note[]
   yesterday: Note[]
   thisWeek: Note[]
@@ -64,7 +61,6 @@ export function isMonthKey(key: string): boolean {
 
 /**
  * Group notes by date categories
- * Pinned notes are separated first, then remaining notes are grouped chronologically
  * Notes older than ~30 days are grouped by month
  */
 export function groupNotesByDate(notes: Note[]): NotesGroupedByDate {
@@ -72,7 +68,6 @@ export function groupNotesByDate(notes: Note[]): NotesGroupedByDate {
   now.setHours(0, 0, 0, 0) // Start of today
 
   const groups: NotesGroupedByDate = {
-    pinned: [],
     today: [],
     yesterday: [],
     thisWeek: [],
@@ -80,12 +75,6 @@ export function groupNotesByDate(notes: Note[]): NotesGroupedByDate {
   }
 
   notes.forEach(note => {
-    // Pinned notes go to pinned section regardless of date
-    if (note.is_pinned) {
-      groups.pinned.push(note)
-      return
-    }
-
     const noteDate = new Date(note.created_at)
     noteDate.setHours(0, 0, 0, 0) // Start of note's day
 
@@ -118,7 +107,6 @@ export function groupNotesByDate(notes: Note[]): NotesGroupedByDate {
 export function getDateGroupTitle(groupKey: DateGroup): string {
   // Handle static groups
   const staticTitles: Record<StaticDateGroup, string> = {
-    pinned: 'Pinned',
     today: 'Today',
     yesterday: 'Yesterday',
     thisWeek: 'This Week',
@@ -146,7 +134,7 @@ export function getDateGroupTitle(groupKey: DateGroup): string {
  * Static groups first, then month groups sorted by date (newest first)
  */
 export function getDateGroupKeys(groupedNotes?: NotesGroupedByDate): DateGroup[] {
-  const staticKeys: StaticDateGroup[] = ['pinned', 'today', 'yesterday', 'thisWeek', 'lastMonth']
+  const staticKeys: StaticDateGroup[] = ['today', 'yesterday', 'thisWeek', 'lastMonth']
 
   if (!groupedNotes) {
     return staticKeys
