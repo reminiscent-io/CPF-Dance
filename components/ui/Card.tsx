@@ -23,13 +23,13 @@ export function Card({
   }
 
   const hoverStyles = hover
-    ? 'hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200'
+    ? 'hover:shadow-soft-lg hover:-translate-y-1 transition-[transform,box-shadow] duration-200'
     : ''
 
   return (
     <div
       className={`
-        bg-white rounded-lg shadow-soft
+        bg-champagne-50 rounded-lg shadow-soft
         ${paddingStyles[padding]}
         ${hoverStyles}
         ${className}
@@ -49,7 +49,7 @@ export interface CardHeaderProps {
 
 export function CardHeader({ children, className = '' }: CardHeaderProps) {
   return (
-    <div className={`border-b border-gray-200 pb-4 mb-4 ${className}`}>
+    <div className={`border-b border-champagne-200 pb-4 mb-4 ${className}`}>
       {children}
     </div>
   )
@@ -62,7 +62,7 @@ export interface CardTitleProps {
 
 export function CardTitle({ children, className = '' }: CardTitleProps) {
   return (
-    <h3 className={`text-xl font-semibold text-gray-900 ${className}`}>
+    <h3 className={`text-xl font-semibold text-charcoal-950 ${className}`}>
       {children}
     </h3>
   )

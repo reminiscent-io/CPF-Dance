@@ -13,13 +13,16 @@ export function Badge({
   size = 'md',
   className = ''
 }: BadgeProps) {
+  // Semantic variants collapse onto the four-family palette per DESIGN.md.
+  // success reads as a Curtain Gilt moment; warning and danger as Stage Rose
+  // moments. No green / yellow / red leaks into the system.
   const variants = {
-    default: 'bg-gray-100 text-gray-800',
-    primary: 'bg-rose-100 text-rose-800',
-    secondary: 'bg-mauve-100 text-mauve-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    danger: 'bg-red-100 text-red-800'
+    default: 'bg-champagne-100 text-charcoal-700',
+    primary: 'bg-ballet-pink-100 text-ballet-pink-800',
+    secondary: 'bg-ballet-pink-100 text-ballet-pink-800',
+    success: 'bg-gold-100 text-gold-800',
+    warning: 'bg-ballet-pink-200 text-ballet-pink-900',
+    danger: 'bg-ballet-pink-200 text-ballet-pink-900'
   }
   
   const sizes = {

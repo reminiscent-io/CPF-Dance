@@ -60,11 +60,13 @@ interface ToastComponentProps {
 }
 
 function ToastComponent({ toast, onClose }: ToastComponentProps) {
+  // Toast types collapse onto the four-family palette per DESIGN.md.
+  // success reads in Curtain Gilt; error and warning in Stage Rose; info in Champagne.
   const styles = {
-    success: 'bg-green-50 text-green-800 border-green-200',
-    error: 'bg-red-50 text-red-800 border-red-200',
-    info: 'bg-blue-50 text-blue-800 border-blue-200',
-    warning: 'bg-yellow-50 text-yellow-800 border-yellow-200'
+    success: 'bg-gold-50 text-gold-800 border-gold-200',
+    error: 'bg-ballet-pink-100 text-ballet-pink-900 border-ballet-pink-200',
+    info: 'bg-champagne-100 text-charcoal-700 border-champagne-200',
+    warning: 'bg-ballet-pink-50 text-ballet-pink-800 border-ballet-pink-200'
   }
 
   const icons = {
@@ -91,7 +93,7 @@ function ToastComponent({ toast, onClose }: ToastComponentProps) {
   }
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border ${styles[toast.type]} min-w-[300px] max-w-md animate-slideUp`}>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-soft-lg border ${styles[toast.type]} min-w-[300px] max-w-md animate-slideUp`}>
       <div className="flex-shrink-0">
         {icons[toast.type]}
       </div>

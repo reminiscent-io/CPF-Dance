@@ -10,28 +10,24 @@ export interface AvatarProps {
   className?: string
 }
 
-// Generate a consistent color based on name
-function getAvatarColor(name: string): string {
-  const colors = [
-    'bg-rose-500',
-    'bg-purple-500',
-    'bg-blue-500',
-    'bg-teal-500',
-    'bg-amber-500',
-    'bg-emerald-500',
-    'bg-indigo-500',
-    'bg-pink-500',
-  ]
-
+function hashName(name: string): number {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash)
   }
-
-  return colors[Math.abs(hash) % colors.length]
+  return Math.abs(hash)
 }
 
-// Get initials from a name (up to 2 characters)
+// Two-tone Ballet Noir avatar background. Champagne paper for most names,
+// Stage Rose Soft for the rest, so a feed of Courtney + dancer initials
+// reads with quiet differentiation rather than uniform sameness.
+function getAvatarTone(name: string): { bg: string; text: string } {
+  const useRose = hashName(name) % 2 === 1
+  return useRose
+    ? { bg: 'bg-ballet-pink-100', text: 'text-ballet-pink-800' }
+    : { bg: 'bg-champagne-200', text: 'text-charcoal-700' }
+}
+
 function getInitials(name: string): string {
   if (!name) return '?'
 
@@ -59,7 +55,7 @@ export function Avatar({
   }
 
   const showImage = src && !imageError
-  const bgColor = getAvatarColor(name || alt || 'User')
+  const tone = getAvatarTone(name || alt || 'User')
   const initials = getInitials(name || alt || 'User')
 
   return (
@@ -67,7 +63,7 @@ export function Avatar({
       className={`
         ${sizes[size]}
         rounded-full flex items-center justify-center flex-shrink-0
-        ${showImage ? 'bg-gray-100' : bgColor}
+        ${showImage ? 'bg-champagne-100' : tone.bg}
         ${className}
       `}
     >
@@ -79,7 +75,7 @@ export function Avatar({
           onError={() => setImageError(true)}
         />
       ) : (
-        <span className="font-medium text-white">
+        <span className={`font-medium ${tone.text}`}>
           {initials}
         </span>
       )}
@@ -87,7 +83,6 @@ export function Avatar({
   )
 }
 
-// Sub-components for more granular control (optional pattern)
 export function AvatarImage({ src, alt }: { src: string; alt?: string }) {
   return (
     <img
@@ -106,7 +101,7 @@ export function AvatarFallback({
   className?: string
 }) {
   return (
-    <span className={`font-medium text-white ${className}`}>
+    <span className={`font-medium text-charcoal-700 ${className}`}>
       {children}
     </span>
   )
