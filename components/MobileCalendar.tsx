@@ -261,54 +261,57 @@ export function MobileCalendar({
     return new Date(dateString).getMinutes()
   }
 
+  // Class types map onto the four-family Ballet Noir palette per DESIGN.md.
+  // Differentiation comes from background tint + text color, not from
+  // colored side stripes (banned by The No Side-Stripe Rule).
   const getClassTypeColor = (type: string) => {
     switch (type) {
       case 'private':
-        return 'bg-purple-500'
-      case 'group':
-        return 'bg-blue-500'
-      case 'workshop':
-        return 'bg-green-500'
-      case 'master_class':
-        return 'bg-amber-500'
-      case 'personal':
         return 'bg-rose-500'
+      case 'group':
+        return 'bg-champagne-500'
+      case 'workshop':
+        return 'bg-gold-500'
+      case 'master_class':
+        return 'bg-charcoal-700'
+      case 'personal':
+        return 'bg-champagne-700'
       default:
-        return 'bg-gray-500'
+        return 'bg-charcoal-300'
     }
   }
 
   const getClassTypeBgColor = (type: string) => {
     switch (type) {
       case 'private':
-        return 'bg-purple-100 border-purple-500 text-purple-900'
+        return 'bg-ballet-pink-100 border-ballet-pink-200 text-ballet-pink-900'
       case 'group':
-        return 'bg-blue-100 border-blue-500 text-blue-900'
+        return 'bg-champagne-100 border-champagne-200 text-charcoal-900'
       case 'workshop':
-        return 'bg-green-100 border-green-500 text-green-900'
+        return 'bg-gold-100 border-gold-200 text-gold-900'
       case 'master_class':
-        return 'bg-amber-100 border-amber-500 text-amber-900'
+        return 'bg-charcoal-100 border-charcoal-200 text-charcoal-900'
       case 'personal':
-        return 'bg-rose-100 border-rose-500 text-rose-900'
+        return 'bg-champagne-200 border-champagne-300 text-charcoal-900'
       default:
-        return 'bg-gray-100 border-gray-500 text-gray-900'
+        return 'bg-champagne-100 border-champagne-200 text-charcoal-700'
     }
   }
 
   const getClassTypeStyles = (type: string) => {
     switch (type) {
       case 'private':
-        return 'bg-purple-50 border-l-4 border-purple-500'
+        return 'bg-ballet-pink-100 border border-ballet-pink-200'
       case 'group':
-        return 'bg-blue-50 border-l-4 border-blue-500'
+        return 'bg-champagne-100 border border-champagne-200'
       case 'workshop':
-        return 'bg-green-50 border-l-4 border-green-500'
+        return 'bg-gold-100 border border-gold-200'
       case 'master_class':
-        return 'bg-amber-50 border-l-4 border-amber-500'
+        return 'bg-charcoal-100 border border-charcoal-200'
       case 'personal':
-        return 'bg-rose-50 border-l-4 border-rose-500'
+        return 'bg-champagne-200 border border-champagne-300'
       default:
-        return 'bg-gray-50 border-l-4 border-gray-500'
+        return 'bg-champagne-100 border border-champagne-200'
     }
   }
 
@@ -539,7 +542,7 @@ export function MobileCalendar({
               <button
                 key={event.id}
                 onClick={() => onEventClick?.(event)}
-                className={`absolute left-1 right-1 rounded-md border-l-4 px-2 py-1 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
+                className={`absolute left-1 right-1 rounded-md border px-2 py-1 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
                 style={{ top: `${top}px`, height: `${height}px`, minHeight: '30px' }}
               >
                 <div className="text-xs font-semibold truncate">
@@ -645,7 +648,7 @@ export function MobileCalendar({
                 <button
                   key={event.id}
                   onClick={() => onEventClick?.(event)}
-                  className={`absolute rounded-sm border-l-2 px-0.5 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
+                  className={`absolute rounded-sm border px-0.5 overflow-hidden ${getClassTypeBgColor(event.class_type)}`}
                   style={{ 
                     top: `${top}px`, 
                     height: `${height}px`, 
@@ -689,8 +692,8 @@ export function MobileCalendar({
                 }}
               >
                 <div className="relative flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
-                  <div className="flex-1 h-0.5 bg-red-500" />
+                  <div className="w-2 h-2 rounded-full bg-rose-600 -ml-1" />
+                  <div className="flex-1 h-0.5 bg-rose-600" />
                 </div>
               </div>
             )
@@ -769,17 +772,17 @@ export function MobileCalendar({
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base font-semibold text-gray-900 truncate" style={{ fontFamily: 'var(--font-family-display)' }}>
+                      <h4 className="text-base font-semibold text-charcoal-950 truncate" style={{ fontFamily: 'var(--font-family-display)' }}>
                         {event.title}
                       </h4>
                       {event.is_cancelled && (
-                        <span className="flex-shrink-0 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
+                        <span className="flex-shrink-0 text-xs bg-ballet-pink-100 text-ballet-pink-800 px-1.5 py-0.5 rounded">
                           Cancelled
                         </span>
                       )}
                     </div>
-                    
-                    <p className="text-sm text-gray-600 truncate mt-1">
+
+                    <p className="text-sm text-charcoal-500 truncate mt-1">
                       {event.studios?.name || event.location || 'Location TBA'}
                     </p>
                     

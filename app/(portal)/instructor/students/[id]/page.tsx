@@ -478,7 +478,7 @@ export default function StudentDetailPage() {
                     return (
                       <div
                         key={note.id}
-                        className={`border-l-4 ${isOwnNote ? 'border-rose-500' : 'border-purple-400'} pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors ${isOwnNote ? 'cursor-pointer' : ''} group relative`}
+                        className={`border ${isOwnNote ? 'border-ballet-pink-200 bg-ballet-pink-50' : 'border-champagne-200 bg-champagne-100'} pl-4 py-2 hover:bg-champagne-200 rounded-md transition-colors ${isOwnNote ? 'cursor-pointer' : ''} group relative`}
                         onClick={() => isOwnNote && handleOpenNoteModal(note)}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -554,7 +554,7 @@ export default function StudentDetailPage() {
                   {notes.filter((n: any) => n.visibility === 'shared_with_instructor').map((note: any) => (
                     <div
                       key={note.id}
-                      className="border-l-4 border-rose-300 pl-4 py-2 hover:bg-gray-50 rounded-r transition-colors group relative"
+                      className="border border-ballet-pink-200 bg-ballet-pink-50 pl-4 py-2 hover:bg-ballet-pink-100 rounded-md transition-colors group relative"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">

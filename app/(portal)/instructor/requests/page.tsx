@@ -221,7 +221,7 @@ export default function InstructorRequestsPage() {
                   {pendingRequests.map((request) => {
                     const contact = getStudentContact(request)
                     return (
-                      <Card key={request.id} className="border-l-4 border-l-amber-400">
+                      <Card key={request.id} className="bg-gold-50 border border-gold-200">
                         <CardContent className="pt-6">
                           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                             <div className="flex-1">
