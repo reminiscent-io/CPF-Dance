@@ -297,10 +297,10 @@ export default function HomePage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
+    <main className="min-h-screen bg-champagne-50 marketing-page overflow-x-hidden">
       {/* Navigation Bar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-rose-50 via-mauve-50 to-cream-50 border-b border-rose-200 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-champagne-50 border-b border-champagne-200 shadow-soft"
         style={{
           opacity: showNav ? 1 : 0,
           transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
@@ -310,7 +310,7 @@ export default function HomePage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-rose-600 to-mauve-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-family-display)' }}>
+          <Link href="/" className="text-xl font-semibold text-charcoal-950 tracking-tight" style={{ fontFamily: 'var(--font-family-display)' }}>
             CPF Dance
           </Link>
           <div className="flex gap-4">
@@ -369,8 +369,8 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* White opaque overlay for readability */}
-        <div className="absolute inset-0 bg-white/75"></div>
+        {/* Champagne paper overlay for readability over hero imagery */}
+        <div className="absolute inset-0 bg-champagne-50/80"></div>
 
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
@@ -382,7 +382,7 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             Precision. Passion.
-            <span className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2">
+            <span className="block text-rose-700 mt-2">
               Performance.
             </span>
           </motion.h1>
@@ -430,8 +430,8 @@ export default function HomePage() {
           />
         </div>
 
-        {/* White Opaque Overlay */}
-        <div className="absolute inset-0 bg-white/60 z-10"></div>
+        {/* Champagne paper overlay */}
+        <div className="absolute inset-0 bg-champagne-50/70 z-10"></div>
 
         {/* Content */}
         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -441,7 +441,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="bg-gradient-to-br from-rose-50/90 to-mauve-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
+            <Card className="bg-champagne-50 border border-champagne-200 p-6 sm:p-8 lg:p-10 shadow-soft-lg">
               <div className="text-center mb-6">
                 <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
                   For Dancers
@@ -492,10 +492,10 @@ export default function HomePage() {
                     }}
                     whileHover={{
                       scale: 1.02,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      backgroundColor: "rgba(245, 241, 234, 0.95)",
                       transition: { duration: 0.2 }
                     }}
-                    className="flex items-start gap-3 bg-white/60 rounded-lg p-3 sm:p-4 shadow-sm cursor-default"
+                    className="flex items-start gap-3 bg-champagne-100/70 rounded-lg p-3 sm:p-4 shadow-soft cursor-default"
                   >
                     <motion.div
                       className="flex-shrink-0 mt-0.5"
@@ -524,7 +524,7 @@ export default function HomePage() {
       </section>
 
       {/* Learn from the Best Section - About Courtney */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-champagne-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-1 lg:order-1">
@@ -555,10 +555,10 @@ export default function HomePage() {
                 >
                   <span className="text-sm font-medium text-rose-700">Radio City Rockettes →</span>
                 </a>
-                <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
+                <div className="px-4 py-2 bg-champagne-100 rounded-full shadow-soft border border-champagne-200">
                   <span className="text-sm font-medium text-charcoal-900">Professional Performer</span>
                 </div>
-                <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-rose-200">
+                <div className="px-4 py-2 bg-champagne-100 rounded-full shadow-soft border border-champagne-200">
                   <span className="text-sm font-medium text-charcoal-900">Precision Technique</span>
                 </div>
                 <a
@@ -576,7 +576,7 @@ export default function HomePage() {
                 {/* Swipable Gallery */}
                 <div
                   ref={galleryRef}
-                  className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide bg-white"
+                  className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide bg-champagne-50"
                   style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none'
@@ -648,8 +648,8 @@ export default function HomePage() {
           />
         </div>
 
-        {/* White Opaque Overlay */}
-        <div className="absolute inset-0 bg-white/60 z-10"></div>
+        {/* Champagne paper overlay */}
+        <div className="absolute inset-0 bg-champagne-50/70 z-10"></div>
 
         {/* Content */}
         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -659,7 +659,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="bg-gradient-to-br from-champagne-50/90 to-ballet-pink-50/90 backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-2xl">
+            <Card className="bg-champagne-50 border border-champagne-200 p-6 sm:p-8 lg:p-10 shadow-soft-lg">
               <div className="text-center mb-6">
                 <h2 className="mb-4" style={{ fontFamily: 'var(--font-family-display)' }}>
                   For Instructors
@@ -672,7 +672,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="inline-block mt-3 px-4 py-1.5 bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold rounded-full shadow-md"
+                  className="inline-block mt-3 px-3 py-1 bg-gold-100 text-gold-800 text-sm font-medium tracking-wide rounded-full"
                 >
                   Coming Soon
                 </motion.span>
@@ -692,10 +692,10 @@ export default function HomePage() {
                     }}
                     whileHover={{
                       scale: 1.02,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      backgroundColor: "rgba(245, 241, 234, 0.95)",
                       transition: { duration: 0.2 }
                     }}
-                    className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-white/60 shadow-sm cursor-default"
+                    className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-champagne-100/70 shadow-soft cursor-default"
                   >
                     <motion.div
                       className="flex-shrink-0 mt-0.5"
