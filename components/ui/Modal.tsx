@@ -77,6 +77,7 @@ export function Modal({
               {title}
             </h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors ml-4"
               aria-label="Close modal"
