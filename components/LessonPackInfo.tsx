@@ -5,13 +5,7 @@ import { LessonPackHistory } from '@/components/LessonPackHistory'
 import { LessonPackSelector } from '@/components/LessonPackSelector'
 import { Button } from '@/components/ui/Button'
 
-interface LessonPackInfoProps {
-  selectedPackId?: string
-  onPackSelect?: (packId: string, lessons: number) => void
-  instructorId?: string | null
-}
-
-export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
+export function LessonPackInfo() {
   const [totalRemaining, setTotalRemaining] = useState(0)
   const [loading, setLoading] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -60,7 +54,6 @@ export function LessonPackInfo({ instructorId }: LessonPackInfoProps) {
             setShowPurchaseOptions(false)
             fetchTotalLessons()
           }}
-          instructorId={instructorId}
         />
       </div>
     )

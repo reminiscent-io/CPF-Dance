@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+import { getCurrentDancerStudent, getDefaultInstructorId } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     const body = await request.json()
-    const { requested_focus, preferred_dates, additional_notes, instructor_id } = body
+    const { requested_focus, preferred_dates, additional_notes } = body
 
     if (!requested_focus) {
       return NextResponse.json(
@@ -51,11 +51,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const instructor_id = await getDefaultInstructorId()
+
     const { data: lessonRequest, error: insertError } = await supabase
       .from('private_lesson_requests')
       .insert({
         student_id: student.id,
-        instructor_id: instructor_id || null,
+        instructor_id,
         requested_focus,
         preferred_dates: preferred_dates || [],
         additional_notes,

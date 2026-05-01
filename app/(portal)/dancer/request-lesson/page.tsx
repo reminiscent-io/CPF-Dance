@@ -11,12 +11,6 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 import { LessonPackInfo } from '@/components/LessonPackInfo'
 
-interface Instructor {
-  id: string
-  full_name: string | null
-  avatar_url: string | null
-}
-
 interface ScheduledClass {
   id: string
   title: string
@@ -43,13 +37,10 @@ export default function RequestPrivateLessonPage() {
   const router = useRouter()
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
-  const [instructors, setInstructors] = useState<Instructor[]>([])
-  const [loadingInstructors, setLoadingInstructors] = useState(true)
   const [formData, setFormData] = useState({
     requested_focus: '',
     preferred_dates: '',
-    additional_notes: '',
-    instructor_id: ''
+    additional_notes: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -68,21 +59,8 @@ export default function RequestPrivateLessonPage() {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
       fetchRequests()
-      fetchInstructors()
     }
   }, [loading, user, profile])
-
-  useEffect(() => {
-    if (instructors.length > 0 && !formData.instructor_id) {
-      const courtney = instructors.find(i => 
-        i.full_name?.toLowerCase().includes('courtney') && 
-        i.full_name?.toLowerCase().includes('file')
-      )
-      if (courtney) {
-        setFormData(prev => ({ ...prev, instructor_id: courtney.id }))
-      }
-    }
-  }, [instructors, formData.instructor_id])
 
   useEffect(() => {
     // Check for payment success/canceled in URL (client-side only)
@@ -129,30 +107,11 @@ export default function RequestPrivateLessonPage() {
     }
   }
 
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch('/api/dancer/instructors')
-      if (response.ok) {
-        const data = await response.json()
-        setInstructors(data.instructors)
-      }
-    } catch (error) {
-      console.error('Error fetching instructors:', error)
-    } finally {
-      setLoadingInstructors(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.requested_focus.trim()) {
       alert('Please describe what you would like to focus on')
-      return
-    }
-
-    if (!formData.instructor_id) {
-      alert('Please select an instructor')
       return
     }
 
@@ -163,15 +122,13 @@ export default function RequestPrivateLessonPage() {
         .map((d) => d.trim())
         .filter((d) => d.length > 0)
 
-      // Step 1: Create the lesson request
       const requestResponse = await fetch('/api/dancer/lesson-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           requested_focus: formData.requested_focus.trim(),
           preferred_dates: preferredDatesArray,
-          additional_notes: formData.additional_notes.trim() || null,
-          instructor_id: formData.instructor_id
+          additional_notes: formData.additional_notes.trim() || null
         })
       })
 
@@ -185,8 +142,7 @@ export default function RequestPrivateLessonPage() {
       setFormData({
         requested_focus: '',
         preferred_dates: '',
-        additional_notes: '',
-        instructor_id: ''
+        additional_notes: ''
       })
       await fetchRequests()
       
@@ -288,10 +244,7 @@ export default function RequestPrivateLessonPage() {
         <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Request a Private Lesson</CardTitle>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <LessonPackInfo instructorId={formData.instructor_id || null} />
-            
-            {/* Instructor selection hidden - defaulting to Courtney Lowe */}
-            <input type="hidden" name="instructor_id" value={formData.instructor_id} />
+            <LessonPackInfo />
 
             <Textarea
               label="What would you like to focus on? *"
