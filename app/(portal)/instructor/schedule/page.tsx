@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -73,7 +73,7 @@ export default function InstructorSchedulePage() {
     }
   }, [authLoading, profile, router])
 
-  const fetchSchedule = async (startDate?: Date, endDate?: Date) => {
+  const fetchSchedule = useCallback(async (startDate?: Date, endDate?: Date) => {
     try {
       setLoading(true)
       setError(null)
@@ -99,15 +99,18 @@ export default function InstructorSchedulePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
+    if (authLoading) return
+    if (profile?.role !== 'instructor' && profile?.role !== 'admin') return
+
     // Calendar grid uses the configured week/month mode; the list view
     // navigates day-by-day so we fetch the month containing currentDate.
     const fetchMode: ViewMode = viewType === 'month' ? calendarMode : 'month'
     const { start, end } = getVisibleDateRange(currentDate, fetchMode)
     fetchSchedule(start, end)
-  }, [currentDate, calendarMode, viewType])
+  }, [currentDate, calendarMode, viewType, fetchSchedule, authLoading, profile])
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date)
