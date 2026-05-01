@@ -36,8 +36,9 @@ export function LessonPackInfo() {
   if (showPurchaseOptions) {
     return (
       <div className="space-y-4">
-        <Button 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => setShowPurchaseOptions(false)}
           className="mb-4"
         >
@@ -63,6 +64,7 @@ export function LessonPackInfo() {
     <>
       <div className="space-y-2">
         <button
+          type="button"
           onClick={() => setHistoryOpen(true)}
           className="w-full p-2 md:p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all cursor-pointer shadow-sm hover:shadow-md"
         >
@@ -77,6 +79,7 @@ export function LessonPackInfo() {
         </button>
 
         <Button
+          type="button"
           variant="secondary"
           onClick={() => setShowPurchaseOptions(true)}
           className="w-full"

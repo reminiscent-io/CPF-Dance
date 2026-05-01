@@ -104,6 +104,7 @@ export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackS
                 <p className="text-2xl font-bold text-rose-600 mb-3">{formatPrice(pack.price)}</p>
                 <p className="text-sm text-gray-600 mb-4">{formatPrice(pack.price / pack.lesson_count)}/lesson</p>
                 <Button
+                  type="button"
                   variant="primary"
                   size="sm"
                   onClick={() => handlePurchase(pack.id)}
