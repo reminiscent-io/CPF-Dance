@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -37,23 +37,25 @@ interface CalendarEvent {
   }
 }
 
+export type ViewMode = 'month' | 'week'
+
 interface CalendarProps {
   events: CalendarEvent[]
+  currentDate: Date
+  viewMode: ViewMode
   onEventClick?: (event: CalendarEvent) => void
-  onDateChange?: (date: Date) => void
+  onDateChange: (date: Date) => void
+  onViewModeChange: (mode: ViewMode) => void
 }
 
-type ViewMode = 'month' | 'week'
-
-export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState<ViewMode>('week')
-
-  const handleDateChange = (newDate: Date) => {
-    setCurrentDate(newDate)
-    onDateChange?.(newDate)
-  }
-
+export function Calendar({
+  events,
+  currentDate,
+  viewMode,
+  onEventClick,
+  onDateChange,
+  onViewModeChange,
+}: CalendarProps) {
   const navigatePrevious = () => {
     const newDate = new Date(currentDate)
     if (viewMode === 'month') {
@@ -61,7 +63,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     } else {
       newDate.setDate(newDate.getDate() - 7)
     }
-    handleDateChange(newDate)
+    onDateChange(newDate)
   }
 
   const navigateNext = () => {
@@ -71,11 +73,11 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     } else {
       newDate.setDate(newDate.getDate() + 7)
     }
-    handleDateChange(newDate)
+    onDateChange(newDate)
   }
 
   const navigateToday = () => {
-    handleDateChange(new Date())
+    onDateChange(new Date())
   }
 
   const formatMonthYear = (date: Date) => {
@@ -371,14 +373,14 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
             <Button
               variant={viewMode === 'week' ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('week')}
+              onClick={() => onViewModeChange('week')}
             >
               Week
             </Button>
             <Button
               variant={viewMode === 'month' ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('month')}
+              onClick={() => onViewModeChange('month')}
             >
               Month
             </Button>
