@@ -11,10 +11,9 @@ import type { LessonPack, LessonPackPurchase } from '@/lib/types'
 interface LessonPackSelectorProps {
   onSelectPack: (packId: string, packName: string, lessons: number) => void
   selectedPackId?: string
-  instructorId?: string | null
 }
 
-export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId }: LessonPackSelectorProps) {
+export function LessonPackSelector({ onSelectPack, selectedPackId }: LessonPackSelectorProps) {
   const [packs, setPacks] = useState<LessonPack[]>([])
   const [purchases, setPurchases] = useState<LessonPackPurchase[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,20 +53,12 @@ export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId 
   }
 
   const handlePurchase = (packId: string) => {
-    // Validate instructor is selected
-    if (!instructorId) {
-      alert('Please select an instructor before purchasing a lesson pack')
-      return
-    }
-
-    // Find the selected pack
     const pack = packs.find(p => p.id === packId)
     if (!pack) {
       alert('Lesson pack not found')
       return
     }
 
-    // Open payment dialog
     setSelectedPack(pack)
     setPaymentDialogOpen(true)
   }
@@ -160,7 +151,6 @@ export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId 
           setSelectedPack(null)
         }}
         lessonPack={selectedPack}
-        instructorId={instructorId || null}
         onSuccess={handlePaymentSuccess}
       />
     </div>

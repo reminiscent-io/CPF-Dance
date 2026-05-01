@@ -102,3 +102,29 @@ export async function requireDancer(): Promise<ProfileWithRole> {
   return requireRole('dancer')
 }
 
+// The dancer portal is operationally single-instructor. Dancer flows
+// (private-lesson requests, lesson-pack checkout) used to take an
+// `instructor_id` from the client; they now resolve it server-side via
+// this helper. Reads `public_profiles` because migration 38 restricts
+// dancers from reading instructor PII off the `profiles` table.
+// Multi-instructor case: deterministic — lowest UUID wins.
+export async function getDefaultInstructorId(): Promise<string> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id')
+    .eq('role', 'instructor')
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`Failed to look up default instructor: ${error.message}`)
+  }
+  if (!data) {
+    throw new Error('No instructor profile found')
+  }
+  return data.id
+}
+

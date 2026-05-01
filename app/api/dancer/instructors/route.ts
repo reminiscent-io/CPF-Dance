@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
 
+// Currently consumed by ReviewModal so dancers can pick which instructor
+// they're reviewing. The dancer request-lesson and lesson-pack flows no
+// longer call this — they resolve the single instructor server-side via
+// getDefaultInstructorId().
 export async function GET(request: NextRequest) {
   try {
     const student = await getCurrentDancerStudent()

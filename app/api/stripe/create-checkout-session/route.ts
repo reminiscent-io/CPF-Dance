@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+import { getCurrentDancerStudent, getDefaultInstructorId } from '@/lib/auth/server-auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const student = await getCurrentDancerStudent()
     const supabase = await createClient()
-    const { lesson_pack_id, instructor_id } = await request.json()
+    const { lesson_pack_id } = await request.json()
 
     if (!lesson_pack_id) {
       return NextResponse.json(
@@ -20,12 +20,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!instructor_id) {
-      return NextResponse.json(
-        { error: 'instructor_id is required. Please select an instructor first.' },
-        { status: 400 }
-      )
-    }
+    const instructor_id = await getDefaultInstructorId()
 
     // Get the lesson pack
     const { data: pack, error: packError } = await supabase
@@ -40,13 +35,6 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
-
-    // Get instructor details for metadata
-    const { data: instructor } = await supabase
-      .from('profiles')
-      .select('full_name, email')
-      .eq('id', instructor_id)
-      .single()
 
     // Get student profile for customer info
     const { data: profile } = await supabase

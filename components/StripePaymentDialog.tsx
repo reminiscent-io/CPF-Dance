@@ -16,7 +16,6 @@ interface StripePaymentDialogProps {
   isOpen: boolean
   onClose: () => void
   lessonPack: LessonPack | null
-  instructorId: string | null
   onSuccess?: () => void
 }
 
@@ -24,7 +23,6 @@ export function StripePaymentDialog({
   isOpen,
   onClose,
   lessonPack,
-  instructorId,
   onSuccess
 }: StripePaymentDialogProps) {
   const [processing, setProcessing] = useState(false)
@@ -42,11 +40,6 @@ export function StripePaymentDialog({
   const handleCheckout = async () => {
     if (!lessonPack) return
 
-    if (!instructorId) {
-      setError('Please select an instructor before purchasing a lesson pack')
-      return
-    }
-
     setProcessing(true)
     setError('')
 
@@ -56,7 +49,6 @@ export function StripePaymentDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lesson_pack_id: lessonPack.id,
-          instructor_id: instructorId,
         }),
       })
 
@@ -105,12 +97,6 @@ export function StripePaymentDialog({
           </div>
         )}
 
-        {!instructorId && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-            Please select an instructor before purchasing a lesson pack
-          </div>
-        )}
-
         <div className="space-y-3 text-sm text-gray-600">
           <div className="flex items-start gap-2">
             <span className="text-green-600">✓</span>
@@ -137,7 +123,7 @@ export function StripePaymentDialog({
           <Button
             variant="primary"
             onClick={handleCheckout}
-            disabled={processing || !instructorId}
+            disabled={processing}
           >
             {processing ? (
               <span className="flex items-center gap-2">
