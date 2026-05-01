@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Calendar } from '@/components/Calendar'
+import { Calendar, type ViewMode } from '@/components/Calendar'
+import { getVisibleDateRange } from '@/lib/utils/calendar-range'
 import { MobileCalendar } from '@/components/MobileCalendar'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -60,6 +61,7 @@ export default function InstructorSchedulePage() {
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [calendarMode, setCalendarMode] = useState<ViewMode>('week')
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
   const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
@@ -71,7 +73,7 @@ export default function InstructorSchedulePage() {
     }
   }, [authLoading, profile, router])
 
-  const fetchSchedule = async (startDate?: Date, endDate?: Date) => {
+  const fetchSchedule = useCallback(async (startDate?: Date, endDate?: Date) => {
     try {
       setLoading(true)
       setError(null)
@@ -97,23 +99,21 @@ export default function InstructorSchedulePage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    // Load initial data for the current month
-    const today = new Date()
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
-
-    fetchSchedule(startOfMonth, endOfMonth)
   }, [])
 
-  const handleDateChange = (date: Date) => {
-    // Load data for the month containing the selected date
-    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
+  useEffect(() => {
+    if (authLoading) return
+    if (profile?.role !== 'instructor' && profile?.role !== 'admin') return
 
-    fetchSchedule(startOfMonth, endOfMonth)
+    // Calendar grid uses the configured week/month mode; the list view
+    // navigates day-by-day so we fetch the month containing currentDate.
+    const fetchMode: ViewMode = viewType === 'month' ? calendarMode : 'month'
+    const { start, end } = getVisibleDateRange(currentDate, fetchMode)
+    fetchSchedule(start, end)
+  }, [currentDate, calendarMode, viewType, fetchSchedule, authLoading, profile])
+
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(date)
   }
 
   const handleEventClick = async (event: ClassEvent) => {
@@ -224,7 +224,6 @@ export default function InstructorSchedulePage() {
 
   const handleMobileMonthChange = (date: Date) => {
     setCurrentDate(date)
-    handleDateChange(date)
   }
 
   const handleAddToAppleCalendar = () => {
@@ -267,19 +266,10 @@ export default function InstructorSchedulePage() {
     const newDate = new Date(currentDate)
     newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1))
     setCurrentDate(newDate)
-
-    // Fetch data for new month if we crossed a month boundary
-    if (newDate.getMonth() !== currentDate.getMonth()) {
-      handleDateChange(newDate)
-    }
   }
 
   const goToToday = () => {
-    const today = new Date()
-    setCurrentDate(today)
-    if (today.getMonth() !== currentDate.getMonth()) {
-      handleDateChange(today)
-    }
+    setCurrentDate(new Date())
   }
 
   const formatDayViewDate = (date: Date) => {
@@ -498,8 +488,11 @@ export default function InstructorSchedulePage() {
               <div className="hidden md:block pb-8">
                 <Calendar
                   events={classes}
+                  currentDate={currentDate}
+                  viewMode={calendarMode}
                   onEventClick={handleEventClick}
                   onDateChange={handleDateChange}
+                  onViewModeChange={setCalendarMode}
                 />
               </div>
             )}
