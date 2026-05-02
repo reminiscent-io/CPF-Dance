@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 
 interface CalendarEvent {
@@ -28,6 +28,51 @@ interface MobileCalendarProps {
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onMonthChange?: (date: Date) => void
+}
+
+interface DayBucket {
+  events: CalendarEvent[]
+  uniqueTypes: string[]
+}
+
+const EMPTY_BUCKET: DayBucket = { events: [], uniqueTypes: [] }
+const EMPTY_EVENTS: CalendarEvent[] = []
+
+// Class types map onto the four-family Ballet Noir palette per DESIGN.md.
+// Hoisted so the lookup tables aren't rebuilt every render.
+const CLASS_TYPE_DOT: Record<string, string> = {
+  private: 'bg-rose-500',
+  group: 'bg-champagne-500',
+  workshop: 'bg-gold-500',
+  master_class: 'bg-charcoal-700',
+  personal: 'bg-champagne-700',
+}
+const DEFAULT_CLASS_TYPE_DOT = 'bg-charcoal-300'
+
+const CLASS_TYPE_BG: Record<string, string> = {
+  private: 'bg-ballet-pink-100 border-ballet-pink-200 text-ballet-pink-900',
+  group: 'bg-champagne-100 border-champagne-200 text-charcoal-900',
+  workshop: 'bg-gold-100 border-gold-200 text-gold-900',
+  master_class: 'bg-charcoal-100 border-charcoal-200 text-charcoal-900',
+  personal: 'bg-champagne-200 border-champagne-300 text-charcoal-900',
+}
+const DEFAULT_CLASS_TYPE_BG = 'bg-champagne-100 border-champagne-200 text-charcoal-700'
+
+const CLASS_TYPE_STYLE: Record<string, string> = {
+  private: 'bg-ballet-pink-100 border border-ballet-pink-200',
+  group: 'bg-champagne-100 border border-champagne-200',
+  workshop: 'bg-gold-100 border border-gold-200',
+  master_class: 'bg-charcoal-100 border border-charcoal-200',
+  personal: 'bg-champagne-200 border border-champagne-300',
+}
+const DEFAULT_CLASS_TYPE_STYLE = 'bg-champagne-100 border border-champagne-200'
+
+const CLASS_TYPE_LABEL: Record<string, string> = {
+  private: 'Private',
+  group: 'Group',
+  workshop: 'Workshop',
+  master_class: 'Master',
+  personal: 'Personal',
 }
 
 export function MobileCalendar({ 
@@ -76,12 +121,17 @@ export function MobileCalendar({
     }
   }, [currentDate])
 
+  // Only tick the clock when a timeline view is mounted; the month-view list
+  // doesn't show the now-line, so a per-minute setState there is wasted work
+  // that triggers full re-renders of the entire calendar tree.
   useEffect(() => {
+    if (viewMode !== 'week' && viewMode !== 'day') return
+    setCurrentTime(new Date())
     const timer = setInterval(() => {
       setCurrentTime(new Date())
     }, 60000)
     return () => clearInterval(timer)
-  }, [])
+  }, [viewMode])
 
   useEffect(() => {
     if ((viewMode === 'week' || viewMode === 'day') && timelineScrollRef.current) {
@@ -187,28 +237,39 @@ export function MobileCalendar({
     return d
   }
 
-  const getWeekDays = (date: Date) => {
-    const start = getStartOfWeek(date)
-    const days: Date[] = []
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start)
-      d.setDate(start.getDate() + i)
-      days.push(d)
+  // Bucket events by date string once per `events` change. Month view alone
+  // renders 42 cells; without this, every render reruns events.filter on each
+  // cell. Pre-computing uniqueTypes here also avoids a per-cell Set allocation
+  // in renderCalendarGrid / renderWeekStrip.
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, DayBucket>()
+    for (const event of events) {
+      const key = new Date(event.start_time).toDateString()
+      let bucket = map.get(key)
+      if (!bucket) {
+        bucket = { events: [], uniqueTypes: [] }
+        map.set(key, bucket)
+      }
+      bucket.events.push(event)
+      if (!bucket.uniqueTypes.includes(event.class_type)) {
+        bucket.uniqueTypes.push(event.class_type)
+      }
     }
-    return days
-  }
-
-  const getEventsForDate = useCallback((date: Date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.start_time)
-      return eventDate.toDateString() === date.toDateString()
-    })
+    return map
   }, [events])
 
-  const isToday = (date: Date) => {
-    const today = new Date()
-    return date.toDateString() === today.toDateString()
-  }
+  const getDayBucket = useCallback(
+    (date: Date) => eventsByDate.get(date.toDateString()) ?? EMPTY_BUCKET,
+    [eventsByDate]
+  )
+
+  const getEventsForDate = useCallback(
+    (date: Date) => getDayBucket(date).events,
+    [getDayBucket]
+  )
+
+  const todayDateString = useMemo(() => new Date().toDateString(), [])
+  const isToday = (date: Date) => date.toDateString() === todayDateString
 
   const isSelected = (date: Date) => {
     return date.toDateString() === selectedDate.toDateString()
@@ -261,76 +322,16 @@ export function MobileCalendar({
     return new Date(dateString).getMinutes()
   }
 
-  // Class types map onto the four-family Ballet Noir palette per DESIGN.md.
-  // Differentiation comes from background tint + text color, not from
-  // colored side stripes (banned by The No Side-Stripe Rule).
-  const getClassTypeColor = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'bg-rose-500'
-      case 'group':
-        return 'bg-champagne-500'
-      case 'workshop':
-        return 'bg-gold-500'
-      case 'master_class':
-        return 'bg-charcoal-700'
-      case 'personal':
-        return 'bg-champagne-700'
-      default:
-        return 'bg-charcoal-300'
-    }
-  }
+  const getClassTypeColor = (type: string) =>
+    CLASS_TYPE_DOT[type] ?? DEFAULT_CLASS_TYPE_DOT
 
-  const getClassTypeBgColor = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'bg-ballet-pink-100 border-ballet-pink-200 text-ballet-pink-900'
-      case 'group':
-        return 'bg-champagne-100 border-champagne-200 text-charcoal-900'
-      case 'workshop':
-        return 'bg-gold-100 border-gold-200 text-gold-900'
-      case 'master_class':
-        return 'bg-charcoal-100 border-charcoal-200 text-charcoal-900'
-      case 'personal':
-        return 'bg-champagne-200 border-champagne-300 text-charcoal-900'
-      default:
-        return 'bg-champagne-100 border-champagne-200 text-charcoal-700'
-    }
-  }
+  const getClassTypeBgColor = (type: string) =>
+    CLASS_TYPE_BG[type] ?? DEFAULT_CLASS_TYPE_BG
 
-  const getClassTypeStyles = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'bg-ballet-pink-100 border border-ballet-pink-200'
-      case 'group':
-        return 'bg-champagne-100 border border-champagne-200'
-      case 'workshop':
-        return 'bg-gold-100 border border-gold-200'
-      case 'master_class':
-        return 'bg-charcoal-100 border border-charcoal-200'
-      case 'personal':
-        return 'bg-champagne-200 border border-champagne-300'
-      default:
-        return 'bg-champagne-100 border border-champagne-200'
-    }
-  }
+  const getClassTypeStyles = (type: string) =>
+    CLASS_TYPE_STYLE[type] ?? DEFAULT_CLASS_TYPE_STYLE
 
-  const getClassTypeLabel = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'Private'
-      case 'group':
-        return 'Group'
-      case 'workshop':
-        return 'Workshop'
-      case 'master_class':
-        return 'Master'
-      case 'personal':
-        return 'Personal'
-      default:
-        return type
-    }
-  }
+  const getClassTypeLabel = (type: string) => CLASS_TYPE_LABEL[type] ?? type
 
   const renderViewModeSelector = () => {
     return (
@@ -354,49 +355,50 @@ export function MobileCalendar({
     )
   }
 
-  const renderCalendarGrid = () => {
+  // The 6×7 month grid only depends on currentDate. Memoizing avoids
+  // re-allocating 42 Date instances on every state change (selection,
+  // currentTime tick, double-tap timer, etc.).
+  const monthGridDays = useMemo(() => {
     const startOfMonth = getStartOfMonth(currentDate)
     const daysInMonth = getDaysInMonth(currentDate)
     const startDay = startOfMonth.getDay()
 
-    const days: (Date | null)[] = []
-
+    const days: Date[] = []
     const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
     const daysInPrevMonth = getDaysInMonth(prevMonth)
     for (let i = startDay - 1; i >= 0; i--) {
       days.push(new Date(prevMonth.getFullYear(), prevMonth.getMonth(), daysInPrevMonth - i))
     }
-
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))
     }
-
-    const remainingDays = 42 - days.length
-    for (let i = 1; i <= remainingDays; i++) {
+    const remaining = 42 - days.length
+    for (let i = 1; i <= remaining; i++) {
       days.push(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, i))
     }
+    return days
+  }, [currentDate])
 
+  const renderCalendarGrid = () => {
     return (
       <div className="grid grid-cols-7 gap-0.5">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-          <div 
-            key={`header-${index}`} 
+          <div
+            key={`header-${index}`}
             className="text-center text-[10px] font-medium text-gray-500 py-1"
           >
             {day}
           </div>
         ))}
-        
-        {days.map((day, index) => {
-          if (!day) return <div key={index} className="h-10" />
-          
-          const dayEvents = getEventsForDate(day)
+
+        {monthGridDays.map((day, index) => {
+          const bucket = getDayBucket(day)
+          const dayEvents = bucket.events
           const hasEvents = dayEvents.length > 0
           const today = isToday(day)
           const selected = isSelected(day)
           const inCurrentMonth = isSameMonth(day)
-          
-          const uniqueTypes = [...new Set(dayEvents.map(e => e.class_type))]
+          const uniqueTypes = bucket.uniqueTypes
           
           return (
             <button
@@ -436,28 +438,40 @@ export function MobileCalendar({
     )
   }
 
+  // weekDays is consumed by renderWeekStrip *and* renderWeekTimeline. Hoisting
+  // it stops both call sites from rebuilding the same 7-element Date array.
+  const weekDays = useMemo(() => {
+    const start = getStartOfWeek(selectedDate)
+    const days: Date[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      days.push(d)
+    }
+    return days
+  }, [selectedDate])
+
   const renderWeekStrip = () => {
-    const weekDays = getWeekDays(selectedDate)
-    
     return (
       <div className="px-2 pb-3">
         <div className="grid grid-cols-7 gap-1">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <div 
-              key={`header-${index}`} 
+            <div
+              key={`header-${index}`}
               className="text-center text-xs font-medium text-gray-500 py-1"
             >
               {day}
             </div>
           ))}
-          
+
           {weekDays.map((day, index) => {
-            const dayEvents = getEventsForDate(day)
+            const bucket = getDayBucket(day)
+            const dayEvents = bucket.events
             const hasEvents = dayEvents.length > 0
             const today = isToday(day)
             const selected = isSelected(day)
             const inCurrentMonth = isSameMonth(day)
-            const uniqueTypes = [...new Set(dayEvents.map(e => e.class_type))]
+            const uniqueTypes = bucket.uniqueTypes
             
             return (
               <button
@@ -499,8 +513,13 @@ export function MobileCalendar({
   }
 
   const renderHourlyTimeline = (dateToShow: Date) => {
-    const dayEvents = getEventsForDate(dateToShow)
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    // Slice before sort: getEventsForDate returns the live bucket array.
+    const dayEventsRaw = getEventsForDate(dateToShow)
+    const dayEvents = dayEventsRaw.length === 0
+      ? EMPTY_EVENTS
+      : dayEventsRaw
+          .slice()
+          .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
     
     const START_HOUR = 5
     const END_HOUR = 23
@@ -565,7 +584,6 @@ export function MobileCalendar({
   }
 
   const renderWeekTimeline = () => {
-    const weekDays = getWeekDays(selectedDate)
     const START_HOUR = 5
     const END_HOUR = 23
     const hours = []
@@ -703,8 +721,15 @@ export function MobileCalendar({
     )
   }
 
-  const selectedDayEvents = getEventsForDate(selectedDate)
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  // getEventsForDate now returns the bucket's underlying array (no per-call
+  // .filter copy), so we slice before sort to avoid mutating shared state.
+  const selectedDayEvents = useMemo(() => {
+    const dayEvents = getEventsForDate(selectedDate)
+    if (dayEvents.length === 0) return EMPTY_EVENTS
+    return dayEvents
+      .slice()
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  }, [getEventsForDate, selectedDate])
 
   const formatSelectedDateHeader = () => {
     if (isToday(selectedDate)) {
@@ -721,7 +746,6 @@ export function MobileCalendar({
     if (viewMode === 'month') {
       return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     } else if (viewMode === 'week') {
-      const weekDays = getWeekDays(selectedDate)
       const start = weekDays[0]
       const end = weekDays[6]
       if (start.getMonth() === end.getMonth()) {
