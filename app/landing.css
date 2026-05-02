@@ -305,28 +305,13 @@
 .lp-dancer-card {
   position: relative;
   background: rgba(45, 45, 45, 0.72);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   padding: 40px 32px;
   border-bottom: 1px solid rgba(196, 160, 85, 0.18);
   transition: background 0.3s ease;
 }
-.lp-dancer-card::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--lp-gold);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.5s var(--ease-out-soft);
-}
 .lp-dancer-card:hover {
   background: rgba(45, 45, 45, 0.85);
 }
-.lp-dancer-card:hover::after { transform: scaleX(1); }
 .lp-dancer-card__num {
   font-family: var(--lp-display);
   font-style: italic;
