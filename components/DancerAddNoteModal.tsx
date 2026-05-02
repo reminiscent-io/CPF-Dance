@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { Modal, ModalFooter, Button, Input } from '@/components/ui'
 import { NotesRichTextEditor, Editor } from '@/components/NotesRichTextEditor'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
@@ -36,7 +37,7 @@ export function DancerAddNoteModal({
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [visibility, setVisibility] = useState<'private' | 'shared_with_instructor'>('private')
+  const [visibility, setVisibility] = useState<'private' | 'shared_with_instructor'>('shared_with_instructor')
   const [selectedClassId, setSelectedClassId] = useState(initialClass?.id || '')
   const [selectedClassType, setSelectedClassType] = useState<'enrolled' | 'personal' | ''>(initialClass?.type || '')
   const [editor, setEditor] = useState<Editor | null>(null)
@@ -219,24 +220,28 @@ export function DancerAddNoteModal({
             </div>
           </div>
 
-          {/* Visibility */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Visibility
-            </label>
-            <select
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value as 'private' | 'shared_with_instructor')}
+          {/* Visibility — quiet inline status. Default is shared with instructor;
+              tapping the link flips into a private note. */}
+          <div className="flex items-center gap-2 pt-1 text-xs text-charcoal-500">
+            {visibility === 'shared_with_instructor' ? (
+              <EyeIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            ) : (
+              <LockClosedIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
+            <span>
+              {visibility === 'shared_with_instructor'
+                ? 'Visible to your instructor'
+                : 'Private to you'}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setVisibility(v => (v === 'private' ? 'shared_with_instructor' : 'private'))
+              }
+              className="ml-1 text-charcoal-700 underline decoration-champagne-300 underline-offset-4 hover:text-charcoal-950 hover:decoration-charcoal-500 transition-colors"
             >
-              <option value="private">Private (Only me)</option>
-              <option value="shared_with_instructor">Shared with Instructor</option>
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              {visibility === 'private'
-                ? 'Only you can see this note'
-                : 'Your instructor will be able to read this note'}
-            </p>
+              {visibility === 'shared_with_instructor' ? 'Make private' : 'Share with instructor'}
+            </button>
           </div>
         </div>
 
