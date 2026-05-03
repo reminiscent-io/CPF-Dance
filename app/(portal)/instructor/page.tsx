@@ -4,18 +4,19 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent, Button, Badge, Spinner } from '@/components/ui'
-import { Avatar } from '@/components/ui/Avatar'
+import { Card, CardContent, Button, Badge, Spinner } from '@/components/ui'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { DashboardStats, RecentActivity } from '@/lib/types'
 import {
-  UserGroupIcon,
   CalendarIcon,
   DocumentTextIcon,
-  BuildingOfficeIcon,
-  AcademicCapIcon,
   CreditCardIcon,
-  ClipboardDocumentCheckIcon,
-  HandRaisedIcon
+  HandRaisedIcon,
+  AcademicCapIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
+  PencilSquareIcon,
+  ArrowRightIcon,
 } from '@heroicons/react/24/outline'
 
 interface NextClass {
@@ -47,6 +48,52 @@ interface RecentNote {
   student_avatar_url: string | null
 }
 
+const ACTIVITY_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+  enrollment: AcademicCapIcon,
+  note: DocumentTextIcon,
+  payment: CreditCardIcon,
+  request: HandRaisedIcon,
+  cancellation: HandRaisedIcon,
+  reschedule_request: CalendarIcon,
+}
+
+const ACTIVITY_LABEL: Record<string, string> = {
+  enrollment: 'Enrolled',
+  note: 'Note',
+  payment: 'Payment',
+  request: 'Request',
+  cancellation: 'Cancelled',
+  reschedule_request: 'Reschedule',
+}
+
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    dayPeriod: 'short',
+  })
+
+const formatHeaderDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
+
+const formatActivityTimestamp = (iso: string) =>
+  new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+const stripHtml = (html: string, maxLength = 140): string => {
+  if (!html) return ''
+  const text = html.replace(/<[^>]*>/g, '').trim()
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength).trimEnd()}…`
+}
+
 export default function InstructorPortalPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
@@ -73,7 +120,6 @@ export default function InstructorPortalPage() {
     try {
       const response = await fetch('/api/dashboard')
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
-
       const data = await response.json()
       setStats(data.stats)
       setNextClass(data.next_class)
@@ -87,20 +133,12 @@ export default function InstructorPortalPage() {
     }
   }
 
-  const getContentPreview = (html: string, maxLength: number = 150): string => {
-    if (!html) return ''
-    const text = html.replace(/<[^>]*>/g, '')
-    if (text.length <= maxLength) return text
-    const truncated = text.substring(0, maxLength)
-    return truncated + '...'
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading…</p>
         </div>
       </div>
     )
@@ -110,498 +148,490 @@ export default function InstructorPortalPage() {
     return null
   }
 
+  const today = new Date()
+  const hasSchedule = todaysClasses.length > 0
+  const pendingRequests = stats?.pending_requests ?? 0
+  const unpaidInvoices = stats?.unpaid_invoices ?? 0
+  const activeStudents = stats?.active_students ?? 0
+
   return (
     <PortalLayout profile={profile}>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
-          Instructor Dashboard
-        </h1>
-        <p className="text-gray-600">Welcome back, {profile.full_name}!</p>
-      </div>
+      <div className="space-y-8">
+        {/* Header — program-book style: serif title, restrained subline, utility chips */}
+        <header className="flex flex-wrap justify-between items-end gap-4">
+          <div>
+            <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">
+              Today
+            </h1>
+            <p className="text-charcoal-500 mt-1">{formatHeaderDate(today)}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/instructor/notes?compose=1')}
+            >
+              <PencilSquareIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+              New note
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/instructor/classes')}
+            >
+              <CalendarIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+              New class
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/instructor/students')}
+            >
+              <UserGroupIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+              Students
+            </Button>
+          </div>
+        </header>
 
-      {loadingData ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+        {/* Today's schedule */}
+        <section>
+          <SectionLabel
+            label={hasSchedule ? "Today's classes" : 'Schedule'}
+            action={
+              stats && stats.upcoming_classes > 0
+                ? {
+                    label: `See all ${stats.upcoming_classes}`,
+                    onClick: () => router.push('/instructor/classes'),
+                  }
+                : undefined
+            }
+          />
+
+          <Card padding="none">
+            <CardContent className="p-0">
+              {loadingData ? (
+                <ScheduleSkeleton />
+              ) : hasSchedule ? (
+                <ul className="divide-y divide-champagne-200">
+                  {todaysClasses.map((classItem) => {
+                    const startTime = new Date(classItem.start_time)
+                    const endTime = new Date(classItem.end_time)
+                    const isPast = endTime < new Date()
+                    return (
+                      <li
+                        key={classItem.id}
+                        className={`px-6 py-5 ${isPast ? 'opacity-60' : ''}`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-serif text-xl font-semibold text-charcoal-950">
+                                {classItem.title}
+                              </h3>
+                              {isPast && (
+                                <Badge variant="default" size="sm">
+                                  Completed
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
+                              <span className="flex items-center gap-1.5">
+                                <CalendarIcon className="w-4 h-4" aria-hidden="true" />
+                                {formatTime(classItem.start_time)} – {formatTime(classItem.end_time)}
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
+                                {classItem.studio_name}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/instructor/classes?class_id=${classItem.id}`)
+                            }
+                          >
+                            Open
+                          </Button>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : nextClass ? (
+                <div className="px-6 py-6">
+                  <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500 mb-3">
+                    Next up
+                  </p>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif text-xl font-semibold text-charcoal-950">
+                        {nextClass.title}
+                      </h3>
+                      <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
+                        <span className="flex items-center gap-1.5">
+                          <CalendarIcon className="w-4 h-4" aria-hidden="true" />
+                          {new Date(nextClass.start_time).toLocaleString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            dayPeriod: 'short',
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
+                          {nextClass.studio_name}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/instructor/classes?class_id=${nextClass.id}`)
+                      }
+                    >
+                      Open
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-6 py-10 text-center">
+                  <p className="font-serif text-2xl text-charcoal-700">Nothing on the calendar.</p>
+                  <p className="text-sm text-charcoal-500 mt-1.5">
+                    Add a class when you&apos;re ready.
+                  </p>
+                  <div className="mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/instructor/classes')}
+                    >
+                      Create class
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Operational metrics — restrained, only what drives action */}
+        <section>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-champagne-200 rounded-lg overflow-hidden border border-champagne-200">
+            <MetricTile
+              label="Pending requests"
+              value={pendingRequests}
+              caption={pendingRequests > 0 ? 'Awaiting your reply' : 'All caught up'}
+              actionLabel={pendingRequests > 0 ? 'Review' : undefined}
+              onAction={() => router.push('/instructor/requests')}
+              loading={loadingData}
+            />
+            <MetricTile
+              label="Unpaid invoices"
+              value={unpaidInvoices}
+              caption={unpaidInvoices > 0 ? 'Outstanding balances' : 'All settled'}
+              actionLabel={unpaidInvoices > 0 ? 'Follow up' : undefined}
+              onAction={() => router.push('/instructor/payments')}
+              loading={loadingData}
+            />
+            <MetricTile
+              label="Active students"
+              value={activeStudents}
+              caption={
+                stats
+                  ? `${stats.total_students ?? 0} on the roster`
+                  : ''
+              }
+              actionLabel="Roster"
+              onAction={() => router.push('/instructor/students')}
+              loading={loadingData}
+            />
+          </div>
+        </section>
+
+        {/* Recent notes — student-led; Courtney's own authorship is implicit */}
+        <section>
+          <SectionLabel
+            label="Recent notes"
+            action={{
+              label: 'View all',
+              onClick: () => router.push('/instructor/notes'),
+              icon: true,
+            }}
+          />
+
+          {loadingData ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[0, 1, 2].map((i) => (
+                <NoteCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : recentNotes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentNotes.map((note) => (
+                <button
+                  key={note.id}
+                  type="button"
+                  onClick={() => router.push('/instructor/notes')}
+                  className="text-left group"
+                >
+                  <Card
+                    hover
+                    padding="md"
+                    className="h-full flex flex-col"
+                  >
+                    <div className="flex items-baseline justify-between gap-3 mb-2">
+                      <p className="font-serif text-lg font-semibold text-charcoal-950 truncate">
+                        {note.student_name}
+                      </p>
+                      <p className="text-xs text-charcoal-500 tabular-nums shrink-0">
+                        {new Date(note.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+
+                    {note.title && (
+                      <h3 className="text-sm font-semibold text-charcoal-900 mb-1.5 line-clamp-2">
+                        {note.title}
+                      </h3>
+                    )}
+
+                    <p className="text-sm text-charcoal-600 line-clamp-3 leading-relaxed flex-1">
+                      {stripHtml(note.content, 120)}
+                    </p>
+
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {note.tags.slice(0, 3).map((tag, idx) => (
+                          <Badge key={idx} variant="default" size="sm">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {note.tags.length > 3 && (
+                          <Badge variant="default" size="sm">
+                            +{note.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Card padding="lg">
+              <CardContent>
+                <div className="text-center py-4">
+                  <p className="font-serif text-2xl text-charcoal-700">No notes yet.</p>
+                  <p className="text-sm text-charcoal-500 mt-1.5 mb-4">
+                    Notes you leave after a lesson appear here.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/instructor/notes')}
+                  >
+                    Write a note
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Recent activity — single graphite vocabulary, no rainbow badges */}
+        <section>
+          <SectionLabel label="Recent activity" />
+          <Card padding="none">
+            <CardContent className="p-0">
+              {loadingData ? (
+                <ActivitySkeleton />
+              ) : recentActivity.length === 0 ? (
+                <p className="text-charcoal-500 text-sm px-6 py-6">No recent activity.</p>
+              ) : (
+                <ul className="divide-y divide-champagne-200">
+                  {recentActivity.map((activity) => {
+                    const Icon = ACTIVITY_ICON[activity.type] ?? DocumentTextIcon
+                    const label = ACTIVITY_LABEL[activity.type] ?? activity.type
+                    const className =
+                      'w-full flex items-start gap-4 px-6 py-4 text-left transition-colors hover:bg-champagne-100'
+                    const body = (
+                      <>
+                        <span className="shrink-0 mt-0.5 text-charcoal-400">
+                          <Icon className="w-5 h-5" aria-hidden="true" />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm text-charcoal-900">
+                            {activity.description}
+                          </span>
+                          <span className="block text-xs text-charcoal-500 mt-1 tabular-nums">
+                            {formatActivityTimestamp(activity.timestamp)}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-charcoal-500 self-center">
+                          {label}
+                        </span>
+                      </>
+                    )
+                    return (
+                      <li key={activity.id}>
+                        {activity.link ? (
+                          <button
+                            type="button"
+                            onClick={() => router.push(activity.link as string)}
+                            className={className}
+                          >
+                            {body}
+                          </button>
+                        ) : (
+                          <div className={`${className} cursor-default hover:bg-transparent`}>
+                            {body}
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </PortalLayout>
+  )
+}
+
+function SectionLabel({
+  label,
+  action,
+}: {
+  label: string
+  action?: { label: string; onClick: () => void; icon?: boolean }
+}) {
+  return (
+    <div className="flex items-baseline justify-between mb-3">
+      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
+        {label}
+      </p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="text-sm text-rose-700 hover:text-rose-800 font-medium inline-flex items-center gap-1 transition-colors"
+        >
+          {action.label}
+          {action.icon && <ArrowRightIcon className="w-3.5 h-3.5" aria-hidden="true" />}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function MetricTile({
+  label,
+  value,
+  caption,
+  actionLabel,
+  onAction,
+  loading,
+}: {
+  label: string
+  value: number | string
+  caption: string
+  actionLabel?: string
+  onAction: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="bg-champagne-50 px-6 py-5">
+      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
+        {label}
+      </p>
+      {loading ? (
+        <div className="mt-3 space-y-2">
+          <Skeleton variant="text" width="40%" height={28} />
+          <Skeleton variant="text" width="65%" height={12} />
         </div>
       ) : (
         <>
-          {/* Today's Classes Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-charcoal-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                {todaysClasses.length > 0 ? "Today's Classes" : "Next Up"}
-              </h2>
-              {stats && stats.upcoming_classes > 0 && (
-                <button
-                  onClick={() => router.push('/instructor/classes')}
-                  className="text-sm text-rose-600 hover:text-rose-700 font-medium"
-                >
-                  See all {stats.upcoming_classes}
-                </button>
-              )}
-            </div>
-            
-            {todaysClasses.length > 0 ? (
-              <div className="space-y-4">
-                {todaysClasses.map((classItem) => {
-                  const startTime = new Date(classItem.start_time)
-                  const endTime = new Date(classItem.end_time)
-                  const isPast = endTime < new Date()
-                  
-                  return (
-                    <div 
-                      key={classItem.id}
-                      className={`pb-4 border-b border-gray-200 ${isPast ? 'opacity-60' : ''}`}
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-semibold text-charcoal-900">{classItem.title}</h3>
-                            {isPast && (
-                              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Completed</span>
-                            )}
-                          </div>
-                          <div className="flex flex-col sm:flex-row sm:gap-6 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <CalendarIcon className="w-4 h-4 text-charcoal-600" />
-                              {startTime.toLocaleString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                dayPeriod: 'short'
-                              })} - {endTime.toLocaleString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                dayPeriod: 'short'
-                              })}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <BuildingOfficeIcon className="w-4 h-4 text-charcoal-600" />
-                              {classItem.studio_name}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => router.push(`/instructor/classes?class_id=${classItem.id}`)}
-                          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-medium transition-colors text-sm"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : nextClass ? (
-              <div className="pb-6 border-b border-gray-200">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-charcoal-900 mb-2">{nextClass.title}</h3>
-                    <div className="flex flex-col sm:flex-row sm:gap-6 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4 text-charcoal-600" />
-                        {new Date(nextClass.start_time).toLocaleString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          dayPeriod: 'short'
-                        })}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <BuildingOfficeIcon className="w-4 h-4 text-charcoal-600" />
-                        {nextClass.studio_name}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => router.push(`/instructor/classes?class_id=${nextClass.id}`)}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-medium transition-colors"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="pb-6 border-b border-gray-200 text-center py-8 text-gray-600">
-                <p>No upcoming classes scheduled</p>
-                <button
-                  onClick={() => router.push('/instructor/classes')}
-                  className="mt-3 text-rose-600 hover:text-rose-700 font-medium text-sm"
-                >
-                  Create a class
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Stats Section - Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {/* Total Students */}
-            <Card
-              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
-              onClick={() => router.push('/instructor/students')}
-            >
-              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
-                    Total Students
-                  </div>
-                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
-                    {stats?.total_students || 0}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {stats?.active_students || 0} active
-                  </p>
-                </div>
-                <UserGroupIcon className="h-4 w-4 text-gray-400" />
-              </CardContent>
-            </Card>
-
-            {/* Pending Requests */}
-            <Card
-              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
-              onClick={() => router.push('/instructor/requests')}
-            >
-              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
-                    Pending Requests
-                  </div>
-                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
-                    {stats?.pending_requests || 0}
-                  </div>
-                  {(stats?.pending_requests || 0) > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push('/instructor/requests')
-                      }}
-                      className="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
-                    >
-                      Review →
-                    </button>
-                  )}
-                </div>
-                <HandRaisedIcon className="h-4 w-4 text-gray-400" />
-              </CardContent>
-            </Card>
-
-            {/* Unpaid Invoices */}
-            <Card
-              className="cursor-pointer hover:border-rose-300 transition-colors shadow-sm"
-              onClick={() => router.push('/instructor/payments')}
-            >
-              <CardContent className="flex flex-row items-center justify-between space-y-0 px-6 py-4">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
-                    Unpaid Invoices
-                  </div>
-                  <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-family-display)' }}>
-                    {stats?.unpaid_invoices || 0}
-                  </div>
-                  {(stats?.unpaid_invoices || 0) > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push('/instructor/payments')
-                      }}
-                      className="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
-                    >
-                      Follow up →
-                    </button>
-                  )}
-                </div>
-                <CreditCardIcon className="h-4 w-4 text-gray-400" />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Notes Section */}
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                Recent Notes
-              </h2>
+          <p className="font-serif text-3xl font-semibold text-charcoal-950 mt-2 tabular-nums">
+            {value}
+          </p>
+          <div className="flex items-center justify-between mt-1.5 gap-3">
+            <p className="text-sm text-charcoal-500 truncate">{caption}</p>
+            {actionLabel && (
               <button
-                onClick={() => router.push('/instructor/notes')}
-                className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                type="button"
+                onClick={onAction}
+                className="shrink-0 text-xs font-medium text-rose-700 hover:text-rose-800 inline-flex items-center gap-0.5 transition-colors"
               >
-                View all
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                {actionLabel}
+                <ArrowRightIcon className="w-3 h-3" aria-hidden="true" />
               </button>
-            </div>
-
-            {recentNotes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recentNotes.map((note) => (
-                  <Card
-                    key={note.id}
-                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer h-full"
-                    onClick={() => router.push('/instructor/notes')}
-                  >
-                    <CardContent className="p-4 flex flex-col h-full">
-                      {/* Header: Avatar + Author + Date */}
-                      <div className="flex items-start justify-between mb-3 gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Avatar
-                            src={note.author_avatar_url}
-                            name={note.author_name}
-                            size="sm"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900 text-xs truncate">
-                              {note.author_name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(note.created_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        {/* Student badge */}
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <Avatar
-                            src={note.student_avatar_url}
-                            name={note.student_name}
-                            size="sm"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Student name */}
-                      <div className="text-xs text-gray-600 mb-2 truncate">
-                        For: {note.student_name}
-                      </div>
-
-                      {/* Title */}
-                      {note.title && (
-                        <h3 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2">
-                          {note.title}
-                        </h3>
-                      )}
-
-                      {/* Content preview */}
-                      <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed flex-1">
-                        {getContentPreview(note.content, 100)}
-                      </p>
-
-                      {/* Tags */}
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {note.tags.slice(0, 2).map((tag, idx) => (
-                            <Badge key={idx} variant="default" size="sm">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {note.tags.length > 2 && (
-                            <Badge variant="default" size="sm">
-                              +{note.tags.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="bg-gray-50 border-dashed">
-                <CardContent className="p-6 text-center">
-                  <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <h3 className="font-medium text-gray-900 mb-1 text-base">No notes yet</h3>
-                  <p className="text-sm text-gray-500 mb-4">Start tracking student progress</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push('/instructor/notes')}
-                  >
-                    Add a note
-                  </Button>
-                </CardContent>
-              </Card>
             )}
-          </section>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardContent className="mt-4 space-y-3">
-                <Button 
-                  className="w-full" 
-                  onClick={() => router.push('/instructor/students')}
-                >
-                  + Add New Student
-                </Button>
-                <Button 
-                  className="w-full" 
-                  variant="secondary"
-                  onClick={() => router.push('/instructor/classes')}
-                >
-                  + Create Class
-                </Button>
-                <Button 
-                  className="w-full" 
-                  variant="outline"
-                  onClick={() => router.push('/instructor/notes')}
-                >
-                  + Add Note
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-2">
-              <CardTitle>Recent Activity</CardTitle>
-              <CardContent className="mt-4">
-                {recentActivity.length === 0 ? (
-                  <p className="text-gray-600 text-sm">No recent activity</p>
-                ) : (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {recentActivity.map((activity) => {
-                      const activityIcons: Record<string, React.ReactNode> = {
-                        enrollment: <AcademicCapIcon className="w-6 h-6 text-blue-600" />,
-                        note: <DocumentTextIcon className="w-6 h-6 text-purple-600" />,
-                        payment: <CreditCardIcon className="w-6 h-6 text-green-600" />,
-                        request: <HandRaisedIcon className="w-6 h-6 text-yellow-600" />
-                      }
-
-                      const activityColors = {
-                        enrollment: 'bg-blue-100 text-blue-800',
-                        note: 'bg-purple-100 text-purple-800',
-                        payment: 'bg-green-100 text-green-800',
-                        request: 'bg-yellow-100 text-yellow-800'
-                      }
-
-                      return (
-                        <div
-                          key={activity.id}
-                          className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="flex-shrink-0 mt-0.5">{activityIcons[activity.type]}</div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900">{activity.description}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {new Date(activity.timestamp).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
-                          <Badge 
-                            variant="default" 
-                            size="sm"
-                            className={activityColors[activity.type]}
-                          >
-                            {activity.type}
-                          </Badge>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardTitle>Navigation</CardTitle>
-              <CardContent className="mt-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => router.push('/instructor/students')}
-                    className="p-4 bg-rose-50 hover:bg-rose-100 rounded-lg text-left transition-colors"
-                  >
-                    <UserGroupIcon className="w-8 h-8 text-rose-600 mb-2" />
-                    <div className="font-semibold text-gray-900">Students</div>
-                    <div className="text-xs text-gray-600">Manage roster</div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push('/instructor/classes')}
-                    className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors"
-                  >
-                    <CalendarIcon className="w-8 h-8 text-blue-600 mb-2" />
-                    <div className="font-semibold text-gray-900">Classes</div>
-                    <div className="text-xs text-gray-600">View schedule</div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push('/instructor/notes')}
-                    className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors"
-                  >
-                    <DocumentTextIcon className="w-8 h-8 text-purple-600 mb-2" />
-                    <div className="font-semibold text-gray-900">Notes</div>
-                    <div className="text-xs text-gray-600">Track progress</div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push('/instructor/studios')}
-                    className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
-                  >
-                    <BuildingOfficeIcon className="w-8 h-8 text-green-600 mb-2" />
-                    <div className="font-semibold text-gray-900">Studios</div>
-                    <div className="text-xs text-gray-600">Manage locations</div>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardTitle>Getting Started</CardTitle>
-              <CardContent className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      1
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Add Your Students</p>
-                      <p className="text-sm text-gray-600">Create student profiles with contact info and skill levels</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      2
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Set Up Studios</p>
-                      <p className="text-sm text-gray-600">Add the studios where you teach</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      3
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Schedule Classes</p>
-                      <p className="text-sm text-gray-600">Create classes and manage enrollments</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      4
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Track Progress</p>
-                      <p className="text-sm text-gray-600">Add notes to monitor student development</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </>
       )}
-    </PortalLayout>
+    </div>
+  )
+}
+
+function ScheduleSkeleton() {
+  return (
+    <ul className="divide-y divide-champagne-200">
+      {[0, 1].map((i) => (
+        <li key={i} className="px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 space-y-2">
+              <Skeleton variant="text" width="40%" height={20} />
+              <Skeleton variant="text" width="60%" height={14} />
+            </div>
+            <Skeleton variant="rectangular" width={70} height={32} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function ActivitySkeleton() {
+  return (
+    <ul className="divide-y divide-champagne-200">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className="px-6 py-4 flex items-start gap-4">
+          <Skeleton variant="circular" width={20} height={20} />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton variant="text" width="75%" height={14} />
+            <Skeleton variant="text" width="30%" height={12} />
+          </div>
+          <Skeleton variant="rectangular" width={64} height={14} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function NoteCardSkeleton() {
+  return (
+    <Card padding="md">
+      <div className="space-y-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <Skeleton variant="text" width="50%" height={20} />
+          <Skeleton variant="text" width={40} height={12} />
+        </div>
+        <Skeleton variant="text" width="70%" height={14} />
+        <div className="space-y-1.5">
+          <Skeleton variant="text" width="100%" height={12} />
+          <Skeleton variant="text" width="92%" height={12} />
+          <Skeleton variant="text" width="78%" height={12} />
+        </div>
+      </div>
+    </Card>
   )
 }
