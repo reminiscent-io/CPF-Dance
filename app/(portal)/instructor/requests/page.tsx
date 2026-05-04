@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent, CardTitle, Button, Badge, Spinner, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
-import type { Studio, ClassType, PricingModel } from '@/lib/types'
+import { Card, CardContent, Button, Badge, Spinner, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
+import type { Studio, ClassType } from '@/lib/types'
 import { convertETToUTC } from '@/lib/utils/et-timezone'
 
 interface PrivateLessonRequest {
@@ -27,13 +27,6 @@ interface PrivateLessonRequest {
       phone: string | null
     } | null
   }
-}
-
-const parseCurrency = (value: string): number | undefined => {
-  if (value === '' || value === null || value === undefined) return undefined
-  const num = parseFloat(value)
-  if (isNaN(num)) return undefined
-  return Math.round(num * 100) / 100
 }
 
 export default function InstructorRequestsPage() {
@@ -109,28 +102,10 @@ export default function InstructorRequestsPage() {
     }
   }
 
-  const updateStatusWithClass = async (id: string, newStatus: string, classId: string) => {
-    setUpdatingId(id)
-    try {
-      const response = await fetch('/api/instructor/requests', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus, scheduled_class_id: classId })
-      })
-
-      if (response.ok) {
-        // Refresh requests to get the updated class info
-        await fetchRequests()
-        addToast('Class scheduled successfully!', 'success')
-      } else {
-        addToast('Failed to update request', 'error')
-      }
-    } catch (err) {
-      console.error('Error updating request:', err)
-      addToast('An error occurred', 'error')
-    } finally {
-      setUpdatingId(null)
-    }
+  const handleClassCreated = async () => {
+    handleCloseCreateClassModal()
+    await fetchRequests()
+    addToast('Private lesson scheduled', 'success')
   }
 
   const handleOpenCreateClassModal = (request: PrivateLessonRequest) => {
@@ -274,19 +249,10 @@ export default function InstructorRequestsPage() {
                             <div className="flex flex-wrap gap-2">
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant="primary"
                                 onClick={() => handleOpenCreateClassModal(request)}
-                                className="bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100"
                               >
                                 Create Class
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                onClick={() => updateStatus(request.id, 'approved')}
-                                disabled={updatingId === request.id}
-                              >
-                                {updatingId === request.id ? 'Updating...' : 'Approve'}
                               </Button>
                               <Button
                                 size="sm"
@@ -313,7 +279,6 @@ export default function InstructorRequestsPage() {
                 </h2>
                 <div className="grid gap-4">
                   {otherRequests.map((request) => {
-                    const contact = getStudentContact(request)
                     return (
                       <Card key={request.id} className="opacity-80">
                         <CardContent className="pt-6">
@@ -375,10 +340,7 @@ export default function InstructorRequestsPage() {
           request={selectedRequest}
           studios={studios}
           onClose={handleCloseCreateClassModal}
-          onSuccess={(classId: string) => {
-            handleCloseCreateClassModal()
-            updateStatusWithClass(selectedRequest.id, 'approved', classId)
-          }}
+          onSuccess={handleClassCreated}
         />
       )}
     </PortalLayout>
@@ -386,10 +348,30 @@ export default function InstructorRequestsPage() {
 }
 
 interface CreatePrivateLessonClassModalProps {
-  request: PrivateLessonRequest
-  studios: Studio[]
-  onClose: () => void
-  onSuccess: (classId: string) => void
+  readonly request: PrivateLessonRequest
+  readonly studios: Studio[]
+  readonly onClose: () => void
+  readonly onSuccess: () => void
+}
+
+interface BalanceSummary {
+  remaining: number
+  dayOfPrice: number | null
+  nextPackName: string | null
+}
+
+const DURATION_OPTIONS = [
+  15, 20, 25, 30, 35, 40, 45, 50, 55, 60,
+  75, 90, 105, 120,
+  150, 180, 210, 240
+]
+
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}min`
+  if (mins === 0) return `${hours}hr`
+  return `${hours}hr ${mins}min`
 }
 
 function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }: CreatePrivateLessonClassModalProps) {
@@ -397,6 +379,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60)
+  const [balance, setBalance] = useState<BalanceSummary | null>(null)
 
   const studentName = request.student?.full_name || request.student?.profile?.full_name || 'Student'
 
@@ -406,45 +389,41 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
     studio_id: '',
     newStudioName: '',
     location: '',
-    start_time: '',
-    pricing_model: 'per_hour' as PricingModel,
-    cost_per_person: undefined as number | undefined,
-    base_cost: undefined as number | undefined,
-    cost_per_hour: undefined as number | undefined,
-    tiered_base_students: undefined as number | undefined,
-    tiered_additional_cost: undefined as number | undefined,
-    max_capacity: 1,
-    is_public: false
+    start_time: ''
   })
 
-  const formatDuration = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    if (hours === 0) return `${mins}min`
-    if (mins === 0) return `${hours}hr`
-    return `${hours}hr ${mins}min`
-  }
-
-  const durationOptions = [
-    15, 20, 25, 30, 35, 40, 45, 50, 55, 60,
-    75, 90, 105, 120,
-    150, 180, 210, 240
-  ]
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/instructor/students/${request.student_id}/lesson-balance`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data) {
+          setBalance({
+            remaining: data.remaining ?? 0,
+            dayOfPrice: data.dayOfPrice ?? null,
+            nextPackName: data.nextPackName ?? null
+          })
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [request.student_id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.title || !formData.start_time) {
       addToast('Please fill in required fields', 'error')
       return
     }
 
     setIsSubmitting(true)
-    
+
     try {
       let studioId = formData.studio_id
 
-      // Create new studio if needed
       if (isCreatingNewStudio && formData.newStudioName?.trim()) {
         const studioResponse = await fetch('/api/studios', {
           method: 'POST',
@@ -464,13 +443,11 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         studioId = studio.id
       }
 
-      // Convert ET times to UTC
       const startUTC = convertETToUTC(formData.start_time)
       const startDate = new Date(startUTC)
       const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
       const endUTC = endDate.toISOString()
 
-      // Create the class
       const classData = {
         title: formData.title,
         description: formData.description,
@@ -479,15 +456,10 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         class_type: 'private' as ClassType,
         start_time: startUTC,
         end_time: endUTC,
-        max_capacity: formData.max_capacity,
-        pricing_model: formData.pricing_model,
-        cost_per_person: formData.cost_per_person,
-        base_cost: formData.base_cost,
-        cost_per_hour: formData.cost_per_hour,
-        tiered_base_students: formData.tiered_base_students,
-        tiered_additional_cost: formData.tiered_additional_cost,
-        is_public: formData.is_public,
-        student_id: request.student_id
+        max_capacity: 1,
+        is_public: false,
+        student_id: request.student_id,
+        private_lesson_request_id: request.id
       }
 
       const response = await fetch('/api/classes', {
@@ -501,9 +473,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         throw new Error(errorData.error || 'Failed to create class')
       }
 
-      const { class: newClass } = await response.json()
-      addToast('Private lesson class created successfully!', 'success')
-      onSuccess(newClass.id)
+      onSuccess()
     } catch (error) {
       console.error('Error creating class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create class'
@@ -514,10 +484,9 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
   }
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Create Private Lesson Class" size="lg">
+    <Modal isOpen={true} onClose={onClose} title="Create Private Lesson" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          {/* Pre-filled student info banner */}
           <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
             <div className="flex items-center gap-2">
               <Badge variant="primary">Private Lesson</Badge>
@@ -531,6 +500,8 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               </p>
             )}
           </div>
+
+          <PaymentSummary balance={balance} />
 
           <Input
             label="Class Title *"
@@ -547,10 +518,10 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
             placeholder="Any additional notes about this lesson..."
           />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <fieldset>
+            <legend className="block text-sm font-medium text-gray-700 mb-2">
               Studio
-            </label>
+            </legend>
             <div className="flex gap-4 mb-2">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -600,7 +571,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                 ))}
               </select>
             )}
-          </div>
+          </fieldset>
 
           <GooglePlacesInput
             label="Location"
@@ -619,16 +590,17 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="duration-select" className="block text-sm font-medium text-gray-700 mb-1">
                 Length *
               </label>
               <select
+                id="duration-select"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={durationMinutes}
-                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+                onChange={(e) => setDurationMinutes(Number.parseInt(e.target.value, 10))}
               >
-                {durationOptions.map(minutes => (
+                {DURATION_OPTIONS.map(minutes => (
                   <option key={minutes} value={minutes}>
                     {formatDuration(minutes)}
                   </option>
@@ -636,97 +608,6 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               </select>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pricing Model *
-            </label>
-            <select
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={formData.pricing_model}
-              onChange={(e) => setFormData({ ...formData, pricing_model: e.target.value as PricingModel })}
-            >
-              <option value="per_person">Per Person</option>
-              <option value="per_class">Per Class (Flat Rate)</option>
-              <option value="per_hour">Per Hour</option>
-              <option value="tiered">Tiered (Base + Additional)</option>
-            </select>
-          </div>
-
-          {formData.pricing_model === 'per_person' && (
-            <Input
-              label="Cost Per Person ($) *"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={formData.cost_per_person || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_person: parseCurrency(e.target.value) })}
-              placeholder="e.g., 75.00"
-            />
-          )}
-
-          {formData.pricing_model === 'per_class' && (
-            <Input
-              label="Base Cost (Flat Rate) ($) *"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={formData.base_cost || ''}
-              onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
-              placeholder="e.g., 150.00"
-            />
-          )}
-
-          {formData.pricing_model === 'per_hour' && (
-            <Input
-              label="Cost Per Hour ($) *"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={formData.cost_per_hour || ''}
-              onChange={(e) => setFormData({ ...formData, cost_per_hour: parseCurrency(e.target.value) })}
-              placeholder="e.g., 75.00"
-            />
-          )}
-
-          {formData.pricing_model === 'tiered' && (
-            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-600">Set a base cost for the first X students, then charge per additional student</p>
-              <Input
-                label="Base Cost ($) *"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={formData.base_cost || ''}
-                onChange={(e) => setFormData({ ...formData, base_cost: parseCurrency(e.target.value) })}
-                placeholder="e.g., 100.00"
-              />
-              <Input
-                label="Students Included in Base Cost *"
-                type="number"
-                min="1"
-                required
-                value={formData.tiered_base_students || ''}
-                onChange={(e) => setFormData({ ...formData, tiered_base_students: e.target.value ? parseInt(e.target.value) : undefined })}
-                placeholder="e.g., 1"
-              />
-              <Input
-                label="Cost Per Additional Student ($) *"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={formData.tiered_additional_cost || ''}
-                onChange={(e) => setFormData({ ...formData, tiered_additional_cost: parseCurrency(e.target.value) })}
-                placeholder="e.g., 50.00"
-              />
-            </div>
-          )}
         </div>
 
         <ModalFooter className="mt-6">
@@ -739,5 +620,35 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         </ModalFooter>
       </form>
     </Modal>
+  )
+}
+
+function PaymentSummary({ balance }: { readonly balance: BalanceSummary | null }) {
+  if (!balance) {
+    return (
+      <div className="p-3 bg-champagne-50 border border-champagne-200 rounded-lg">
+        <p className="text-sm text-charcoal-500">Checking lesson balance…</p>
+      </div>
+    )
+  }
+
+  if (balance.remaining > 0) {
+    const packLabel = balance.nextPackName ? ` from ${balance.nextPackName}` : ''
+    return (
+      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+        <p className="text-sm text-emerald-900">
+          <strong>1 credit will be used</strong>{packLabel} when you create the class. Dancer has {balance.remaining} {balance.remaining === 1 ? 'credit' : 'credits'} on file.
+        </p>
+      </div>
+    )
+  }
+
+  const priceLabel = balance.dayOfPrice != null ? `$${balance.dayOfPrice.toFixed(2)}` : 'the single-lesson rate'
+  return (
+    <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+      <p className="text-sm text-charcoal-900">
+        <strong>No credits on file.</strong> Dancer will pay <span className="tabular-nums font-medium">{priceLabel}</span> day-of via Venmo or cash.
+      </p>
+    </div>
   )
 }

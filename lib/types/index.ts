@@ -157,10 +157,11 @@ export interface DashboardStats {
 
 export interface RecentActivity {
   id: string
-  type: 'enrollment' | 'note' | 'payment' | 'request'
+  type: 'enrollment' | 'note' | 'payment' | 'request' | 'cancellation' | 'reschedule_request'
   description: string
   timestamp: string
   student_name?: string
+  link?: string
 }
 
 export interface CreateStudentData {
@@ -266,7 +267,22 @@ export interface LessonPackUsage {
   id: string
   lesson_pack_purchase_id: string
   private_lesson_request_id: string | null
+  class_id: string | null
   lessons_used: number
   used_at: string
+  created_at: string
+  voided_at: string | null
+  voided_reason: string | null
+}
+
+export interface LessonRescheduleRequest {
+  id: string
+  class_id: string
+  student_id: string
+  proposed_dates: string[]
+  reason: string | null
+  status: 'pending' | 'resolved' | 'declined'
+  resolved_by: string | null
+  resolved_at: string | null
   created_at: string
 }

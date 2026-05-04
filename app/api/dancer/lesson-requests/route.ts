@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+import { getStudentRemainingLessons } from '@/lib/lesson-credits'
+import { notifyRequestSubmitted } from '@/lib/notifications/private-lessons'
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,6 +69,30 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('Error creating lesson request:', insertError)
       return NextResponse.json({ error: 'Failed to create lesson request' }, { status: 500 })
+    }
+
+    try {
+      const remaining = await getStudentRemainingLessons(supabase, student.id)
+      const { data: studentRow } = await supabase
+        .from('students')
+        .select('full_name, profile:profiles!students_profile_id_fkey(full_name)')
+        .eq('id', student.id)
+        .single()
+      const studentProfile = Array.isArray(studentRow?.profile)
+        ? studentRow?.profile[0]
+        : studentRow?.profile
+      const dancerName = studentRow?.full_name || studentProfile?.full_name || 'Dancer'
+
+      await notifyRequestSubmitted({
+        dancerName,
+        focus: requested_focus,
+        preferredDates: preferred_dates || [],
+        additionalNotes: additional_notes,
+        hasCredits: remaining > 0,
+        remainingCredits: remaining
+      })
+    } catch (notifyError) {
+      console.error('[lesson-requests] notify failed:', notifyError)
     }
 
     return NextResponse.json({ request: lessonRequest }, { status: 201 })

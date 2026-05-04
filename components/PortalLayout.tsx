@@ -50,18 +50,29 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
 
   if (!mounted) {
     return (
-      <div className="h-[100dvh] bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
+      <div className="h-[100dvh] bg-champagne-50 flex flex-col md:flex-row overflow-hidden portal-content">
         <div
-          className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-10"
+          className="md:hidden fixed top-0 left-0 right-0 z-30 bg-champagne-50 border-b border-champagne-200 h-10"
           style={{
             paddingTop: 'max(env(safe-area-inset-top), 0px)',
             height: 'calc(2.5rem + env(safe-area-inset-top))'
           }}
         />
-        <aside className="hidden md:block fixed top-0 left-0 h-[100dvh] w-64 bg-gradient-to-br from-rose-600 to-mauve-600 text-white shadow-lg z-50 md:static md:relative md:translate-x-0 md:h-[100dvh]">
+        <aside className="hidden md:block fixed top-0 left-0 h-[100dvh] w-64 bg-champagne-100 border-r border-champagne-200 z-50 md:static md:relative md:translate-x-0 md:h-[100dvh]">
           <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-rose-500">
-              <span className="text-2xl font-bold text-white">CPF Dance</span>
+            <div className="px-6 py-6 border-b border-champagne-200">
+              <span
+                className="text-charcoal-950"
+                style={{
+                  fontFamily: 'var(--font-family-display)',
+                  fontSize: '1.5rem',
+                  fontWeight: 600,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                CPF Dance
+              </span>
             </div>
           </div>
         </aside>
@@ -82,7 +93,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
   }
 
   return (
-    <div className="h-[100dvh] bg-gray-50 flex flex-col md:flex-row overflow-hidden portal-content">
+    <div className="h-[100dvh] bg-champagne-50 flex flex-col md:flex-row overflow-hidden portal-content">
       <MobileHeader onMenuToggle={handleToggleSidebar} />
       <Sidebar profile={profile} isOpen={isOpen} setIsOpen={setIsOpen} />
 
@@ -101,13 +112,13 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
         </main>
 
         <footer
-          className="bg-white border-t border-gray-200 flex-shrink-0 hidden md:block"
+          className="bg-champagne-50 border-t border-champagne-200 flex-shrink-0 hidden md:block"
           style={{
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-charcoal-500">
               <p>&copy; {currentYear} CPF Dance LLC. All rights reserved.</p>
             </div>
           </div>

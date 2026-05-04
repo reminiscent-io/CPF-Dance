@@ -158,6 +158,56 @@ export async function GET(request: NextRequest) {
       .order('transaction_date', { ascending: false })
       .limit(5)
 
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+
+    const { data: recentLessonRequests } = await supabase
+      .from('private_lesson_requests')
+      .select(`
+        id,
+        created_at,
+        requested_focus,
+        status,
+        student:students(
+          profile:profiles!students_profile_id_fkey(full_name)
+        )
+      `)
+      .gte('created_at', thirtyDaysAgo)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const { data: recentRescheduleRequests } = await supabase
+      .from('lesson_reschedule_requests')
+      .select(`
+        id,
+        created_at,
+        status,
+        class:classes(start_time, title),
+        student:students(
+          profile:profiles!students_profile_id_fkey(full_name)
+        )
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const { data: recentCancellations } = await supabase
+      .from('classes')
+      .select(`
+        id,
+        updated_at,
+        title,
+        class_type,
+        is_cancelled,
+        cancellation_reason,
+        enrollments(student:students(profile:profiles!students_profile_id_fkey(full_name)))
+      `)
+      .eq('is_cancelled', true)
+      .eq('class_type', 'private')
+      .gte('updated_at', fourteenDaysAgo)
+      .order('updated_at', { ascending: false })
+      .limit(10)
+
     const recentActivity = [
       ...(recentEnrollments || []).map(e => {
         const studentName = (e.student as any)?.profile?.full_name || 'Unknown Student'
@@ -189,10 +239,44 @@ export async function GET(request: NextRequest) {
           timestamp: p.transaction_date,
           student_name: studentName
         }
+      }),
+      ...(recentLessonRequests || []).map(r => {
+        const studentName = (r.student as any)?.profile?.full_name || 'Unknown Student'
+        return {
+          id: `request-${r.id}`,
+          type: 'request' as const,
+          description: `${studentName} requested a private lesson${r.requested_focus ? `: ${r.requested_focus}` : ''}`,
+          timestamp: r.created_at,
+          student_name: studentName,
+          link: '/instructor/requests'
+        }
+      }),
+      ...(recentRescheduleRequests || []).map(r => {
+        const studentName = (r.student as any)?.profile?.full_name || 'Unknown Student'
+        return {
+          id: `reschedule-${r.id}`,
+          type: 'reschedule_request' as const,
+          description: `${studentName} asked to reschedule their lesson`,
+          timestamp: r.created_at,
+          student_name: studentName,
+          link: '/instructor/schedule'
+        }
+      }),
+      ...(recentCancellations || []).map(c => {
+        const enrollment = (c.enrollments as any[])?.[0]
+        const studentName = enrollment?.student?.profile?.full_name || 'Dancer'
+        return {
+          id: `cancel-${c.id}`,
+          type: 'cancellation' as const,
+          description: `${studentName}'s private lesson was cancelled${c.cancellation_reason ? ` — ${c.cancellation_reason}` : ''}`,
+          timestamp: c.updated_at,
+          student_name: studentName,
+          link: '/instructor/schedule'
+        }
       })
     ]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 10)
+      .slice(0, 12)
 
     const stats = {
       total_students: totalStudents || 0,

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Editor } from '@tiptap/react'
+import { LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { NotesRichTextEditor } from '@/components/NotesRichTextEditor'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { Button } from '@/components/ui/Button'
@@ -363,25 +364,26 @@ export function NoteFocusMode({
                 </div>
               )}
 
-              {/* Visibility toggle - only shown if callback provided */}
+              {/* Visibility — quiet inline status. Default is shared with
+                  instructor; the link flips to a private note. Mirrors the
+                  toggle used in the calendar create/edit flow. */}
               {onVisibilityChange && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Visibility
-                  </label>
-                  <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
-                    value={isPrivate ? 'private' : 'shared'}
-                    onChange={(e) => onVisibilityChange(e.target.value === 'private')}
+                <div className="flex items-center gap-2 pt-1 text-xs text-charcoal-500">
+                  {isPrivate ? (
+                    <LockClosedIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                  ) : (
+                    <EyeIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                  )}
+                  <span>
+                    {isPrivate ? 'Private to you' : 'Visible to your instructor'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onVisibilityChange(!isPrivate)}
+                    className="ml-1 text-charcoal-700 underline decoration-champagne-300 underline-offset-4 hover:text-charcoal-950 hover:decoration-charcoal-500 transition-colors"
                   >
-                    <option value="private">Private (Only me)</option>
-                    <option value="shared">Shared with Instructor</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {isPrivate
-                      ? 'Only you can see this note'
-                      : 'Your instructor will be able to read this note'}
-                  </p>
+                    {isPrivate ? 'Share with instructor' : 'Make private'}
+                  </button>
                 </div>
               )}
             </div>

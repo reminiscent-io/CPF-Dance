@@ -15,6 +15,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
 import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
+import { PrivateLessonActions } from '@/components/dancer/PrivateLessonActions'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
@@ -601,6 +602,20 @@ export default function DancerSchedulePage() {
                   ))}
                 </ul>
               </div>
+            )}
+
+            {selectedEvent.class_type === 'private' && !selectedEvent.isPersonal && !selectedEvent.is_cancelled && (
+              <PrivateLessonActions
+                classId={selectedEvent.id.replace(/^enrolled-/, '')}
+                startTimeIso={selectedEvent.start_time}
+                onCancelled={() => {
+                  setShowEventModal(false)
+                  fetchSchedule()
+                }}
+                onRescheduleRequested={() => {
+                  setShowEventModal(false)
+                }}
+              />
             )}
 
             <div className="space-y-3 pt-2">

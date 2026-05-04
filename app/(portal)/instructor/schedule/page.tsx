@@ -14,6 +14,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { AddNoteModal } from '@/components/AddNoteModal'
+import { InstructorPrivateLessonCancel } from '@/components/instructor/InstructorPrivateLessonCancel'
 import type { CreateNoteData } from '@/lib/types'
 
 interface ClassEvent {
@@ -208,17 +209,18 @@ export default function InstructorSchedulePage() {
   }
 
   const getClassTypeClassName = (type: string) => {
+    // Class type chips collapse onto the four-family palette per DESIGN.md.
+    // Private and master class earn an accent (rose for the intimate, gilt
+    // for the premium); the rest stay neutral champagne.
     switch (type) {
       case 'private':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'group':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'workshop':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-ballet-pink-50 text-ballet-pink-800 border-ballet-pink-200'
       case 'master_class':
-        return 'bg-amber-100 text-amber-800 border-amber-200'
+        return 'bg-gold-100 text-gold-800 border-gold-200'
+      case 'group':
+      case 'workshop':
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-champagne-100 text-charcoal-700 border-champagne-200'
     }
   }
 
@@ -521,171 +523,191 @@ export default function InstructorSchedulePage() {
       <Modal
         isOpen={showEventModal}
         onClose={() => setShowEventModal(false)}
-        title="Class Details"
+        title={selectedEvent?.title ?? 'Class details'}
+        size="lg"
       >
         {selectedEvent && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {selectedEvent.title}
-              </h3>
-              <Badge className={getClassTypeClassName(selectedEvent.class_type)}>
-                {getClassTypeLabel(selectedEvent.class_type)}
-              </Badge>
+          <div>
+            {/* Status group — chips and any cancellation note read as one block */}
+            <div className="space-y-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  className={`border ${getClassTypeClassName(selectedEvent.class_type)}`}
+                >
+                  {getClassTypeLabel(selectedEvent.class_type)}
+                </Badge>
+                {selectedEvent.is_cancelled && !selectedEvent.cancellation_reason && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium tracking-[0.04em] uppercase bg-ballet-pink-100 text-ballet-pink-800 border border-ballet-pink-200">
+                    Cancelled
+                  </span>
+                )}
+              </div>
+
+              {selectedEvent.is_cancelled && selectedEvent.cancellation_reason && (
+                <div className="rounded-lg border border-ballet-pink-200 bg-ballet-pink-50 px-4 py-3">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-ballet-pink-800 mb-1">
+                    Cancelled
+                  </p>
+                  <p className="text-sm text-charcoal-800 leading-relaxed">
+                    {selectedEvent.cancellation_reason}
+                  </p>
+                </div>
+              )}
             </div>
 
-            {selectedEvent.is_cancelled && (
-              <Card className="bg-red-50 border-red-200">
-                <div className="flex items-start gap-2">
-                  <svg
-                    className="w-5 h-5 text-red-600 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-red-900">This class is cancelled</p>
-                    {selectedEvent.cancellation_reason && (
-                      <p className="text-red-700 text-sm mt-1">
-                        {selectedEvent.cancellation_reason}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Start Time</p>
-                <p className="font-medium text-gray-900">
+            {/* Meta — generous gap above; tight rhythm within */}
+            <dl className="mt-7 space-y-3.5 text-sm">
+              <ModalMetaRow label="When">
+                <span className="text-charcoal-900">
                   {formatDateTime(selectedEvent.start_time)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">End Time</p>
-                <p className="font-medium text-gray-900">
+                  <span className="text-charcoal-400">{' – '}</span>
                   {new Date(selectedEvent.end_time).toLocaleTimeString('en-US', {
                     hour: 'numeric',
                     minute: '2-digit',
-                    hour12: true
+                    hour12: true,
                   })}
-                </p>
-              </div>
-            </div>
+                </span>
+              </ModalMetaRow>
 
-            {selectedEvent.location && (
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Location</p>
-                <p className="font-medium text-gray-900">{selectedEvent.location}</p>
-              </div>
-            )}
+              {(selectedEvent.studios || selectedEvent.location) && (
+                <ModalMetaRow label="Where">
+                  <span className="text-charcoal-900">
+                    {selectedEvent.studios?.name || selectedEvent.location}
+                  </span>
+                  {selectedEvent.studios?.address && (
+                    <span className="block text-charcoal-500 text-xs mt-0.5">
+                      {selectedEvent.studios.address}
+                    </span>
+                  )}
+                  {selectedEvent.studios?.name && selectedEvent.location && (
+                    <span className="block text-charcoal-500 text-xs mt-0.5">
+                      {selectedEvent.location}
+                    </span>
+                  )}
+                </ModalMetaRow>
+              )}
 
-            {selectedEvent.studios && (
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Studio</p>
-                <p className="font-medium text-gray-900">{selectedEvent.studios.name}</p>
-                {selectedEvent.studios.address && (
-                  <p className="text-sm text-gray-600">{selectedEvent.studios.address}</p>
-                )}
-              </div>
-            )}
-
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Enrollment</p>
-              <p className="font-medium text-gray-900">
-                {selectedEvent.enrolled_count}
-                {selectedEvent.max_capacity && ` / ${selectedEvent.max_capacity}`} students
-              </p>
-            </div>
+              <ModalMetaRow label="Enrollment">
+                <span className="text-charcoal-900">
+                  {selectedEvent.enrolled_count ?? 0}
+                  {selectedEvent.max_capacity && (
+                    <span className="text-charcoal-500">
+                      {' / '}
+                      {selectedEvent.max_capacity}
+                    </span>
+                  )}{' '}
+                  <span className="text-charcoal-500">
+                    {(selectedEvent.enrolled_count ?? 0) === 1 ? 'student' : 'students'}
+                  </span>
+                </span>
+              </ModalMetaRow>
+            </dl>
 
             {selectedEvent.description && (
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Description</p>
-                <p className="text-gray-900">{selectedEvent.description}</p>
-              </div>
+              <section className="mt-7">
+                <h3 className="font-sans text-[11px] font-medium uppercase tracking-[0.1em] text-charcoal-500 mb-2">
+                  About
+                </h3>
+                <p className="text-sm text-charcoal-800 leading-relaxed">
+                  {selectedEvent.description}
+                </p>
+              </section>
             )}
 
-            {/* Show enrolled students for private lessons */}
             {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-1">Enrolled Student{enrolledStudents.length > 1 ? 's' : ''}</p>
-                {enrolledStudents.map(student => (
-                  <p key={student.id} className="text-sm text-gray-900">
-                    {student.full_name} {student.email && `(${student.email})`}
-                  </p>
-                ))}
-              </div>
+              <section className="mt-7">
+                <h3 className="font-sans text-[11px] font-medium uppercase tracking-[0.1em] text-charcoal-500 mb-2">
+                  {enrolledStudents.length === 1 ? 'Student' : 'Students'}
+                </h3>
+                <ul className="rounded-lg border border-champagne-200 divide-y divide-champagne-200 overflow-hidden">
+                  {enrolledStudents.map((student) => (
+                    <li key={student.id} className="px-4 py-2.5 bg-champagne-100/60">
+                      <p className="text-sm text-charcoal-900">{student.full_name}</p>
+                      {student.email && (
+                        <p className="text-xs text-charcoal-500 mt-0.5">{student.email}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
 
-            <div className="space-y-3">
-              {/* Create Note button for private lessons with enrolled students */}
+            {/* Action stack — generous gap above; internal rhythm separates do-something / leave */}
+            <div className="mt-9 space-y-3">
               {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
                 <Button
                   onClick={handleCreateNote}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  variant="primary"
+                  className="w-full"
                 >
-                  ✏️ Create Note for Student
+                  Create note for{' '}
+                  {enrolledStudents.length === 1
+                    ? enrolledStudents[0].full_name.split(' ')[0]
+                    : 'student'}
                 </Button>
               )}
 
               <div className="relative">
                 <Button
                   onClick={() => setShowCalendarMenu(!showCalendarMenu)}
+                  variant="outline"
                   className="w-full"
                 >
-                  + Add to Calendar
+                  Add to calendar
                 </Button>
                 {showCalendarMenu && (
-                  <div className="absolute bottom-full mb-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                  <div className="absolute bottom-full mb-2 w-full bg-champagne-50 border border-champagne-200 rounded-lg shadow-soft-lg z-10 overflow-hidden">
                     <button
                       onClick={handleAddToAppleCalendar}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                      className="w-full text-left px-4 py-3 min-h-11 hover:bg-champagne-100 border-b border-champagne-200 last:border-b-0 text-sm text-charcoal-800 transition-colors"
                     >
-                      📱 Apple Calendar / Outlook (download)
+                      Apple Calendar / Outlook
+                      <span className="block text-xs text-charcoal-500 mt-0.5">.ics download</span>
                     </button>
                     <button
                       onClick={handleAddToGoogleCalendar}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                      className="w-full text-left px-4 py-3 min-h-11 hover:bg-champagne-100 border-b border-champagne-200 last:border-b-0 text-sm text-charcoal-800 transition-colors"
                     >
-                      📅 Google Calendar
+                      Google Calendar
                     </button>
                     <button
                       onClick={handleAddToOutlook}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      className="w-full text-left px-4 py-3 min-h-11 hover:bg-champagne-100 text-sm text-charcoal-800 transition-colors"
                     >
-                      📧 Microsoft Outlook
+                      Microsoft Outlook
                     </button>
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
-                  }}
-                  className="flex-1"
-                >
-                  View Class Details
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
+
+              {selectedEvent.class_type === 'private' && !selectedEvent.is_cancelled && (
+                <InstructorPrivateLessonCancel
+                  classId={selectedEvent.id}
+                  startTimeIso={selectedEvent.start_time}
+                  onCancelled={() => {
                     setShowEventModal(false)
                     setShowCalendarMenu(false)
+                    const now = new Date()
+                    fetchSchedule(
+                      new Date(now.getFullYear(), now.getMonth(), 1),
+                      new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+                    )
                   }}
-                  className="flex-1"
-                >
-                  Close
-                </Button>
-              </div>
+                />
+              )}
+            </div>
+
+            {/* Navigation away — separated by hairline so it reads as exit, not action */}
+            <div className="mt-5 pt-4 border-t border-champagne-200">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
+                }}
+                className="w-full text-center text-sm text-ballet-pink-700 hover:text-ballet-pink-800 font-medium tracking-[0.02em] py-1.5 transition-colors"
+              >
+                Open full class page →
+              </button>
             </div>
           </div>
         )}
@@ -705,5 +727,24 @@ export default function InstructorSchedulePage() {
         />
       )}
     </PortalLayout>
+  )
+}
+
+function ModalMetaRow({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  // Stacked label-above-value on narrow phones, two-column from sm+ where the
+  // label can sit in its own gutter without crowding the value.
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1 sm:items-baseline">
+      <dt className="text-[11px] font-medium uppercase tracking-[0.1em] text-charcoal-500">
+        {label}
+      </dt>
+      <dd className="min-w-0">{children}</dd>
+    </div>
   )
 }

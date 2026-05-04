@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 
 export interface ModalProps {
   isOpen: boolean
@@ -17,6 +18,9 @@ export function Modal({
   title,
   size = 'md'
 }: ModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(containerRef, isOpen)
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -65,6 +69,7 @@ export function Modal({
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
+        ref={containerRef}
         className={`
           bg-champagne-50 rounded-lg shadow-soft-lg w-full ${sizes[size]}
           animate-slideUp

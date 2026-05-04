@@ -2,17 +2,31 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Spinner } from '@/components/ui/Spinner'
-import { Input, Textarea } from '@/components/ui/Input'
-import { Modal, ModalFooter } from '@/components/ui/Modal'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/DropdownMenu'
+import { ClassEditSheet, type PersonalClass } from '@/components/dancer/ClassEditSheet'
+import { ClassDetailSheet, type DetailClass } from '@/components/dancer/ClassDetailSheet'
+import type { Note } from '@/lib/utils/date-helpers'
+import {
+  formatClassDate,
+  formatClassTime,
+  formatTimeRange,
+  groupClassesByDate,
+} from '@/lib/utils/class-dates'
+import { useNow } from '@/lib/hooks/use-now'
+import { ClockIcon, MapPinIcon, UserIcon, EllipsisHorizontalIcon, PlusIcon } from '@heroicons/react/24/outline'
 
-interface ClassData {
+interface EnrolledClass {
   id: string
   title: string
   description: string | null
@@ -35,49 +49,42 @@ interface ClassData {
   source: 'enrolled'
 }
 
-interface PersonalClass {
-  id: string
-  title: string
-  instructor_name: string | null
-  location: string | null
-  start_time: string
-  end_time: string | null
-  notes: string | null
-  is_recurring: boolean
-  created_at: string
-  updated_at: string
+interface PersonalClassRow extends PersonalClass {
   source: 'personal'
 }
 
-type CombinedClass = ClassData | PersonalClass
+type CombinedClass = EnrolledClass | PersonalClassRow
 
-type FilterType = 'all' | 'upcoming' | 'past'
+type FilterType = 'upcoming' | 'past' | 'all'
+
+const FILTERS: { value: FilterType; label: string }[] = [
+  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'past', label: 'Past' },
+  { value: 'all', label: 'All' },
+]
+
+const CLASS_TYPE_LABEL: Record<string, string> = {
+  group: 'Group',
+  private: 'Private',
+  workshop: 'Workshop',
+  master_class: 'Master class',
+}
 
 export default function DancerClassesPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
-  const [enrolledClasses, setEnrolledClasses] = useState<ClassData[]>([])
-  const [personalClasses, setPersonalClasses] = useState<PersonalClass[]>([])
+  const { addToast } = useToast()
+
+  const [enrolled, setEnrolled] = useState<EnrolledClass[]>([])
+  const [personal, setPersonal] = useState<PersonalClassRow[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
   const [filter, setFilter] = useState<FilterType>('upcoming')
-  const [showModal, setShowModal] = useState(false)
-  const [editingClass, setEditingClass] = useState<PersonalClass | null>(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    instructor_name: '',
-    location: '',
-    start_time: '',
-    end_time: '',
-    notes: '',
-    is_recurring: false
-  })
-  const [saving, setSaving] = useState(false)
-  const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
-  const [recurringDays, setRecurringDays] = useState<number[]>([]) // 0=Sun, 1=Mon, etc
-  const [recurringEndDate, setRecurringEndDate] = useState('')
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [tentativeClasses, setTentativeClasses] = useState<Array<{ start_time: string; end_time: string }>>([])
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const [editing, setEditing] = useState<PersonalClassRow | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [detail, setDetail] = useState<CombinedClass | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<PersonalClassRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -86,728 +93,498 @@ export default function DancerClassesPage() {
     }
   }, [loading, profile, router])
 
+  const fetchClasses = useCallback(async () => {
+    try {
+      const [enrolledRes, personalRes, notesRes] = await Promise.all([
+        fetch('/api/dancer/classes'),
+        fetch('/api/dancer/personal-classes'),
+        fetch('/api/dancer/notes'),
+      ])
+      if (enrolledRes.ok) {
+        const data = await enrolledRes.json()
+        setEnrolled(data.classes.map((c: EnrolledClass) => ({ ...c, source: 'enrolled' as const })))
+      }
+      if (personalRes.ok) {
+        const data = await personalRes.json()
+        setPersonal(data.classes.map((c: PersonalClass) => ({ ...c, source: 'personal' as const })))
+      }
+      if (notesRes.ok) {
+        const data = await notesRes.json()
+        setNotes(data.notes ?? [])
+      }
+    } catch {
+      addToast('Could not load your classes.', 'error')
+    } finally {
+      setLoadingClasses(false)
+    }
+  }, [addToast])
+
   useEffect(() => {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
       fetchClasses()
     }
-  }, [loading, user, profile])
+  }, [loading, user, profile, fetchClasses])
 
-  const fetchClasses = async () => {
-    try {
-      const [enrolledResponse, personalResponse] = await Promise.all([
-        fetch('/api/dancer/classes'),
-        fetch('/api/dancer/personal-classes')
-      ])
+  const all = useMemo<CombinedClass[]>(
+    () =>
+      [...enrolled, ...personal].sort(
+        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      ),
+    [enrolled, personal]
+  )
 
-      if (enrolledResponse.ok) {
-        const data = await enrolledResponse.json()
-        setEnrolledClasses(data.classes.map((c: any) => ({ ...c, source: 'enrolled' as const })))
-      }
+  const now = useNow()
 
-      if (personalResponse.ok) {
-        const data = await personalResponse.json()
-        setPersonalClasses(data.classes.map((c: any) => ({ ...c, source: 'personal' as const })))
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error)
-    } finally {
-      setLoadingClasses(false)
-    }
-  }
-
-  const handleOpenModal = (personalClass?: PersonalClass) => {
-    if (personalClass) {
-      setEditingClass(personalClass)
-      const startDate = new Date(personalClass.start_time)
-      let duration = 60 // Default 1 hour
-      if (personalClass.end_time) {
-        const endDate = new Date(personalClass.end_time)
-        duration = Math.round((endDate.getTime() - startDate.getTime()) / 60000) // Convert to minutes
-      }
-      setDurationMinutes(duration)
-      setFormData({
-        title: personalClass.title,
-        instructor_name: personalClass.instructor_name || '',
-        location: personalClass.location || '',
-        start_time: startDate.toISOString().slice(0, 16),
-        end_time: personalClass.end_time ? new Date(personalClass.end_time).toISOString().slice(0, 16) : '',
-        notes: personalClass.notes || '',
-        is_recurring: personalClass.is_recurring
-      })
-    } else {
-      setEditingClass(null)
-      setDurationMinutes(60)
-      setFormData({
-        title: '',
-        instructor_name: '',
-        location: '',
-        start_time: '',
-        end_time: '',
-        notes: '',
-        is_recurring: false
-      })
-    }
-    setRecurringDays([])
-    setRecurringEndDate('')
-    setShowModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setShowModal(false)
-    setEditingClass(null)
-    setDurationMinutes(60)
-    setRecurringDays([])
-    setRecurringEndDate('')
-    setShowConfirmation(false)
-    setTentativeClasses([])
-    setFormData({
-      title: '',
-      instructor_name: '',
-      location: '',
-      start_time: '',
-      end_time: '',
-      notes: '',
-      is_recurring: false
+  const filtered = useMemo(() => {
+    return all.filter((cls) => {
+      const date = new Date(cls.start_time)
+      if (filter === 'upcoming') return date >= now
+      if (filter === 'past') return date < now
+      return true
     })
-  }
+  }, [all, filter, now])
 
-  const generateRecurringInstances = (startTime: string, duration: number, days: number[], endDate: string) => {
-    const instances: Array<{ start_time: string; end_time: string }> = []
-    const start = new Date(startTime)
-    const end = new Date(endDate)
-    end.setHours(23, 59, 59, 999)
+  const groups = useMemo(
+    () =>
+      groupClassesByDate(
+        filter === 'past' ? [...filtered].reverse() : filtered,
+        filter === 'past' ? 'past' : 'upcoming'
+      ),
+    [filtered, filter]
+  )
 
-    // Start from the first matching day
-    const currentDate = new Date(start)
-    const dayOfWeek = currentDate.getDay()
-    const daysToAdd = days.length > 0 ? Math.min(...days.map(d => (d - dayOfWeek + 7) % 7 || 7)) : 0
-
-    if (daysToAdd > 0) {
-      currentDate.setDate(currentDate.getDate() + daysToAdd)
-    }
-
-    // Generate all instances
-    while (currentDate <= end) {
-      if (days.includes(currentDate.getDay())) {
-        const instanceStart = new Date(currentDate)
-        instanceStart.setHours(start.getHours(), start.getMinutes(), 0, 0)
-
-        const instanceEnd = new Date(instanceStart.getTime() + duration * 60000)
-
-        instances.push({
-          start_time: instanceStart.toISOString(),
-          end_time: instanceEnd.toISOString()
-        })
-      }
-
-      currentDate.setDate(currentDate.getDate() + 1)
-    }
-
-    return instances
-  }
-
-  const handleSaveClick = async () => {
-    if (!formData.title.trim() || !formData.start_time || !durationMinutes) {
-      alert('Please enter a title, start time, and duration')
-      return
-    }
-
-    if (formData.is_recurring) {
-      if (recurringDays.length === 0) {
-        alert('Please select at least one day of the week')
-        return
-      }
-      if (!recurringEndDate) {
-        alert('Please select an end date for recurring classes')
-        return
-      }
-
-      // Generate instances and check if > 20
-      const instances = generateRecurringInstances(formData.start_time, durationMinutes, recurringDays, recurringEndDate)
-
-      if (instances.length > 20) {
-        setTentativeClasses(instances)
-        setShowConfirmation(true)
-        return
-      }
-
-      // Otherwise proceed with creation
-      await createRecurringClasses(instances)
-    } else {
-      // Single class - proceed normally
-      await createSingleClass()
-    }
-  }
-
-  const createSingleClass = async () => {
-    setSaving(true)
+  async function deletePersonal(cls: PersonalClassRow) {
+    setDeleting(true)
     try {
-      const startDate = new Date(formData.start_time)
-      const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
-      const endTimeISO = endDate.toISOString()
-
-      const payload = {
-        ...formData,
-        title: formData.title.trim(),
-        instructor_name: formData.instructor_name.trim() || null,
-        location: formData.location.trim() || null,
-        start_time: startDate.toISOString(),
-        end_time: endTimeISO,
-        notes: formData.notes.trim() || null,
-        is_recurring: false
+      const res = await fetch(`/api/dancer/personal-classes?id=${cls.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        addToast(err.error || 'Could not delete the class.', 'error')
+        return
       }
-
-      const url = '/api/dancer/personal-classes'
-      const method = editingClass ? 'PUT' : 'POST'
-      const body = editingClass ? { ...payload, id: editingClass.id } : payload
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-
-      if (response.ok) {
-        await fetchClasses()
-        handleCloseModal()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to save class')
-      }
-    } catch (error) {
-      console.error('Error saving class:', error)
-      alert('Failed to save class')
+      addToast('Class removed.', 'success')
+      await fetchClasses()
+    } catch {
+      addToast('Could not delete the class.', 'error')
     } finally {
-      setSaving(false)
+      setDeleting(false)
+      setDeleteConfirm(null)
     }
   }
-
-  const createRecurringClasses = async (instances: Array<{ start_time: string; end_time: string }>) => {
-    setSaving(true)
-    try {
-      const requests = instances.map(instance =>
-        fetch('/api/dancer/personal-classes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: formData.title.trim(),
-            instructor_name: formData.instructor_name.trim() || null,
-            location: formData.location.trim() || null,
-            start_time: instance.start_time,
-            end_time: instance.end_time,
-            notes: formData.notes.trim() || null,
-            is_recurring: false
-          })
-        })
-      )
-
-      const responses = await Promise.all(requests)
-      const allSuccessful = responses.every(r => r.ok)
-
-      if (allSuccessful) {
-        await fetchClasses()
-        handleCloseModal()
-        alert(`Successfully created ${instances.length} classes`)
-      } else {
-        alert('Some classes failed to create. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error creating recurring classes:', error)
-      alert('Failed to create recurring classes')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDelete = async (classId: string) => {
-    if (!confirm('Are you sure you want to delete this class?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/dancer/personal-classes?id=${classId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        await fetchClasses()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to delete class')
-      }
-    } catch (error) {
-      console.error('Error deleting class:', error)
-      alert('Failed to delete class')
-    }
-  }
-
-  // Helper function to format duration for display
-  const formatDuration = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    if (hours === 0) return `${mins}min`
-    if (mins === 0) return `${hours}hr`
-    return `${hours}hr ${mins}min`
-  }
-
-  // Generate duration options in 5-minute increments
-  const durationOptions = [
-    15, 20, 25, 30, 35, 40, 45, 50, 55, 60, // up to 1 hour
-    75, 90, 105, 120, // 1.25hr, 1.5hr, 1.75hr, 2hr
-    150, 180, 210, 240 // 2.5hr, 3hr, 3.5hr, 4hr
-  ]
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
-        </div>
-      </div>
+      <PortalLayout profile={null}>
+        <PageHeaderSkeleton />
+        <ListSkeleton />
+      </PortalLayout>
     )
   }
 
-  if (!user || !profile) {
-    return null
-  }
-
-  const now = new Date()
-
-  // Combine both enrolled and personal classes
-  const allClasses: CombinedClass[] = [
-    ...enrolledClasses,
-    ...personalClasses
-  ].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-
-  const filteredClasses = allClasses.filter((cls) => {
-    const classDate = new Date(cls.start_time)
-    if (filter === 'upcoming') {
-      if (cls.source === 'enrolled') {
-        return classDate >= now && !(cls as ClassData).is_cancelled
-      }
-      return classDate >= now
-    }
-    if (filter === 'past') return classDate < now
-    return true
-  })
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return {
-      date: date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-    }
-  }
-
-  const getClassTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      group: 'bg-blue-100 text-blue-800',
-      private: 'bg-purple-100 text-purple-800',
-      workshop: 'bg-green-100 text-green-800',
-      master_class: 'bg-rose-100 text-rose-800'
-    }
-    return colors[type] || 'bg-gray-100 text-gray-800'
-  }
-
-  const getAttendanceColor = (status: string | null) => {
-    const colors: Record<string, string> = {
-      present: 'success',
-      absent: 'danger',
-      late: 'warning',
-      excused: 'secondary'
-    }
-    return (status && colors[status]) || 'default'
-  }
+  if (!user || !profile) return null
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Classes</h1>
-          <p className="text-gray-600">Track all your dance classes in one place</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-charcoal-950 tracking-[-0.03em]">
+            My Classes
+          </h1>
+          <p className="mt-1 text-charcoal-500">
+            Your enrolled lessons and the practice you keep on your own.
+          </p>
         </div>
-        <Button variant="primary" onClick={() => handleOpenModal()} aria-label="Add Class">
-          <PlusIcon className="w-5 h-5" />
+        <Button
+          variant="primary"
+          onClick={() => {
+            setEditing(null)
+            setSheetOpen(true)
+          }}
+          aria-label="Add a class"
+          className="gap-2"
+        >
+          <PlusIcon className="w-4 h-4" />
+          <span className="hidden sm:inline">Add class</span>
         </Button>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Button
-          variant={filter === 'upcoming' ? 'primary' : 'outline'}
-          onClick={() => setFilter('upcoming')}
-        >
-          Upcoming
-        </Button>
-        <Button
-          variant={filter === 'past' ? 'primary' : 'outline'}
-          onClick={() => setFilter('past')}
-        >
-          Past
-        </Button>
-        <Button
-          variant={filter === 'all' ? 'primary' : 'outline'}
-          onClick={() => setFilter('all')}
-        >
-          All
-        </Button>
-      </div>
+      <FilterTabs filter={filter} onChange={setFilter} />
 
-      {loadingClasses ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : filteredClasses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map((cls) => {
-            const { date, time } = formatDateTime(cls.start_time)
-            const isPast = new Date(cls.start_time) < now
-            const isPersonal = cls.source === 'personal'
-            const personalCls = isPersonal ? (cls as PersonalClass) : null
-            const enrolledCls = !isPersonal ? (cls as ClassData) : null
-
-            return (
-              <Card key={cls.id} hover className="flex flex-col">
-                <CardContent className="p-6 flex-1">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {cls.title}
-                        </h3>
-                        <Badge variant={isPersonal ? 'secondary' : 'primary'} size="sm">
-                          {isPersonal ? 'Personal' : 'Enrolled'}
-                        </Badge>
-                      </div>
-                      {enrolledCls && (
-                        <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getClassTypeColor(
-                            enrolledCls.class_type
-                          )}`}
-                        >
-                          {enrolledCls.class_type.replace('_', ' ')}
-                        </span>
-                      )}
-                    </div>
-                    {enrolledCls?.is_cancelled && (
-                      <Badge variant="danger" size="sm">
-                        Cancelled
-                      </Badge>
-                    )}
-                  </div>
-
-                  {enrolledCls?.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {enrolledCls.description}
-                    </p>
-                  )}
-
-                  <div className="space-y-2 text-sm mb-4">
-                    <div className="flex items-center text-gray-700">
-                      <span className="mr-2">📅</span>
-                      <span>{date}</span>
-                    </div>
-                    <div className="flex items-center text-gray-700">
-                      <span className="mr-2">⏰</span>
-                      <span>{time}</span>
-                    </div>
-                    {cls.location && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="mr-2">📍</span>
-                        <span>
-                          {isPersonal ? cls.location : (enrolledCls?.studio?.name || cls.location)}
-                          {enrolledCls?.studio?.city && `, ${enrolledCls.studio.city}`}
-                        </span>
-                      </div>
-                    )}
-                    {(isPersonal ? personalCls?.instructor_name : enrolledCls?.instructor_name) && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="mr-2">👤</span>
-                        <span>{isPersonal ? personalCls?.instructor_name : enrolledCls?.instructor_name}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {enrolledCls && isPast && enrolledCls.attendance_status && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Attendance:</span>
-                        <Badge
-                          variant={getAttendanceColor(enrolledCls.attendance_status) as any}
-                          size="sm"
-                        >
-                          {enrolledCls.attendance_status}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {enrolledCls?.enrollment_notes && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600 italic">
-                        &ldquo;{enrolledCls.enrollment_notes}&rdquo;
-                      </p>
-                    </div>
-                  )}
-
-                  {personalCls?.notes && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600 italic">
-                        &ldquo;{personalCls.notes}&rdquo;
-                      </p>
-                    </div>
-                  )}
-
-                  {isPersonal && (
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleOpenModal(personalCls!)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-red-600 hover:bg-red-50"
-                        onClick={() => handleDelete(cls.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">🩰</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {filter === 'upcoming' && 'No Upcoming Classes'}
-              {filter === 'past' && 'No Past Classes'}
-              {filter === 'all' && 'No Classes Yet'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {filter === 'upcoming' &&
-                "You don't have any upcoming classes scheduled right now."}
-              {filter === 'past' && "You haven't attended any classes yet."}
-              {filter === 'all' &&
-                "You're not enrolled in any classes yet. Talk to your instructor to get started!"}
-            </p>
-            {filter !== 'all' && (
-              <Button variant="outline" onClick={() => setFilter('all')}>
-                View All Classes
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Create/Edit Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        title={editingClass ? 'Edit Class' : 'Add New Class'}
-        size="lg"
-      >
-        <div className="space-y-4">
-          <Input
-            label="Class Title"
-            placeholder="e.g., Ballet Class, Hip Hop Workshop..."
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
+      <div className="mt-6">
+        {loadingClasses ? (
+          <ListSkeleton />
+        ) : groups.length === 0 ? (
+          <EmptyState
+            filter={filter}
+            onAdd={() => {
+              setEditing(null)
+              setSheetOpen(true)
+            }}
+            onShowAll={() => setFilter('all')}
           />
-          <Input
-            label="Instructor Name (optional)"
-            placeholder="e.g., Sarah Johnson"
-            value={formData.instructor_name}
-            onChange={(e) => setFormData({ ...formData, instructor_name: e.target.value })}
-          />
-          <Input
-            label="Location (optional)"
-            placeholder="e.g., Dance Studio A, 123 Main St"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Start Date & Time *"
-              type="datetime-local"
-              value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-              required
-            />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duration *
-              </label>
-              <select
-                required
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              >
-                {durationOptions.map(minutes => (
-                  <option key={minutes} value={minutes}>
-                    {formatDuration(minutes)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <Textarea
-            label="Notes (optional)"
-            placeholder="Add any notes about this class..."
-            rows={3}
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="is_recurring"
-              checked={formData.is_recurring}
-              onChange={(e) => setFormData({ ...formData, is_recurring: e.target.checked })}
-              className="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-            />
-            <label htmlFor="is_recurring" className="text-sm font-medium text-gray-700">
-              This is a recurring class
-            </label>
-          </div>
-
-          {formData.is_recurring && (
-            <>
-              <div className="border-t border-rose-200 pt-4"></div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Days of Week *
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {daysOfWeek.map((day, index) => (
-                    <label key={index} className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={recurringDays.includes(index)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setRecurringDays([...recurringDays, index].sort((a, b) => a - b))
-                          } else {
-                            setRecurringDays(recurringDays.filter(d => d !== index))
-                          }
-                        }}
-                        className="mr-2 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
-                      />
-                      <span className="text-sm text-gray-700">{day.slice(0, 3)}</span>
-                    </label>
+        ) : (
+          <div className="space-y-10">
+            {groups.map((group) => (
+              <section key={group.key} aria-labelledby={`group-${group.key}`}>
+                <h2
+                  id={`group-${group.key}`}
+                  className="text-sm font-medium tracking-[0.08em] uppercase text-charcoal-500 mb-3"
+                >
+                  {group.label}
+                </h2>
+                <ul className="divide-y divide-champagne-200 border-y border-champagne-200">
+                  {group.items.map((cls) => (
+                    <ClassRow
+                      key={`${cls.source}-${cls.id}`}
+                      cls={cls}
+                      isPast={new Date(cls.start_time) < now}
+                      onOpen={(c) => setDetail(c)}
+                      onEdit={(c) => {
+                        setEditing(c)
+                        setSheetOpen(true)
+                      }}
+                      onDelete={(c) => setDeleteConfirm(c)}
+                    />
                   ))}
-                </div>
-              </div>
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date *
-                </label>
-                <input
-                  type="date"
-                  value={recurringEndDate}
-                  onChange={(e) => setRecurringEndDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  required
-                />
+      <ClassEditSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        editing={editing}
+        onSaved={fetchClasses}
+      />
+
+      <ClassDetailSheet
+        isOpen={Boolean(detail)}
+        onClose={() => setDetail(null)}
+        cls={detail as DetailClass | null}
+        notes={notes.filter((n) => {
+          if (!detail) return false
+          if (detail.source === 'enrolled') return n.class_id === detail.id
+          return n.personal_class_id === detail.id
+        })}
+        currentUserName={profile.full_name ?? undefined}
+        onEdit={(c) => {
+          setDetail(null)
+          setEditing(c as PersonalClassRow)
+          setSheetOpen(true)
+        }}
+        onDelete={(c) => {
+          setDetail(null)
+          setDeleteConfirm(c as PersonalClassRow)
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteConfirm)}
+        title="Delete this class?"
+        body={
+          deleteConfirm
+            ? `${deleteConfirm.title} on ${formatClassDate(deleteConfirm.start_time)} will be removed from your schedule. This cannot be undone.`
+            : ''
+        }
+        confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+        tone="destructive"
+        busy={deleting}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && deletePersonal(deleteConfirm)}
+      />
+    </PortalLayout>
+  )
+}
+
+function FilterTabs({
+  filter,
+  onChange,
+}: {
+  filter: FilterType
+  onChange: (next: FilterType) => void
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Filter classes"
+      className="inline-flex items-center gap-1 p-1 rounded-md bg-champagne-100 border border-champagne-200"
+    >
+      {FILTERS.map((tab) => {
+        const active = filter === tab.value
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(tab.value)}
+            className={`
+              min-h-11 sm:min-h-9 px-4 rounded text-sm font-medium tracking-wide
+              transition-colors
+              ${active
+                ? 'bg-champagne-50 text-charcoal-900 shadow-soft'
+                : 'text-charcoal-500 hover:text-charcoal-900'
+              }
+            `}
+          >
+            {tab.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+interface RowProps {
+  cls: CombinedClass
+  isPast: boolean
+  onOpen: (cls: CombinedClass) => void
+  onEdit: (cls: PersonalClassRow) => void
+  onDelete: (cls: PersonalClassRow) => void
+}
+
+function ClassRow({ cls, isPast, onOpen, onEdit, onDelete }: RowProps) {
+  const isPersonal = cls.source === 'personal'
+  const personalCls = isPersonal ? cls : null
+  const enrolledCls = !isPersonal ? cls : null
+  const date = new Date(cls.start_time)
+  const cancelled = enrolledCls?.is_cancelled
+
+  const meta: { icon: React.ReactNode; text: string }[] = []
+  meta.push({
+    icon: <ClockIcon className="w-3.5 h-3.5" />,
+    text: enrolledCls?.end_time
+      ? formatTimeRange(cls.start_time, enrolledCls.end_time)
+      : personalCls?.end_time
+        ? formatTimeRange(cls.start_time, personalCls.end_time)
+        : formatClassTime(cls.start_time),
+  })
+  const locationText = enrolledCls
+    ? [enrolledCls.studio?.name, enrolledCls.studio?.city].filter(Boolean).join(', ') ||
+      enrolledCls.location
+    : personalCls?.location
+  if (locationText) {
+    meta.push({ icon: <MapPinIcon className="w-3.5 h-3.5" />, text: locationText })
+  }
+  const instructorText = enrolledCls?.instructor_name || personalCls?.instructor_name
+  if (instructorText) {
+    meta.push({ icon: <UserIcon className="w-3.5 h-3.5" />, text: instructorText })
+  }
+
+  const noteText = enrolledCls?.enrollment_notes || personalCls?.notes
+
+  return (
+    <li className={`group relative flex items-stretch ${cancelled ? 'opacity-60' : ''}`}>
+      <button
+        type="button"
+        onClick={() => onOpen(cls)}
+        aria-label={`View details for ${cls.title}`}
+        className="flex flex-1 items-start gap-5 py-5 pr-2 text-left rounded-md -mx-2 px-2 hover:bg-champagne-100/60 focus:outline-none focus-visible:bg-champagne-100/60 focus-visible:ring-2 focus-visible:ring-rose-500 transition-colors"
+      >
+        {/* Editorial date sidesheet */}
+        <div className="flex-shrink-0 w-16 sm:w-20 pt-0.5 text-charcoal-700">
+          <div className="text-xs uppercase tracking-[0.1em] text-charcoal-400">
+            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+          </div>
+          <div className="font-serif text-3xl leading-none mt-1 tabular-nums text-charcoal-950">
+            {String(date.getDate()).padStart(2, '0')}
+          </div>
+          <div className="text-xs uppercase tracking-[0.08em] text-charcoal-500 mt-1">
+            {date.toLocaleDateString('en-US', { month: 'short' })}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h3
+              className={`text-lg font-semibold leading-snug ${
+                cancelled ? 'text-charcoal-400 line-through' : 'text-charcoal-950'
+              }`}
+            >
+              {cls.title}
+            </h3>
+            {enrolledCls && <ClassTypeChip type={enrolledCls.class_type} />}
+            {cancelled && <StatusChip tone="rose">Cancelled</StatusChip>}
+            {isPast && enrolledCls?.attendance_status && (
+              <AttendanceChip status={enrolledCls.attendance_status} />
+            )}
+          </div>
+
+          <dl className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-charcoal-600">
+            {meta.map((m, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span className="text-charcoal-400" aria-hidden>
+                  {m.icon}
+                </span>
+                <dd className="tabular-nums">{m.text}</dd>
               </div>
-            </>
+            ))}
+          </dl>
+
+          {noteText && (
+            <p className="mt-3 text-sm text-charcoal-700 italic font-serif line-clamp-2">
+              {noteText}
+            </p>
+          )}
+
+          {enrolledCls?.description && !noteText && (
+            <p className="mt-2 text-sm text-charcoal-600 line-clamp-2">
+              {enrolledCls.description}
+            </p>
           )}
         </div>
+      </button>
 
-        <ModalFooter className="mt-6">
-          <Button variant="outline" onClick={handleCloseModal} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSaveClick} disabled={saving}>
-            {saving ? 'Saving...' : editingClass ? 'Update Class' : 'Add Class'}
-          </Button>
-        </ModalFooter>
-      </Modal>
-
-      {/* Confirmation Dialog for Large Batch */}
-      <Modal
-        isOpen={showConfirmation}
-        onClose={() => {
-          setShowConfirmation(false)
-          setTentativeClasses([])
-        }}
-        title="Confirm Recurring Classes"
-        size="lg"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-700">
-            You are about to create <strong className="text-rose-600">{tentativeClasses.length} classes</strong>.
-          </p>
-          <p className="text-sm text-gray-600">
-            This is a large batch. Please confirm you want to proceed with creating all these classes.
-          </p>
-          <div className="bg-gray-50 p-4 rounded-lg max-h-48 overflow-y-auto">
-            <p className="text-sm font-semibold text-gray-700 mb-2">Class Instances:</p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              {tentativeClasses.slice(0, 10).map((cls, idx) => (
-                <li key={idx}>
-                  {new Date(cls.start_time).toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </li>
-              ))}
-              {tentativeClasses.length > 10 && (
-                <li className="font-semibold text-gray-700 mt-2">
-                  ... and {tentativeClasses.length - 10} more
-                </li>
-              )}
-            </ul>
-          </div>
+      {/* Personal-class actions — outside the row button so its trigger
+          doesn't double-fire onOpen */}
+      {personalCls && (
+        <div className="flex-shrink-0 self-start pt-3.5 -mr-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="inline-flex items-center justify-center w-11 h-11 rounded-md text-charcoal-500 hover:text-charcoal-900 hover:bg-champagne-100 transition-colors"
+              aria-label={`Actions for ${cls.title}`}
+            >
+              <EllipsisHorizontalIcon className="w-5 h-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(personalCls)}>Edit</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem destructive onClick={() => onDelete(personalCls)}>
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      )}
+    </li>
+  )
+}
 
-        <ModalFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowConfirmation(false)
-              setTentativeClasses([])
-            }}
-            disabled={saving}
-          >
-            Cancel
+function ClassTypeChip({ type }: { type: string }) {
+  const isPremium = type === 'master_class'
+  const label = CLASS_TYPE_LABEL[type] ?? type.replace('_', ' ')
+  return (
+    <span
+      className={`
+        inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase
+        px-2 py-0.5 rounded-sm
+        ${isPremium
+          ? 'bg-gold-100 text-gold-800'
+          : 'bg-champagne-100 text-charcoal-600'
+        }
+      `}
+    >
+      {label}
+    </span>
+  )
+}
+
+function StatusChip({
+  tone,
+  children,
+}: {
+  tone: 'rose' | 'gold' | 'neutral'
+  children: React.ReactNode
+}) {
+  const styles = {
+    rose: 'bg-rose-100 text-rose-700',
+    gold: 'bg-gold-100 text-gold-800',
+    neutral: 'bg-champagne-100 text-charcoal-600',
+  }
+  return (
+    <span className={`inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase px-2 py-0.5 rounded-sm ${styles[tone]}`}>
+      {children}
+    </span>
+  )
+}
+
+function AttendanceChip({ status }: { status: string }) {
+  // present → gold (positive milestone), absent/late → rose, excused → neutral.
+  const tone: 'rose' | 'gold' | 'neutral' =
+    status === 'present' ? 'gold' : status === 'excused' ? 'neutral' : 'rose'
+  return <StatusChip tone={tone}>{status}</StatusChip>
+}
+
+function EmptyState({
+  filter,
+  onAdd,
+  onShowAll,
+}: {
+  filter: FilterType
+  onAdd: () => void
+  onShowAll: () => void
+}) {
+  const copy = {
+    upcoming: {
+      title: 'Nothing scheduled.',
+      body: 'When Courtney sets a class, or when you add one of your own, it will appear here.',
+    },
+    past: {
+      title: 'No past classes.',
+      body: 'Once you have attended a class, it will live here as part of your record.',
+    },
+    all: {
+      title: 'Your schedule is empty.',
+      body: 'Track classes you take outside of lessons with Courtney, or wait for an enrollment to arrive.',
+    },
+  }[filter]
+
+  return (
+    <div className="border-y border-champagne-200 py-16 text-center">
+      <h3 className="font-serif text-2xl text-charcoal-950">{copy.title}</h3>
+      <p className="mt-2 max-w-md mx-auto text-charcoal-500">{copy.body}</p>
+      <div className="mt-6 flex items-center justify-center gap-3">
+        <Button onClick={onAdd}>Add a class</Button>
+        {filter !== 'all' && (
+          <Button variant="outline" onClick={onShowAll}>
+            View everything
           </Button>
-          <Button
-            onClick={async () => {
-              setShowConfirmation(false)
-              await createRecurringClasses(tentativeClasses)
-              setTentativeClasses([])
-            }}
-            disabled={saving}
-          >
-            {saving ? 'Creating...' : `Create ${tentativeClasses.length} Classes`}
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PortalLayout>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PageHeaderSkeleton() {
+  return (
+    <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="space-y-2">
+        <div className="h-9 w-48 rounded bg-champagne-100 animate-pulse" />
+        <div className="h-4 w-72 rounded bg-champagne-100 animate-pulse" />
+      </div>
+      <div className="h-11 w-28 rounded bg-champagne-100 animate-pulse" />
+    </div>
+  )
+}
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-10">
+      {[0, 1].map((g) => (
+        <div key={g}>
+          <div className="h-3 w-24 rounded bg-champagne-100 animate-pulse mb-3" />
+          <ul className="divide-y divide-champagne-200 border-y border-champagne-200">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="flex items-start gap-5 py-5">
+                <div className="w-16 sm:w-20 space-y-1.5">
+                  <div className="h-3 w-10 rounded bg-champagne-100 animate-pulse" />
+                  <div className="h-7 w-12 rounded bg-champagne-100 animate-pulse" />
+                  <div className="h-3 w-10 rounded bg-champagne-100 animate-pulse" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-2/3 rounded bg-champagne-100 animate-pulse" />
+                  <div className="h-4 w-1/2 rounded bg-champagne-100 animate-pulse" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   )
 }

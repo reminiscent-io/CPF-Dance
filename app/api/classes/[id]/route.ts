@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
+import { refundCreditForClass } from '@/lib/lesson-credits'
 
 export async function GET(
   request: NextRequest,
@@ -205,6 +207,10 @@ export async function DELETE(
 
     const supabase = await createClient()
     const { id } = await params
+
+    // Refund any active credit attached to this class before deletion.
+    // Uses the admin client because nobody has UPDATE on lesson_pack_usage under RLS.
+    await refundCreditForClass({ supabase: createAdminClient(), classId: id, reason: 'class_deleted' })
 
     // Build query - admins can delete any class, instructors only their own
     let query = supabase
