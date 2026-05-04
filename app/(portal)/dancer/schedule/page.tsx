@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Calendar } from '@/components/Calendar'
+import { Calendar, type ViewMode } from '@/components/Calendar'
 import { MobileCalendar } from '@/components/MobileCalendar'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -105,6 +105,7 @@ export default function DancerSchedulePage() {
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [selectedNote, setSelectedNote] = useState<DetailNote | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [calendarMode, setCalendarMode] = useState<ViewMode>('week')
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -188,8 +189,8 @@ export default function DancerSchedulePage() {
   }, [authLoading, user, profile])
 
   const handleDateChange = (date: Date) => {
+    // Dancer endpoint returns all enrolled classes, so no refetch is needed.
     setCurrentDate(date)
-    // Data is already loaded - no need to refetch for dancers since we get all classes
   }
 
   const handleEventClick = (event: CalendarEvent) => {
@@ -425,8 +426,11 @@ export default function DancerSchedulePage() {
             <div className="hidden md:flex md:flex-col flex-1 overflow-hidden">
               <Calendar
                 events={events}
+                currentDate={currentDate}
+                viewMode={calendarMode}
                 onEventClick={handleEventClick}
                 onDateChange={handleDateChange}
+                onViewModeChange={setCalendarMode}
               />
             </div>
 

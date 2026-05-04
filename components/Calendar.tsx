@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -60,22 +60,27 @@ interface CalendarEvent {
   }
 }
 
+export type ViewMode = 'month' | 'week'
+
 interface CalendarProps {
   events: CalendarEvent[]
+  currentDate: Date
+  viewMode: ViewMode
   onEventClick?: (event: CalendarEvent) => void
-  onDateChange?: (date: Date) => void
+  onDateChange: (date: Date) => void
+  onViewModeChange: (mode: ViewMode) => void
 }
 
-type ViewMode = 'month' | 'week'
-
-export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState<ViewMode>('week')
-
+export function Calendar({
+  events,
+  currentDate,
+  viewMode,
+  onEventClick,
+  onDateChange,
+  onViewModeChange,
+}: CalendarProps) {
   // Bucket events by ET date key (and by hour within that day) so the grid
   // can do O(1) lookups instead of filtering the whole event array per cell.
-  // Without this, week view runs ~91 cells × events.length filter passes per
-  // render, each invoking Intl.DateTimeFormat twice via isSameDateET.
   const { eventsByDate, eventsByDateAndHour } = useMemo(() => {
     const byDate = new Map<string, CalendarEvent[]>()
     const byDateAndHour = new Map<string, Map<number, CalendarEvent[]>>()
@@ -99,11 +104,6 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     return { eventsByDate: byDate, eventsByDateAndHour: byDateAndHour }
   }, [events])
 
-  const handleDateChange = (newDate: Date) => {
-    setCurrentDate(newDate)
-    onDateChange?.(newDate)
-  }
-
   const navigatePrevious = () => {
     const newDate = new Date(currentDate)
     if (viewMode === 'month') {
@@ -111,7 +111,7 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     } else {
       newDate.setDate(newDate.getDate() - 7)
     }
-    handleDateChange(newDate)
+    onDateChange(newDate)
   }
 
   const navigateNext = () => {
@@ -121,11 +121,11 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
     } else {
       newDate.setDate(newDate.getDate() + 7)
     }
-    handleDateChange(newDate)
+    onDateChange(newDate)
   }
 
   const navigateToday = () => {
-    handleDateChange(new Date())
+    onDateChange(new Date())
   }
 
   const formatMonthYear = (date: Date) => {
@@ -389,14 +389,14 @@ export function Calendar({ events, onEventClick, onDateChange }: CalendarProps) 
             <Button
               variant={viewMode === 'week' ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('week')}
+              onClick={() => onViewModeChange('week')}
             >
               Week
             </Button>
             <Button
               variant={viewMode === 'month' ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('month')}
+              onClick={() => onViewModeChange('month')}
             >
               Month
             </Button>

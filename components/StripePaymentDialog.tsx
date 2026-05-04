@@ -33,6 +33,7 @@ export function StripePaymentDialog({
   onClose,
   lessonPack,
   instructorId,
+  onSuccess,
 }: StripePaymentDialogProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
@@ -53,7 +54,6 @@ export function StripePaymentDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lesson_pack_id: lessonPack.id,
-          instructor_id: instructorId,
         }),
       })
 
@@ -129,9 +129,10 @@ export function StripePaymentDialog({
             Cancel
           </Button>
           <Button
+            type="button"
             variant="primary"
             onClick={handleCheckout}
-            disabled={processing || !instructorId}
+            disabled={processing}
           >
             {processing ? (
               <span className="flex items-center gap-2">
