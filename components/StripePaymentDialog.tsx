@@ -99,9 +99,10 @@ export function StripePaymentDialog({
           </p>
         </header>
 
-        <p className="text-sm text-charcoal-500 leading-relaxed text-center max-w-sm mx-auto">
-          Stripe handles the card details, so we never see them. Lessons stay valid for 12 months and pull from your packs in the order you bought them.
-        </p>
+        <div className="text-sm text-charcoal-500 leading-relaxed text-center max-w-sm mx-auto space-y-2">
+          <p>Stripe handles the card details, so we never see them.</p>
+          <p>Lessons stay valid for 12 months and pull in the order you bought them.</p>
+        </div>
 
         {!instructorId && (
           <div
