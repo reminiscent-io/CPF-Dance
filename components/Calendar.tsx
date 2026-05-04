@@ -1,6 +1,6 @@
 'use client'
 
-
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -12,6 +12,29 @@ import {
   getDayOfMonthET,
   formatWeekdayET
 } from '@/lib/utils/et-timezone'
+
+const CLASS_TYPE_STYLES: Record<string, string> = {
+  private: 'bg-purple-100 border border-purple-300 text-purple-900',
+  group: 'bg-blue-100 border border-blue-300 text-blue-900',
+  workshop: 'bg-green-100 border border-green-300 text-green-900',
+  master_class: 'bg-amber-100 border border-amber-300 text-amber-900',
+  personal: 'bg-rose-100 border border-rose-300 text-rose-900',
+}
+const DEFAULT_CLASS_TYPE_STYLE = 'bg-gray-100 border border-gray-300 text-gray-900'
+
+const ET_DATE_KEY_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  timeZone: ET_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+function getDateKeyET(date: Date): string {
+  return ET_DATE_KEY_FORMATTER.format(date)
+}
+
+const EMPTY_EVENTS: CalendarEvent[] = []
+const EMPTY_HOUR_MAP: ReadonlyMap<number, CalendarEvent[]> = new Map()
 
 interface CalendarEvent {
   id: string
@@ -56,6 +79,31 @@ export function Calendar({
   onDateChange,
   onViewModeChange,
 }: CalendarProps) {
+  // Bucket events by ET date key (and by hour within that day) so the grid
+  // can do O(1) lookups instead of filtering the whole event array per cell.
+  const { eventsByDate, eventsByDateAndHour } = useMemo(() => {
+    const byDate = new Map<string, CalendarEvent[]>()
+    const byDateAndHour = new Map<string, Map<number, CalendarEvent[]>>()
+    for (const event of events) {
+      const eventDate = new Date(event.start_time)
+      const dateKey = getDateKeyET(eventDate)
+      const dayBucket = byDate.get(dateKey)
+      if (dayBucket) dayBucket.push(event)
+      else byDate.set(dateKey, [event])
+
+      const hour = eventDate.getHours()
+      let hourMap = byDateAndHour.get(dateKey)
+      if (!hourMap) {
+        hourMap = new Map()
+        byDateAndHour.set(dateKey, hourMap)
+      }
+      const hourBucket = hourMap.get(hour)
+      if (hourBucket) hourBucket.push(event)
+      else hourMap.set(hour, [event])
+    }
+    return { eventsByDate: byDate, eventsByDateAndHour: byDateAndHour }
+  }, [events])
+
   const navigatePrevious = () => {
     const newDate = new Date(currentDate)
     if (viewMode === 'month') {
@@ -110,64 +158,36 @@ export function Calendar({
   }
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.start_time)
-      return isSameDateET(eventDate, date)
-    })
+    return eventsByDate.get(getDateKeyET(date)) ?? EMPTY_EVENTS
   }
 
   const formatTime = (dateString: string) => {
     return formatTimeET(dateString)
   }
 
-  const getClassTypeColor = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'purple'
-      case 'group':
-        return 'blue'
-      case 'workshop':
-        return 'green'
-      case 'master_class':
-        return 'amber'
-      case 'personal':
-        return 'rose'
-      default:
-        return 'gray'
-    }
-  }
+  const getClassTypeStyles = (type: string) =>
+    CLASS_TYPE_STYLES[type] ?? DEFAULT_CLASS_TYPE_STYLE
 
-  const getClassTypeStyles = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'bg-purple-100 border border-purple-300 text-purple-900'
-      case 'group':
-        return 'bg-blue-100 border border-blue-300 text-blue-900'
-      case 'workshop':
-        return 'bg-green-100 border border-green-300 text-green-900'
-      case 'master_class':
-        return 'bg-amber-100 border border-amber-300 text-amber-900'
-      case 'personal':
-        return 'bg-rose-100 border border-rose-300 text-rose-900'
-      default:
-        return 'bg-gray-100 border border-gray-300 text-gray-900'
-    }
-  }
+  const todayDateString = useMemo(() => new Date().toDateString(), [])
+  const isToday = (date: Date) => date.toDateString() === todayDateString
 
-  const isToday = (date: Date) => {
-    const today = new Date()
-    return date.toDateString() === today.toDateString()
-  }
-
-  const renderWeekView = () => {
+  const weekDays = useMemo(() => {
     const startOfWeek = getStartOfWeek(currentDate)
-    const days = Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(startOfWeek)
       date.setDate(date.getDate() + i)
       return date
     })
+  }, [currentDate])
 
-    const hours = Array.from({ length: 13 }, (_, i) => i + 7) // 7 AM to 7 PM (reduced hours)
+  const weekHours = useMemo(
+    () => Array.from({ length: 13 }, (_, i) => i + 7),
+    []
+  ) // 7 AM to 7 PM (reduced hours)
+
+  const renderWeekView = () => {
+    const days = weekDays
+    const hours = weekHours
 
     return (
       <div className="flex-1 flex flex-col min-h-0">
@@ -210,13 +230,12 @@ export function Calendar({
           </div>
 
           {/* Day columns */}
-          {days.map((day, dayIndex) => (
+          {days.map((day, dayIndex) => {
+            const dayHourMap = eventsByDateAndHour.get(getDateKeyET(day)) ?? EMPTY_HOUR_MAP
+            return (
             <div key={dayIndex} className="border-r border-gray-200 flex flex-col">
               {hours.map(hour => {
-                const dayEvents = getEventsForDate(day).filter(event => {
-                  const eventHour = new Date(event.start_time).getHours()
-                  return eventHour === hour
-                })
+                const dayEvents = dayHourMap.get(hour) ?? EMPTY_EVENTS
 
                 return (
                   <div
@@ -251,31 +270,28 @@ export function Calendar({
                 )
               })}
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     )
   }
 
-  const renderMonthView = () => {
+  const monthGrid = useMemo(() => {
     const startOfMonth = getStartOfMonth(currentDate)
     const daysInMonth = getDaysInMonth(currentDate)
     const startDay = startOfMonth.getDay()
 
-    const days = []
-
-    // Add empty cells for days before the month starts
-    for (let i = 0; i < startDay; i++) {
-      days.push(null)
-    }
-
-    // Add all days in the month
+    const days: (Date | null)[] = []
+    for (let i = 0; i < startDay; i++) days.push(null)
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))
     }
+    return { days, numRows: Math.ceil(days.length / 7) }
+  }, [currentDate])
 
-    // Calculate number of rows needed
-    const numRows = Math.ceil(days.length / 7)
+  const renderMonthView = () => {
+    const { days, numRows } = monthGrid
 
     return (
       <div className="flex-1 flex flex-col min-h-0">

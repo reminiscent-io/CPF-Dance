@@ -8,20 +8,15 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
-import { Badge } from '@/components/ui/Badge'
-import { Avatar } from '@/components/ui/Avatar'
-import { createSanitizedHtml } from '@/lib/utils/sanitize'
+import { NoteFeedItem } from '@/components/notes/NoteFeedItem'
+import { NoteViewContent } from '@/components/notes/NoteViewContent'
 import {
   CalendarIcon,
   DocumentTextIcon,
   ClockIcon,
   MapPinIcon,
   ChevronRightIcon,
-  SparklesIcon,
-  CameraIcon,
-  StarIcon
 } from '@heroicons/react/24/outline'
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import ReviewModal from '@/components/ReviewModal'
 
@@ -109,26 +104,18 @@ export default function DancerPortalPage() {
     }
   }
 
-  const getContentPreview = (html: string, maxLength: number = 150): string => {
-    if (!html) return ''
-    const text = html.replace(/<[^>]*>/g, '')
-    if (text.length <= maxLength) return text
-    const truncated = text.substring(0, maxLength)
-    return truncated + '...'
-  }
-
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
     return {
-      date: date.toLocaleDateString('en-US', { 
+      date: date.toLocaleDateString('en-US', {
         weekday: 'short',
-        month: 'short', 
+        month: 'short',
         day: 'numeric'
       }),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
+      time: date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true 
+        hour12: true
       })
     }
   }
@@ -143,25 +130,12 @@ export default function DancerPortalPage() {
     setViewingNote(null)
   }
 
-  const getTagColor = (tag: string) => {
-    const colors: Record<string, any> = {
-      technique: 'primary',
-      performance: 'secondary',
-      improvement: 'success',
-      strength: 'warning',
-      flexibility: 'default',
-      musicality: 'primary',
-      choreography: 'secondary'
-    }
-    return colors[tag.toLowerCase()] || 'default'
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading…</p>
         </div>
       </div>
     )
@@ -171,410 +145,250 @@ export default function DancerPortalPage() {
     return null
   }
 
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
+
+  const firstName = (profile.full_name || '').split(' ')[0] || profile.full_name
+
+  const showProfilePrompt = !profile.avatar_url
+  const showReviewPrompt = !hasReviews
+  const showFooterPrompts = showProfilePrompt || showReviewPrompt
+
   return (
     <PortalLayout profile={profile}>
-      <div className="space-y-6">
-        {/* Welcome Header */}
-        <div>
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-0 md:mb-1" style={{ fontFamily: 'var(--font-family-display)' }}>
-              Welcome back, {profile.full_name}
-            </h1>
-            {/* Inline stats on mobile only */}
-            {!loadingData && stats && (
-              <div className="flex items-center gap-3 md:hidden">
-                <button
-                  onClick={() => router.push('/dancer/classes')}
-                  className="flex items-center gap-1 text-xs text-gray-500"
-                >
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  <span className="font-semibold text-gray-900">{stats.total_classes_attended}</span> classes
-                </button>
-                <button
-                  onClick={() => router.push('/dancer/notes?tab=instructor')}
-                  className="flex items-center gap-1 text-xs text-gray-500"
-                >
-                  <DocumentTextIcon className="w-3.5 h-3.5" />
-                  <span className="font-semibold text-gray-900">{stats.recent_notes}</span> notes
-                </button>
-              </div>
-            )}
-          </div>
-          <p className="hidden md:block text-gray-600 text-base md:text-lg">Here's what's happening with your dance journey</p>
-        </div>
-
-        {/* Profile Photo Prompt Banner */}
-        {!profile.avatar_url && (
-          <div className="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-lg p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
-                <CameraIcon className="w-5 h-5 text-rose-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
-                  Complete your profile
-                </p>
-                <p className="text-sm text-gray-600">
-                  Add a profile photo so your instructors can easily recognize you.
-                </p>
-              </div>
-              <Link
-                href="/dancer/profile"
-                className="flex-shrink-0 text-sm font-medium text-rose-600 hover:text-rose-700 flex items-center gap-1"
-              >
-                Go to Profile
-                <ChevronRightIcon className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Leave a Review Banner */}
-        {hasReviews ? (
-          <button
-            onClick={() => setShowReviewModal(true)}
-            className="w-full text-left bg-amber-50/60 border border-amber-100 rounded-lg px-4 py-2.5 flex items-center gap-3 hover:bg-amber-50 transition-colors"
-          >
-            <StarIconSolid className="w-4 h-4 text-amber-500 flex-shrink-0" />
-            <span className="text-sm text-gray-600">
-              Thanks for your review! You can update it or leave another anytime.
-            </span>
-            <ChevronRightIcon className="w-4 h-4 text-gray-400 ml-auto flex-shrink-0" />
-          </button>
-        ) : (
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                <StarIcon className="w-4 h-4 md:w-5 md:h-5 text-amber-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
-                  Enjoying your classes?
-                </p>
-                <p className="hidden md:block text-sm text-gray-600">
-                  Your reviews are incredibly helpful and go a long way in helping your instructor build her business. It only takes a moment!
-                </p>
-                <p className="md:hidden text-xs text-gray-500">
-                  Help your instructor with a quick review!
-                </p>
-              </div>
-              <Button
-                variant="gold"
-                size="sm"
-                onClick={() => setShowReviewModal(true)}
-              >
-                Leave a Review
-              </Button>
-            </div>
-          </div>
-        )}
+      <div className="space-y-8">
+        {/* Program-page header — date + name, no greeting */}
+        <header className="border-b border-champagne-200 pb-5">
+          <p className="text-xs text-charcoal-500 uppercase tracking-[0.14em]">
+            {today}
+          </p>
+          <h1 className="mt-1.5 text-3xl md:text-4xl text-charcoal-950 tracking-[-0.03em]">
+            {firstName}
+          </h1>
+        </header>
 
         {loadingData ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
           </div>
         ) : (
-          <>
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column - Notes */}
-              <section>
-                <div className="flex items-center justify-between mb-3 md:mb-4">
-                  <h2 className="text-xl md:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                    Recent Notes
-                  </h2>
-                  <button
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Notes — primary surface, two-thirds */}
+            <section className="lg:col-span-2">
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+                  Recent notes
+                </h2>
+                <button
+                  onClick={() => router.push('/dancer/notes')}
+                  className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
+                >
+                  All notes
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {recentNotes.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {recentNotes.map((note) => (
+                    <NoteFeedItem
+                      key={note.id}
+                      note={note as any}
+                      onEdit={() => handleNoteClick(note)}
+                      currentUserName={profile?.full_name || undefined}
+                      showActions={false}
+                      density="compact"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="border border-champagne-200 border-dashed rounded-lg p-8 text-center bg-champagne-100/50">
+                  <DocumentTextIcon className="w-10 h-10 text-charcoal-400 mx-auto mb-3" />
+                  <p className="text-charcoal-700 mb-4">
+                    No notes yet. Courtney's feedback will appear here after your next lesson.
+                  </p>
+                  <Button
+                    variant="outline"
                     onClick={() => router.push('/dancer/notes')}
-                    className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
                   >
-                    View all
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </button>
+                    Open notes
+                  </Button>
                 </div>
+              )}
+            </section>
 
-                {recentNotes.length > 0 ? (
-                  <div className="space-y-2 md:space-y-3">
-                    {recentNotes.map((note) => (
-                      <Card
-                        key={note.id}
-                        className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => handleNoteClick(note)}
-                      >
-                        <CardContent className="p-2.5 md:p-4">
-                          {/* Header: Avatar + Author + Date */}
-                          <div className="flex items-center justify-between mb-1.5 md:mb-3">
-                            <div className="flex items-center gap-2 md:gap-3">
-                              <Avatar
-                                src={note.author_avatar_url}
-                                name={note.author_name}
-                                size="sm"
-                              />
-                              <div>
-                                <div className="font-medium text-gray-900 text-sm">
-                                  {note.author_name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {new Date(note.created_at).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
+            {/* Right column — upcoming classes only, no KPI tiles */}
+            <section>
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+                  Upcoming
+                </h2>
+                <button
+                  onClick={() => router.push('/dancer/classes')}
+                  className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
+                >
+                  All classes
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {upcomingClasses.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Mobile: show only the next class */}
+                  <div className="md:hidden">
+                    {(() => {
+                      const classItem = upcomingClasses[0]
+                      const { date, time } = formatDateTime(classItem.start_time)
+                      return (
+                        <Card
+                          hover
+                          padding="none"
+                          className="cursor-pointer"
+                          onClick={() => router.push('/dancer/classes')}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
+                                  {classItem.title}
+                                </h3>
+                                <div className="flex items-center gap-3 text-xs text-charcoal-500 mt-1">
+                                  <span className="flex items-center gap-1">
+                                    <ClockIcon className="w-3.5 h-3.5" />
+                                    {date}, {time}
+                                  </span>
+                                  {(classItem.studios?.name || classItem.location) && (
+                                    <span className="flex items-center gap-1 truncate">
+                                      <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                      <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                    </span>
+                                  )}
                                 </div>
                               </div>
+                              <ChevronRightIcon className="w-4 h-4 text-charcoal-300 flex-shrink-0" />
                             </div>
-                            {/* Status badge */}
-                            <Badge
-                              variant={note.is_personal ? 'default' : 'success'}
-                              size="sm"
-                            >
-                              {note.is_personal ? 'Personal' : 'Shared'}
-                            </Badge>
-                          </div>
-
-                          {/* Title */}
-                          {note.title && (
-                            <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-0.5 md:mb-2">
-                              {note.title}
-                            </h3>
-                          )}
-
-                          {/* Content preview */}
-                          <p className="text-sm text-gray-600 line-clamp-2 leading-snug md:leading-relaxed">
-                            {getContentPreview(note.content, 120)}
-                          </p>
-
-                          {/* Class info */}
-                          {note.classes && (
-                            <p className="text-xs text-gray-400 mt-1 md:mt-2">
-                              {note.classes.title}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      )
+                    })()}
+                    {upcomingClasses.length > 1 && (
+                      <p className="text-xs text-charcoal-400 mt-2 text-center">
+                        +{upcomingClasses.length - 1} more upcoming
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <Card className="bg-gray-50 border-dashed">
-                    <CardContent className="p-6 text-center">
-                      <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <h3 className="font-medium text-gray-900 mb-1 text-base">No notes yet</h3>
-                      <p className="text-sm text-gray-500 mb-4">Start capturing your dance journey</p>
-                      <Button
-                        variant="outline"
-                        onClick={() => router.push('/dancer/notes')}
-                      >
-                        Add a note
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </section>
 
-              {/* Right Column - Upcoming */}
-              <section>
-                <div className="flex items-center justify-between mb-3 md:mb-4">
-                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>
-                    <span className="hidden md:inline">Upcoming Classes</span>
-                    <span className="md:hidden">Next Class</span>
-                  </h2>
-                  <button
-                    onClick={() => router.push('/dancer/classes')}
-                    className="text-sm text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
-                  >
-                    View all
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </button>
+                  {/* Desktop: list */}
+                  <div className="hidden md:flex md:flex-col md:gap-3">
+                    {upcomingClasses.slice(0, 5).map((classItem) => {
+                      const { date, time } = formatDateTime(classItem.start_time)
+                      return (
+                        <Card
+                          key={classItem.id}
+                          hover
+                          padding="none"
+                          className="cursor-pointer"
+                          onClick={() => router.push('/dancer/classes')}
+                        >
+                          <CardContent className="p-4">
+                            <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
+                              {classItem.title}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-charcoal-500 mt-1.5">
+                              <span className="flex items-center gap-1.5">
+                                <ClockIcon className="w-4 h-4" />
+                                {date}, {time}
+                              </span>
+                              {(classItem.studios?.name || classItem.location) && (
+                                <span className="flex items-center gap-1.5 truncate">
+                                  <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                                  <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
                 </div>
-
-                {upcomingClasses.length > 0 ? (
-                  <>
-                    {/* Mobile: show only next class */}
-                    <div className="md:hidden">
-                      {(() => {
-                        const classItem = upcomingClasses[0]
-                        const { date, time } = formatDateTime(classItem.start_time)
-                        return (
-                          <Card
-                            className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
-                            onClick={() => router.push('/dancer/classes')}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-gray-900 text-sm truncate">{classItem.title}</h3>
-                                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                                    <span className="flex items-center gap-1">
-                                      <ClockIcon className="w-3.5 h-3.5" />
-                                      {date}, {time}
-                                    </span>
-                                    {(classItem.studios?.name || classItem.location) && (
-                                      <span className="flex items-center gap-1 truncate">
-                                        <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                                        <span className="truncate">{classItem.studios?.name || classItem.location}</span>
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <ChevronRightIcon className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )
-                      })()}
-                      {upcomingClasses.length > 1 && (
-                        <p className="text-xs text-gray-400 mt-1.5 text-center">
-                          +{upcomingClasses.length - 1} more upcoming
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Desktop: full list */}
-                    <div className="hidden md:block space-y-3">
-                      {upcomingClasses.slice(0, 5).map((classItem) => {
-                        const { date, time } = formatDateTime(classItem.start_time)
-                        return (
-                          <Card
-                            key={classItem.id}
-                            className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
-                            onClick={() => router.push('/dancer/classes')}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-gray-900 text-base truncate">{classItem.title}</h3>
-                                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                                    <span className="flex items-center gap-1">
-                                      <ClockIcon className="w-4 h-4" />
-                                      {date}, {time}
-                                    </span>
-                                    {(classItem.studios?.name || classItem.location) && (
-                                      <span className="flex items-center gap-1 truncate">
-                                        <MapPinIcon className="w-4 h-4 flex-shrink-0" />
-                                        <span className="truncate">{classItem.studios?.name || classItem.location}</span>
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <ChevronRightIcon className="w-5 h-5 text-gray-300 flex-shrink-0" />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  <Card className="bg-gray-50 border-dashed">
-                    <CardContent className="p-6 text-center">
-                      <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <h3 className="font-medium text-gray-900 mb-1 text-base">No upcoming classes</h3>
-                      <p className="text-sm text-gray-500 mb-4">Browse available classes to get started</p>
-                      <Button
-                        variant="outline"
-                        onClick={() => router.push('/dancer/classes')}
-                      >
-                        Browse classes
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Quick Stats - hidden on mobile (shown inline in header) */}
-                <div className="hidden md:grid grid-cols-2 gap-3 mt-4">
-                  <Card
-                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
+              ) : (
+                <div className="border border-champagne-200 border-dashed rounded-lg p-8 text-center bg-champagne-100/50">
+                  <CalendarIcon className="w-10 h-10 text-charcoal-400 mx-auto mb-3" />
+                  <p className="text-charcoal-700 mb-4">
+                    No classes on the calendar yet.
+                  </p>
+                  <Button
+                    variant="outline"
                     onClick={() => router.push('/dancer/classes')}
                   >
-                    <CardContent className="p-4">
-                      <p className="text-3xl font-bold text-gray-900">{stats?.total_classes_attended || 0}</p>
-                      <p className="text-sm text-gray-500">Classes Attended</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className="hover:border-rose-300 hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => router.push('/dancer/notes?tab=instructor')}
-                  >
-                    <CardContent className="p-4">
-                      <p className="text-3xl font-bold text-gray-900">{stats?.recent_notes || 0}</p>
-                      <p className="text-sm text-gray-500">Instructor Notes</p>
-                    </CardContent>
-                  </Card>
+                    Browse classes
+                  </Button>
                 </div>
-              </section>
-            </div>
-          </>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* Quiet program-page footer — profile + review prompts as text links, no banners */}
+        {showFooterPrompts && (
+          <footer className="border-t border-champagne-200 pt-5 mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-8 gap-3 text-sm text-charcoal-500">
+            {showProfilePrompt && (
+              <Link
+                href="/dancer/profile"
+                className="hover:text-rose-800 transition-colors"
+              >
+                Add a profile photo
+                <span className="text-charcoal-300 mx-2">·</span>
+                <span className="text-charcoal-400">so Courtney recognizes you</span>
+              </Link>
+            )}
+            {showReviewPrompt && (
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="text-left hover:text-rose-800 transition-colors"
+              >
+                Leave a review
+                <span className="text-charcoal-300 mx-2">·</span>
+                <span className="text-charcoal-400">a few words about working with Courtney</span>
+              </button>
+            )}
+          </footer>
         )}
       </div>
 
-      {/* Review Modal */}
       <ReviewModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
         onReviewSubmitted={() => setHasReviews(true)}
       />
 
-      {/* Note View Modal */}
       <Modal
         isOpen={showViewModal}
         onClose={handleCloseViewModal}
-        title={viewingNote?.is_personal ? 'Personal Note' : 'Instructor Feedback'}
+        title={viewingNote?.is_personal ? 'Your note' : 'From Courtney'}
       >
         {viewingNote && (
-          <div className="space-y-4">
-            {viewingNote.title && (
-              <h3 className="text-2xl font-bold text-gray-900">
-                {viewingNote.title}
-              </h3>
-            )}
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{viewingNote.is_personal ? '📝' : '🎓'} {viewingNote.author_name}</span>
-            </div>
-
-            {viewingNote.tags && viewingNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 py-2">
-                {viewingNote.tags.map((tag, idx) => (
-                  <Badge key={idx} variant={getTagColor(tag)}>
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {viewingNote.classes && (
-              <div className="text-sm text-gray-500">
-                {viewingNote.classes.title}
-              </div>
-            )}
-
-            <div className="border-t border-gray-200 pt-4">
-              <div className="prose prose-sm max-w-none">
-                <div
-                  className="text-gray-700 text-base leading-relaxed"
-                  dangerouslySetInnerHTML={createSanitizedHtml(viewingNote.content)}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
-              <span>
-                {new Date(viewingNote.created_at).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </span>
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => router.push(`/dancer/notes?tab=${viewingNote.is_personal ? 'personal' : 'instructor'}`)}>
-                View All Notes
-              </Button>
-              <Button onClick={handleCloseViewModal}>
-                Close
-              </Button>
-            </div>
-          </div>
+          <NoteViewContent
+            note={viewingNote as any}
+            currentUserName={profile?.full_name || undefined}
+            footerSlot={
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(`/dancer/notes?tab=${viewingNote.is_personal ? 'personal' : 'instructor'}`)
+                  }
+                >
+                  View all notes
+                </Button>
+                <Button onClick={handleCloseViewModal}>Close</Button>
+              </>
+            }
+          />
         )}
       </Modal>
     </PortalLayout>

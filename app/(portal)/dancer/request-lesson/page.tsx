@@ -2,56 +2,80 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Input, Textarea } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
-import { LessonPackInfo } from '@/components/LessonPackInfo'
+import { LessonBalanceLedger } from '@/components/LessonBalanceLedger'
+import { RequestComposer } from '@/components/RequestComposer'
+import { InFlightSection, type LessonRequest } from '@/components/InFlightSection'
+import { DeleteRequestDialog } from '@/components/DeleteRequestDialog'
+import { RequestBanner, type BannerTone } from '@/components/RequestBanner'
+import { LessonPackHistory } from '@/components/LessonPackHistory'
+import { LessonPackSelector } from '@/components/LessonPackSelector'
 
-interface ScheduledClass {
+interface PurchaseRow {
   id: string
-  title: string
-  start_time: string
-  end_time: string
+  remaining_lessons: number
+  purchased_at: string
 }
 
-interface LessonRequest {
-  id: string
-  requested_focus: string | null
-  preferred_dates: string[] | null
-  additional_notes: string | null
-  status: string
-  instructor_response: string | null
-  instructor_id: string | null
-  scheduled_class_id: string | null
-  scheduled_class: ScheduledClass | null
-  created_at: string
-  updated_at: string
+interface BannerState {
+  tone: BannerTone
+  message: string
 }
 
-export default function RequestPrivateLessonPage() {
+const PACK_VALIDITY_MONTHS = 12
+
+function addMonths(iso: string, months: number): string {
+  const d = new Date(iso)
+  d.setMonth(d.getMonth() + months)
+  return d.toISOString()
+}
+
+function deriveEarliestExpiry(purchases: PurchaseRow[]): { date: string | null; count: number } {
+  const active = purchases
+    .filter((p) => p.remaining_lessons > 0)
+    .map((p) => ({ ...p, expiry: addMonths(p.purchased_at, PACK_VALIDITY_MONTHS) }))
+    .sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime())
+  if (active.length === 0) return { date: null, count: 0 }
+  return { date: active[0].expiry, count: active[0].remaining_lessons }
+}
+
+export default function PrivateLessonsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
-  const [formData, setFormData] = useState({
-    requested_focus: '',
-    preferred_dates: '',
-    additional_notes: ''
+
+  const [balance, setBalance] = useState(0)
+  const [earliestExpiry, setEarliestExpiry] = useState<{ date: string | null; count: number }>({
+    date: null,
+    count: 0
   })
+  const [loadingBalance, setLoadingBalance] = useState(true)
+
   const [submitting, setSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
-  const [paymentCanceled, setPaymentCanceled] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+
+  const [banner, setBanner] = useState<BannerState | null>(null)
+  const [showHistory, setShowHistory] = useState(false)
+  const [showPurchase, setShowPurchase] = useState(false)
+
+  const [instructorId, setInstructorId] = useState<string | null>(null)
+
   const hasFetched = useRef(false)
 
   useEffect(() => {
-    if (!loading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
-      router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
+    if (
+      !loading &&
+      profile &&
+      profile.role !== 'dancer' &&
+      profile.role !== 'admin' &&
+      profile.role !== 'guardian'
+    ) {
+      router.push(profile.role === 'instructor' ? '/instructor' : '/studio')
     }
   }, [loading, profile, router])
 
@@ -59,37 +83,23 @@ export default function RequestPrivateLessonPage() {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
       fetchRequests()
+      fetchBalance()
+      fetchInstructor()
     }
   }, [loading, user, profile])
 
   useEffect(() => {
-    // Check for payment success/canceled in URL (client-side only)
     if (typeof window === 'undefined') return
-
     const params = new URLSearchParams(window.location.search)
     const success = params.get('success')
     const canceled = params.get('canceled')
-
     if (success === 'true') {
-      setPaymentSuccess(true)
-      setPaymentCanceled(false)
-      setSuccessMessage('Payment successful! Your lesson pack has been added to your account. 🎉')
-      setTimeout(() => {
-        setPaymentSuccess(false)
-        setSuccessMessage('')
-        // Clear URL parameters
-        router.replace('/dancer/request-lesson')
-      }, 5000)
+      setBanner({ tone: 'gilt', message: 'Pack added. Refreshing your balance…' })
+      fetchBalance()
+      router.replace('/dancer/request-lesson')
     } else if (canceled === 'true') {
-      setPaymentCanceled(true)
-      setPaymentSuccess(false)
-      setSuccessMessage('Payment was canceled. You can try again anytime.')
-      setTimeout(() => {
-        setPaymentCanceled(false)
-        setSuccessMessage('')
-        // Clear URL parameters
-        router.replace('/dancer/request-lesson')
-      }, 5000)
+      setBanner({ tone: 'neutral', message: 'Payment canceled. Your packs are unchanged.' })
+      router.replace('/dancer/request-lesson')
     }
   }, [router])
 
@@ -100,305 +110,205 @@ export default function RequestPrivateLessonPage() {
         const data = await response.json()
         setRequests(data.requests)
       }
-    } catch (error) {
-      console.error('Error fetching requests:', error)
+    } catch (err) {
+      console.error('Error fetching requests:', err)
     } finally {
       setLoadingRequests(false)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.requested_focus.trim()) {
-      alert('Please describe what you would like to focus on')
-      return
+  const fetchBalance = async () => {
+    try {
+      const response = await fetch('/api/dancer/lesson-packs/history')
+      if (response.ok) {
+        const data = await response.json()
+        setBalance(data.totalRemaining || 0)
+        setEarliestExpiry(deriveEarliestExpiry(data.purchases || []))
+      }
+    } catch (err) {
+      console.error('Error fetching balance:', err)
+    } finally {
+      setLoadingBalance(false)
     }
+  }
 
+  const fetchInstructor = async () => {
+    try {
+      const response = await fetch('/api/dancer/instructors')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.instructors && data.instructors.length > 0) {
+          setInstructorId(data.instructors[0].id)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching instructors:', err)
+    }
+  }
+
+  const handleSubmit = async (data: {
+    focus: string
+    preferredDates: string[]
+    additionalNotes: string | null
+  }) => {
     setSubmitting(true)
     try {
-      const preferredDatesArray = formData.preferred_dates
-        .split(',')
-        .map((d) => d.trim())
-        .filter((d) => d.length > 0)
-
-      const requestResponse = await fetch('/api/dancer/lesson-requests', {
+      const response = await fetch('/api/dancer/lesson-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requested_focus: formData.requested_focus.trim(),
-          preferred_dates: preferredDatesArray,
-          additional_notes: formData.additional_notes.trim() || null
+          requested_focus: data.focus,
+          preferred_dates: data.preferredDates,
+          additional_notes: data.additionalNotes,
+          instructor_id: instructorId
         })
       })
-
-      if (!requestResponse.ok) {
-        const error = await requestResponse.json()
-        alert(error.error || 'Failed to submit request')
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        setBanner({
+          tone: 'error',
+          message: err.error || "Couldn't send. Try again, or check your connection."
+        })
         return
       }
-
-      setSuccessMessage('Your private lesson request has been submitted! 🎉')
-      setFormData({
-        requested_focus: '',
-        preferred_dates: '',
-        additional_notes: ''
-      })
+      setBanner({ tone: 'success', message: 'Sent. Courtney will get back to you.' })
       await fetchRequests()
-      
-      setTimeout(() => setSuccessMessage(''), 5000)
-    } catch (error) {
-      console.error('Error submitting request:', error)
-      alert('Failed to submit request')
+    } catch (err) {
+      console.error('Error submitting request:', err)
+      setBanner({
+        tone: 'error',
+        message: "Couldn't send. Try again, or check your connection."
+      })
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleDelete = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this private lesson request?')) {
-      return
-    }
-
-    setDeletingId(requestId)
+  const handleDeleteConfirm = async () => {
+    if (!pendingDelete) return
+    const id = pendingDelete
+    setDeletingId(id)
     try {
-      const response = await fetch(`/api/dancer/lesson-requests?id=${requestId}`, {
+      const response = await fetch(`/api/dancer/lesson-requests?id=${id}`, {
         method: 'DELETE'
       })
-
       if (response.ok) {
-        setSuccessMessage('Private lesson request deleted successfully')
+        setBanner({ tone: 'success', message: 'Request deleted.' })
         await fetchRequests()
-        setTimeout(() => setSuccessMessage(''), 5000)
+        setPendingDelete(null)
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to delete request')
+        const err = await response.json().catch(() => ({}))
+        setBanner({
+          tone: 'error',
+          message: err.error || "Couldn't delete that request."
+        })
       }
-    } catch (error) {
-      console.error('Error deleting request:', error)
-      alert('Failed to delete request')
+    } catch (err) {
+      console.error('Error deleting request:', err)
+      setBanner({ tone: 'error', message: "Couldn't delete that request." })
     } finally {
       setDeletingId(null)
     }
   }
 
+  const handleAddPack = () => {
+    setShowPurchase(true)
+  }
+
+  const handlePackPurchased = async () => {
+    setShowPurchase(false)
+    setBanner({ tone: 'gilt', message: 'Pack added.' })
+    await fetchBalance()
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <Spinner size="lg" color="rose" />
       </div>
     )
   }
 
-  if (!user || !profile) {
-    return null
-  }
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, any> = {
-      pending: 'warning',
-      approved: 'success',
-      scheduled: 'primary',
-      declined: 'danger'
-    }
-    return colors[status] || 'default'
-  }
-
-  const getStatusIcon = (status: string) => {
-    const icons: Record<string, string> = {
-      pending: '⏳',
-      approved: '✅',
-      scheduled: '📅',
-      declined: '❌'
-    }
-    return icons[status] || '📝'
-  }
+  if (!user || !profile) return null
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Private Lesson Requests 💫
-        </h1>
-        <p className="text-gray-600">
-          Request one-on-one time with your instructor to focus on specific skills
-        </p>
-      </div>
-
-      {successMessage && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          paymentSuccess
-            ? 'bg-green-50 border border-green-200 text-green-800'
-            : paymentCanceled
-            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
-            : 'bg-green-50 border border-green-200 text-green-800'
-        }`}>
-          {successMessage}
-        </div>
-      )}
-
-      <Card className="mb-8">
-        <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Request a Private Lesson</CardTitle>
-        <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <LessonPackInfo />
-
-            <Textarea
-              label="What would you like to focus on? *"
-              placeholder="Describe the skills, techniques, or areas you'd like to work on..."
-              rows={4}
-              value={formData.requested_focus}
-              onChange={(e) =>
-                setFormData({ ...formData, requested_focus: e.target.value })
-              }
-              required
-            />
-            <Input
-              label="Preferred Dates"
-              placeholder="e.g., Next Tuesday, December 20th, Weekday afternoons"
-              value={formData.preferred_dates}
-              onChange={(e) =>
-                setFormData({ ...formData, preferred_dates: e.target.value })
-              }
-              helperText="Separate multiple dates with commas"
-            />
-            <Textarea
-              label="Additional Notes"
-              placeholder="Any other information that would be helpful..."
-              rows={3}
-              value={formData.additional_notes}
-              onChange={(e) =>
-                setFormData({ ...formData, additional_notes: e.target.value })
-              }
-            />
-            <Button type="submit" variant="primary" disabled={submitting}>
-              {submitting ? 'Submitting...' : 'Submit Request'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Your Requests</h2>
-      </div>
-
-      {loadingRequests ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : requests.length > 0 ? (
-        <div className="space-y-4">
-          {requests.map((request) => (
-            <Card key={request.id}>
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{getStatusIcon(request.status)}</span>
-                    <Badge variant={getStatusColor(request.status)}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-500">
-                      {new Date(request.created_at).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
-                    <button
-                      onClick={() => handleDelete(request.id)}
-                      disabled={deletingId === request.id}
-                      className="text-sm text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Delete request"
-                    >
-                      {deletingId === request.id ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Focus Areas:</h4>
-                    <p className="text-gray-700">{request.requested_focus}</p>
-                  </div>
-
-                  {request.preferred_dates && request.preferred_dates.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-1">Preferred Dates:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {request.preferred_dates.map((date, idx) => (
-                          <Badge key={idx} variant="default" size="sm">
-                            {date}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {request.additional_notes && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-1">Additional Notes:</h4>
-                      <p className="text-gray-700">{request.additional_notes}</p>
-                    </div>
-                  )}
-
-                  {request.scheduled_class && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 bg-green-50 -mx-4 md:-mx-6 p-4 md:p-6 rounded-b-lg">
-                      <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
-                        <span>📅</span>
-                        Scheduled Lesson:
-                      </h4>
-                      <p className="text-green-800 font-medium">{request.scheduled_class.title}</p>
-                      <p className="text-green-700">
-                        {new Date(request.scheduled_class.start_time).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                        {' at '}
-                        {new Date(request.scheduled_class.start_time).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          timeZone: 'America/New_York'
-                        })}
-                        {' ET'}
-                      </p>
-                    </div>
-                  )}
-
-                  {request.instructor_response && !request.scheduled_class && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 bg-rose-50 -mx-4 md:-mx-6 -mb-4 md:-mb-6 mt-4 p-4 md:p-6 rounded-b-lg">
-                      <h4 className="font-medium text-rose-900 mb-2 flex items-center gap-2">
-                        <span>💬</span>
-                        Instructor Response:
-                      </h4>
-                      <p className="text-rose-800">{request.instructor_response}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-8 md:p-12 text-center">
-            <div className="text-6xl mb-4">🌟</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No Requests Yet
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Ready to take your dancing to the next level? Request a private lesson
-              to get personalized attention and focus on your goals!
+      <header className="mb-8 lg:mb-12">
+        <div className="lg:flex lg:items-end lg:justify-between lg:gap-10">
+          <div className="lg:flex-1 lg:max-w-xl">
+            <h1 className="font-serif text-3xl md:text-4xl text-charcoal-950 tracking-tight">
+              Private Lessons
+            </h1>
+            <p className="mt-2 text-base text-charcoal-500 leading-relaxed">
+              Tell Courtney what you want to work on. She'll get back to you.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="mt-6 lg:mt-0 lg:shrink-0">
+            <LessonBalanceLedger
+              totalRemaining={balance}
+              earliestExpiryDate={earliestExpiry.date}
+              earliestExpiryCount={earliestExpiry.count}
+              loading={loadingBalance}
+              onShowHistory={() => setShowHistory(true)}
+              onAddPack={handleAddPack}
+            />
+          </div>
+        </div>
+      </header>
+
+      {banner && (
+        <div className="mb-6">
+          <RequestBanner
+            tone={banner.tone}
+            message={banner.message}
+            onDismiss={() => setBanner(null)}
+          />
+        </div>
       )}
+
+      {showPurchase ? (
+        <section aria-label="Buy a lesson pack" className="space-y-6">
+          <button
+            type="button"
+            onClick={() => setShowPurchase(false)}
+            className="text-sm text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
+          >
+            ← back to requests
+          </button>
+          <LessonPackSelector
+            onSelectPack={handlePackPurchased}
+            instructorId={instructorId}
+          />
+        </section>
+      ) : (
+        <>
+          <div className="mb-12 md:mb-16">
+            <RequestComposer
+              balance={balance}
+              submitting={submitting}
+              onSubmit={handleSubmit}
+              onAddPack={handleAddPack}
+            />
+          </div>
+          <InFlightSection
+            requests={requests}
+            loading={loadingRequests}
+            onRequestDelete={(id) => setPendingDelete(id)}
+            deletingId={deletingId}
+          />
+        </>
+      )}
+
+      <DeleteRequestDialog
+        isOpen={!!pendingDelete}
+        isDeleting={!!deletingId}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => {
+          if (!deletingId) setPendingDelete(null)
+        }}
+      />
+
+      <LessonPackHistory isOpen={showHistory} onClose={() => setShowHistory(false)} />
     </PortalLayout>
   )
 }

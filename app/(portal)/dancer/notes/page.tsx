@@ -13,8 +13,7 @@ import { PlusIcon } from '@heroicons/react/24/outline'
 import { Note } from '@/lib/utils/date-helpers'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { createSanitizedHtml } from '@/lib/utils/sanitize'
+import { NoteViewContent } from '@/components/notes/NoteViewContent'
 
 interface ClassOption {
   id: string
@@ -194,18 +193,6 @@ function DancerNotesContent() {
     setViewingNote(null)
   }
 
-  const getTagColor = (tag: string) => {
-    const colors: Record<string, any> = {
-      technique: 'primary',
-      performance: 'secondary',
-      improvement: 'success',
-      strength: 'warning',
-      flexibility: 'default',
-      musicality: 'primary',
-      choreography: 'secondary'
-    }
-    return colors[tag.toLowerCase()] || 'default'
-  }
 
   const handleCloseFocusMode = () => {
     setFocusModeOpen(false)
@@ -289,10 +276,10 @@ function DancerNotesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4 italic">Loading…</p>
         </div>
       </div>
     )
@@ -302,68 +289,87 @@ function DancerNotesContent() {
     return null
   }
 
+  const tabOptions: { id: TabType; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'instructor', label: 'Instructor' },
+    { id: 'personal', label: 'Personal' }
+  ]
+
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Notes
-          </h1>
-          <p className="text-gray-600">
-            Track your progress with instructor feedback and personal reflections
-          </p>
-        </div>
-        <Button onClick={() => handleOpenFocusMode()} aria-label="Add Note">
-          <PlusIcon className="w-5 h-5" />
-        </Button>
-      </div>
+      <div className="max-w-3xl">
+        <header className="pt-4 pb-10 flex items-end justify-between gap-6">
+          <div>
+            <p className="text-[0.7rem] uppercase tracking-[0.24em] text-charcoal-400 mb-3">
+              Program · Notebook
+            </p>
+            <h1 className="font-serif text-charcoal-950 text-5xl md:text-6xl leading-[0.95] tracking-[-0.03em]">
+              Notes
+            </h1>
+            <p className="mt-4 font-serif italic text-charcoal-500 text-lg max-w-prose tracking-[-0.005em]">
+              Feedback from Courtney, alongside what you keep for yourself between lessons.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleOpenFocusMode()}
+            className="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ballet-pink-700 hover:text-ballet-pink-800 pb-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-4 focus-visible:ring-offset-champagne-50 rounded-sm"
+          >
+            <PlusIcon className="w-4 h-4" aria-hidden="true" />
+            Write
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenFocusMode()}
+            aria-label="Write a new note"
+            className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-full bg-ballet-pink-600 text-champagne-50 hover:bg-ballet-pink-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-champagne-50"
+          >
+            <PlusIcon className="w-5 h-5" />
+          </button>
+        </header>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-2 sm:space-x-4 md:space-x-8">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`
-                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
-                ${activeTab === 'all'
-                  ? 'border-rose-500 text-rose-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              <span className="sm:hidden">All ({notes.length})</span>
-              <span className="hidden sm:inline">All Notes ({notes.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('instructor')}
-              className={`
-                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
-                ${activeTab === 'instructor'
-                  ? 'border-rose-500 text-rose-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              <span className="sm:hidden">Instructor ({instructorNotesCount})</span>
-              <span className="hidden sm:inline">Instructor Feedback ({instructorNotesCount})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('personal')}
-              className={`
-                py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors
-                ${activeTab === 'personal'
-                  ? 'border-rose-500 text-rose-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              <span className="sm:hidden">Personal ({personalNotesCount})</span>
-              <span className="hidden sm:inline">Personal Notes ({personalNotesCount})</span>
-            </button>
-          </nav>
-        </div>
-      </div>
+        <nav
+          aria-label="Filter notes by source"
+          className="flex items-center gap-x-6 text-sm border-b border-champagne-200 pb-3 mb-8"
+        >
+          {tabOptions.map((tab) => {
+            const active = activeTab === tab.id
+            const count =
+              tab.id === 'all'
+                ? notes.length
+                : tab.id === 'instructor'
+                ? instructorNotesCount
+                : personalNotesCount
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-pressed={active}
+                className={`flex items-baseline gap-2 pb-1 -mb-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-4 focus-visible:ring-offset-champagne-50 rounded-sm ${
+                  active
+                    ? 'text-ballet-pink-700'
+                    : 'text-charcoal-500 hover:text-charcoal-900'
+                }`}
+              >
+                <span
+                  className={`uppercase tracking-[0.14em] text-xs ${
+                    active ? 'font-medium' : ''
+                  }`}
+                >
+                  {tab.label}
+                </span>
+                <span
+                  className={`text-[0.7rem] tabular-nums ${
+                    active ? 'text-ballet-pink-600' : 'text-charcoal-300'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </nav>
 
       {loadingNotes ? (
         <div className="py-6">
@@ -407,84 +413,19 @@ function DancerNotesContent() {
 
         </>
       )}
+      </div>
 
-      {/* Read-only modal for instructor notes */}
       <Modal
         isOpen={showViewModal}
         onClose={handleCloseViewModal}
-        title="Instructor Feedback"
+        title={viewingNote?.is_personal ? 'Your note' : 'From Courtney'}
       >
         {viewingNote && (
-          <div className="space-y-4">
-            {viewingNote.title && (
-              <h3 className="text-2xl font-bold text-gray-900">
-                {viewingNote.title}
-              </h3>
-            )}
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{(viewingNote as any).author_name || 'Instructor'}</span>
-              {((viewingNote as any).classes || (viewingNote as any).personal_classes) && (
-                <>
-                  <span>•</span>
-                  <span>
-                    {(viewingNote as any).classes?.title || (viewingNote as any).personal_classes?.title}
-                  </span>
-                  {((viewingNote as any).classes?.start_time || (viewingNote as any).personal_classes?.start_time) && (
-                    <>
-                      <span>•</span>
-                      <span>
-                        {new Date(
-                          (viewingNote as any).classes?.start_time || (viewingNote as any).personal_classes?.start_time
-                        ).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <div className="prose prose-sm max-w-none">
-                <div
-                  className="text-gray-700"
-                  dangerouslySetInnerHTML={createSanitizedHtml(viewingNote.content)}
-                />
-              </div>
-            </div>
-
-            {viewingNote.tags && viewingNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
-                {viewingNote.tags.map((tag, idx) => (
-                  <Badge key={idx} variant={getTagColor(tag)}>
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 text-sm text-gray-500">
-              <span>
-                Created: {new Date(viewingNote.created_at).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit'
-                })}
-              </span>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleCloseViewModal}>
-                Close
-              </Button>
-            </div>
-          </div>
+          <NoteViewContent
+            note={viewingNote}
+            currentUserName={currentUserName}
+            footerSlot={<Button onClick={handleCloseViewModal}>Close</Button>}
+          />
         )}
       </Modal>
     </PortalLayout>
@@ -494,7 +435,7 @@ function DancerNotesContent() {
 export default function DancerNotesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     }>

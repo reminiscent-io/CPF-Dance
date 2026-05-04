@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 
 export interface ModalProps {
   isOpen: boolean
@@ -17,6 +18,9 @@ export function Modal({
   title,
   size = 'md'
 }: ModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(containerRef, isOpen)
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -51,8 +55,9 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm animate-fadeIn"
       style={{
+        backgroundColor: 'rgba(10, 10, 10, 0.5)',
         paddingTop: 'max(env(safe-area-inset-top), 12px)',
         paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 56px), 68px)', // Account for bottom nav (40px) + safe area + padding
         paddingLeft: 'max(env(safe-area-inset-left), 12px)',
@@ -64,22 +69,23 @@ export function Modal({
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
+        ref={containerRef}
         className={`
-          bg-white rounded-lg shadow-xl w-full ${sizes[size]}
-          transform transition-all duration-200 animate-slideUp
+          bg-champagne-50 rounded-lg shadow-soft-lg w-full ${sizes[size]}
+          animate-slideUp
           max-h-full flex flex-col
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
-            <h2 id="modal-title" className="text-xl sm:text-2xl font-semibold text-gray-900">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-champagne-200 flex-shrink-0">
+            <h2 id="modal-title" className="text-xl sm:text-2xl font-semibold text-charcoal-950">
               {title}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors ml-4"
+              className="text-charcoal-400 hover:text-charcoal-700 transition-colors ml-4"
               aria-label="Close modal"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,7 +109,7 @@ export interface ModalFooterProps {
 
 export function ModalFooter({ children, className = '' }: ModalFooterProps) {
   return (
-    <div className={`flex items-center justify-end gap-3 pt-4 border-t border-gray-200 ${className}`}>
+    <div className={`flex items-center justify-end gap-3 pt-4 border-t border-champagne-200 ${className}`}>
       {children}
     </div>
   )

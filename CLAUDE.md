@@ -8,6 +8,15 @@ Dance teaching schedule management platform. Roles: Instructor, Dancer, Guardian
 
 **Key Integrations:** Stripe (payments/webhooks), TipTap (rich text editor), OpenAI (voice-to-notes, note formatting), Google Places API, Gmail (via Replit connectors), Recharts (dashboard charts)
 
+## Design Context
+
+Two files at the project root carry the design system. Read them before any UI work.
+
+- **[PRODUCT.md](PRODUCT.md)** — strategic. Register, users (Courtney as sole instructor; dancers 15-25 as the volume audience), product purpose, brand personality (sophisticated, warm, precise), anti-references (no SaaS dashboard, no heavy promo site, no low-end studio cliché), design principles.
+- **[DESIGN.md](DESIGN.md)** + **[DESIGN.json](DESIGN.json)** — visual. North Star is *The Ballet Noir Program*. Palette: Stage Rose accent, Curtain Gilt premium, four-tone Champagne paper, Charcoal ink. Typography: Cormorant Garamond display + Manrope body. Named rules (One Ribbon, No-White, No-Black, No Side-Stripe, Serif-For-Headings, Tight-Tracking, Flat-By-Default) are binding.
+
+When picking colors, fonts, spacing, or component patterns, source from DESIGN.md. When making product or copy decisions, source from PRODUCT.md. Do not introduce off-system colors or fonts without naming a new role.
+
 ## Architecture
 
 ```

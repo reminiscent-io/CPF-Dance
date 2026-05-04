@@ -16,29 +16,34 @@ interface StripePaymentDialogProps {
   isOpen: boolean
   onClose: () => void
   lessonPack: LessonPack | null
+  instructorId: string | null
   onSuccess?: () => void
 }
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price)
 
 export function StripePaymentDialog({
   isOpen,
   onClose,
   lessonPack,
-  onSuccess
+  instructorId,
+  onSuccess,
 }: StripePaymentDialogProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price)
-  }
-
   const handleCheckout = async () => {
     if (!lessonPack) return
+    if (!instructorId) {
+      setError('Pick an instructor before purchasing a pack.')
+      return
+    }
 
     setProcessing(true)
     setError('')
@@ -60,7 +65,6 @@ export function StripePaymentDialog({
       const { url } = await response.json()
 
       if (url) {
-        // Redirect to Stripe Checkout
         window.location.href = url
       } else {
         throw new Error('No checkout URL received')
@@ -74,51 +78,54 @@ export function StripePaymentDialog({
 
   if (!lessonPack) return null
 
+  const lessons = lessonPack.lesson_count
+  const perLesson = lessonPack.price / lessons
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Complete Your Purchase" size="md">
-      <div className="space-y-6">
-        <div className="bg-rose-50 border border-rose-200 rounded-lg p-6">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {lessonPack.lesson_count} Private Lessons
-            </h3>
-            <p className="text-4xl font-bold text-rose-600 mb-2">
-              {formatPrice(lessonPack.price)}
-            </p>
-            <p className="text-sm text-gray-600">
-              {formatPrice(lessonPack.price / lessonPack.lesson_count)} per lesson
-            </p>
-          </div>
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirm purchase" size="md">
+      <div className="space-y-7">
+        <header className="text-center border-b border-champagne-200 pb-6">
+          <p className="text-xs uppercase tracking-[0.18em] text-charcoal-500">
+            {lessons === 1 ? 'private lesson' : 'private lessons'}
+          </p>
+          <p className="mt-3 font-serif text-6xl text-charcoal-950 leading-none tracking-[-0.03em] tabular-nums">
+            {lessons}
+          </p>
+          <p className="mt-5 font-serif text-3xl text-charcoal-950 tracking-tight tabular-nums">
+            {formatPrice(lessonPack.price)}
+          </p>
+          <p className="mt-1 text-sm text-charcoal-500 tabular-nums">
+            {formatPrice(perLesson)} each
+          </p>
+        </header>
+
+        <div className="text-sm text-charcoal-500 leading-relaxed text-center max-w-sm mx-auto space-y-2">
+          <p>Stripe handles the card details, so we never see them.</p>
+          <p>Lessons stay valid for 12 months and pull in the order you bought them.</p>
         </div>
 
+        {!instructorId && (
+          <div
+            role="alert"
+            className="bg-champagne-100 px-4 py-3 text-sm text-charcoal-900"
+            style={{ borderLeft: '1px solid var(--color-rose-600)' }}
+          >
+            Pick an instructor before purchasing a pack.
+          </div>
+        )}
+
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+          <div
+            role="alert"
+            className="bg-champagne-100 px-4 py-3 text-sm text-charcoal-900"
+            style={{ borderLeft: '1px solid var(--color-rose-600)' }}
+          >
             {error}
           </div>
         )}
 
-        <div className="space-y-3 text-sm text-gray-600">
-          <div className="flex items-start gap-2">
-            <span className="text-green-600">✓</span>
-            <span>Secure payment processing through Stripe</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-green-600">✓</span>
-            <span>Use lessons anytime with your selected instructor</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-green-600">✓</span>
-            <span>Track your remaining lessons in the dashboard</span>
-          </div>
-        </div>
-
         <ModalFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={processing}
-          >
+          <Button variant="outline" onClick={onClose} disabled={processing}>
             Cancel
           </Button>
           <Button
@@ -130,10 +137,10 @@ export function StripePaymentDialog({
             {processing ? (
               <span className="flex items-center gap-2">
                 <Spinner size="sm" />
-                Processing...
+                Processing
               </span>
             ) : (
-              'Proceed to Payment'
+              'Continue to checkout'
             )}
           </Button>
         </ModalFooter>

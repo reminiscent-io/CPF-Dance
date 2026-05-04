@@ -4,8 +4,6 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 
 interface Payment {
@@ -58,7 +56,6 @@ interface LessonPackUsage {
   } | null
 }
 
-// Unified transaction type for display
 interface Transaction {
   id: string
   type: 'payment' | 'pack_purchase' | 'lesson_used'
@@ -70,6 +67,21 @@ interface Transaction {
   receipt_url?: string | null
   remaining?: number
 }
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price)
+
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 
 export default function DancerPaymentsPage() {
   const { user, profile, loading } = useUser()
@@ -111,114 +123,229 @@ export default function DancerPaymentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="mt-4 text-sm text-charcoal-500 tracking-wide">Loading</p>
         </div>
       </div>
     )
   }
 
-  if (!user || !profile) {
-    return null
-  }
+  if (!user || !profile) return null
 
-  // Build unified transaction list
   const transactions: Transaction[] = [
-    // Regular payments
     ...payments.map((p): Transaction => ({
       id: `payment-${p.id}`,
       type: 'payment',
       date: p.transaction_date,
-      title: p.classes?.title || 'Class Payment',
+      title: p.classes?.title || 'Class payment',
       amount: parseFloat(p.amount.toString()),
       status: p.payment_status,
-      receipt_url: p.receipt_url
+      receipt_url: p.receipt_url,
     })),
-    // Lesson pack purchases
     ...lessonPackPurchases.map((p): Transaction => ({
       id: `pack-${p.id}`,
       type: 'pack_purchase',
       date: p.purchased_at,
-      title: p.lesson_packs?.name || 'Lesson Pack',
-      subtitle: `${p.lesson_packs?.lesson_count || 0} lessons`,
+      title: p.lesson_packs?.name || `${p.lesson_packs?.lesson_count ?? '?'}-pack`,
+      subtitle: `${p.lesson_packs?.lesson_count ?? '?'} ${p.lesson_packs?.lesson_count === 1 ? 'lesson' : 'lessons'}`,
       amount: p.lesson_packs?.price ? parseFloat(p.lesson_packs.price.toString()) : undefined,
-      remaining: p.remaining_lessons
+      remaining: p.remaining_lessons,
     })),
-    // Lesson usage
     ...lessonPackUsage.map((u): Transaction => ({
       id: `usage-${u.id}`,
       type: 'lesson_used',
       date: u.used_at,
-      title: 'Private Lesson',
-      subtitle: u.private_lesson_requests?.requested_focus || u.lesson_pack_purchases?.lesson_packs?.name || 'Lesson Pack'
-    }))
+      title: u.private_lesson_requests?.requested_focus || 'Private lesson',
+      subtitle: u.lesson_pack_purchases?.lesson_packs?.name,
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  // Separate pending payments
   const pendingPayments = payments.filter((p) => p.payment_status === 'pending')
-
-  // Active lesson packs (with remaining lessons)
   const activePacks = lessonPackPurchases.filter((p) => p.remaining_lessons > 0)
+  const historyTransactions = transactions.filter(
+    (t) => !(t.type === 'payment' && t.status === 'pending')
+  )
+  const hasData = transactions.length > 0 || activePacks.length > 0
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
+  return (
+    <PortalLayout profile={profile}>
+      <header className="border-b border-champagne-200 pb-5 mb-10 lg:mb-12">
+        <p className="text-xs uppercase tracking-[0.18em] text-charcoal-500">Account</p>
+        <h1 className="mt-1.5 font-serif text-3xl md:text-4xl text-charcoal-950 tracking-[-0.03em]">
+          Payments
+        </h1>
+      </header>
 
-  const TransactionRow = ({ transaction }: { transaction: Transaction }) => (
-    <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-          transaction.type === 'lesson_used'
-            ? 'bg-emerald-50 text-emerald-600'
-            : transaction.type === 'pack_purchase'
-            ? 'bg-violet-50 text-violet-600'
-            : 'bg-gray-100 text-gray-600'
-        }`}>
-          {transaction.type === 'lesson_used' ? (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : transaction.type === 'pack_purchase' ? (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-            </svg>
-          )}
+      {loadingData ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
         </div>
-        <div className="min-w-0">
-          <p className="font-medium text-gray-900 truncate">{transaction.title}</p>
-          <p className="text-sm text-gray-500">
-            {formatDate(transaction.date)}
-            {transaction.subtitle && ` · ${transaction.subtitle}`}
+      ) : !hasData ? (
+        <div className="border-t border-champagne-200 pt-16 lg:pt-20 text-center">
+          <p className="font-serif text-2xl md:text-3xl text-charcoal-950 tracking-tight">
+            Nothing here yet.
+          </p>
+          <p className="mt-3 text-sm text-charcoal-500 leading-relaxed max-w-sm mx-auto">
+            Once you book a lesson or buy a pack, the trail starts here.
           </p>
         </div>
+      ) : (
+        <div className="space-y-12 lg:space-y-16">
+          {activePacks.length > 0 && <ActivePacksSection packs={activePacks} />}
+
+          {pendingPayments.length > 0 && (
+            <PaymentsSection
+              id="outstanding-heading"
+              title="Outstanding"
+              eyebrow={`${pendingPayments.length} ${pendingPayments.length === 1 ? 'item' : 'items'}`}
+            >
+              {pendingPayments.map((payment) => (
+                <TransactionRow
+                  key={payment.id}
+                  transaction={{
+                    id: `payment-${payment.id}`,
+                    type: 'payment',
+                    date: payment.transaction_date,
+                    title: payment.classes?.title || 'Class payment',
+                    amount: parseFloat(payment.amount.toString()),
+                    status: payment.payment_status,
+                    receipt_url: payment.receipt_url,
+                  }}
+                />
+              ))}
+            </PaymentsSection>
+          )}
+
+          {historyTransactions.length > 0 && (
+            <PaymentsSection id="history-heading" title="History">
+              {historyTransactions.map((transaction) => (
+                <TransactionRow key={transaction.id} transaction={transaction} />
+              ))}
+            </PaymentsSection>
+          )}
+        </div>
+      )}
+    </PortalLayout>
+  )
+}
+
+function ActivePacksSection({ packs }: { packs: LessonPackPurchase[] }) {
+  return (
+    <section aria-labelledby="active-packs-heading">
+      <div className="flex items-end justify-between border-b border-champagne-200 pb-3 mb-5">
+        <h2
+          id="active-packs-heading"
+          className="font-serif text-2xl text-charcoal-950 tracking-tight"
+        >
+          Active packs
+        </h2>
+        <span className="text-xs uppercase tracking-[0.18em] text-charcoal-500 tabular-nums">
+          {packs.length} {packs.length === 1 ? 'pack' : 'packs'}
+        </span>
       </div>
-      <div className="flex items-center gap-3 ml-4">
-        {transaction.type === 'lesson_used' ? (
-          <span className="text-emerald-600 text-sm font-medium">Lesson used</span>
+      <ul className="divide-y divide-champagne-200">
+        {packs.map((pack) => {
+          const lessonCount = pack.lesson_packs?.lesson_count
+          const name =
+            pack.lesson_packs?.name ||
+            (lessonCount !== undefined ? `${lessonCount}-pack` : 'Lesson pack')
+          return (
+            <li
+              key={pack.id}
+              className="py-4 flex items-baseline justify-between gap-6"
+            >
+              <div className="min-w-0">
+                <p className="text-base text-charcoal-900">{name}</p>
+                <p className="mt-1 text-sm text-charcoal-500 tabular-nums">
+                  {lessonCount !== undefined &&
+                    `${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`}
+                  {pack.expires_at && (
+                    <>
+                      {lessonCount !== undefined && <span> · </span>}
+                      expires {formatDate(pack.expires_at)}
+                    </>
+                  )}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm text-charcoal-700 tabular-nums">
+                {pack.remaining_lessons}
+                {lessonCount !== undefined && (
+                  <span className="text-charcoal-300"> / {lessonCount}</span>
+                )}{' '}
+                left
+              </p>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
+function PaymentsSection({
+  id,
+  title,
+  eyebrow,
+  children,
+}: {
+  id: string
+  title: string
+  eyebrow?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section aria-labelledby={id}>
+      <div className="flex items-end justify-between border-b border-champagne-200 pb-3 mb-5">
+        <h2
+          id={id}
+          className="font-serif text-2xl text-charcoal-950 tracking-tight"
+        >
+          {title}
+        </h2>
+        {eyebrow && (
+          <span className="text-xs uppercase tracking-[0.18em] text-charcoal-500 tabular-nums">
+            {eyebrow}
+          </span>
+        )}
+      </div>
+      <ul className="divide-y divide-champagne-200">{children}</ul>
+    </section>
+  )
+}
+
+function TransactionRow({ transaction }: { transaction: Transaction }) {
+  const isUsed = transaction.type === 'lesson_used'
+  const isPending = transaction.type === 'payment' && transaction.status === 'pending'
+  const isPaid = transaction.type === 'payment' && transaction.status === 'confirmed'
+
+  return (
+    <li className="py-4 flex items-baseline justify-between gap-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-base text-charcoal-900 truncate">{transaction.title}</p>
+        <p className="mt-1 text-sm text-charcoal-500 tabular-nums">
+          {formatDate(transaction.date)}
+          {transaction.subtitle && <span> · {transaction.subtitle}</span>}
+        </p>
+      </div>
+      <div className="shrink-0 flex items-baseline gap-4 text-sm tabular-nums">
+        {isUsed ? (
+          <span className="text-charcoal-500 tracking-wide">lesson drawn</span>
         ) : (
           <>
             {transaction.amount !== undefined && (
-              <span className="text-gray-700 font-medium">
-                ${transaction.amount.toFixed(2)}
+              <span className="text-charcoal-900">{formatPrice(transaction.amount)}</span>
+            )}
+            {isPending && (
+              <span className="text-rose-700 text-xs uppercase tracking-[0.18em]">
+                outstanding
               </span>
             )}
-            {transaction.status && (
-              <Badge
-                variant={transaction.status === 'confirmed' ? 'success' : transaction.status === 'pending' ? 'warning' : 'default'}
-                className="text-xs"
-              >
-                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-              </Badge>
+            {isPaid && (
+              <span className="text-gold-700 text-xs uppercase tracking-[0.18em]">
+                paid
+              </span>
             )}
           </>
         )}
@@ -227,117 +354,12 @@ export default function DancerPaymentsPage() {
             href={transaction.receipt_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-rose-600 hover:text-rose-700 text-sm"
+            className="text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
           >
-            Receipt
+            receipt
           </a>
         )}
       </div>
-    </div>
-  )
-
-  const hasData = transactions.length > 0 || activePacks.length > 0
-
-  return (
-    <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
-        <p className="text-gray-600">View your payment history and lesson packs</p>
-      </div>
-
-      {loadingData ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : !hasData ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No payments yet</h3>
-            <p className="text-gray-500">Your payment history will appear here</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {/* Active Lesson Packs */}
-          {activePacks.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Lesson Packs</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {activePacks.map((pack) => (
-                    <div
-                      key={pack.id}
-                      className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">{pack.lesson_packs?.name}</h3>
-                        <Badge variant="default" className="bg-violet-100 text-violet-700">
-                          {pack.remaining_lessons} left
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {pack.lesson_packs?.lesson_count} lesson pack
-                        {pack.expires_at && ` · Expires ${formatDate(pack.expires_at)}`}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Outstanding Payments */}
-          {pendingPayments.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Outstanding</h2>
-                  <span className="text-sm text-gray-500">
-                    {pendingPayments.length} {pendingPayments.length === 1 ? 'item' : 'items'}
-                  </span>
-                </div>
-                <div>
-                  {pendingPayments.map((payment) => (
-                    <TransactionRow
-                      key={payment.id}
-                      transaction={{
-                        id: `payment-${payment.id}`,
-                        type: 'payment',
-                        date: payment.transaction_date,
-                        title: payment.classes?.title || 'Class Payment',
-                        amount: parseFloat(payment.amount.toString()),
-                        status: payment.payment_status,
-                        receipt_url: payment.receipt_url
-                      }}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Transaction History */}
-          {transactions.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">History</h2>
-                <div>
-                  {transactions
-                    .filter(t => !(t.type === 'payment' && t.status === 'pending'))
-                    .map((transaction) => (
-                      <TransactionRow key={transaction.id} transaction={transaction} />
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-    </PortalLayout>
+    </li>
   )
 }

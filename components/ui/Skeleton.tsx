@@ -13,7 +13,7 @@ export function Skeleton({
   height,
   className = ''
 }: SkeletonProps) {
-  const baseClass = 'animate-pulse bg-gray-200'
+  const baseClass = 'animate-pulse bg-champagne-200'
 
   const variantClasses = {
     text: 'rounded',
@@ -45,7 +45,7 @@ export function Skeleton({
 // Pre-built skeleton for note cards
 export function NoteCardSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+    <div className="bg-champagne-50 border border-champagne-200 rounded-lg p-4 space-y-3">
       {/* Header: Avatar + Name + Date */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

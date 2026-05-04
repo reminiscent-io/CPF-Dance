@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Calendar, type ViewMode } from '@/components/Calendar'
@@ -13,7 +14,24 @@ import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
+import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
+import { PrivateLessonActions } from '@/components/dancer/PrivateLessonActions'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
+import { createSanitizedHtml } from '@/lib/utils/sanitize'
+
+interface DancerNote {
+  id: string
+  title: string | null
+  content: string
+  tags: string[] | null
+  visibility: 'private' | 'shared_with_student' | 'shared_with_guardian' | 'shared_with_instructor'
+  created_at: string
+  updated_at: string
+  author_id: string
+  author_name?: string
+  class_id: string | null
+  personal_class_id: string | null
+}
 
 interface EnrolledClass {
   id: string
@@ -78,12 +96,14 @@ export default function DancerSchedulePage() {
   const router = useRouter()
   const { addToast } = useToast()
   const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [classNotes, setClassNotes] = useState<DancerNote[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
   const [showNoteModal, setShowNoteModal] = useState(false)
+  const [selectedNote, setSelectedNote] = useState<DetailNote | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [calendarMode, setCalendarMode] = useState<ViewMode>('week')
 
@@ -98,18 +118,24 @@ export default function DancerSchedulePage() {
       setLoading(true)
       setError(null)
 
-      // Fetch both enrolled classes and personal classes in parallel
-      const [enrolledResponse, personalResponse] = await Promise.all([
+      // Fetch enrolled classes, personal classes, and the dancer's notes in parallel.
+      // Notes are pre-loaded so the event-details modal can show class-linked notes
+      // inline without an extra round-trip on each open.
+      const [enrolledResponse, personalResponse, notesResponse] = await Promise.all([
         fetch('/api/dancer/classes'),
-        fetch('/api/dancer/personal-classes')
+        fetch('/api/dancer/personal-classes'),
+        fetch('/api/dancer/notes')
       ])
 
       const enrolledData = await enrolledResponse.json()
       const personalData = await personalResponse.json()
+      const notesData = notesResponse.ok ? await notesResponse.json() : { notes: [] }
 
       if (!enrolledResponse.ok) {
         throw new Error(enrolledData.error || 'Failed to fetch enrolled classes')
       }
+
+      setClassNotes(notesData.notes ?? [])
 
       // Transform enrolled classes to CalendarEvent format
       const enrolledEvents: CalendarEvent[] = (enrolledData.classes || []).map((c: EnrolledClass) => ({
@@ -170,6 +196,33 @@ export default function DancerSchedulePage() {
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event)
     setShowEventModal(true)
+  }
+
+  // Notes whose class_id / personal_class_id matches the selected event.
+  // The CalendarEvent.id is prefixed with 'enrolled-' or 'personal-'; strip it.
+  const selectedEventNotes = useMemo(() => {
+    if (!selectedEvent) return []
+    const isPersonal = selectedEvent.id.startsWith('personal-')
+    const actualId = selectedEvent.id.replace(/^(enrolled-|personal-)/, '')
+    return classNotes
+      .filter(n =>
+        isPersonal ? n.personal_class_id === actualId : n.class_id === actualId
+      )
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [selectedEvent, classNotes])
+
+  const formatNoteTimestamp = (iso: string) => {
+    const date = new Date(iso)
+    const now = new Date()
+    const sameYear = date.getFullYear() === now.getFullYear()
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      ...(sameYear ? {} : { year: 'numeric' }),
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
   }
 
   const handleMobileMonthChange = (date: Date) => {
@@ -263,6 +316,28 @@ export default function DancerSchedulePage() {
     setShowNoteModal(true)
   }
 
+  const handleOpenNote = (note: DancerNote) => {
+    // Stack-style navigation: hide the class modal, surface the note detail
+    // with a back arrow that returns the dancer to where they were.
+    setSelectedNote(note as DetailNote)
+    setShowEventModal(false)
+    setShowCalendarMenu(false)
+  }
+
+  const handleNoteDetailBack = () => {
+    setSelectedNote(null)
+    if (selectedEvent) setShowEventModal(true)
+  }
+
+  const handleNoteDetailClose = () => {
+    setSelectedNote(null)
+  }
+
+  const handleNoteSaved = (updated: DetailNote) => {
+    setClassNotes(prev => prev.map(n => (n.id === updated.id ? { ...n, ...updated } : n)))
+    setSelectedNote(updated)
+  }
+
   const handleNoteSubmit = async (data: {
     title: string
     content: string
@@ -282,8 +357,16 @@ export default function DancerSchedulePage() {
       throw new Error(error.error || 'Failed to create note')
     }
 
+    const result = await response.json().catch(() => null)
+    if (result?.note) {
+      // Optimistically prepend so the event modal shows it immediately on reopen.
+      setClassNotes(prev => [result.note as DancerNote, ...prev])
+    }
+
     addToast('Note created successfully', 'success')
     setShowNoteModal(false)
+    // Return the dancer to the class details where the new note now lives.
+    if (selectedEvent) setShowEventModal(true)
   }
 
   // Extract actual class ID and type from the event
@@ -477,13 +560,75 @@ export default function DancerSchedulePage() {
               </div>
             )}
 
+            {selectedEventNotes.length > 0 && (
+              <div className="pt-2">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-charcoal-500 mb-2">
+                  Your notes
+                </p>
+                <ul className="divide-y divide-champagne-200 border-t border-b border-champagne-200">
+                  {selectedEventNotes.map(note => (
+                    <li key={note.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenNote(note)}
+                        className="w-full text-left py-3 -mx-2 px-2 rounded-md transition-colors hover:bg-champagne-100 focus:outline-none focus-visible:bg-champagne-100"
+                      >
+                        <div className="flex items-baseline justify-between gap-3">
+                          <h4
+                            className="text-base font-semibold text-charcoal-950 truncate"
+                            style={{ fontFamily: 'var(--font-family-display)' }}
+                          >
+                            {note.title?.trim() || 'Untitled note'}
+                          </h4>
+                          <span className="text-xs text-charcoal-500 flex-shrink-0 whitespace-nowrap">
+                            {formatNoteTimestamp(note.created_at)}
+                          </span>
+                        </div>
+                        <div
+                          className="mt-1.5 text-sm text-charcoal-700 line-clamp-3 [&_p]:m-0 [&_p+p]:mt-1"
+                          dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
+                        />
+                        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-charcoal-500">
+                          {note.visibility === 'private' ? (
+                            <>
+                              <LockClosedIcon className="w-3 h-3" aria-hidden="true" />
+                              <span>Private</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeIcon className="w-3 h-3" aria-hidden="true" />
+                              <span>Visible to your instructor</span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selectedEvent.class_type === 'private' && !selectedEvent.isPersonal && !selectedEvent.is_cancelled && (
+              <PrivateLessonActions
+                classId={selectedEvent.id.replace(/^enrolled-/, '')}
+                startTimeIso={selectedEvent.start_time}
+                onCancelled={() => {
+                  setShowEventModal(false)
+                  fetchSchedule()
+                }}
+                onRescheduleRequested={() => {
+                  setShowEventModal(false)
+                }}
+              />
+            )}
+
             <div className="space-y-3 pt-2">
               {/* Create Note button */}
               <Button
                 onClick={handleCreateNote}
                 className="w-full bg-rose-600 hover:bg-rose-700"
               >
-                Create Note
+                {selectedEventNotes.length > 0 ? 'Add another note' : 'Create note'}
               </Button>
 
               <div className="relative">
@@ -538,6 +683,19 @@ export default function DancerSchedulePage() {
           onClose={() => setShowNoteModal(false)}
           onSubmit={handleNoteSubmit}
           initialClass={getClassInfoFromEvent(selectedEvent) || undefined}
+        />
+      )}
+
+      {/* Note Detail Modal — drilled in from the class details modal. The
+          back arrow returns the dancer to the class modal; closing dismisses
+          the whole stack. */}
+      {selectedNote && (
+        <NoteDetailModal
+          note={selectedNote}
+          isOwn={!!profile && selectedNote.author_id === profile.id}
+          onBack={handleNoteDetailBack}
+          onClose={handleNoteDetailClose}
+          onSaved={handleNoteSaved}
         />
       )}
     </PortalLayout>

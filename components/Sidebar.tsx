@@ -228,15 +228,30 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     return children.some(child => pathname === child.href || pathname?.startsWith(child.href + '/'))
   }
 
+  const renderWordmark = () => (
+    <span
+      className="text-charcoal-950"
+      style={{
+        fontFamily: 'var(--font-family-display)',
+        fontSize: '1.5rem',
+        fontWeight: 600,
+        lineHeight: 1.1,
+        letterSpacing: '-0.025em',
+      }}
+    >
+      CPF Dance
+    </span>
+  )
+
   if (!mounted) {
     return (
-      <aside className="fixed top-0 left-0 h-[100dvh] w-64 bg-rose-800 text-white shadow-lg z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-[100dvh]">
+      <aside className="fixed top-0 left-0 h-[100dvh] w-64 bg-champagne-100 border-r border-champagne-200 z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-[100dvh]">
         <div className="flex flex-col h-full">
           <div
-            className="px-4 py-1 md:p-6 border-b border-rose-500 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
+            className="px-5 md:px-6 py-1 md:py-6 border-b border-champagne-200 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
             style={{ paddingTop: 'max(0.25rem, env(safe-area-inset-top))' }}
           >
-            <span className="text-2xl font-bold text-white">CPF Dance</span>
+            {renderWordmark()}
           </div>
         </div>
       </aside>
@@ -245,27 +260,32 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   return (
     <>
-      <div className="fixed inset-0 z-40 md:hidden" style={{ display: isOpen ? 'block' : 'none' }} onClick={() => setIsOpen(false)} />
+      <div
+        className="fixed inset-0 z-40 md:hidden bg-charcoal-950/50 backdrop-blur-[2px]"
+        style={{ display: isOpen ? 'block' : 'none' }}
+        onClick={() => setIsOpen(false)}
+      />
 
       <aside className={`
-        fixed top-0 left-0 h-[100dvh] w-64 bg-rose-800 text-white shadow-lg z-50
-        transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-[100dvh] w-64 bg-champagne-100 border-r border-champagne-200 z-50
+        transform transition-transform duration-300 ease-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:static md:relative md:translate-x-0 md:h-[100dvh]
       `}>
         <div className="flex flex-col h-full">
-          {/* Header - with safe area for notch on mobile */}
+          {/* Header */}
           <div
-            className="px-4 py-1 md:p-6 border-b border-rose-500 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
+            className="px-5 md:px-6 py-1 md:py-6 border-b border-champagne-200 min-h-[2.5rem] md:min-h-0 flex items-center md:block"
             style={{ paddingTop: 'max(0.25rem, env(safe-area-inset-top))' }}
           >
-            <Link href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'} className="flex items-center justify-between w-full">
-              <span className="text-2xl font-bold text-white">
-                CPF Dance
-              </span>
+            <Link
+              href={profile ? `/${profile.role === 'guardian' ? 'dancer' : profile.role === 'admin' ? 'instructor' : profile.role}` : '/'}
+              className="flex items-center justify-between w-full"
+            >
+              {renderWordmark()}
               <button
-                onClick={() => setIsOpen(false)}
-                className="md:hidden p-2 hover:bg-rose-700 rounded-lg transition-colors"
+                onClick={(e) => { e.preventDefault(); setIsOpen(false) }}
+                className="md:hidden -mr-2 p-2 rounded-md text-charcoal-700 hover:bg-champagne-200/60 transition-colors"
                 aria-label="Close menu"
               >
                 <XMarkIcon className="w-5 h-5" />
@@ -275,8 +295,11 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
           {/* Admin Portal Switcher */}
           {profile?.role === 'admin' && (
-            <div className="px-6 py-4 border-b border-rose-500">
-              <label className="block text-xs text-rose-100 font-medium uppercase tracking-wide mb-2">
+            <div className="px-5 md:px-6 py-4 border-b border-champagne-200">
+              <label
+                className="block text-charcoal-500 mb-2"
+                style={{ fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' }}
+              >
                 Switch Portal
               </label>
               <select
@@ -285,7 +308,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                   router.push(portalOptions.find(p => p.value === e.target.value)?.href || '/instructor')
                   setIsOpen(false)
                 }}
-                className="w-full text-sm font-medium bg-rose-700 border border-rose-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-rose-300"
+                className="w-full text-sm font-medium bg-champagne-50 border border-champagne-200 rounded-md px-3 py-2 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600/40 transition"
               >
                 {portalOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -296,47 +319,58 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             </div>
           )}
 
-          {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-            {/* Ungrouped Items (Dashboard) */}
-            {navLinks.ungrouped?.map((link: any) => {
-              const isExactMatch = pathname === link.href
-              const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
-              const isActive = isExactMatch || isSubpage
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-5">
+            {/* Ungrouped (Dashboard) */}
+            {navLinks.ungrouped && navLinks.ungrouped.length > 0 && (
+              <div className="space-y-0.5">
+                {navLinks.ungrouped.map((link: any) => {
+                  const isExactMatch = pathname === link.href
+                  const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
+                  const isActive = isExactMatch || isSubpage
 
-              return (
-                <button
-                  key={link.href}
-                  onClick={() => {
-                    setIsOpen(false)
-                    router.push(link.href)
-                  }}
-                  className={`
-                    w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
-                    ${isActive
-                      ? 'bg-rose-400 text-white shadow-md'
-                      : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
-                    }
-                  `}
-                >
-                  <span className="mr-3">{link.icon}</span>
-                  {link.label}
-                </button>
-              )
-            })}
+                  return (
+                    <button
+                      key={link.href}
+                      onClick={() => { setIsOpen(false); router.push(link.href) }}
+                      className={`
+                        w-full text-left flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                        ${isActive
+                          ? 'bg-rose-100 text-rose-700'
+                          : 'text-charcoal-700 hover:bg-champagne-200/60 hover:text-charcoal-900'
+                        }
+                      `}
+                    >
+                      <span className={`mr-3 ${isActive ? 'text-rose-700' : 'text-charcoal-400'}`}>{link.icon}</span>
+                      {link.label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
-            {/* Grouped Items */}
+            {/* Groups */}
             {navLinks.groups?.map((group: any, groupIndex: number) => (
-              <div key={group.label} className={groupIndex > 0 || navLinks.ungrouped?.length > 0 ? 'mt-4' : ''}>
-                {/* Group Header */}
-                <div className="px-4 mb-1.5">
-                  <div className="text-xs font-semibold text-rose-200 uppercase tracking-wider pb-1 border-b border-rose-500/50" style={{ fontFamily: 'var(--font-family-sans)' }}>
+              <div
+                key={group.label}
+                className={groupIndex > 0 || (navLinks.ungrouped && navLinks.ungrouped.length > 0) ? 'mt-7' : ''}
+              >
+                <div className="px-3 mb-2">
+                  <span
+                    className="text-charcoal-500"
+                    style={{
+                      fontFamily: 'var(--font-family-sans)',
+                      fontSize: '0.6875rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     {group.label}
-                  </div>
+                  </span>
                 </div>
 
-                {/* Group Links */}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {group.links.map((link: any) => {
                     const hasChildren = link.children && link.children.length > 0
                     const isExpanded = expandedParents.has(link.label)
@@ -351,27 +385,24 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                           <button
                             onClick={() => {
                               toggleParent(link.label)
-                              if (link.href) {
-                                setIsOpen(false)
-                                router.push(link.href)
-                              }
+                              if (link.href) { setIsOpen(false); router.push(link.href) }
                             }}
                             className={`
-                              w-full text-left flex items-center justify-between px-4 py-2 rounded-lg font-medium text-sm transition-all
+                              w-full text-left flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors
                               ${childIsActive
-                                ? 'bg-rose-400 text-white shadow-md'
-                                : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                                ? 'bg-rose-100 text-rose-700'
+                                : 'text-charcoal-700 hover:bg-champagne-200/60 hover:text-charcoal-900'
                               }
                             `}
                           >
                             <span className="flex items-center">
-                              <span className="mr-3">{link.icon}</span>
+                              <span className={`mr-3 ${childIsActive ? 'text-rose-700' : 'text-charcoal-400'}`}>{link.icon}</span>
                               {link.label}
                             </span>
                             <ChevronDownIcon className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                           </button>
                           {isExpanded && (
-                            <div className="space-y-1 pl-4 mt-1">
+                            <div className="space-y-0.5 pl-4 mt-0.5">
                               {link.children.map((child: any) => {
                                 const childExactMatch = pathname === child.href
                                 const childSubpage = pathname?.startsWith(child.href + '/') && child.label !== 'Overview'
@@ -379,19 +410,16 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                                 return (
                                   <button
                                     key={child.href}
-                                    onClick={() => {
-                                      setIsOpen(false)
-                                      router.push(child.href)
-                                    }}
+                                    onClick={() => { setIsOpen(false); router.push(child.href) }}
                                     className={`
-                                      w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
+                                      w-full text-left flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
                                       ${childIsActiveItem
-                                        ? 'bg-rose-400 text-white shadow-md'
-                                        : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                                        ? 'bg-rose-100 text-rose-700'
+                                        : 'text-charcoal-700 hover:bg-champagne-200/60 hover:text-charcoal-900'
                                       }
                                     `}
                                   >
-                                    <span className="mr-3">{child.icon}</span>
+                                    <span className={`mr-3 ${childIsActiveItem ? 'text-rose-700' : 'text-charcoal-400'}`}>{child.icon}</span>
                                     {child.label}
                                   </button>
                                 )
@@ -405,19 +433,16 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                     return (
                       <button
                         key={link.href}
-                        onClick={() => {
-                          setIsOpen(false)
-                          router.push(link.href)
-                        }}
+                        onClick={() => { setIsOpen(false); router.push(link.href) }}
                         className={`
-                          w-full text-left flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all
+                          w-full text-left flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
                           ${isActive
-                            ? 'bg-rose-400 text-white shadow-md'
-                            : 'text-rose-100 hover:bg-white hover:bg-opacity-10'
+                            ? 'bg-rose-100 text-rose-700'
+                            : 'text-charcoal-700 hover:bg-champagne-200/60 hover:text-charcoal-900'
                           }
                         `}
                       >
-                        <span className="mr-3">{link.icon}</span>
+                        <span className={`mr-3 ${isActive ? 'text-rose-700' : 'text-charcoal-400'}`}>{link.icon}</span>
                         {link.label}
                       </button>
                     )
@@ -427,39 +452,23 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             ))}
           </nav>
 
-          {/* Footer - with safe area for home indicator + bottom nav on mobile */}
-          <div className="border-t border-rose-500 p-4 pb-[calc(1rem+env(safe-area-inset-bottom)+2.5rem)] md:!pb-4">
+          {/* Footer */}
+          <div className="border-t border-champagne-200 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom)+2.5rem)] md:!pb-3">
             <button
-              onClick={() => {
-                setIsOpen(false)
-                router.push(getProfileUrl())
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-rose-700/50 hover:bg-rose-700 border border-rose-500/50 hover:border-rose-400 transition-all group"
+              onClick={() => { setIsOpen(false); router.push(getProfileUrl()) }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-champagne-200/60 transition-colors text-left"
             >
-              {/* Avatar circle or photo */}
-              <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-400 transition-colors overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-white font-semibold text-sm">
-                    {profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
-                  </span>
-                )}
+              {profile?.avatar_url && (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-charcoal-900 truncate">{profile?.full_name}</p>
+                <p className="text-xs text-charcoal-500 capitalize">{profile?.role}</p>
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{profile?.full_name}</p>
-                <p className="text-xs text-rose-200 capitalize">
-                  {profile?.role}
-                </p>
-              </div>
-              {/* Chevron indicator */}
-              <svg className="w-4 h-4 text-rose-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
             </button>
           </div>
         </div>

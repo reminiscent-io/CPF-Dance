@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
+import { spendCreditForClass, getDayOfLessonPrice } from '@/lib/lesson-credits'
+import { notifyClassScheduled } from '@/lib/notifications/private-lessons'
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,7 +100,8 @@ export async function POST(request: NextRequest) {
       external_signup_url,
       is_public,
       student_id, // For automatically enrolling a student (private lessons)
-      asset_id // Optional promotional asset
+      asset_id, // Optional promotional asset
+      private_lesson_request_id // When created from a request, links + spends credit
     } = body
 
     // Determine instructor_id based on role
@@ -205,6 +209,52 @@ export async function POST(request: NextRequest) {
         }
       } catch (enrollError) {
         console.error('Unexpected error during enrollment:', enrollError)
+      }
+    }
+
+    // If linked to a private lesson request, spend a credit, link the class, and notify Courtney.
+    // Credit + request-status mutations need the admin client because the instructor's
+    // session is RLS-blocked from updating lesson_pack_purchases / private_lesson_requests.
+    if (classData && class_type === 'private' && private_lesson_request_id && student_id) {
+      const admin = createAdminClient()
+      const spendResult = await spendCreditForClass({
+        supabase: admin,
+        studentId: student_id,
+        classId: classData.id,
+        requestId: private_lesson_request_id
+      })
+
+      await admin
+        .from('private_lesson_requests')
+        .update({
+          status: 'approved',
+          scheduled_class_id: classData.id
+        })
+        .eq('id', private_lesson_request_id)
+
+      try {
+        const { data: studentRow } = await admin
+          .from('students')
+          .select('full_name, profile:profiles!students_profile_id_fkey(full_name)')
+          .eq('id', student_id)
+          .single()
+        const studentProfile = Array.isArray(studentRow?.profile)
+          ? studentRow?.profile[0]
+          : studentRow?.profile
+        const dancerName = studentRow?.full_name || studentProfile?.full_name || 'Dancer'
+
+        const dayOfPrice = spendResult.used ? null : await getDayOfLessonPrice(admin)
+
+        await notifyClassScheduled({
+          dancerName,
+          startTimeIso: classData.start_time,
+          paymentMode: spendResult.used ? 'credit' : 'day_of',
+          packName: spendResult.used ? spendResult.packName : null,
+          remainingAfter: spendResult.used ? spendResult.remainingAfter : 0,
+          dayOfPrice
+        })
+      } catch (notifyError) {
+        console.error('[classes POST] notifyClassScheduled failed:', notifyError)
       }
     }
 

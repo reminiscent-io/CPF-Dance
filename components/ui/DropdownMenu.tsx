@@ -180,8 +180,8 @@ export function DropdownMenuContent({
       role="menu"
       aria-orientation="vertical"
       className={`
-        absolute z-50 mt-1 min-w-[160px] rounded-md border border-gray-200
-        bg-white py-1 shadow-lg
+        absolute z-50 mt-1 min-w-[160px] rounded-md border border-champagne-200
+        bg-champagne-50 py-1 shadow-soft-lg
         ${alignClass}
         ${className}
       `}
@@ -232,12 +232,12 @@ export function DropdownMenuItem({
       tabIndex={-1}
       className={`
         w-full px-3 py-2 text-left text-sm
-        focus:outline-none focus:bg-gray-100
+        focus:outline-none focus:bg-champagne-100
         ${disabled
-          ? 'text-gray-400 cursor-not-allowed'
+          ? 'text-charcoal-300 cursor-not-allowed'
           : destructive
-            ? 'text-red-600 hover:bg-red-50'
-            : 'text-gray-700 hover:bg-gray-100'
+            ? 'text-rose-700 hover:bg-rose-50'
+            : 'text-charcoal-700 hover:bg-champagne-100'
         }
         ${className}
       `}
@@ -252,5 +252,5 @@ export interface DropdownMenuSeparatorProps {
 }
 
 export function DropdownMenuSeparator({ className = '' }: DropdownMenuSeparatorProps) {
-  return <div className={`my-1 h-px bg-gray-200 ${className}`} role="separator" />
+  return <div className={`my-1 h-px bg-champagne-200 ${className}`} role="separator" />
 }

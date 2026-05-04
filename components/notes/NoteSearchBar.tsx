@@ -1,8 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
-
 interface NoteSearchBarProps {
   searchTerm: string
   onSearchChange: (term: string) => void
@@ -26,87 +23,78 @@ export function NoteSearchBar({
   const hasActiveFilters = searchTerm || selectedTag
 
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 pb-3 mb-4">
-      <div className="space-y-3">
-        {/* Search input */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Search notes..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
+    <div className="mb-10">
+      <div className="flex items-center gap-3 border-b border-champagne-200 pb-3 transition-colors focus-within:border-charcoal-700">
+        <svg
+          className="h-4 w-4 text-charcoal-400 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
-        </div>
-
-        {/* Tag filters with horizontal scroll */}
-        {allTags.length > 0 && (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 pb-1">
-                <button
-                  onClick={() => onTagSelect(null)}
-                  className={`flex-shrink-0 transition-all ${
-                    selectedTag === null ? 'scale-105' : ''
-                  }`}
-                >
-                  <Badge
-                    variant={selectedTag === null ? 'primary' : 'default'}
-                    size="sm"
-                    className="cursor-pointer whitespace-nowrap"
-                  >
-                    All
-                  </Badge>
-                </button>
-
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => onTagSelect(tag === selectedTag ? null : tag)}
-                    className={`flex-shrink-0 transition-all ${
-                      selectedTag === tag ? 'scale-105' : ''
-                    }`}
-                  >
-                    <Badge
-                      variant={selectedTag === tag ? 'primary' : 'default'}
-                      size="sm"
-                      className="cursor-pointer whitespace-nowrap"
-                    >
-                      {tag}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Clear filters button */}
-            {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className="flex-shrink-0 text-sm text-gray-500 hover:text-gray-700 underline"
-                aria-label="Clear all filters"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+        </svg>
+        <input
+          type="text"
+          aria-label="Search notes"
+          placeholder="Search notes"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="flex-1 bg-transparent border-0 p-0 text-charcoal-900 placeholder:text-charcoal-400 placeholder:italic text-sm focus:outline-none focus:ring-0"
+        />
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="text-xs uppercase tracking-[0.14em] text-charcoal-400 hover:text-ballet-pink-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-champagne-50 rounded-sm"
+            aria-label="Clear all filters"
+          >
+            Clear
+          </button>
         )}
       </div>
+
+      {allTags.length > 0 && (
+        <div className="mt-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <div className="flex items-center gap-x-5 whitespace-nowrap text-xs italic">
+            <button
+              type="button"
+              onClick={() => onTagSelect(null)}
+              aria-pressed={selectedTag === null}
+              className={`transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-champagne-50 rounded-sm ${
+                selectedTag === null
+                  ? 'text-ballet-pink-700'
+                  : 'text-charcoal-400 hover:text-charcoal-700'
+              }`}
+            >
+              All
+            </button>
+            {allTags.map((tag) => {
+              const active = selectedTag === tag
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onTagSelect(active ? null : tag)}
+                  aria-pressed={active}
+                  className={`transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-champagne-50 rounded-sm ${
+                    active
+                      ? 'text-ballet-pink-700'
+                      : 'text-charcoal-500 hover:text-charcoal-800'
+                  }`}
+                >
+                  {tag}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {

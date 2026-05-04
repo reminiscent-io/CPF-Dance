@@ -90,15 +90,15 @@ export default function DancerWaiversPage() {
 
       <div className="grid gap-6">
         {pendingWaivers.length > 0 && (
-          <Card className="border-l-4 border-l-yellow-400">
+          <Card className="bg-gold-50 border border-gold-200">
             <CardTitle>Pending Waivers ({pendingWaivers.length})</CardTitle>
             <CardContent className="mt-4">
               <div className="space-y-3">
                 {pendingWaivers.map((waiver) => (
-                  <div key={waiver.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div key={waiver.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-gold-100 rounded-lg border border-gold-200">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm md:text-base">{waiver.title}</h3>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1 line-clamp-2">{waiver.description}</p>
+                      <h3 className="font-semibold text-charcoal-950 text-sm md:text-base">{waiver.title}</h3>
+                      <p className="text-xs md:text-sm text-charcoal-500 mt-1 line-clamp-2">{waiver.description}</p>
                     </div>
                     <Button
                       onClick={() => router.push(`/dancer/waivers/${waiver.id}/sign`)}

@@ -403,7 +403,7 @@ export default function HomePage() {
                 Precision. Passion.
               </motion.span>
               <motion.span
-                className="block bg-gradient-to-r from-rose-600 via-gold-600 to-gold-700 bg-clip-text text-transparent mt-2"
+                className="block text-rose-600 mt-2"
                 initial={heroAnimateEnabled ? { opacity: 0, y: -20 } : false}
                 animate={{ opacity: heroRevealActive ? 1 : 0, y: heroRevealActive ? 0 : -20 }}
                 transition={{ duration: 0.7, delay: heroRevealActive ? 1.1 : 0 }}
