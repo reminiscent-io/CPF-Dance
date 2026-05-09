@@ -65,18 +65,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const response = await fetch(
-      'https://maps.googleapis.com/maps/api/place/details/json',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          place_id: placeId,
-          key: apiKey,
-          fields: 'address_component,formatted_address,geometry'
-        })
-      }
-    )
+    const url = new URL('https://maps.googleapis.com/maps/api/place/details/json')
+    url.searchParams.set('place_id', placeId)
+    url.searchParams.set('key', apiKey)
+    url.searchParams.set('fields', 'address_components,formatted_address,geometry')
+
+    const response = await fetch(url.toString())
 
     if (!response.ok) {
       throw new Error('Google Places API error')
@@ -85,6 +79,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
 
     if (data.status !== 'OK' || !data.result) {
+      console.error('Google Places details error:', data.status, data.error_message)
       throw new Error('Invalid place result')
     }
 

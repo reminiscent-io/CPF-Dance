@@ -24,28 +24,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const response = await fetch(
-      'https://maps.googleapis.com/maps/api/place/autocomplete/json',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: query,
-          key: apiKey,
-          components: 'country:us'
-        })
-      }
-    )
+    const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json')
+    url.searchParams.set('input', query)
+    url.searchParams.set('key', apiKey)
+    url.searchParams.set('components', 'country:us')
+
+    const response = await fetch(url.toString())
 
     if (!response.ok) {
       throw new Error('Google Places API error')
     }
 
     const data = await response.json()
-    
-    return NextResponse.json({
-      predictions: data.predictions || []
-    })
+
+    if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      console.error('Google Places autocomplete error:', data.status, data.error_message)
+      return NextResponse.json({ predictions: [] })
+    }
+
+    const predictions = (data.predictions || []).map((p: any) => ({
+      place_id: p.place_id,
+      main_text: p.structured_formatting?.main_text ?? p.description,
+      secondary_text: p.structured_formatting?.secondary_text ?? '',
+      description: p.description,
+    }))
+
+    return NextResponse.json({ predictions })
   } catch (error) {
     console.error('Places search error:', error)
     return NextResponse.json(
