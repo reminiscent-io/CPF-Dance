@@ -7,11 +7,13 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password, fullName, phone, role, isAtLeast13, guardianEmail, portal } = body
 
-    // SECURITY: Prevent role escalation - users cannot self-register as admin
-    const allowedSignupRoles = ['instructor', 'dancer', 'guardian']
+    // SECURITY: Prevent role escalation. Users may only self-register as
+    // dancer or guardian. Instructor accounts are provisioned by an admin via
+    // the instructor-access-request flow; admin is never self-selectable.
+    const allowedSignupRoles = ['dancer', 'guardian']
     if (!role || !allowedSignupRoles.includes(role)) {
       return NextResponse.json(
-        { error: 'Invalid role. Allowed roles: instructor, dancer, guardian' },
+        { error: 'Invalid role. Allowed roles: dancer, guardian' },
         { status: 400 }
       )
     }

@@ -559,8 +559,16 @@ DECLARE
   user_role TEXT;
   guardian_uuid UUID;
 BEGIN
-  -- Get role from metadata, default to 'dancer' if not provided
+  -- Get role from metadata, default to 'dancer' if not provided.
+  -- SECURITY: clamp self-service signups to non-privileged roles. Instructor
+  -- and admin accounts are provisioned by an admin (e.g. the
+  -- instructor-access-request flow), never via signup metadata. Without this,
+  -- an attacker could POST role='instructor' to /api/auth/signup and gain
+  -- access to all students' PII, notes, and payments.
   user_role := COALESCE(NEW.raw_user_meta_data->>'role', 'dancer');
+  IF user_role NOT IN ('dancer', 'guardian') THEN
+    user_role := 'dancer';
+  END IF;
 
   -- Get guardian_id from metadata if provided
   guardian_uuid := (NEW.raw_user_meta_data->>'guardian_id')::UUID;
