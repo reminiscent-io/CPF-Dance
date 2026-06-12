@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Input, Modal, ModalFooter, Textarea, Table, useToast, Spinner } from '@/components/ui'
+import { Badge, Button, Input, Modal, ModalFooter, Select, Textarea, Table, useToast, Spinner } from '@/components/ui'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import type { Student, CreateStudentData } from '@/lib/types'
 
@@ -151,16 +151,23 @@ export default function StudentsPage() {
 
   if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     )
   }
 
-  const filteredStudents = students.filter(student => {
-    const studentName = (student.full_name || student.profile?.full_name || '').toLowerCase()
-    return studentName.includes(search.toLowerCase())
-  })
+  const getStudentName = (student: Student) =>
+    student.full_name || student.profile?.full_name || ''
+
+  // Most-taught students first; ties fall back to name
+  const filteredStudents = students
+    .filter(student => getStudentName(student).toLowerCase().includes(search.toLowerCase()))
+    .sort(
+      (a, b) =>
+        (b.classes_taken ?? 0) - (a.classes_taken ?? 0) ||
+        getStudentName(a).localeCompare(getStudentName(b))
+    )
 
   const baseColumns = [
     {
@@ -170,9 +177,7 @@ export default function StudentsPage() {
         <div className="flex items-center gap-2">
           <span>{student.full_name || student.profile?.full_name || 'N/A'}</span>
           {!student.profile_id && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              Not Linked
-            </span>
+            <Badge variant="warning" size="sm">Not linked</Badge>
           )}
         </div>
       )
@@ -188,16 +193,19 @@ export default function StudentsPage() {
       render: (student: Student) => student.skill_level || 'N/A'
     },
     {
+      key: 'classes_taken',
+      header: 'Classes',
+      render: (student: Student) => (
+        <span className="tabular-nums">{student.classes_taken ?? 0}</span>
+      )
+    },
+    {
       key: 'status',
       header: 'Status',
       render: (student: Student) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          student.is_active
-            ? 'bg-green-100 text-green-800'
-            : 'bg-gray-100 text-gray-800'
-        }`}>
+        <Badge variant={student.is_active ? 'primary' : 'default'} size="sm">
           {student.is_active ? 'Active' : 'Inactive'}
-        </span>
+        </Badge>
       )
     }
   ]
@@ -214,13 +222,13 @@ export default function StudentsPage() {
             {taggedInstructors.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {taggedInstructors.map((instructor: any) => (
-                  <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <Badge key={instructor.id} variant="default" size="sm">
                     {instructor.full_name}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             ) : (
-              <span className="text-gray-400 text-sm">No instructors</span>
+              <span className="text-charcoal-400 text-sm">No instructors</span>
             )}
           </div>
         )
@@ -250,13 +258,14 @@ export default function StudentsPage() {
   return (
     <PortalLayout profile={profile}>
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-end gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Students</h1>
-            <p className="text-gray-600 mt-1">Manage your student roster</p>
+            <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">Students</h1>
+            <p className="text-charcoal-500 mt-1">Manage your student roster</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} aria-label="Add New Student">
-            <PlusIcon className="w-5 h-5" />
+          <Button onClick={() => setShowAddModal(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Add student
           </Button>
         </div>
 
@@ -308,12 +317,12 @@ export default function StudentsPage() {
       {/* Mobile Card View */}
       <div className="md:hidden">
         {loading ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="bg-champagne-50 rounded-lg shadow-soft p-8 text-center">
+            <Spinner size="md" className="mx-auto" />
+            <p className="mt-2 text-charcoal-500">Loading...</p>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">
+          <div className="bg-champagne-50 rounded-lg shadow-soft p-8 text-center text-charcoal-500">
             No students found
           </div>
         ) : (
@@ -322,58 +331,58 @@ export default function StudentsPage() {
               <div
                 key={student.id}
                 onClick={() => router.push(`/instructor/students/${student.id}`)}
-                className="bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                className="bg-champagne-50 rounded-lg shadow-soft p-4 cursor-pointer hover:bg-champagne-100 active:bg-champagne-200 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">
                         {student.full_name || student.profile?.full_name || 'N/A'}
                       </h3>
                       {!student.profile_id && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
-                          Not Linked
-                        </span>
+                        <Badge variant="warning" size="sm" className="whitespace-nowrap">
+                          Not linked
+                        </Badge>
                       )}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-charcoal-700">
                       {student.age_group && (
                         <span className="inline-flex items-center">
-                          <span className="text-gray-400 mr-1">Age:</span>
+                          <span className="text-charcoal-400 mr-1">Age:</span>
                           {student.age_group}
                         </span>
                       )}
                       {student.skill_level && (
                         <span className="inline-flex items-center">
-                          <span className="text-gray-400 mr-1">Level:</span>
+                          <span className="text-charcoal-400 mr-1">Level:</span>
                           {student.skill_level}
                         </span>
                       )}
+                      <span className="inline-flex items-center tabular-nums">
+                        <span className="text-charcoal-400 mr-1">Classes:</span>
+                        {student.classes_taken ?? 0}
+                      </span>
                     </div>
                     {profile?.role === 'admin' && (
                       <div className="mt-2">
                         {getStudentInstructors(student.id).length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {getStudentInstructors(student.id).map((instructor: any) => (
-                              <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <Badge key={instructor.id} variant="default" size="sm">
                                 {instructor.full_name}
-                              </span>
+                              </Badge>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">No instructors tagged</span>
+                          <span className="text-xs text-charcoal-400">No instructors tagged</span>
                         )}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      student.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <Badge variant={student.is_active ? 'primary' : 'default'} size="sm">
                       {student.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    </Badge>
                     {profile?.role === 'admin' && (
                       <Button
                         size="sm"
@@ -471,21 +480,17 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Age Group (optional)
-              </label>
-              <select
-                value={formData.age_group}
-                onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
-              >
-                <option value="">Select age group...</option>
-                <option value="Child (<13)">Child (&lt;13)</option>
-                <option value="Teen (13-18)">Teen (13-18)</option>
-                <option value="Adult (+18)">Adult (+18)</option>
-              </select>
-            </div>
+            <Select
+              label="Age Group (optional)"
+              value={formData.age_group}
+              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+              options={[
+                { value: '', label: 'Select age group...' },
+                { value: 'Child (<13)', label: 'Child (<13)' },
+                { value: 'Teen (13-18)', label: 'Teen (13-18)' },
+                { value: 'Adult (+18)', label: 'Adult (+18)' }
+              ]}
+            />
             <Input
               label="Skill Level (optional)"
               placeholder="e.g., Beginner, Intermediate"
@@ -579,18 +584,18 @@ function TagInstructorModal({
         {/* Current Tagged Instructors */}
         {currentRelationships.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Currently Tagged:</h3>
+            <h3 className="text-sm font-medium text-charcoal-700 mb-2">Currently Tagged:</h3>
             <div className="space-y-2">
               {currentRelationships.map((instructor) => {
                 const relationship = relationships.find(r => r.instructor?.id === instructor.id)
                 return (
                   <div
                     key={instructor.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-champagne-100 rounded-lg"
                   >
                     <div>
-                      <p className="font-medium">{instructor.full_name}</p>
-                      <p className="text-sm text-gray-600">{instructor.email}</p>
+                      <p className="font-medium text-charcoal-900">{instructor.full_name}</p>
+                      <p className="text-sm text-charcoal-500">{instructor.email}</p>
                     </div>
                     <Button
                       size="sm"
@@ -608,27 +613,24 @@ function TagInstructorModal({
 
         {/* Add New Instructor */}
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Add New Instructor:</h3>
+          <h3 className="text-sm font-medium text-charcoal-700 mb-2">Add New Instructor:</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Instructor
-              </label>
-              <select
+              <Select
+                label="Select Instructor"
                 value={selectedInstructorId}
                 onChange={(e) => setSelectedInstructorId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
                 required
-              >
-                <option value="">Choose an instructor...</option>
-                {availableInstructors.map((instructor) => (
-                  <option key={instructor.id} value={instructor.id}>
-                    {instructor.full_name} ({instructor.email})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'Choose an instructor...' },
+                  ...availableInstructors.map((instructor) => ({
+                    value: instructor.id,
+                    label: `${instructor.full_name} (${instructor.email})`
+                  }))
+                ]}
+              />
               {availableInstructors.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-charcoal-400 mt-2">
                   All available instructors are already tagged
                 </p>
               )}
