@@ -75,12 +75,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
             </div>
           </div>
         </aside>
-        <div
-          className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0"
-          style={{
-            paddingTop: 'calc(2.5rem + env(safe-area-inset-top))'
-          }}
-        >
+        <div className="flex-1 flex flex-col overflow-hidden pt-[calc(2.5rem+env(safe-area-inset-top))] md:pt-0">
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-page-x pt-5 lg:pt-page-top pb-8">
               {children}
@@ -96,12 +91,8 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
       <MobileHeader onMenuToggle={handleToggleSidebar} />
       <Sidebar profile={profile} isOpen={isOpen} setIsOpen={setIsOpen} />
 
-      <div
-        className="flex-1 flex flex-col overflow-hidden pt-10 md:pt-0"
-        style={{
-          paddingTop: 'calc(2.5rem + env(safe-area-inset-top))', // 2.5rem = 40px mobile header height
-        }}
-      >
+      {/* 2.5rem = 40px mobile header height; md:pt-0 removes it once the sidebar takes over */}
+      <div className="flex-1 flex flex-col overflow-hidden pt-[calc(2.5rem+env(safe-area-inset-top))] md:pt-0">
         <main className="flex-1 overflow-y-auto md:pt-0">
           <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-page-x pt-5 lg:pt-page-top ${
             profile?.role ? 'pb-24 md:pb-8' : 'pb-8'
