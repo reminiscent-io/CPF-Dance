@@ -7,12 +7,29 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Calendar, type ViewMode } from '@/components/Calendar'
 import { getVisibleDateRange } from '@/lib/utils/calendar-range'
 import { MobileCalendar } from '@/components/MobileCalendar'
-import { Modal } from '@/components/ui/Modal'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Card } from '@/components/ui/Card'
-import { Spinner } from '@/components/ui/Spinner'
-import { useToast } from '@/components/ui/Toast'
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Modal,
+  PageHeader,
+  SegmentedControl,
+  Spinner,
+  StatusDot,
+  Toolbar,
+  useToast
+} from '@/components/ui'
+import {
+  BuildingOffice2Icon,
+  CalendarDaysIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  MapPinIcon,
+  UsersIcon
+} from '@heroicons/react/24/outline'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { AddNoteModal } from '@/components/AddNoteModal'
 import { InstructorPrivateLessonCancel } from '@/components/instructor/InstructorPrivateLessonCancel'
@@ -292,10 +309,10 @@ export default function InstructorSchedulePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading...</p>
         </div>
       </div>
     )
@@ -308,40 +325,54 @@ export default function InstructorSchedulePage() {
   return (
     <PortalLayout profile={profile}>
       <div className="flex flex-col">
-        {/* Header */}
-        <div className="hidden md:flex md:items-center md:justify-between mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes</p>
-          </div>
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewType('day')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewType === 'day'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setViewType('month')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewType === 'month'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Calendar
-            </button>
-          </div>
+        {/* Header + toolbar (desktop only; mobile keeps its full-bleed calendar) */}
+        <div className="hidden md:block">
+          <PageHeader title="Calendar" subtitle="View your upcoming classes" />
+          <Toolbar
+            filters={
+              <>
+                {viewType === 'day' && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigateDay('prev')}
+                      aria-label="Previous day"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={goToToday}
+                      disabled={isToday(currentDate)}
+                    >
+                      Today
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigateDay('next')}
+                      aria-label="Next day"
+                    >
+                      <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
+                    </Button>
+                  </div>
+                )}
+                <SegmentedControl<ViewType>
+                  aria-label="Switch calendar view"
+                  options={[
+                    { value: 'day', label: 'List' },
+                    { value: 'month', label: 'Calendar' }
+                  ]}
+                  value={viewType}
+                  onChange={setViewType}
+                />
+              </>
+            }
+          />
         </div>
 
         {error && (
-          <Card className="bg-red-50 border-red-200 mb-4">
-            <p className="text-red-700">{error}</p>
+          <Card className="bg-ballet-pink-50 border-ballet-pink-200 mb-4 md:mt-toolbar-gap md:mb-0">
+            <p className="text-ballet-pink-800">{error}</p>
           </Card>
         )}
 
@@ -353,47 +384,20 @@ export default function InstructorSchedulePage() {
           <>
             {/* DESKTOP VIEW - Day View */}
             {viewType === 'day' && (
-              <div className="hidden md:flex md:flex-col">
-                {/* Day Navigation */}
-                <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                  <button
-                    onClick={() => navigateDay('prev')}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <div className="text-center">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {formatDayViewDate(currentDate)}
-                    </h2>
-                    {!isToday(currentDate) && (
-                      <button
-                        onClick={goToToday}
-                        className="text-sm text-rose-600 hover:text-rose-700 font-medium mt-1"
-                      >
-                        Go to Today
-                      </button>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => navigateDay('next')}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
+              <div className="mt-toolbar-gap hidden md:flex md:flex-col">
+                {/* Day heading - nav lives in the toolbar above */}
+                <h2 className="font-serif text-xl font-semibold text-charcoal-950 pb-4 border-b border-champagne-200">
+                  {formatDayViewDate(currentDate)}
+                </h2>
 
                 {/* Day Classes List */}
-                <div className="pb-8">
+                <div className="mt-4">
                   {dayClasses.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-5xl mb-4">📅</div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No classes scheduled</h3>
-                      <p className="text-gray-600">You don't have any classes on this day.</p>
+                    <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+                      <EmptyState
+                        icon={<CalendarDaysIcon />}
+                        message="No classes scheduled on this day."
+                      />
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -406,35 +410,32 @@ export default function InstructorSchedulePage() {
                           <div
                             key={classItem.id}
                             onClick={() => handleEventClick(classItem)}
-                            className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                              isPast ? 'opacity-60 bg-gray-50' : 'bg-white hover:border-rose-300'
-                            } ${classItem.is_cancelled ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                            className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                              classItem.is_cancelled
+                                ? 'border-ballet-pink-200 bg-ballet-pink-50'
+                                : 'border-champagne-200 bg-champagne-50 hover:bg-champagne-100'
+                            } ${isPast ? 'opacity-60' : ''}`}
                           >
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="text-lg font-semibold text-gray-900">{classItem.title}</h3>
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <h3 className="font-serif text-lg font-semibold text-charcoal-950">{classItem.title}</h3>
                                   {classItem.has_notes && (
-                                    <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                      <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"/>
-                                      <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                                    </svg>
+                                    <DocumentTextIcon className="w-4 h-4 text-gold-600" aria-hidden="true" />
                                   )}
                                   <Badge className={getClassTypeClassName(classItem.class_type)}>
                                     {getClassTypeLabel(classItem.class_type)}
                                   </Badge>
                                   {isPast && (
-                                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Completed</span>
+                                    <StatusDot tone="neutral" label="Completed" />
                                   )}
                                   {classItem.is_cancelled && (
-                                    <span className="text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded">Cancelled</span>
+                                    <StatusDot tone="attention" label="Cancelled" />
                                   )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-charcoal-500">
                                   <div className="flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <ClockIcon className="w-4 h-4" aria-hidden="true" />
                                     {startTime.toLocaleTimeString('en-US', {
                                       hour: 'numeric',
                                       minute: '2-digit',
@@ -447,33 +448,24 @@ export default function InstructorSchedulePage() {
                                   </div>
                                   {classItem.location && (
                                     <div className="flex items-center gap-1">
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      </svg>
+                                      <MapPinIcon className="w-4 h-4" aria-hidden="true" />
                                       {classItem.location}
                                     </div>
                                   )}
                                   {classItem.studios?.name && (
                                     <div className="flex items-center gap-1">
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                      </svg>
+                                      <BuildingOffice2Icon className="w-4 h-4" aria-hidden="true" />
                                       {classItem.studios.name}
                                     </div>
                                   )}
                                   <div className="flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
+                                    <UsersIcon className="w-4 h-4" aria-hidden="true" />
                                     {classItem.enrolled_count || 0}{classItem.max_capacity ? `/${classItem.max_capacity}` : ''} enrolled
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <ChevronRightIcon className="w-5 h-5 text-charcoal-400" aria-hidden="true" />
                               </div>
                             </div>
                           </div>
@@ -487,7 +479,7 @@ export default function InstructorSchedulePage() {
 
             {/* DESKTOP VIEW - Calendar Grid (Month View) */}
             {viewType === 'month' && (
-              <div className="hidden md:block pb-8">
+              <div className="mt-toolbar-gap hidden md:block">
                 <Calendar
                   events={classes}
                   currentDate={currentDate}

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent, Button, Badge, Spinner, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
+import { Button, Badge, EmptyState, PageHeader, Spinner, StatusDot, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
+import { InboxIcon } from '@heroicons/react/24/outline'
 import type { Studio, ClassType } from '@/lib/types'
 import { convertETToUTC } from '@/lib/utils/et-timezone'
 
@@ -35,7 +36,7 @@ export default function InstructorRequestsPage() {
   const [requests, setRequests] = useState<PrivateLessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  
+
   // Create Class Modal state
   const [showCreateClassModal, setShowCreateClassModal] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<PrivateLessonRequest | null>(null)
@@ -87,7 +88,7 @@ export default function InstructorRequestsPage() {
       })
 
       if (response.ok) {
-        setRequests(prev => prev.map(req => 
+        setRequests(prev => prev.map(req =>
           req.id === id ? { ...req, status: newStatus } : req
         ))
         addToast(`Request ${newStatus}`, 'success')
@@ -118,28 +119,28 @@ export default function InstructorRequestsPage() {
     setSelectedRequest(null)
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusDot = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return <Badge variant="warning">Pending</Badge>
+        return <StatusDot tone="neutral" label="Pending" />
       case 'approved':
-        return <Badge variant="success">Approved</Badge>
+        return <StatusDot tone="positive" label="Approved" />
       case 'confirmed':
-        return <Badge variant="success">Confirmed</Badge>
+        return <StatusDot tone="positive" label="Confirmed" />
       case 'scheduled':
-        return <Badge variant="primary">Scheduled</Badge>
+        return <StatusDot tone="accent" label="Scheduled" />
       case 'declined':
-        return <Badge variant="default">Declined</Badge>
+        return <StatusDot tone="attention" label="Declined" />
       case 'completed':
-        return <Badge variant="secondary">Completed</Badge>
+        return <StatusDot tone="neutral" label="Completed" />
       default:
-        return <Badge variant="default">{status}</Badge>
+        return <StatusDot tone="neutral" label={status} />
     }
   }
 
   const getStudentName = (request: PrivateLessonRequest) => {
-    return request.student?.full_name || 
-           request.student?.profile?.full_name || 
+    return request.student?.full_name ||
+           request.student?.profile?.full_name ||
            'Unknown Student'
   }
 
@@ -168,168 +169,165 @@ export default function InstructorRequestsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-charcoal-950 mb-2">Private Lesson Requests</h1>
-          <p className="text-lg text-charcoal-800">
-            Manage private lesson requests from your students
-          </p>
-        </div>
+      <PageHeader
+        title="Lesson Requests"
+        subtitle="Manage private lesson requests from your students"
+      />
 
+      <div className="mt-header-gap">
         {requests.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <p className="text-charcoal-600 mb-2">No requests yet</p>
-              <p className="text-charcoal-500 text-sm">
-                When students submit private lesson requests, they'll appear here
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<InboxIcon />}
+              message="Private lesson requests from your students will appear here."
+            />
+          </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {pendingRequests.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold text-charcoal-900 mb-4">
-                  Pending Requests ({pendingRequests.length})
+              <section>
+                <h2 className="font-serif text-xl font-semibold text-charcoal-950">
+                  Pending requests ({pendingRequests.length})
                 </h2>
-                <div className="grid gap-4">
+                <div className="mt-4 grid gap-4">
                   {pendingRequests.map((request) => {
                     const contact = getStudentContact(request)
                     return (
-                      <Card key={request.id} className="bg-gold-50 border border-gold-200">
-                        <CardContent className="pt-6">
-                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <h3 className="text-lg font-semibold text-charcoal-950">
-                                  {getStudentName(request)}
-                                </h3>
-                                {getStatusBadge(request.status)}
-                              </div>
-                              
-                              <div className="space-y-2 text-sm text-charcoal-700">
-                                <div>
-                                  <span className="font-medium">Focus: </span>
-                                  {request.requested_focus}
-                                </div>
-                                
-                                {request.preferred_dates && request.preferred_dates.length > 0 && (
-                                  <div>
-                                    <span className="font-medium">Preferred Dates: </span>
-                                    {request.preferred_dates.join(', ')}
-                                  </div>
-                                )}
-                                
-                                {request.additional_notes && (
-                                  <div>
-                                    <span className="font-medium">Notes: </span>
-                                    {request.additional_notes}
-                                  </div>
-                                )}
-                                
-                                <div className="flex flex-wrap gap-4 pt-2 text-charcoal-600">
-                                  {contact.email && (
-                                    <a href={`mailto:${contact.email}`} className="hover:text-rose-600">
-                                      {contact.email}
-                                    </a>
-                                  )}
-                                  {contact.phone && (
-                                    <a href={`tel:${contact.phone}`} className="hover:text-rose-600">
-                                      {contact.phone}
-                                    </a>
-                                  )}
-                                </div>
-                                
-                                <div className="text-xs text-charcoal-500 pt-1">
-                                  Submitted {new Date(request.created_at).toLocaleDateString()}
-                                </div>
-                              </div>
+                      <div
+                        key={request.id}
+                        className="rounded-lg border border-champagne-200 bg-champagne-50 p-5"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <h3 className="font-serif text-lg font-semibold text-charcoal-950">
+                                {getStudentName(request)}
+                              </h3>
+                              {getStatusDot(request.status)}
                             </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                onClick={() => handleOpenCreateClassModal(request)}
-                              >
-                                Create Class
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateStatus(request.id, 'declined')}
-                                disabled={updatingId === request.id}
-                              >
-                                Decline
-                              </Button>
+
+                            <div className="space-y-2 text-sm text-charcoal-700">
+                              <div>
+                                <span className="font-medium">Focus: </span>
+                                {request.requested_focus}
+                              </div>
+
+                              {request.preferred_dates && request.preferred_dates.length > 0 && (
+                                <div>
+                                  <span className="font-medium">Preferred dates: </span>
+                                  {request.preferred_dates.join(', ')}
+                                </div>
+                              )}
+
+                              {request.additional_notes && (
+                                <div>
+                                  <span className="font-medium">Notes: </span>
+                                  {request.additional_notes}
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap gap-4 pt-2 text-charcoal-500">
+                                {contact.email && (
+                                  <a href={`mailto:${contact.email}`} className="hover:text-rose-600">
+                                    {contact.email}
+                                  </a>
+                                )}
+                                {contact.phone && (
+                                  <a href={`tel:${contact.phone}`} className="hover:text-rose-600">
+                                    {contact.phone}
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="text-xs text-charcoal-500 pt-1">
+                                Submitted {new Date(request.created_at).toLocaleDateString()}
+                              </div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleOpenCreateClassModal(request)}
+                            >
+                              Create class
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => updateStatus(request.id, 'declined')}
+                              disabled={updatingId === request.id}
+                            >
+                              Decline
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     )
                   })}
                 </div>
-              </div>
+              </section>
             )}
 
             {otherRequests.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold text-charcoal-900 mb-4">
-                  Previous Requests ({otherRequests.length})
+              <section>
+                <h2 className="font-serif text-xl font-semibold text-charcoal-950">
+                  Previous requests ({otherRequests.length})
                 </h2>
-                <div className="grid gap-4">
+                <div className="mt-4 grid gap-4">
                   {otherRequests.map((request) => {
                     return (
-                      <Card key={request.id} className="opacity-80">
-                        <CardContent className="pt-6">
-                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold text-charcoal-950">
-                                  {getStudentName(request)}
-                                </h3>
-                                {getStatusBadge(request.status)}
-                              </div>
-                              
-                              <div className="space-y-1 text-sm text-charcoal-600">
-                                <div>
-                                  <span className="font-medium">Focus: </span>
-                                  {request.requested_focus}
-                                </div>
-                                
-                                <div className="text-xs text-charcoal-500">
-                                  Submitted {new Date(request.created_at).toLocaleDateString()}
-                                </div>
-                              </div>
+                      <div
+                        key={request.id}
+                        className="rounded-lg border border-champagne-200 bg-champagne-50 p-5"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-serif text-lg font-semibold text-charcoal-950">
+                                {getStudentName(request)}
+                              </h3>
+                              {getStatusDot(request.status)}
                             </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleOpenCreateClassModal(request)}
-                                className="bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100"
-                              >
-                                Create Class
-                              </Button>
-                              {request.status !== 'pending' && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updateStatus(request.id, 'pending')}
-                                  disabled={updatingId === request.id}
-                                >
-                                  Reopen
-                                </Button>
-                              )}
+
+                            <div className="space-y-1 text-sm text-charcoal-500">
+                              <div>
+                                <span className="font-medium">Focus: </span>
+                                {request.requested_focus}
+                              </div>
+
+                              <div className="text-xs text-charcoal-500">
+                                Submitted {new Date(request.created_at).toLocaleDateString()}
+                              </div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleOpenCreateClassModal(request)}
+                            >
+                              Create class
+                            </Button>
+                            {request.status !== 'pending' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => updateStatus(request.id, 'pending')}
+                                disabled={updatingId === request.id}
+                              >
+                                Reopen
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     )
                   })}
                 </div>
-              </div>
+              </section>
             )}
           </div>
         )}
@@ -487,15 +485,15 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
     <Modal isOpen={true} onClose={onClose} title="Create Private Lesson" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
             <div className="flex items-center gap-2">
               <Badge variant="primary">Private Lesson</Badge>
-              <span className="text-sm font-medium text-purple-800">
+              <span className="text-sm font-medium text-rose-800">
                 for {studentName}
               </span>
             </div>
             {request.requested_focus && (
-              <p className="text-sm text-purple-700 mt-1">
+              <p className="text-sm text-rose-700 mt-1">
                 <span className="font-medium">Focus:</span> {request.requested_focus}
               </p>
             )}
@@ -519,7 +517,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
           />
 
           <fieldset>
-            <legend className="block text-sm font-medium text-gray-700 mb-2">
+            <legend className="block text-sm font-medium text-charcoal-700 mb-2">
               Studio
             </legend>
             <div className="flex gap-4 mb-2">
@@ -534,7 +532,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Select existing</span>
+                <span className="text-sm text-charcoal-700">Select existing</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -547,7 +545,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Create new</span>
+                <span className="text-sm text-charcoal-700">Create new</span>
               </label>
             </div>
 
@@ -590,7 +588,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
-              <label htmlFor="duration-select" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="duration-select" className="block text-sm font-medium text-charcoal-700 mb-1">
                 Length *
               </label>
               <select

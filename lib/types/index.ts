@@ -23,6 +23,7 @@ export interface Student {
   is_active: boolean
   created_at: string
   updated_at: string
+  classes_taken?: number // Enrollments in past, non-cancelled classes (GET /api/students)
   profile?: {
     full_name: string
     email: string | null

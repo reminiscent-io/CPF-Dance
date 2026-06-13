@@ -50,7 +50,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch students' }, { status: 500 })
     }
 
-    return NextResponse.json({ students })
+    // Classes taken = enrollments in non-cancelled classes that have already started
+    const classCounts: Record<string, number> = {}
+    const studentIds = (students || []).map((s) => s.id)
+    if (studentIds.length > 0) {
+      const { data: enrollmentRows, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select('student_id, classes!inner(id)')
+        .in('student_id', studentIds)
+        .lte('classes.start_time', new Date().toISOString())
+        .eq('classes.is_cancelled', false)
+
+      if (enrollmentsError) {
+        // Soft-fail: counts read 0 rather than taking down the roster
+        console.error('Error fetching enrollment counts:', enrollmentsError)
+      } else {
+        for (const row of enrollmentRows || []) {
+          classCounts[row.student_id] = (classCounts[row.student_id] || 0) + 1
+        }
+      }
+    }
+
+    const studentsWithCounts = (students || []).map((s) => ({
+      ...s,
+      classes_taken: classCounts[s.id] || 0
+    }))
+
+    return NextResponse.json({ students: studentsWithCounts })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -2,11 +2,114 @@ import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Button, EmptyCell, EmptyState, PageHeader, StatusDot, Table } from '@/components/ui'
+import type { Column, StatusTone } from '@/components/ui'
+import { DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline'
 
 export const metadata = {
   title: 'Invoices | Dance Studio',
   description: 'Manage student invoices and billing',
 }
+
+interface InvoiceRow {
+  id: string
+  amount: number | null
+  payment_status: string
+  transaction_date: string | null
+  student: { id: string; full_name: string } | null
+  class: { id: string; title: string; start_time: string | null } | null
+  [key: string]: any
+}
+
+const statusTones: Record<string, StatusTone> = {
+  confirmed: 'positive',
+  pending: 'neutral',
+  disputed: 'attention',
+  cancelled: 'attention',
+}
+
+const requestPaymentAction = (
+  <Link
+    href="/instructor/payments?request=true"
+    className="inline-flex min-h-control items-center justify-center rounded-lg bg-rose-600 px-4 py-2 text-base font-medium text-champagne-50 transition-colors duration-200 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+  >
+    <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+    Request payment
+  </Link>
+)
+
+const columns: Column<InvoiceRow>[] = [
+  {
+    key: 'student',
+    header: 'Student',
+    render: (invoice) =>
+      invoice.student?.full_name ? (
+        <span className="font-medium">{invoice.student.full_name}</span>
+      ) : (
+        <EmptyCell />
+      ),
+  },
+  {
+    key: 'class',
+    header: 'Class',
+    render: (invoice) =>
+      invoice.class ? (
+        <div>
+          <div>{invoice.class.title || <EmptyCell />}</div>
+          {invoice.class.start_time && (
+            <div className="text-xs text-charcoal-500">
+              {new Date(invoice.class.start_time).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+      ) : (
+        <EmptyCell />
+      ),
+  },
+  {
+    key: 'date',
+    header: 'Date',
+    render: (invoice) =>
+      invoice.transaction_date ? (
+        new Date(invoice.transaction_date).toLocaleDateString()
+      ) : (
+        <EmptyCell />
+      ),
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    numeric: true,
+    render: (invoice) => `$${invoice.amount?.toFixed(2) || '0.00'}`,
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (invoice) => (
+      <StatusDot
+        tone={statusTones[invoice.payment_status] || 'neutral'}
+        label={invoice.payment_status}
+        className="capitalize"
+      />
+    ),
+  },
+  {
+    key: 'actions',
+    header: '',
+    align: 'right',
+    hoverOnly: true,
+    render: () => (
+      <div className="flex justify-end gap-1">
+        <Button size="sm" variant="ghost">
+          View
+        </Button>
+        <Button size="sm" variant="ghost">
+          Download
+        </Button>
+      </div>
+    ),
+  },
+]
 
 export default async function InvoicesPage() {
   await requireInstructor()
@@ -32,111 +135,36 @@ export default async function InvoicesPage() {
     `)
     .order('transaction_date', { ascending: false })
 
+  const invoices = (payments ?? []) as InvoiceRow[]
+
   return (
-    <div className="min-h-screen bg-cream-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
-            <p className="mt-2 text-gray-600">Manage student invoices and billing</p>
-          </div>
-          <Link
-            href="/instructor/payments?request=true"
-            className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors font-medium"
-          >
-            + Request Payment
-          </Link>
-        </div>
+    <div className="min-h-screen bg-champagne-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-page-x pt-5 lg:pt-page-top pb-8">
+        <PageHeader
+          title="Invoices"
+          subtitle="Manage student invoices and billing."
+          action={requestPaymentAction}
+        />
 
-        {error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            Failed to load invoices: {error.message}
-          </div>
-        ) : payments && payments.length > 0 ? (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Class
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {payments.map((payment) => {
-                  const statusColors = {
-                    confirmed: 'bg-green-100 text-green-800',
-                    pending: 'bg-yellow-100 text-yellow-800',
-                    disputed: 'bg-red-100 text-red-800',
-                    cancelled: 'bg-gray-100 text-gray-800',
-                  }
-
-                  return (
-                    <tr key={payment.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {payment.student?.full_name || 'Unknown'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{payment.class?.title || 'N/A'}</div>
-                        {payment.class?.start_time && (
-                          <div className="text-sm text-gray-500">
-                            {new Date(payment.class.start_time).toLocaleDateString()}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {payment.transaction_date ? new Date(payment.transaction_date).toLocaleDateString() : 'Not set'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        ${payment.amount?.toFixed(2) || '0.00'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[payment.payment_status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}`}>
-                          {payment.payment_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="text-rose-600 hover:text-rose-900 font-medium mr-3">
-                          View
-                        </button>
-                        <button className="text-gray-600 hover:text-gray-900 font-medium">
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="max-w-md mx-auto">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices yet</h3>
-              <p className="mt-1 text-sm text-gray-500">Create your first invoice to start tracking payments.</p>
+        <div className="mt-header-gap">
+          {error ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+              Failed to load invoices: {error.message}
             </div>
-          </div>
-        )}
+          ) : (
+            <Table
+              data={invoices}
+              columns={columns}
+              empty={
+                <EmptyState
+                  icon={<DocumentTextIcon />}
+                  message="No invoices yet."
+                  action={requestPaymentAction}
+                />
+              }
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -25,8 +25,29 @@ export type { ConfirmDialogProps } from './ConfirmDialog'
 export { Spinner, LoadingOverlay } from './Spinner'
 export type { SpinnerProps, LoadingOverlayProps } from './Spinner'
 
-export { Table } from './Table'
+export { Table, EmptyCell } from './Table'
 export type { TableProps, Column } from './Table'
+
+export { PageHeader } from './PageHeader'
+export type { PageHeaderProps } from './PageHeader'
+
+export { Toolbar } from './Toolbar'
+export type { ToolbarProps } from './Toolbar'
+
+export { SegmentedControl } from './SegmentedControl'
+export type { SegmentedControlProps, SegmentedOption } from './SegmentedControl'
+
+export { StatusDot } from './StatusDot'
+export type { StatusDotProps, StatusTone } from './StatusDot'
+
+export { PersonChip } from './PersonChip'
+export type { PersonChipProps } from './PersonChip'
+
+export { EmptyState } from './EmptyState'
+export type { EmptyStateProps } from './EmptyState'
+
+export { Skeleton } from './Skeleton'
+export type { SkeletonProps } from './Skeleton'
 
 export { GooglePlacesInput } from './GooglePlacesInput'
 export type { PlaceDetails } from './GooglePlacesInput'

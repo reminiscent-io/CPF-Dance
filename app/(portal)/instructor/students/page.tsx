@@ -4,9 +4,29 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Input, Modal, ModalFooter, Textarea, Table, useToast, Spinner } from '@/components/ui'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import {
+  Badge,
+  Button,
+  EmptyCell,
+  EmptyState,
+  Input,
+  Modal,
+  ModalFooter,
+  PageHeader,
+  PersonChip,
+  SegmentedControl,
+  Select,
+  StatusDot,
+  Table,
+  Textarea,
+  Toolbar,
+  useToast,
+  Spinner
+} from '@/components/ui'
+import { PlusIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import type { Student, CreateStudentData } from '@/lib/types'
+
+type StudentFilter = 'all' | 'active' | 'inactive'
 
 export default function StudentsPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -151,16 +171,30 @@ export default function StudentsPage() {
 
   if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     )
   }
 
-  const filteredStudents = students.filter(student => {
-    const studentName = (student.full_name || student.profile?.full_name || '').toLowerCase()
-    return studentName.includes(search.toLowerCase())
-  })
+  const getStudentName = (student: Student) =>
+    student.full_name || student.profile?.full_name || ''
+
+  // Most-taught students first; ties fall back to name
+  const filteredStudents = students
+    .filter(student => getStudentName(student).toLowerCase().includes(search.toLowerCase()))
+    .sort(
+      (a, b) =>
+        (b.classes_taken ?? 0) - (a.classes_taken ?? 0) ||
+        getStudentName(a).localeCompare(getStudentName(b))
+    )
+
+  // Sparse columns stay hidden until the data exists.
+  const hasAgeGroups = filteredStudents.some((s) => s.age_group)
+  const hasSkillLevels = filteredStudents.some((s) => s.skill_level)
+
+  let studentFilter: StudentFilter = 'all'
+  if (filterActive !== null) studentFilter = filterActive ? 'active' : 'inactive'
 
   const baseColumns = [
     {
@@ -168,36 +202,41 @@ export default function StudentsPage() {
       header: 'Name',
       render: (student: Student) => (
         <div className="flex items-center gap-2">
-          <span>{student.full_name || student.profile?.full_name || 'N/A'}</span>
+          <span className="font-medium">{getStudentName(student) || <EmptyCell />}</span>
           {!student.profile_id && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              Not Linked
-            </span>
+            <Badge variant="warning" size="sm">Not linked</Badge>
           )}
         </div>
       )
     },
+    ...(hasAgeGroups
+      ? [{
+          key: 'age_group',
+          header: 'Age Group',
+          render: (student: Student) => student.age_group || <EmptyCell />
+        }]
+      : []),
+    ...(hasSkillLevels
+      ? [{
+          key: 'skill_level',
+          header: 'Skill Level',
+          render: (student: Student) => student.skill_level || <EmptyCell />
+        }]
+      : []),
     {
-      key: 'age_group',
-      header: 'Age Group',
-      render: (student: Student) => student.age_group || 'N/A'
-    },
-    {
-      key: 'skill_level',
-      header: 'Skill Level',
-      render: (student: Student) => student.skill_level || 'N/A'
+      key: 'classes_taken',
+      header: 'Classes',
+      numeric: true,
+      render: (student: Student) => student.classes_taken ?? 0
     },
     {
       key: 'status',
       header: 'Status',
       render: (student: Student) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          student.is_active
-            ? 'bg-green-100 text-green-800'
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {student.is_active ? 'Active' : 'Inactive'}
-        </span>
+        <StatusDot
+          tone={student.is_active ? 'positive' : 'neutral'}
+          label={student.is_active ? 'Active' : 'Inactive'}
+        />
       )
     }
   ]
@@ -206,40 +245,36 @@ export default function StudentsPage() {
     ...baseColumns,
     {
       key: 'instructors',
-      header: 'Tagged Instructors',
+      header: 'Instructors',
       render: (student: Student) => {
         const taggedInstructors = getStudentInstructors(student.id)
-        return (
-          <div className="flex items-center gap-2">
-            {taggedInstructors.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {taggedInstructors.map((instructor: any) => (
-                  <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {instructor.full_name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-gray-400 text-sm">No instructors</span>
-            )}
+        return taggedInstructors.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {taggedInstructors.map((instructor: any) => (
+              <PersonChip key={instructor.id} name={instructor.full_name} />
+            ))}
           </div>
+        ) : (
+          <EmptyCell />
         )
       }
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: '',
+      align: 'right' as const,
+      hoverOnly: true,
       render: (student: Student) => (
         <Button
           size="sm"
-          variant="outline"
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation()
             setSelectedStudent(student)
             setShowTagModal(true)
           }}
         >
-          Tag Instructor
+          + Tag
         </Button>
       )
     }
@@ -249,72 +284,85 @@ export default function StudentsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Students</h1>
-            <p className="text-gray-600 mt-1">Manage your student roster</p>
-          </div>
-          <Button onClick={() => setShowAddModal(true)} aria-label="Add New Student">
-            <PlusIcon className="w-5 h-5" />
+      <PageHeader
+        title="Students"
+        subtitle="Manage your student roster"
+        action={
+          <Button onClick={() => setShowAddModal(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Add student
           </Button>
-        </div>
+        }
+      />
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <Input
-              placeholder="Search students..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={filterActive === null ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(null)}
-              size="sm"
-            >
-              All
-            </Button>
-            <Button
-              variant={filterActive === true ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(true)}
-              size="sm"
-            >
-              Active
-            </Button>
-            <Button
-              variant={filterActive === false ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(false)}
-              size="sm"
-            >
-              Inactive
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Toolbar
+        search={
+          <Input
+            placeholder="Search students..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search students"
+          />
+        }
+        filters={
+          <SegmentedControl<StudentFilter>
+            aria-label="Filter students by status"
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' }
+            ]}
+            value={studentFilter}
+            onChange={(value) => setFilterActive(value === 'all' ? null : value === 'active')}
+          />
+        }
+      />
 
       {/* Desktop Table View */}
-      <div className="hidden md:block">
+      <div className="mt-toolbar-gap hidden md:block">
         <Table
           data={filteredStudents}
           columns={columns}
           onRowClick={(student) => router.push(`/instructor/students/${student.id}`)}
           loading={loading}
-          emptyMessage="No students found"
+          empty={
+            <EmptyState
+              icon={<UserGroupIcon />}
+              message={
+                search || filterActive !== null
+                  ? 'No students match this view.'
+                  : 'Your roster is empty.'
+              }
+              action={
+                !search && filterActive === null ? (
+                  <Button onClick={() => setShowAddModal(true)}>
+                    <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+                    Add student
+                  </Button>
+                ) : undefined
+              }
+            />
+          }
         />
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden">
+      <div className="mt-toolbar-gap md:hidden">
         {loading ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-8 text-center">
+            <Spinner size="md" className="mx-auto" />
+            <p className="mt-2 text-charcoal-500">Loading...</p>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">
-            No students found
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<UserGroupIcon />}
+              message={
+                search || filterActive !== null
+                  ? 'No students match this view.'
+                  : 'Your roster is empty.'
+              }
+            />
           </div>
         ) : (
           <div className="space-y-3">
@@ -322,70 +370,68 @@ export default function StudentsPage() {
               <div
                 key={student.id}
                 onClick={() => router.push(`/instructor/students/${student.id}`)}
-                className="bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                className="rounded-lg border border-champagne-200 bg-champagne-50 p-4 cursor-pointer hover:bg-champagne-100 active:bg-champagne-200 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {student.full_name || student.profile?.full_name || 'N/A'}
+                      <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">
+                        {getStudentName(student) || '–'}
                       </h3>
                       {!student.profile_id && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
-                          Not Linked
-                        </span>
+                        <Badge variant="warning" size="sm" className="whitespace-nowrap">
+                          Not linked
+                        </Badge>
                       )}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-charcoal-700">
                       {student.age_group && (
                         <span className="inline-flex items-center">
-                          <span className="text-gray-400 mr-1">Age:</span>
+                          <span className="text-charcoal-400 mr-1">Age:</span>
                           {student.age_group}
                         </span>
                       )}
                       {student.skill_level && (
                         <span className="inline-flex items-center">
-                          <span className="text-gray-400 mr-1">Level:</span>
+                          <span className="text-charcoal-400 mr-1">Level:</span>
                           {student.skill_level}
                         </span>
                       )}
+                      <span className="inline-flex items-center tabular-nums">
+                        <span className="text-charcoal-400 mr-1">Classes:</span>
+                        {student.classes_taken ?? 0}
+                      </span>
                     </div>
                     {profile?.role === 'admin' && (
                       <div className="mt-2">
                         {getStudentInstructors(student.id).length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1.5">
                             {getStudentInstructors(student.id).map((instructor: any) => (
-                              <span key={instructor.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {instructor.full_name}
-                              </span>
+                              <PersonChip key={instructor.id} name={instructor.full_name} />
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">No instructors tagged</span>
+                          <span className="text-xs text-charcoal-400">No instructors tagged</span>
                         )}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      student.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {student.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    <StatusDot
+                      tone={student.is_active ? 'positive' : 'neutral'}
+                      label={student.is_active ? 'Active' : 'Inactive'}
+                    />
                     {profile?.role === 'admin' && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedStudent(student)
                           setShowTagModal(true)
                         }}
-                        className="text-xs"
                       >
-                        Tag
+                        + Tag
                       </Button>
                     )}
                   </div>
@@ -471,21 +517,17 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Age Group (optional)
-              </label>
-              <select
-                value={formData.age_group}
-                onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
-              >
-                <option value="">Select age group...</option>
-                <option value="Child (<13)">Child (&lt;13)</option>
-                <option value="Teen (13-18)">Teen (13-18)</option>
-                <option value="Adult (+18)">Adult (+18)</option>
-              </select>
-            </div>
+            <Select
+              label="Age Group (optional)"
+              value={formData.age_group}
+              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+              options={[
+                { value: '', label: 'Select age group...' },
+                { value: 'Child (<13)', label: 'Child (<13)' },
+                { value: 'Teen (13-18)', label: 'Teen (13-18)' },
+                { value: 'Adult (+18)', label: 'Adult (+18)' }
+              ]}
+            />
             <Input
               label="Skill Level (optional)"
               placeholder="e.g., Beginner, Intermediate"
@@ -579,18 +621,18 @@ function TagInstructorModal({
         {/* Current Tagged Instructors */}
         {currentRelationships.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Currently Tagged:</h3>
+            <h3 className="text-sm font-medium text-charcoal-700 mb-2">Currently Tagged:</h3>
             <div className="space-y-2">
               {currentRelationships.map((instructor) => {
                 const relationship = relationships.find(r => r.instructor?.id === instructor.id)
                 return (
                   <div
                     key={instructor.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-champagne-100 rounded-lg"
                   >
                     <div>
-                      <p className="font-medium">{instructor.full_name}</p>
-                      <p className="text-sm text-gray-600">{instructor.email}</p>
+                      <p className="font-medium text-charcoal-900">{instructor.full_name}</p>
+                      <p className="text-sm text-charcoal-500">{instructor.email}</p>
                     </div>
                     <Button
                       size="sm"
@@ -608,27 +650,24 @@ function TagInstructorModal({
 
         {/* Add New Instructor */}
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Add New Instructor:</h3>
+          <h3 className="text-sm font-medium text-charcoal-700 mb-2">Add New Instructor:</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Instructor
-              </label>
-              <select
+              <Select
+                label="Select Instructor"
                 value={selectedInstructorId}
                 onChange={(e) => setSelectedInstructorId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
                 required
-              >
-                <option value="">Choose an instructor...</option>
-                {availableInstructors.map((instructor) => (
-                  <option key={instructor.id} value={instructor.id}>
-                    {instructor.full_name} ({instructor.email})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'Choose an instructor...' },
+                  ...availableInstructors.map((instructor) => ({
+                    value: instructor.id,
+                    label: `${instructor.full_name} (${instructor.email})`
+                  }))
+                ]}
+              />
               {availableInstructors.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-charcoal-400 mt-2">
                   All available instructors are already tagged
                 </p>
               )}

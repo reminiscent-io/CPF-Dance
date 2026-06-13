@@ -6,7 +6,9 @@ import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusDot, type StatusTone } from '@/components/ui/StatusDot'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Waiver {
   id: string
@@ -53,23 +55,23 @@ export default function DancerWaiversPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): StatusTone => {
     switch (status) {
       case 'signed':
-        return 'success'
+        return 'positive'
       case 'pending':
-        return 'warning'
+        return 'neutral'
       case 'declined':
-        return 'danger'
+        return 'attention'
       default:
-        return 'default'
+        return 'neutral'
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <p className="text-charcoal-500">Loading...</p>
       </div>
     )
   }
@@ -83,12 +85,12 @@ export default function DancerWaiversPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Waivers</h1>
-        <p className="text-gray-600">Review and sign waivers for your lessons</p>
-      </div>
+      <PageHeader
+        title="My Waivers"
+        subtitle="Review and sign waivers for your lessons"
+      />
 
-      <div className="grid gap-6">
+      <div className="mt-header-gap grid gap-6">
         {pendingWaivers.length > 0 && (
           <Card className="bg-gold-50 border border-gold-200">
             <CardTitle>Pending Waivers ({pendingWaivers.length})</CardTitle>
@@ -118,22 +120,20 @@ export default function DancerWaiversPage() {
           <CardTitle>All Waivers ({waivers.length})</CardTitle>
           <CardContent className="mt-4">
             {loadingWaivers ? (
-              <p className="text-gray-500">Loading waivers...</p>
+              <p className="text-charcoal-500">Loading waivers...</p>
             ) : waivers.length === 0 ? (
-              <p className="text-gray-500">No waivers yet.</p>
+              <EmptyState message="No waivers have been issued to you yet." />
             ) : (
               <>
                 {/* Mobile View - Card Layout */}
                 <div className="block md:hidden space-y-3">
                   {waivers.map((waiver) => (
-                    <div key={waiver.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div key={waiver.id} className="p-4 bg-champagne-50 rounded-lg border border-champagne-200">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-gray-900 text-sm flex-1">{waiver.title}</h3>
-                        <Badge variant={getStatusColor(waiver.status)} size="sm">
-                          {waiver.status}
-                        </Badge>
+                        <h3 className="font-semibold text-charcoal-950 text-sm flex-1">{waiver.title}</h3>
+                        <StatusDot tone={getStatusTone(waiver.status)} label={waiver.status} />
                       </div>
-                      <div className="space-y-1 text-xs text-gray-600 mb-3">
+                      <div className="space-y-1 text-xs text-charcoal-500 mb-3">
                         <div>Issued: {new Date(waiver.created_at).toLocaleDateString()}</div>
                         {waiver.signed_at && <div>Signed: {new Date(waiver.signed_at).toLocaleDateString()}</div>}
                       </div>
@@ -152,29 +152,27 @@ export default function DancerWaiversPage() {
                 {/* Desktop View - Table Layout */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="border-b border-gray-200">
+                    <thead className="border-b border-champagne-200">
                       <tr>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Title</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Issued</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Signed</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                        <th className="text-left py-3 px-4 font-semibold text-charcoal-700">Title</th>
+                        <th className="text-left py-3 px-4 font-semibold text-charcoal-700">Status</th>
+                        <th className="text-left py-3 px-4 font-semibold text-charcoal-700">Issued</th>
+                        <th className="text-left py-3 px-4 font-semibold text-charcoal-700">Signed</th>
+                        <th className="text-left py-3 px-4 font-semibold text-charcoal-700">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-champagne-200">
                       {waivers.map((waiver) => (
-                        <tr key={waiver.id} className="hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-gray-900">{waiver.title}</td>
+                        <tr key={waiver.id} className="hover:bg-champagne-100">
+                          <td className="py-3 px-4 font-medium text-charcoal-950">{waiver.title}</td>
                           <td className="py-3 px-4">
-                            <Badge variant={getStatusColor(waiver.status)}>
-                              {waiver.status}
-                            </Badge>
+                            <StatusDot tone={getStatusTone(waiver.status)} label={waiver.status} />
                           </td>
-                          <td className="py-3 px-4 text-gray-600 text-xs">
+                          <td className="py-3 px-4 text-charcoal-500 text-xs">
                             {new Date(waiver.created_at).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-4 text-gray-600 text-xs">
-                            {waiver.signed_at ? new Date(waiver.signed_at).toLocaleDateString() : '—'}
+                          <td className="py-3 px-4 text-charcoal-500 text-xs">
+                            {waiver.signed_at ? new Date(waiver.signed_at).toLocaleDateString() : '–'}
                           </td>
                           <td className="py-3 px-4">
                             <Button

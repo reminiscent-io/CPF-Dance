@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { LessonBalanceLedger } from '@/components/LessonBalanceLedger'
 import { RequestComposer } from '@/components/RequestComposer'
 import { InFlightSection, type LessonRequest } from '@/components/InFlightSection'
@@ -236,12 +237,10 @@ export default function PrivateLessonsPage() {
       <header className="mb-8 lg:mb-12">
         <div className="lg:flex lg:items-end lg:justify-between lg:gap-10">
           <div className="lg:flex-1 lg:max-w-xl">
-            <h1 className="font-serif text-3xl md:text-4xl text-charcoal-950 tracking-tight">
-              Private Lessons
-            </h1>
-            <p className="mt-2 text-base text-charcoal-500 leading-relaxed">
-              Tell Courtney what you want to work on. She'll get back to you.
-            </p>
+            <PageHeader
+              title="Private Lessons"
+              subtitle="Tell Courtney what you want to work on. She'll get back to you."
+            />
           </div>
           <div className="mt-6 lg:mt-0 lg:shrink-0">
             <LessonBalanceLedger

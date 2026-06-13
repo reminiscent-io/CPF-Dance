@@ -8,7 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const labelClass = 'block text-sm font-medium text-charcoal-500 mb-1'
 const fieldClass =
-  'w-full px-4 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 placeholder:text-charcoal-300 ' +
+  'w-full min-h-control px-4 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 placeholder:text-charcoal-300 ' +
   'focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent ' +
   'transition-[border-color,box-shadow,background-color] duration-200 ' +
   'disabled:bg-champagne-200 disabled:text-charcoal-300 disabled:cursor-not-allowed'

@@ -6,9 +6,17 @@ import Link from 'next/link'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { RichTextEditor } from '@/components/RichTextEditor'
-import { Card, CardTitle, CardContent, Button, Badge, useToast, Spinner, Input, Textarea, Modal, ModalFooter } from '@/components/ui'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { Card, Button, Badge, useToast, Spinner, Input, Textarea, Select, Modal, ModalFooter } from '@/components/ui'
 import type { Student, Note, Enrollment, Payment, PrivateLessonRequest, UpdateStudentData } from '@/lib/types'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
+
+const VISIBILITY_LABELS: Record<string, string> = {
+  private: 'Private',
+  shared_with_student: 'Shared with dancer',
+  shared_with_guardian: 'Shared with guardian',
+  shared_with_instructor: 'From dancer'
+}
 
 export default function StudentDetailPage() {
   const params = useParams()
@@ -16,7 +24,7 @@ export default function StudentDetailPage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
   const { addToast } = useToast()
-  
+
   const [student, setStudent] = useState<Student | null>(null)
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [notes, setNotes] = useState<Note[]>([])
@@ -59,7 +67,7 @@ export default function StudentDetailPage() {
     try {
       const response = await fetch(`/api/students/${id}`)
       if (!response.ok) throw new Error('Failed to fetch student')
-      
+
       const data = await response.json()
       setStudent(data.student)
       setEnrollments(data.enrollments || [])
@@ -301,7 +309,7 @@ export default function StudentDetailPage() {
 
   if (authLoading || loading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     )
@@ -311,7 +319,7 @@ export default function StudentDetailPage() {
     return (
       <PortalLayout profile={profile}>
         <div className="text-center py-12">
-          <p className="text-gray-600">Student not found</p>
+          <p className="text-charcoal-500">Student not found</p>
           <Button onClick={() => router.push('/instructor/students')} className="mt-4">
             Back to Students
           </Button>
@@ -320,335 +328,339 @@ export default function StudentDetailPage() {
     )
   }
 
+  const studentName = student.full_name || student.profile?.full_name
+  const instructorNotes = notes.filter((n: any) => n.visibility !== 'shared_with_instructor')
+  const dancerNotes = notes.filter((n: any) => n.visibility === 'shared_with_instructor')
+  const trainingMeta = [student.age_group, student.skill_level].filter(Boolean).join(' · ')
+
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-6">
-        <Button variant="outline" onClick={() => router.push('/instructor/students')}>
-          ← Back to Students
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <Card>
-            <CardTitle>Student Profile</CardTitle>
-            <CardContent className="mt-4 space-y-3">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {student.full_name || student.profile?.full_name}
-                </h3>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant={student.is_active ? 'success' : 'default'}>
-                    {student.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
-                  {!student.profile_id && (
-                    <Badge variant="warning">Not Linked</Badge>
-                  )}
-                </div>
+      <div className="space-y-8">
+        <div>
+          <Link
+            href="/instructor/students"
+            className="text-sm text-charcoal-500 hover:text-rose-700 transition-colors"
+          >
+            ← Students
+          </Link>
+          <header className="mt-3 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">
+                  {studentName}
+                </h1>
+                <Badge variant={student.is_active ? 'primary' : 'default'} size="sm">
+                  {student.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+                {!student.profile_id && (
+                  <Badge variant="warning" size="sm">Not linked</Badge>
+                )}
               </div>
+              {trainingMeta && <p className="text-charcoal-500 mt-1">{trainingMeta}</p>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
+                Edit profile
+              </Button>
+              <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
+                <PencilSquareIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                Add note
+              </Button>
+            </div>
+          </header>
+        </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <aside className="lg:sticky lg:top-6">
+            <Card padding="none">
               {!student.profile_id && (
-                <div className="pt-3 pb-3 border-b border-gray-200">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm text-yellow-800 mb-2">
-                      This student doesn't have a linked dancer account yet.
-                    </p>
-                    <div className="space-y-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowLinkModal(true)}
-                        className="w-full"
-                      >
-                        Link to Dancer Account
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleOpenMergeModal}
-                        className="w-full"
-                      >
-                        Merge into Existing Dancer
-                      </Button>
-                    </div>
+                <div className="px-6 py-5 bg-champagne-100 rounded-t-lg border-b border-champagne-200">
+                  <p className="text-sm text-charcoal-700">
+                    No dancer account linked. Link or merge to give this student portal access.
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowLinkModal(true)}
+                      className="w-full"
+                    >
+                      Link to dancer account
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleOpenMergeModal}
+                      className="w-full"
+                    >
+                      Merge into existing dancer
+                    </Button>
                   </div>
                 </div>
               )}
 
-              <div className="pt-3 border-t border-gray-200">
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="text-gray-900">{student.email || student.profile?.email || 'N/A'}</p>
-              </div>
+              <dl className="px-6 py-5">
+                <FactGroup label="Contact">
+                  <Fact label="Email" value={student.email || student.profile?.email} />
+                  <Fact label="Phone" value={student.phone || student.profile?.phone} />
+                </FactGroup>
 
-              <div>
-                <p className="text-sm text-gray-600">Phone</p>
-                <p className="text-gray-900">{student.phone || student.profile?.phone || 'N/A'}</p>
-              </div>
+                <FactGroup label="Training" divided>
+                  <Fact label="Age group" value={student.age_group} />
+                  <Fact label="Skill level" value={student.skill_level} />
+                  <Fact label="Goals" value={student.goals} />
+                </FactGroup>
 
-              <div>
-                <p className="text-sm text-gray-600">Age Group</p>
-                <p className="text-gray-900">{student.age_group || 'N/A'}</p>
-              </div>
+                <FactGroup label="Safety" divided>
+                  <Fact label="Medical notes" value={student.medical_notes} />
+                  <Fact
+                    label="Emergency contact"
+                    value={
+                      [student.emergency_contact_name, student.emergency_contact_phone]
+                        .filter(Boolean)
+                        .join('\n')
+                    }
+                  />
+                </FactGroup>
+              </dl>
+            </Card>
+          </aside>
 
-              <div>
-                <p className="text-sm text-gray-600">Skill Level</p>
-                <p className="text-gray-900">{student.skill_level || 'N/A'}</p>
-              </div>
-
-              {student.goals && (
-                <div>
-                  <p className="text-sm text-gray-600">Goals</p>
-                  <p className="text-gray-900">{student.goals}</p>
-                </div>
-              )}
-
-              {student.medical_notes && (
-                <div>
-                  <p className="text-sm text-gray-600">Medical Notes</p>
-                  <p className="text-gray-900">{student.medical_notes}</p>
-                </div>
-              )}
-
-              <div>
-                <p className="text-sm text-gray-600">Emergency Contact</p>
-                <p className="text-gray-900">{student.emergency_contact_name}</p>
-                <p className="text-gray-900">{student.emergency_contact_phone}</p>
-              </div>
-
-              <Button onClick={() => setShowEditModal(true)} className="w-full mt-4">
-                Edit Student Info
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardTitle>Enrolled Classes ({enrollments.length})</CardTitle>
-            <CardContent className="mt-4">
-              {enrollments.length === 0 ? (
-                <p className="text-gray-600">No enrollments yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {enrollments.map((enrollment: any) => (
-                    <div key={enrollment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{enrollment.class?.title}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(enrollment.class?.start_time).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {enrollment.attendance_status && (
-                        <Badge variant="default">{enrollment.attendance_status}</Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Instructor Notes - shows all notes from instructors (not student-authored) */}
-          <Card>
-            <div className="flex justify-between items-center">
-              <CardTitle>Instructor Notes ({notes.filter((n: any) => n.visibility !== 'shared_with_instructor').length})</CardTitle>
-              <div className="flex gap-2">
-                <Link href={`/instructor/notes?student_id=${student.id}`}>
-                  <Button variant="outline" size="sm">
-                    View All Notes
-                  </Button>
-                </Link>
-                <Button variant="primary" size="sm" onClick={() => handleOpenNoteModal()}>
-                  + Add Note
-                </Button>
-              </div>
-            </div>
-            <CardContent className="mt-4">
-              {notes.filter((n: any) => n.visibility !== 'shared_with_instructor').length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-600 mb-4">No notes yet</p>
-                  <Button variant="outline" onClick={() => handleOpenNoteModal()}>
-                    Create First Note
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {notes.filter((n: any) => n.visibility !== 'shared_with_instructor').map((note: any) => {
-                    const isOwnNote = note.author_id === profile?.id
-                    return (
-                      <div
-                        key={note.id}
-                        className={`border ${isOwnNote ? 'border-ballet-pink-200 bg-ballet-pink-50' : 'border-champagne-200 bg-champagne-100'} pl-4 py-2 hover:bg-champagne-200 rounded-md transition-colors ${isOwnNote ? 'cursor-pointer' : ''} group relative`}
-                        onClick={() => isOwnNote && handleOpenNoteModal(note)}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant={isOwnNote ? 'primary' : 'default'} size="sm">
-                                {isOwnNote ? 'You' : note.author_name || 'Instructor'}
-                              </Badge>
-                              {note.class_name && (
-                                <span className="text-xs text-gray-600">{note.class_name}</span>
-                              )}
-                              <Badge variant="secondary" size="sm">{note.visibility}</Badge>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs text-gray-500">
-                              {new Date(note.created_at).toLocaleDateString()}
-                            </p>
-                            {isOwnNote && (
-                              <Button
-                                variant="outline"
-                                size="sm"
+          <div className="lg:col-span-2 space-y-8">
+            {/* Instructor notes — the core of the record, so they lead */}
+            <section>
+              <SectionLabel
+                label={`Notes · ${instructorNotes.length}`}
+                action={{ label: 'View all', href: `/instructor/notes?student_id=${student.id}` }}
+              />
+              <Card padding="none">
+                {instructorNotes.length === 0 ? (
+                  <div className="px-6 py-10 text-center">
+                    <p className="text-charcoal-500 mb-4">No notes yet</p>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenNoteModal()}>
+                      Write the first note
+                    </Button>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-champagne-200">
+                    {instructorNotes.map((note: any) => {
+                      const isOwnNote = note.author_id === profile?.id
+                      return (
+                        <li
+                          key={note.id}
+                          className={`px-6 py-5 group ${isOwnNote ? 'cursor-pointer hover:bg-champagne-100 focus-within:bg-champagne-100 transition-colors' : ''}`}
+                          onClick={() => isOwnNote && handleOpenNoteModal(note)}
+                          title={isOwnNote ? 'Click to edit' : undefined}
+                        >
+                          <div className="flex items-baseline justify-between gap-4">
+                            {isOwnNote ? (
+                              <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleDeleteNote(note.id)
+                                  handleOpenNoteModal(note)
                                 }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="font-serif text-lg font-semibold text-charcoal-950 text-left"
                               >
-                                Delete
-                              </Button>
+                                {note.title || 'Note'}
+                              </button>
+                            ) : (
+                              <p className="font-serif text-lg font-semibold text-charcoal-950">
+                                {note.title || 'Note'}
+                              </p>
                             )}
+                            <span className="flex items-center gap-3 shrink-0">
+                              {isOwnNote && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteNote(note.id)
+                                  }}
+                                  className="text-xs text-charcoal-400 hover:text-rose-700 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              <time className="text-xs text-charcoal-400">
+                                {new Date(note.created_at).toLocaleDateString()}
+                              </time>
+                            </span>
                           </div>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <Badge variant={isOwnNote ? 'primary' : 'default'} size="sm">
+                              {isOwnNote ? 'You' : note.author_name || 'Instructor'}
+                            </Badge>
+                            {note.class_name && (
+                              <span className="text-xs text-charcoal-500">{note.class_name}</span>
+                            )}
+                            <span className="text-xs text-charcoal-400">
+                              {VISIBILITY_LABELS[note.visibility] || note.visibility}
+                            </span>
+                          </div>
+                          <div
+                            className="prose prose-sm max-w-none text-charcoal-700 mt-3"
+                            dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
+                          />
+                          {note.tags && note.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {note.tags.map((tag: string) => (
+                                <Badge key={tag} variant="default" size="sm">{tag}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </Card>
+            </section>
+
+            {/* Notes the dancer chose to share back */}
+            <section>
+              <SectionLabel
+                label={`From the dancer · ${dancerNotes.length}`}
+                action={{ label: 'View all', href: `/instructor/notes?student_id=${student.id}` }}
+              />
+              <Card padding="none">
+                {dancerNotes.length === 0 ? (
+                  <div className="px-6 py-8 text-center">
+                    <p className="text-charcoal-500">Nothing shared yet</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-champagne-200">
+                    {dancerNotes.map((note: any) => (
+                      <li key={note.id} className="px-6 py-5">
+                        <div className="flex items-baseline justify-between gap-4">
+                          <p className="font-serif text-lg font-semibold text-charcoal-950">
+                            {note.title || 'Note'}
+                          </p>
+                          <time className="text-xs text-charcoal-400 shrink-0">
+                            {new Date(note.created_at).toLocaleDateString()}
+                          </time>
                         </div>
-                        <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <Badge variant="default" size="sm">
+                            {note.author_name || 'Dancer'}
+                          </Badge>
+                          {note.class_name && (
+                            <span className="text-xs text-charcoal-500">{note.class_name}</span>
+                          )}
+                        </div>
+                        <div
+                          className="prose prose-sm max-w-none text-charcoal-700 mt-3"
+                          dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
+                        />
                         {note.tags && note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {note.tags.map((tag: string, idx: number) => (
-                              <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {note.tags.map((tag: string) => (
+                              <Badge key={tag} variant="default" size="sm">{tag}</Badge>
                             ))}
                           </div>
                         )}
-                        {isOwnNote && (
-                          <p className="text-xs text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            Click to edit
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </section>
+
+            <section>
+              <SectionLabel label={`Classes · ${enrollments.length}`} />
+              <Card padding="none">
+                {enrollments.length === 0 ? (
+                  <div className="px-6 py-8 text-center">
+                    <p className="text-charcoal-500">No enrollments yet</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-champagne-200">
+                    {enrollments.map((enrollment: any) => (
+                      <li key={enrollment.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-charcoal-900 truncate">
+                            {enrollment.class?.title}
                           </p>
+                          <p className="text-xs text-charcoal-500 mt-0.5">
+                            {new Date(enrollment.class?.start_time).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {enrollment.attendance_status && (
+                          <Badge variant="default" size="sm">{enrollment.attendance_status}</Badge>
                         )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </section>
 
-          {/* Student Notes */}
-          <Card>
-            <div className="flex justify-between items-center">
-              <CardTitle>Student Notes ({notes.filter((n: any) => n.visibility === 'shared_with_instructor').length})</CardTitle>
-              <Link href={`/instructor/notes?student_id=${student.id}`}>
-                <Button variant="outline" size="sm">
-                  View All Notes
-                </Button>
-              </Link>
-            </div>
-            <CardContent className="mt-4">
-              {notes.filter((n: any) => n.visibility === 'shared_with_instructor').length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-600">No notes shared with you yet</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {notes.filter((n: any) => n.visibility === 'shared_with_instructor').map((note: any) => (
-                    <div
-                      key={note.id}
-                      className="border border-ballet-pink-200 bg-ballet-pink-50 pl-4 py-2 hover:bg-ballet-pink-100 rounded-md transition-colors group relative"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{note.title || 'Note'}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="default" size="sm">
-                              {note.author_name || 'Student'}
-                            </Badge>
-                            {note.class_name && (
-                              <span className="text-xs text-gray-600">{note.class_name}</span>
+            <section>
+              <SectionLabel
+                label={`Requests · ${requests.length}`}
+                action={{ label: 'View all', href: '/instructor/requests' }}
+              />
+              <Card padding="none">
+                {requests.length === 0 ? (
+                  <div className="px-6 py-8 text-center">
+                    <p className="text-charcoal-500">No requests</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-champagne-200">
+                    {requests.map((request: any) => (
+                      <li key={request.id}>
+                        <Link
+                          href="/instructor/requests"
+                          className="flex items-start justify-between gap-4 px-6 py-4 hover:bg-champagne-100 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-charcoal-900">
+                              {request.requested_focus}
+                            </p>
+                            {request.additional_notes && (
+                              <p className="text-xs text-charcoal-500 mt-0.5">{request.additional_notes}</p>
                             )}
-                            <Badge variant="secondary" size="sm">{note.visibility}</Badge>
                           </div>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          {new Date(note.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-gray-700 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={createSanitizedHtml(note.content)} />
-                      {note.tags && note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {note.tags.map((tag: string, idx: number) => (
-                            <Badge key={idx} variant="secondary" size="sm">{tag}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                          <Badge variant={request.status === 'pending' ? 'warning' : 'success'} size="sm">
+                            {request.status}
+                          </Badge>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </section>
 
-          <Card>
-            <div className="flex justify-between items-center">
-              <CardTitle>Private Lesson Requests ({requests.length})</CardTitle>
-              <Link href="/instructor/requests">
-                <Button variant="outline" size="sm">
-                  View All Requests
-                </Button>
-              </Link>
-            </div>
-            <CardContent className="mt-4">
-              {requests.length === 0 ? (
-                <p className="text-gray-600">No requests</p>
-              ) : (
-                <div className="space-y-3">
-                  {requests.map((request: any) => (
-                    <Link 
-                      key={request.id} 
-                      href="/instructor/requests"
-                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="font-medium text-gray-900">{request.requested_focus}</p>
-                        <Badge variant={request.status === 'pending' ? 'warning' : 'success'}>
-                          {request.status}
+            <section>
+              <SectionLabel label={`Payments · ${payments.length}`} />
+              <Card padding="none">
+                {payments.length === 0 ? (
+                  <div className="px-6 py-8 text-center">
+                    <p className="text-charcoal-500">No payments recorded</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-champagne-200">
+                    {payments.map((payment: any) => (
+                      <li key={payment.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                        <div>
+                          <p className="text-sm font-medium text-charcoal-900 tabular-nums">
+                            ${payment.amount}
+                          </p>
+                          <p className="text-xs text-charcoal-500 mt-0.5">
+                            {new Date(payment.transaction_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant={payment.payment_status === 'confirmed' ? 'success' : 'warning'} size="sm">
+                          {payment.payment_status}
                         </Badge>
-                      </div>
-                      {request.additional_notes && (
-                        <p className="text-sm text-gray-600">{request.additional_notes}</p>
-                      )}
-                      <p className="text-xs text-rose-600 mt-2">Click to view details →</p>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardTitle>Payment History ({payments.length})</CardTitle>
-            <CardContent className="mt-4">
-              {payments.length === 0 ? (
-                <p className="text-gray-600">No payment history</p>
-              ) : (
-                <div className="space-y-3">
-                  {payments.map((payment: any) => (
-                    <div key={payment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">${payment.amount}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(payment.transaction_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Badge variant={payment.payment_status === 'confirmed' ? 'success' : 'warning'}>
-                        {payment.payment_status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </section>
+          </div>
         </div>
       </div>
 
@@ -671,7 +683,7 @@ export default function StudentDetailPage() {
           size="md"
         >
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-charcoal-500">
               Enter the email address the dancer used to create their account. This will link this student record to their dancer portal access.
             </p>
             <Input
@@ -714,13 +726,13 @@ export default function StudentDetailPage() {
           size="md"
         >
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-charcoal-500">
               Select an existing dancer account to merge this student into. All notes, enrollments, payments, and other data will be transferred to the selected account.
             </p>
 
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-700 mb-1">Data to be transferred:</p>
-              <ul className="text-sm text-gray-600 space-y-1">
+            <div className="bg-champagne-100 rounded-lg p-3">
+              <p className="text-sm font-medium text-charcoal-700 mb-1">Data to be transferred:</p>
+              <ul className="text-sm text-charcoal-500 space-y-1">
                 <li>{enrollments.length} enrollment(s)</li>
                 <li>{notes.length} note(s)</li>
                 <li>{payments.length} payment(s)</li>
@@ -729,34 +741,31 @@ export default function StudentDetailPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Dancer Account
-              </label>
               {loadingLinkedStudents ? (
                 <div className="flex items-center justify-center py-4">
                   <Spinner size="sm" />
-                  <span className="ml-2 text-sm text-gray-600">Loading dancer accounts...</span>
+                  <span className="ml-2 text-sm text-charcoal-500">Loading dancer accounts...</span>
                 </div>
               ) : linkedStudents.length === 0 ? (
-                <p className="text-sm text-gray-500 py-2">No dancer accounts available to merge into.</p>
+                <p className="text-sm text-charcoal-400 py-2">No dancer accounts available to merge into.</p>
               ) : (
-                <select
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                <Select
+                  label="Select Dancer Account"
                   value={selectedTargetId}
                   onChange={(e) => setSelectedTargetId(e.target.value)}
-                >
-                  <option value="">-- Select a dancer account --</option>
-                  {linkedStudents.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.profile?.full_name} ({s.profile?.email})
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: 'Select a dancer account' },
+                    ...linkedStudents.map((s) => ({
+                      value: s.id,
+                      label: `${s.profile?.full_name} (${s.profile?.email})`
+                    }))
+                  ]}
+                />
               )}
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-sm text-amber-800">
+            <div className="bg-ballet-pink-50 border border-ballet-pink-200 rounded-lg p-3">
+              <p className="text-sm text-ballet-pink-900">
                 <strong>Warning:</strong> This action cannot be undone. The current student record will be deleted after the merge.
               </p>
             </div>
@@ -795,7 +804,7 @@ export default function StudentDetailPage() {
               onChange={(e) => setNoteFormData({ ...noteFormData, title: e.target.value })}
             />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-charcoal-500 mb-1">
                 Content
               </label>
               <RichTextEditor
@@ -811,40 +820,29 @@ export default function StudentDetailPage() {
               onChange={(e) => setNoteFormData({ ...noteFormData, tags: e.target.value })}
               helperText="Add tags to categorize this note"
             />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Related Class (optional)
-              </label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                value={noteFormData.class_id}
-                onChange={(e) => setNoteFormData({ ...noteFormData, class_id: e.target.value })}
-              >
-                <option value="">-- General Note (No Specific Class) --</option>
-                {enrollments.map((enrollment: any) => (
-                  <option key={enrollment.class_id} value={enrollment.class_id}>
-                    {enrollment.class?.title} - {new Date(enrollment.class?.start_time).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Link this note to a specific class the student is enrolled in
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Visibility
-              </label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                value={noteFormData.visibility}
-                onChange={(e) => setNoteFormData({ ...noteFormData, visibility: e.target.value })}
-              >
-                <option value="shared_with_student">Share with Student</option>
-                <option value="shared_with_guardian">Share with Guardian</option>
-                <option value="private">Private (Instructor Only)</option>
-              </select>
-            </div>
+            <Select
+              label="Related Class (optional)"
+              value={noteFormData.class_id}
+              onChange={(e) => setNoteFormData({ ...noteFormData, class_id: e.target.value })}
+              options={[
+                { value: '', label: 'General note (no specific class)' },
+                ...enrollments.map((enrollment: any) => ({
+                  value: enrollment.class_id,
+                  label: `${enrollment.class?.title} · ${new Date(enrollment.class?.start_time).toLocaleDateString()}`
+                }))
+              ]}
+              helperText="Link this note to a specific class the student is enrolled in"
+            />
+            <Select
+              label="Visibility"
+              value={noteFormData.visibility}
+              onChange={(e) => setNoteFormData({ ...noteFormData, visibility: e.target.value })}
+              options={[
+                { value: 'shared_with_student', label: 'Share with dancer' },
+                { value: 'shared_with_guardian', label: 'Share with guardian' },
+                { value: 'private', label: 'Private (only you)' }
+              ]}
+            />
           </div>
 
           <ModalFooter className="mt-6">
@@ -865,6 +863,59 @@ export default function StudentDetailPage() {
         </Modal>
       )}
     </PortalLayout>
+  )
+}
+
+function SectionLabel({
+  label,
+  action,
+}: {
+  label: string
+  action?: { label: string; href: string }
+}) {
+  return (
+    <div className="flex items-baseline justify-between mb-3">
+      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
+        {label}
+      </p>
+      {action && (
+        <Link
+          href={action.href}
+          className="text-sm text-rose-700 hover:text-rose-800 font-medium transition-colors"
+        >
+          {action.label}
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function FactGroup({
+  label,
+  divided = false,
+  children,
+}: {
+  label: string
+  divided?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className={divided ? 'border-t border-champagne-200 mt-5 pt-5' : ''}>
+      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
+        {label}
+      </p>
+      <div className="mt-3 space-y-3">{children}</div>
+    </div>
+  )
+}
+
+function Fact({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null
+  return (
+    <div>
+      <dt className="text-xs text-charcoal-500">{label}</dt>
+      <dd className="text-sm text-charcoal-900 mt-0.5 break-words whitespace-pre-line">{value}</dd>
+    </div>
   )
 }
 
@@ -919,21 +970,17 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Age Group
-              </label>
-              <select
-                value={formData.age_group}
-                onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-500 focus:border-transparent transition"
-              >
-                <option value="">Select age group...</option>
-                <option value="Child (<13)">Child (&lt;13)</option>
-                <option value="Teen (13-18)">Teen (13-18)</option>
-                <option value="Adult (+18)">Adult (+18)</option>
-              </select>
-            </div>
+            <Select
+              label="Age Group"
+              value={formData.age_group}
+              onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+              options={[
+                { value: '', label: 'Select age group...' },
+                { value: 'Child (<13)', label: 'Child (<13)' },
+                { value: 'Teen (13-18)', label: 'Teen (13-18)' },
+                { value: 'Adult (+18)', label: 'Adult (+18)' }
+              ]}
+            />
             <Input
               label="Skill Level"
               value={formData.skill_level}
@@ -975,9 +1022,9 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+              className="rounded border-champagne-300 text-rose-600 focus:ring-rose-500"
             />
-            <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
+            <label htmlFor="is_active" className="text-sm font-medium text-charcoal-700">
               Active Student
             </label>
           </div>

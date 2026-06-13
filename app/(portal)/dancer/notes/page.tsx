@@ -13,6 +13,7 @@ import { PlusIcon } from '@heroicons/react/24/outline'
 import { Note } from '@/lib/utils/date-helpers'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { NoteViewContent } from '@/components/notes/NoteViewContent'
 
 interface ClassOption {
@@ -298,39 +299,20 @@ function DancerNotesContent() {
   return (
     <PortalLayout profile={profile}>
       <div className="max-w-3xl">
-        <header className="pt-4 pb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-[0.7rem] uppercase tracking-[0.24em] text-charcoal-400 mb-3">
-              Program · Notebook
-            </p>
-            <h1 className="font-serif text-charcoal-950 text-5xl md:text-6xl leading-[0.95] tracking-[-0.03em]">
-              Notes
-            </h1>
-            <p className="mt-4 font-serif italic text-charcoal-500 text-lg max-w-prose tracking-[-0.005em]">
-              Feedback from Courtney, alongside what you keep for yourself between lessons.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleOpenFocusMode()}
-            className="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ballet-pink-700 hover:text-ballet-pink-800 pb-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-4 focus-visible:ring-offset-champagne-50 rounded-sm"
-          >
-            <PlusIcon className="w-4 h-4" aria-hidden="true" />
-            Write
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOpenFocusMode()}
-            aria-label="Write a new note"
-            className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-full bg-ballet-pink-600 text-champagne-50 hover:bg-ballet-pink-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ballet-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-champagne-50"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
-        </header>
+        <PageHeader
+          title="Notes"
+          subtitle="Feedback from Courtney, alongside what you keep for yourself between lessons."
+          action={
+            <Button onClick={() => handleOpenFocusMode()} aria-label="Write a new note">
+              <PlusIcon className="w-5 h-5 sm:mr-1.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Write</span>
+            </Button>
+          }
+        />
 
         <nav
           aria-label="Filter notes by source"
-          className="flex items-center gap-x-6 text-sm border-b border-champagne-200 pb-3 mb-8"
+          className="mt-header-gap flex items-center gap-x-6 text-sm border-b border-champagne-200 pb-3 mb-8"
         >
           {tabOptions.map((tab) => {
             const active = activeTab === tab.id

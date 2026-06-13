@@ -4,8 +4,25 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Badge, Modal, ModalFooter, Input, Textarea, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import {
+  Badge,
+  Button,
+  EmptyState,
+  GooglePlacesInput,
+  Input,
+  Modal,
+  ModalFooter,
+  PageHeader,
+  PersonChip,
+  SegmentedControl,
+  Select,
+  Spinner,
+  StatusDot,
+  Textarea,
+  Toolbar,
+  useToast
+} from '@/components/ui'
+import { CalendarDaysIcon, MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
@@ -283,130 +300,153 @@ function ClassesContent() {
 
   if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     )
   }
 
+  // Quiet empty-state copy that matches the active filters
+  let emptyStateMessage = 'No classes on the schedule yet.'
+  if (filterStudio || filterType) {
+    emptyStateMessage = 'No classes match this view.'
+  } else if (upcomingOnly) {
+    emptyStateMessage = 'No upcoming classes on the schedule.'
+  }
+
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Classes</h1>
-            <p className="text-gray-600 mt-1">Manage your class schedule</p>
-          </div>
-          <Button onClick={() => setShowCreateModal(true)} aria-label="Create Class">
-            <PlusIcon className="w-5 h-5" />
+      <PageHeader
+        title="Classes"
+        subtitle="Manage your class schedule"
+        action={
+          <Button onClick={() => setShowCreateModal(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Create class
           </Button>
-        </div>
+        }
+      />
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            value={filterStudio}
-            onChange={(e) => setFilterStudio(e.target.value)}
-          >
-            <option value="">All Studios</option>
-            {studios.map(studio => (
-              <option key={studio.id} value={studio.id}>
-                {studio.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as ClassType | '')}
-          >
-            <option value="">All Types</option>
-            <option value="group">Group</option>
-            <option value="private">Private</option>
-            <option value="workshop">Workshop</option>
-            <option value="master_class">Master Class</option>
-          </select>
-
-          <Button
-            variant={upcomingOnly ? 'primary' : 'outline'}
-            onClick={() => setUpcomingOnly(!upcomingOnly)}
-          >
-            {upcomingOnly ? 'Upcoming Only' : 'All Classes'}
-          </Button>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : classes.length === 0 ? (
-        <Card>
-          <div className="text-center py-12 text-gray-600">
-            No classes found
+      <Toolbar
+        filters={
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-full sm:w-44">
+              <Select
+                aria-label="Filter classes by studio"
+                value={filterStudio}
+                onChange={(e) => setFilterStudio(e.target.value)}
+                options={[
+                  { value: '', label: 'All Studios' },
+                  ...studios.map(studio => ({ value: studio.id, label: studio.name }))
+                ]}
+              />
+            </div>
+            <div className="w-full sm:w-44">
+              <Select
+                aria-label="Filter classes by type"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as ClassType | '')}
+                options={[
+                  { value: '', label: 'All Types' },
+                  { value: 'group', label: 'Group' },
+                  { value: 'private', label: 'Private' },
+                  { value: 'workshop', label: 'Workshop' },
+                  { value: 'master_class', label: 'Master Class' }
+                ]}
+              />
+            </div>
+            <SegmentedControl<'upcoming' | 'all'>
+              aria-label="Filter classes by time"
+              options={[
+                { value: 'upcoming', label: 'Upcoming' },
+                { value: 'all', label: 'All' }
+              ]}
+              value={upcomingOnly ? 'upcoming' : 'all'}
+              onChange={(value) => setUpcomingOnly(value === 'upcoming')}
+            />
           </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classes.map((cls: any) => (
-            <Card
-              key={cls.id}
-              hover
-              className={`cursor-pointer ${cls.class_type === 'private' ? '!bg-purple-50 !border-2 !border-purple-400' : ''}`}
-              onClick={() => handleClassClick(cls)}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 flex-1">{cls.title}</h3>
-                {cls.is_cancelled ? (
-                  <Badge variant="danger">Cancelled</Badge>
-                ) : (
-                  <Badge variant="primary">{cls.class_type.replace('_', ' ')}</Badge>
+        }
+      />
+
+      <div className="mt-toolbar-gap">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : classes.length === 0 ? (
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState icon={<CalendarDaysIcon />} message={emptyStateMessage} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {classes.map((cls: any) => (
+              <div
+                key={cls.id}
+                onClick={() => handleClassClick(cls)}
+                className={`cursor-pointer rounded-lg border p-5 transition-colors ${
+                  cls.class_type === 'private'
+                    ? 'border-rose-200 bg-rose-50 hover:bg-rose-100'
+                    : 'border-champagne-200 bg-champagne-50 hover:bg-champagne-100'
+                }`}
+              >
+                <div className="flex justify-between items-start gap-2 mb-3">
+                  <h3 className="font-serif text-lg font-semibold text-charcoal-950 flex-1">{cls.title}</h3>
+                  {cls.is_cancelled ? (
+                    <StatusDot tone="attention" label="Cancelled" />
+                  ) : (
+                    <Badge variant="primary">{cls.class_type.replace('_', ' ')}</Badge>
+                  )}
+                </div>
+
+                {cls.instructor_name && (
+                  <div className="mb-2">
+                    <PersonChip name={cls.instructor_name} full />
+                  </div>
                 )}
-              </div>
 
-              {cls.instructor_name && (
-                <p className="text-sm text-gray-700 font-medium mb-2">
-                  👤 {cls.instructor_name}
+                {cls.studio && (
+                  <p className="flex items-center gap-1.5 text-sm text-charcoal-500 mb-2">
+                    <MapPinIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
+                    <span className="truncate">
+                      {cls.studio.name}
+                      {cls.studio.city && `, ${cls.studio.city}`}
+                    </span>
+                  </p>
+                )}
+
+                <p className="flex items-center gap-1.5 text-sm text-charcoal-500 mb-3">
+                  <CalendarDaysIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
+                  <span>
+                    {new Date(cls.start_time).toLocaleString('en-US', {
+                      timeZone: 'America/New_York',
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })} ET
+                  </span>
                 </p>
-              )}
 
-              {cls.studio && (
-                <p className="text-sm text-gray-600 mb-2">
-                  📍 {cls.studio.name}
-                  {cls.studio.city && `, ${cls.studio.city}`}
-                </p>
-              )}
+                {cls.description && (
+                  <p className="text-sm text-charcoal-700 mb-3 line-clamp-2">{cls.description}</p>
+                )}
 
-              <p className="text-sm text-gray-600 mb-3">
-                📅 {new Date(cls.start_time).toLocaleString('en-US', {
-                  timeZone: 'America/New_York',
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit'
-                })} ET
-              </p>
-
-              {cls.description && (
-                <p className="text-sm text-gray-700 mb-3 line-clamp-2">{cls.description}</p>
-              )}
-
-              <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                <span className="text-sm text-gray-600">
-                  {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
-                    ? `${cls.actual_attendance_count} attended`
-                    : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
-                </span>
-                <span className="text-sm font-semibold text-gray-900">
-                  {getPricingModelDescription(cls)}
-                </span>
+                <div className="flex justify-between items-center pt-3 border-t border-champagne-200">
+                  <span className="text-sm text-charcoal-500 tabular-nums">
+                    {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
+                      ? `${cls.actual_attendance_count} attended`
+                      : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
+                  </span>
+                  <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
+                    {getPricingModelDescription(cls)}
+                  </span>
+                </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {showCreateModal && (
         <CreateClassModal
@@ -741,11 +781,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           {/* Instructor selection - only for admins */}
           {profile?.role === 'admin' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
                 Instructor (leave blank to use yourself)
               </label>
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
@@ -766,7 +806,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="bg-champagne-100 border border-champagne-200 rounded-lg p-4 mb-4">
             <Input
               label="Actual Attendance (Override)"
               type="number"
@@ -774,14 +814,14 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               value={formData.actual_attendance_count || ''}
               onChange={(e) => setFormData({ ...formData, actual_attendance_count: e.target.value ? parseInt(e.target.value) : undefined })}
             />
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-charcoal-500 mt-1">
               Use this to manually set the actual number of students who attended. Leave blank to use enrollment count.
               Currently enrolled: {classData.enrolled_count || 0} students.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-700 mb-2">
               Studio
             </label>
             <div className="flex gap-4 mb-2">
@@ -796,7 +836,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Select existing</span>
+                <span className="text-sm text-charcoal-700">Select existing</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -809,7 +849,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Create new</span>
+                <span className="text-sm text-charcoal-700">Create new</span>
               </label>
             </div>
 
@@ -821,7 +861,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               />
             ) : (
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.studio_id}
                 onChange={(e) => setFormData({ ...formData, studio_id: e.target.value })}
               >
@@ -836,12 +876,12 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal-700 mb-1">
               Class Type *
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.class_type}
               onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
             >
@@ -854,16 +894,16 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
           {/* Student enrollment management for private lessons */}
           {formData.class_type === 'private' && (
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-3">
+              <label className="block text-sm font-medium text-charcoal-700">
                 Enrolled Students
               </label>
 
               {enrolledStudents.length > 0 ? (
                 <div className="space-y-2">
                   {enrolledStudents.map(student => (
-                    <div key={student.id} className="flex items-center justify-between p-2 bg-white rounded border border-purple-200">
-                      <span className="text-sm font-medium text-gray-900">{student.full_name}</span>
+                    <div key={student.id} className="flex items-center justify-between p-2 bg-champagne-50 rounded border border-rose-200">
+                      <span className="text-sm font-medium text-charcoal-950">{student.full_name}</span>
                       <button
                         type="button"
                         onClick={async () => {
@@ -883,7 +923,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                             }
                           }
                         }}
-                        className="text-xs text-red-600 hover:text-red-800"
+                        className="text-xs text-rose-700 hover:text-rose-800"
                       >
                         Remove
                       </button>
@@ -891,15 +931,15 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-600">No students enrolled yet</p>
+                <p className="text-sm text-charcoal-500">No students enrolled yet</p>
               )}
 
-              <div className="pt-2 border-t border-purple-200">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+              <div className="pt-2 border-t border-rose-200">
+                <label className="block text-xs font-medium text-charcoal-700 mb-1">
                   Add Student
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 text-sm border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                   onChange={async (e) => {
                     const studentId = e.target.value
                     if (studentId) {
@@ -952,12 +992,12 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
                 Length *
               </label>
               <select
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
               >
@@ -985,7 +1025,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             value={formData.external_signup_url || ''}
             onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
           />
-          <p className="text-xs text-gray-600 -mt-2 mb-2">
+          <p className="text-xs text-charcoal-500 -mt-2 mb-2">
             Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
           </p>
 
@@ -995,20 +1035,20 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               id="edit_is_public"
               checked={formData.is_public || false}
               onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
             />
-            <label htmlFor="edit_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <label htmlFor="edit_is_public" className="text-sm font-medium text-charcoal-700 cursor-pointer">
               Make class public for dancers and guardians to view and enroll
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal-700 mb-1">
               Pricing Model *
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.pricing_model || 'per_person'}
               onChange={(e) => setFormData({ ...formData, pricing_model: e.target.value as PricingModel })}
             >
@@ -1060,8 +1100,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           )}
 
           {formData.pricing_model === 'tiered' && (
-            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-600">Set a base cost for the first X students, then charge per additional student</p>
+            <div className="space-y-4 p-4 bg-champagne-100 rounded-lg border border-champagne-200">
+              <p className="text-sm text-charcoal-500">Set a base cost for the first X students, then charge per additional student</p>
               <Input
                 label="Base Cost ($) *"
                 type="number"
@@ -1095,11 +1135,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           )}
 
           {/* Create Recurring Copies Section */}
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-4">
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-medium text-gray-900">Create Recurring Copies</h4>
-                <p className="text-xs text-gray-600">Generate additional classes based on this one</p>
+                <h4 className="text-sm font-medium text-charcoal-950">Create Recurring Copies</h4>
+                <p className="text-xs text-charcoal-500">Generate additional classes based on this one</p>
               </div>
               <Button
                 type="button"
@@ -1114,7 +1154,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             {showRecurringSection && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-charcoal-700 mb-2">
                     Create copies on these days *
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -1131,8 +1171,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                         }}
                         className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                           recurringSelectedDays.includes(index)
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                            ? 'bg-rose-600 text-champagne-50 border-rose-600'
+                            : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
                         }`}
                       >
                         {day}
@@ -1150,7 +1190,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                 />
 
                 {recurringCopyDates.length > 0 && (
-                  <div className="text-sm text-purple-700 bg-purple-100 px-3 py-2 rounded">
+                  <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
                     This will create <strong>{recurringCopyDates.length}</strong> additional classes
                   </div>
                 )}
@@ -1184,7 +1224,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
         </div>
 
         <ModalFooter className="mt-6">
-          <button type="button" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-colors" title="Delete class">
+          <button type="button" onClick={onDelete} className="text-rose-700 hover:text-rose-800 hover:bg-rose-50 p-2 rounded transition-colors" title="Delete class">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1489,11 +1529,11 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           {/* Instructor selection - only for admins */}
           {profile?.role === 'admin' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
                 Instructor (leave blank to use yourself)
               </label>
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.instructor_id || ''}
                 onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
               >
@@ -1515,7 +1555,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-700 mb-2">
               Studio
             </label>
             <div className="flex gap-4 mb-2">
@@ -1530,7 +1570,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Select existing</span>
+                <span className="text-sm text-charcoal-700">Select existing</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -1543,7 +1583,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                   }}
                   className="mr-2 text-rose-600 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-700">Create new</span>
+                <span className="text-sm text-charcoal-700">Create new</span>
               </label>
             </div>
 
@@ -1555,7 +1595,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               />
             ) : (
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.studio_id}
                 onChange={(e) => setFormData({ ...formData, studio_id: e.target.value })}
               >
@@ -1570,12 +1610,12 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal-700 mb-1">
               Class Type *
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.class_type}
               onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
             >
@@ -1603,12 +1643,12 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
             />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
                 Length *
               </label>
               <select
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
               >
@@ -1636,18 +1676,18 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             value={formData.external_signup_url || ''}
             onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
           />
-          <p className="text-xs text-gray-600 -mt-2 mb-2">
+          <p className="text-xs text-charcoal-500 -mt-2 mb-2">
             Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
           </p>
 
           {/* Student selection for private lessons */}
           {formData.class_type === 'private' && (
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
                 Student (Optional)
               </label>
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.student_id || ''}
                 onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
               >
@@ -1658,14 +1698,14 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-purple-700 mt-2">
+              <p className="text-xs text-rose-700 mt-2">
                 Select a student to automatically enroll them in this private lesson
               </p>
             </div>
           )}
 
           {/* Recurring Class Options */}
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-4">
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -1678,9 +1718,9 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                     setRecurringEndDate('')
                   }
                 }}
-                className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
               />
-              <label htmlFor="recurring_toggle" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                 Make this a recurring class
               </label>
             </div>
@@ -1688,7 +1728,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             {isRecurring && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-charcoal-700 mb-2">
                     Repeat on these days *
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -1705,8 +1745,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                         }}
                         className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                           selectedDays.includes(index)
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                            ? 'bg-rose-600 text-champagne-50 border-rose-600'
+                            : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
                         }`}
                       >
                         {day}
@@ -1725,10 +1765,10 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 />
 
                 {recurringDates.length > 0 && (
-                  <div className="text-sm text-purple-700 bg-purple-100 px-3 py-2 rounded">
+                  <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
                     This will create <strong>{recurringDates.length}</strong> classes
                     {recurringDates.length > 20 && (
-                      <span className="text-purple-800"> (confirmation required)</span>
+                      <span className="text-rose-800"> (confirmation required)</span>
                     )}
                   </div>
                 )}
@@ -1742,20 +1782,20 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               id="create_is_public"
               checked={formData.is_public || false}
               onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
             />
-            <label htmlFor="create_is_public" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <label htmlFor="create_is_public" className="text-sm font-medium text-charcoal-700 cursor-pointer">
               Make class public for dancers and guardians to view and enroll
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal-700 mb-1">
               Pricing Model *
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.pricing_model || 'per_person'}
               onChange={(e) => setFormData({ ...formData, pricing_model: e.target.value as PricingModel })}
             >
@@ -1807,8 +1847,8 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
           )}
 
           {formData.pricing_model === 'tiered' && (
-            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-600">Set a base cost for the first X students, then charge per additional student</p>
+            <div className="space-y-4 p-4 bg-champagne-100 rounded-lg border border-champagne-200">
+              <p className="text-sm text-charcoal-500">Set a base cost for the first X students, then charge per additional student</p>
               <Input
                 label="Base Cost ($) *"
                 type="number"
@@ -1866,15 +1906,15 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       {showConfirmDialog && (
         <Modal isOpen={true} onClose={() => setShowConfirmDialog(false)} title="Confirm Bulk Creation" size="md">
           <div className="space-y-4">
-            <p className="text-gray-700">
-              You are about to create <strong className="text-purple-700">{pendingClassDates.length}</strong> classes.
+            <p className="text-charcoal-700">
+              You are about to create <strong className="text-rose-700">{pendingClassDates.length}</strong> classes.
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-charcoal-500">
               This will create individual classes for each scheduled date. Are you sure you want to proceed?
             </p>
-            <div className="max-h-40 overflow-y-auto bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-2">Scheduled dates (Eastern Time):</p>
-              <ul className="text-sm text-gray-700 space-y-1">
+            <div className="max-h-40 overflow-y-auto bg-champagne-100 rounded-lg p-3">
+              <p className="text-xs text-charcoal-500 mb-2">Scheduled dates (Eastern Time):</p>
+              <ul className="text-sm text-charcoal-700 space-y-1">
                 {pendingClassDates.slice(0, 10).map((dateStr, i) => {
                   // Parse datetime-local string for display
                   const [datePart, timePart] = dateStr.split('T')
@@ -1892,7 +1932,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                   )
                 })}
                 {pendingClassDates.length > 10 && (
-                  <li className="text-gray-500 italic">...and {pendingClassDates.length - 10} more</li>
+                  <li className="text-charcoal-500 italic">...and {pendingClassDates.length - 10} more</li>
                 )}
               </ul>
             </div>
@@ -1914,7 +1954,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 export default function ClassesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     }>

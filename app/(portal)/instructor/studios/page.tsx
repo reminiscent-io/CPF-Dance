@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, Button, Input, Modal, ModalFooter, Textarea, Badge, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { Button, EmptyState, Input, Modal, ModalFooter, PageHeader, SegmentedControl, StatusDot, Textarea, Toolbar, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
+import { BuildingStorefrontIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { CommunicationsSection } from '@/components/CommunicationsSection'
 import type { Studio, CreateStudioData } from '@/lib/types'
+
+type StudioFilter = 'all' | 'active' | 'inactive'
 
 export default function StudiosPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -101,7 +103,7 @@ export default function StudiosPage() {
 
   if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     )
@@ -111,123 +113,136 @@ export default function StudiosPage() {
     ? studios.filter(s => s.is_active === filterActive)
     : studios
 
+  let studioFilter: StudioFilter = 'all'
+  if (filterActive !== null) studioFilter = filterActive ? 'active' : 'inactive'
+
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Studios</h1>
-            <p className="text-gray-600 mt-1">Manage studio locations and contacts</p>
-          </div>
-          <Button onClick={() => setShowAddModal(true)} aria-label="Add Studio">
-            <PlusIcon className="w-5 h-5" />
+      <PageHeader
+        title="Studios"
+        subtitle="Manage studio locations and contacts"
+        action={
+          <Button onClick={() => setShowAddModal(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Add studio
           </Button>
-        </div>
+        }
+      />
 
-        <div className="flex gap-3">
-          <Button
-            variant={filterActive === null ? 'primary' : 'outline'}
-            onClick={() => setFilterActive(null)}
-          >
-            All Studios
-          </Button>
-          <Button
-            variant={filterActive === true ? 'primary' : 'outline'}
-            onClick={() => setFilterActive(true)}
-          >
-            Active
-          </Button>
-          <Button
-            variant={filterActive === false ? 'primary' : 'outline'}
-            onClick={() => setFilterActive(false)}
-          >
-            Inactive
-          </Button>
-        </div>
+      <Toolbar
+        filters={
+          <SegmentedControl<StudioFilter>
+            aria-label="Filter studios by status"
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' }
+            ]}
+            value={studioFilter}
+            onChange={(value) => setFilterActive(value === 'all' ? null : value === 'active')}
+          />
+        }
+      />
+
+      <div className="mt-toolbar-gap">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : filteredStudios.length === 0 ? (
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<BuildingStorefrontIcon />}
+              message={
+                filterActive !== null
+                  ? 'No studios match this view.'
+                  : 'No studios yet.'
+              }
+              action={
+                filterActive === null ? (
+                  <Button variant="secondary" onClick={() => setShowAddModal(true)}>
+                    <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+                    Add studio
+                  </Button>
+                ) : undefined
+              }
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredStudios.map((studio) => (
+              <div
+                key={studio.id}
+                onClick={() => handleStudioClick(studio)}
+                className="cursor-pointer rounded-lg border border-champagne-200 bg-champagne-50 p-4 transition-colors hover:bg-champagne-100 active:bg-champagne-200"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="flex-1 font-serif text-lg font-semibold text-charcoal-950">
+                    {studio.name}
+                  </h3>
+                  <StatusDot
+                    tone={studio.is_active ? 'positive' : 'neutral'}
+                    label={studio.is_active ? 'Active' : 'Inactive'}
+                  />
+                </div>
+
+                {/* Address */}
+                {(studio.address || studio.city || studio.state || studio.zip_code) && (
+                  <div className="mt-3">
+                    <div className="text-sm font-medium text-charcoal-500">Location</div>
+                    {studio.address && (
+                      <div className="text-sm text-charcoal-700">{studio.address}</div>
+                    )}
+                    {(studio.city || studio.state || studio.zip_code) && (
+                      <div className="text-sm text-charcoal-700">
+                        {[studio.city, studio.state, studio.zip_code].filter(Boolean).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Contact Information */}
+                {(studio.contact_email || studio.contact_phone) && (
+                  <div className="mt-3 space-y-2">
+                    {studio.contact_email && (
+                      <div>
+                        <div className="text-sm font-medium text-charcoal-500">Email</div>
+                        <a
+                          href={`mailto:${studio.contact_email}`}
+                          className="text-sm text-rose-600 hover:text-rose-700"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {studio.contact_email}
+                        </a>
+                      </div>
+                    )}
+                    {studio.contact_phone && (
+                      <div>
+                        <div className="text-sm font-medium text-charcoal-500">Phone</div>
+                        <a
+                          href={`tel:${studio.contact_phone}`}
+                          className="text-sm text-rose-600 hover:text-rose-700"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {studio.contact_phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Notes */}
+                {studio.notes && (
+                  <div className="mt-3 border-t border-champagne-200 pt-3">
+                    <div className="text-sm font-medium text-charcoal-500">Notes</div>
+                    <p className="text-sm text-charcoal-700 line-clamp-2">{studio.notes}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : filteredStudios.length === 0 ? (
-        <Card>
-          <div className="text-center py-12 text-gray-600">
-            No studios found
-          </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStudios.map((studio) => (
-            <Card
-              key={studio.id}
-              hover
-              className="cursor-pointer"
-              onClick={() => handleStudioClick(studio)}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                  {studio.name}
-                </h3>
-                <Badge variant={studio.is_active ? 'success' : 'default'}>
-                  {studio.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-
-              {/* Address */}
-              {(studio.address || studio.city || studio.state || studio.zip_code) && (
-                <div className="mb-4">
-                  <div className="text-sm font-medium text-gray-700 mb-1">📍 Location</div>
-                  {studio.address && (
-                    <div className="text-sm text-gray-600">{studio.address}</div>
-                  )}
-                  {(studio.city || studio.state || studio.zip_code) && (
-                    <div className="text-sm text-gray-600">
-                      {[studio.city, studio.state, studio.zip_code].filter(Boolean).join(', ')}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Contact Information */}
-              <div className="space-y-2 mb-4">
-                {studio.contact_email && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">📧 Email</div>
-                    <a
-                      href={`mailto:${studio.contact_email}`}
-                      className="text-sm text-rose-600 hover:text-rose-700"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {studio.contact_email}
-                    </a>
-                  </div>
-                )}
-                {studio.contact_phone && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">📞 Phone</div>
-                    <a
-                      href={`tel:${studio.contact_phone}`}
-                      className="text-sm text-rose-600 hover:text-rose-700"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {studio.contact_phone}
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Notes */}
-              {studio.notes && (
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="text-sm font-medium text-gray-700 mb-1">Notes</div>
-                  <p className="text-sm text-gray-600 line-clamp-2">{studio.notes}</p>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
 
       {showAddModal && (
         <AddStudioModal
@@ -317,16 +332,16 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
           {formData.address && (
             <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
               <div>
-                <p className="text-xs text-gray-600">Address</p>
-                <p className="text-sm font-medium text-gray-900">{formData.address}</p>
+                <p className="text-xs text-charcoal-500">Address</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600">City</p>
-                <p className="text-sm font-medium text-gray-900">{formData.city || '-'}</p>
+                <p className="text-xs text-charcoal-500">City</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.city || '-'}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600">State, Zip</p>
-                <p className="text-sm font-medium text-gray-900">{formData.state} {formData.zip_code}</p>
+                <p className="text-xs text-charcoal-500">State, Zip</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.state} {formData.zip_code}</p>
               </div>
             </div>
           )}
@@ -361,9 +376,9 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                 className="mr-2 h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
               />
-              <span className="text-sm font-medium text-gray-700">Active Studio</span>
+              <span className="text-sm font-medium text-charcoal-700">Active Studio</span>
             </label>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-charcoal-500 mt-1">
               Inactive studios won't appear in class creation dropdowns
             </p>
           </div>
@@ -443,16 +458,16 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
           {formData.address && (
             <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
               <div>
-                <p className="text-xs text-gray-600">Address</p>
-                <p className="text-sm font-medium text-gray-900">{formData.address}</p>
+                <p className="text-xs text-charcoal-500">Address</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600">City</p>
-                <p className="text-sm font-medium text-gray-900">{formData.city || '-'}</p>
+                <p className="text-xs text-charcoal-500">City</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.city || '-'}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600">State, Zip</p>
-                <p className="text-sm font-medium text-gray-900">{formData.state} {formData.zip_code}</p>
+                <p className="text-xs text-charcoal-500">State, Zip</p>
+                <p className="text-sm font-medium text-charcoal-950">{formData.state} {formData.zip_code}</p>
               </div>
             </div>
           )}
