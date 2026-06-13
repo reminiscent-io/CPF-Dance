@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Toolbar } from '@/components/ui/Toolbar'
+import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
@@ -186,32 +189,37 @@ export default function DancerClassesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-charcoal-950 tracking-[-0.03em]">
-            My Classes
-          </h1>
-          <p className="mt-1 text-charcoal-500">
-            Your enrolled lessons and the practice you keep on your own.
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          onClick={() => {
-            setEditing(null)
-            setSheetOpen(true)
-          }}
-          aria-label="Add a class"
-          className="gap-2"
-        >
-          <PlusIcon className="w-4 h-4" />
-          <span className="hidden sm:inline">Add class</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="My Classes"
+        subtitle="Your enrolled lessons and the practice you keep on your own."
+        action={
+          <Button
+            variant="primary"
+            onClick={() => {
+              setEditing(null)
+              setSheetOpen(true)
+            }}
+            aria-label="Add a class"
+            className="gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Add class</span>
+          </Button>
+        }
+      />
 
-      <FilterTabs filter={filter} onChange={setFilter} />
+      <Toolbar
+        filters={
+          <SegmentedControl<FilterType>
+            aria-label="Filter classes"
+            options={FILTERS}
+            value={filter}
+            onChange={setFilter}
+          />
+        }
+      />
 
-      <div className="mt-6">
+      <div className="mt-toolbar-gap">
         {loadingClasses ? (
           <ListSkeleton />
         ) : groups.length === 0 ? (
@@ -297,45 +305,6 @@ export default function DancerClassesPage() {
         onConfirm={() => deleteConfirm && deletePersonal(deleteConfirm)}
       />
     </PortalLayout>
-  )
-}
-
-function FilterTabs({
-  filter,
-  onChange,
-}: {
-  filter: FilterType
-  onChange: (next: FilterType) => void
-}) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Filter classes"
-      className="inline-flex items-center gap-1 p-1 rounded-md bg-champagne-100 border border-champagne-200"
-    >
-      {FILTERS.map((tab) => {
-        const active = filter === tab.value
-        return (
-          <button
-            key={tab.value}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(tab.value)}
-            className={`
-              min-h-11 sm:min-h-9 px-4 rounded text-sm font-medium tracking-wide
-              transition-colors
-              ${active
-                ? 'bg-champagne-50 text-charcoal-900 shadow-soft'
-                : 'text-charcoal-500 hover:text-charcoal-900'
-              }
-            `}
-          >
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
   )
 }
 

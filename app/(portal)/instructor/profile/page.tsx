@@ -8,6 +8,8 @@ import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { CheckIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { HeadshotUpload } from '@/components/HeadshotUpload'
 import { signOut } from '@/lib/auth/actions'
 
@@ -145,10 +147,10 @@ export default function InstructorProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading...</p>
         </div>
       </div>
     )
@@ -160,48 +162,39 @@ export default function InstructorProfilePage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>My Profile</h1>
-          <p className="text-gray-600">Manage your personal information</p>
-        </div>
-
-        {/* Save status indicator */}
-        <div className="flex items-center gap-2 text-sm">
-          {saveStatus === 'saving' && (
-            <span className="text-gray-500 flex items-center gap-1.5">
-              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Saving...
-            </span>
-          )}
-          {saveStatus === 'saved' && (
-            <span className="text-green-600 flex items-center gap-1.5">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Saved
-            </span>
-          )}
-          {saveStatus === 'error' && (
-            <span className="text-red-600 flex items-center gap-1.5">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Error saving
-            </span>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="My Profile"
+        subtitle="Manage your personal information"
+        action={
+          <div className="flex items-center gap-1.5 text-sm">
+            {saveStatus === 'saving' && (
+              <span className="text-charcoal-500 flex items-center gap-1.5">
+                <ArrowPathIcon className="animate-spin h-4 w-4" aria-hidden="true" />
+                Saving...
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="text-gold-700 flex items-center gap-1.5">
+                <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                Saved
+              </span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="text-rose-700 flex items-center gap-1.5">
+                <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                Error saving
+              </span>
+            )}
+          </div>
+        }
+      />
 
       {loadingData ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="mt-header-gap space-y-6">
           {/* Headshot Section */}
           <Card>
             <CardTitle className="p-4 md:p-6 pb-2 md:pb-4">Profile Photo</CardTitle>
@@ -255,8 +248,8 @@ export default function InstructorProfilePage() {
             <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Password</p>
-                  <p className="text-gray-600 mb-3">
+                  <p className="text-sm font-medium text-charcoal-700 mb-2">Password</p>
+                  <p className="text-charcoal-500 mb-3">
                     Keep your account secure by using a strong password.
                   </p>
                   <Button
@@ -271,9 +264,9 @@ export default function InstructorProfilePage() {
                   </Button>
                 </div>
 
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Sign Out</p>
-                  <p className="text-gray-600 mb-3">
+                <div className="border-t border-champagne-200 pt-4">
+                  <p className="text-sm font-medium text-charcoal-700 mb-2">Sign Out</p>
+                  <p className="text-charcoal-500 mb-3">
                     Sign out of your account on this device.
                   </p>
                   <Button

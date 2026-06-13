@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusDot } from '@/components/ui/StatusDot'
 
 interface Payment {
   id: string
@@ -171,13 +173,12 @@ export default function DancerPaymentsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <header className="border-b border-champagne-200 pb-5 mb-10 lg:mb-12">
-        <p className="text-xs uppercase tracking-[0.18em] text-charcoal-500">Account</p>
-        <h1 className="mt-1.5 font-serif text-3xl md:text-4xl text-charcoal-950 tracking-[-0.03em]">
-          Payments
-        </h1>
-      </header>
+      <PageHeader
+        title="Payments"
+        subtitle="Your lesson packs, payments, and receipts."
+      />
 
+      <div className="mt-header-gap">
       {loadingData ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
@@ -227,6 +228,7 @@ export default function DancerPaymentsPage() {
           )}
         </div>
       )}
+      </div>
     </PortalLayout>
   )
 }
@@ -337,16 +339,8 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
             {transaction.amount !== undefined && (
               <span className="text-charcoal-900">{formatPrice(transaction.amount)}</span>
             )}
-            {isPending && (
-              <span className="text-rose-700 text-xs uppercase tracking-[0.18em]">
-                outstanding
-              </span>
-            )}
-            {isPaid && (
-              <span className="text-gold-700 text-xs uppercase tracking-[0.18em]">
-                paid
-              </span>
-            )}
+            {isPending && <StatusDot tone="attention" label="Outstanding" />}
+            {isPaid && <StatusDot tone="positive" label="Paid" />}
           </>
         )}
         {transaction.receipt_url && (

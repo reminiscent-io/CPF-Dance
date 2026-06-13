@@ -6,7 +6,9 @@ import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusDot } from '@/components/ui/StatusDot'
+import type { StatusTone } from '@/components/ui/StatusDot'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
 interface Waiver {
@@ -142,25 +144,23 @@ export default function WaiverDetailPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): StatusTone => {
     switch (status) {
       case 'signed':
-        return 'success'
-      case 'pending':
-        return 'warning'
+        return 'positive'
       case 'declined':
-        return 'danger'
       case 'expired':
-        return 'default'
+        return 'attention'
+      case 'pending':
       default:
-        return 'default'
+        return 'neutral'
     }
   }
 
   if (loading || loadingWaiver) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <p className="text-charcoal-500">Loading...</p>
       </div>
     )
   }
@@ -177,31 +177,35 @@ export default function WaiverDetailPage() {
     <PortalLayout profile={profile}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/instructor/waivers')}
-            className="mb-4"
-          >
-            ← Back to Waivers
-          </Button>
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/instructor/waivers')}
+          className="mb-4"
+        >
+          ← Back to Waivers
+        </Button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{waiver.title}</h1>
-              {waiver.description && (
-                <p className="text-gray-600">{waiver.description}</p>
+        <PageHeader
+          title={waiver.title}
+          subtitle={waiver.description || 'Review this waiver and its signature status.'}
+          action={
+            <div className="flex items-center gap-3">
+              <StatusDot tone={getStatusTone(waiver.status)} label={waiver.status} className="capitalize" />
+              {isPending && (
+                <Button
+                  onClick={() => router.push(`/instructor/waivers/${waiver.id}/edit`)}
+                >
+                  Edit Waiver
+                </Button>
               )}
             </div>
-            <Badge variant={getStatusColor(waiver.status)} className="text-lg px-4 py-2">
-              {waiver.status}
-            </Badge>
-          </div>
-        </div>
+          }
+        />
 
+        <div className="mt-header-gap space-y-6">
         {/* Actions */}
         {isPending && (
-          <Card className="mb-6">
+          <Card>
             <CardTitle>Actions</CardTitle>
             <CardContent className="mt-4">
               <div className="flex gap-3">
@@ -209,17 +213,17 @@ export default function WaiverDetailPage() {
                   variant="outline"
                   onClick={() => router.push(`/instructor/waivers/${waiver.id}/edit`)}
                 >
-                  ✏️ Edit Waiver
+                  Edit Waiver
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={handleDelete}
                   disabled={deleting}
                 >
-                  {deleting ? 'Deleting...' : '🗑️ Delete Waiver'}
+                  {deleting ? 'Deleting...' : 'Delete Waiver'}
                 </Button>
               </div>
-              <p className="text-sm text-gray-500 mt-3">
+              <p className="text-sm text-charcoal-500 mt-3">
                 This waiver can be edited or deleted because it hasn't been signed yet.
               </p>
             </CardContent>
@@ -227,21 +231,21 @@ export default function WaiverDetailPage() {
         )}
 
         {/* Waiver Info */}
-        <Card className="mb-6">
+        <Card>
           <CardTitle>Waiver Information</CardTitle>
           <CardContent className="mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Type</label>
-                <p className="text-gray-900 capitalize">{waiver.waiver_type}</p>
+                <label className="text-sm font-medium text-charcoal-700">Type</label>
+                <p className="text-charcoal-950 capitalize">{waiver.waiver_type}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Recipient Type</label>
-                <p className="text-gray-900 capitalize">{waiver.recipient_type}</p>
+                <label className="text-sm font-medium text-charcoal-700">Recipient Type</label>
+                <p className="text-charcoal-950 capitalize">{waiver.recipient_type}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Issued</label>
-                <p className="text-gray-900">
+                <label className="text-sm font-medium text-charcoal-700">Issued</label>
+                <p className="text-charcoal-950">
                   {new Date(waiver.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
@@ -251,8 +255,8 @@ export default function WaiverDetailPage() {
               </div>
               {waiver.expires_at && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Expires</label>
-                  <p className="text-gray-900">
+                  <label className="text-sm font-medium text-charcoal-700">Expires</label>
+                  <p className="text-charcoal-950">
                     {new Date(waiver.expires_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -267,22 +271,22 @@ export default function WaiverDetailPage() {
 
         {/* Recipient Info */}
         {recipientInfo && (
-          <Card className="mb-6">
+          <Card>
             <CardTitle>Recipient</CardTitle>
             <CardContent className="mt-4">
               <div className="space-y-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Name</label>
-                  <p className="text-gray-900">{recipientInfo.name}</p>
+                  <label className="text-sm font-medium text-charcoal-700">Name</label>
+                  <p className="text-charcoal-950">{recipientInfo.name}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <p className="text-gray-900">{recipientInfo.email}</p>
+                  <label className="text-sm font-medium text-charcoal-700">Email</label>
+                  <p className="text-charcoal-950">{recipientInfo.email}</p>
                 </div>
                 {recipientInfo.phone && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Phone</label>
-                    <p className="text-gray-900">{recipientInfo.phone}</p>
+                    <label className="text-sm font-medium text-charcoal-700">Phone</label>
+                    <p className="text-charcoal-950">{recipientInfo.phone}</p>
                   </div>
                 )}
               </div>
@@ -292,18 +296,20 @@ export default function WaiverDetailPage() {
 
         {/* Signature Info */}
         {isSigned && signature && (
-          <Card className="mb-6 border-green-200 bg-green-50">
-            <CardTitle className="text-green-900">✓ Signed</CardTitle>
+          <Card>
+            <CardTitle>
+              <StatusDot tone="positive" label="Signed" />
+            </CardTitle>
             <CardContent className="mt-4">
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-green-900">Signed By</label>
-                  <p className="text-green-800">{signature.signer_name}</p>
-                  <p className="text-sm text-green-700">{signature.signer_email}</p>
+                  <label className="text-sm font-medium text-charcoal-700">Signed By</label>
+                  <p className="text-charcoal-950">{signature.signer_name}</p>
+                  <p className="text-sm text-charcoal-500">{signature.signer_email}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-green-900">Signed At</label>
-                  <p className="text-green-800">
+                  <label className="text-sm font-medium text-charcoal-700">Signed At</label>
+                  <p className="text-charcoal-950">
                     {new Date(signature.signed_at).toLocaleString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -315,8 +321,8 @@ export default function WaiverDetailPage() {
                 </div>
                 {waiver.signature_image_url && (
                   <div>
-                    <label className="text-sm font-medium text-green-900">Signature</label>
-                    <div className="mt-2 border-2 border-green-300 rounded-lg p-4 bg-white inline-block">
+                    <label className="text-sm font-medium text-charcoal-700">Signature</label>
+                    <div className="mt-2 border border-champagne-200 rounded-lg p-4 bg-champagne-50 inline-block">
                       <img
                         src={waiver.signature_image_url}
                         alt="Signature"
@@ -332,13 +338,15 @@ export default function WaiverDetailPage() {
 
         {/* Declined Info */}
         {waiver.status === 'declined' && (
-          <Card className="mb-6 border-red-200 bg-red-50">
-            <CardTitle className="text-red-900">✗ Declined</CardTitle>
+          <Card>
+            <CardTitle>
+              <StatusDot tone="attention" label="Declined" />
+            </CardTitle>
             <CardContent className="mt-4">
               {waiver.declined_reason && (
                 <div>
-                  <label className="text-sm font-medium text-red-900">Reason</label>
-                  <p className="text-red-800">{waiver.declined_reason}</p>
+                  <label className="text-sm font-medium text-charcoal-700">Reason</label>
+                  <p className="text-charcoal-950">{waiver.declined_reason}</p>
                 </div>
               )}
             </CardContent>
@@ -350,11 +358,12 @@ export default function WaiverDetailPage() {
           <CardTitle>Waiver Content</CardTitle>
           <CardContent className="mt-4">
             <div
-              className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-gray-200"
+              className="prose prose-sm max-w-none bg-champagne-100 p-6 rounded-lg border border-champagne-200"
               dangerouslySetInnerHTML={createSanitizedHtml(waiver.content)}
             />
           </CardContent>
         </Card>
+        </div>
       </div>
     </PortalLayout>
   )

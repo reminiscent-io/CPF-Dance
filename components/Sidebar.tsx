@@ -260,11 +260,12 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-40 md:hidden bg-charcoal-950/50 backdrop-blur-[2px]"
-        style={{ display: isOpen ? 'block' : 'none' }}
-        onClick={() => setIsOpen(false)}
-      />
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden bg-charcoal-950/50 backdrop-blur-[2px]"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
       <aside className={`
         fixed top-0 left-0 h-[100dvh] w-64 bg-champagne-100 border-r border-champagne-200 z-50

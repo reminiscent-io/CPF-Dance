@@ -25,6 +25,23 @@
   --spacing-12: 6rem;     /* 96px */
   --spacing-16: 8rem;     /* 128px */
 
+  /* Portal rhythm tokens - the single source of truth for page chrome.
+     Use these (pt-page-top, px-page-x, mt-header-gap, mt-toolbar-gap,
+     h-control, h-row) instead of numeric utilities so every tab shares
+     identical rails and vertical rhythm. All values sit on the 8pt grid. */
+  --spacing-page-top: 3rem;      /* 48px - viewport top to page title */
+  --spacing-page-x: 3rem;        /* 48px - main content horizontal padding */
+  --spacing-header-gap: 2rem;    /* 32px - title block to toolbar */
+  --spacing-toolbar-gap: 1.5rem; /* 24px - toolbar to table/grid/calendar */
+  --spacing-control: 2.75rem;    /* 44px - inputs, buttons, segmented controls */
+  --spacing-row: 4rem;           /* 64px - data table rows */
+
+  /* Portal type scale additions */
+  --text-th: 0.8125rem;          /* 13px - table headers */
+  --text-th--line-height: 1.25rem;
+  --text-cell: 0.9375rem;        /* 15px - table body cells */
+  --text-cell--line-height: 1.375rem;
+
   /* Ballet Noir Color Palette - Sophisticated Dark + Blush */
 
   /* Charcoal - Primary text and headings */

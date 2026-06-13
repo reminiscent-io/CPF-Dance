@@ -4,12 +4,15 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { CalendarIcon } from '@heroicons/react/24/outline'
 
 const PENDING_EXTERNAL_SIGNUP_KEY = 'pending_external_signup'
 
@@ -227,32 +230,30 @@ export default function AvailableClassesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Available Classes</h1>
-        <p className="text-gray-600">
-          Browse and enroll in upcoming public classes
-        </p>
-      </div>
+      <PageHeader
+        title="Available Classes"
+        subtitle="Browse and enroll in upcoming public classes"
+      />
 
       {upcomingClasses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-header-gap grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {upcomingClasses.map(cls => (
             <Card key={cls.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{cls.title}</h3>
+                    <h3 className="text-lg font-semibold text-charcoal-950">{cls.title}</h3>
                     <Badge variant={cls.class_type === 'private' ? 'warning' : 'default'}>
                       {formatClassType(cls.class_type)}
                     </Badge>
                   </div>
 
                   {cls.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                    <p className="text-sm text-charcoal-500 mb-4 line-clamp-3">
                       {cls.description}
                     </p>
                   )}
 
-                  <div className="space-y-2 text-sm text-gray-700 mb-4">
+                  <div className="space-y-2 text-sm text-charcoal-700 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Instructor:</span>
                       <span>{cls.instructor.full_name}</span>
@@ -319,17 +320,12 @@ export default function AvailableClassesPage() {
             ))}
           </div>
         ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="text-6xl mb-4">🩰</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No Classes Available
-              </h3>
-              <p className="text-gray-600">
-                There are no public classes available at this time. Check back later!
-              </p>
-            </CardContent>
-          </Card>
+          <div className="mt-header-gap rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<CalendarIcon />}
+              message="No public classes are open right now."
+            />
+          </div>
         )}
 
       {/* Enrollment Confirmation Modal */}
@@ -341,23 +337,23 @@ export default function AvailableClassesPage() {
       >
         {selectedClass && (
           <div className="space-y-4">
-            <p className="text-gray-700">
+            <p className="text-charcoal-700">
               Are you sure you want to enroll in <strong>{selectedClass.title}</strong>?
             </p>
 
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+            <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
+                <span className="text-charcoal-500">Date:</span>
                 <span className="font-medium">{formatDate(selectedClass.start_time)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Time:</span>
+                <span className="text-charcoal-500">Time:</span>
                 <span className="font-medium">
                   {formatTime(selectedClass.start_time)} - {formatTime(selectedClass.end_time)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Price:</span>
+                <span className="text-charcoal-500">Price:</span>
                 <span className="font-medium">{formatPrice(selectedClass)}</span>
               </div>
             </div>
@@ -390,29 +386,29 @@ export default function AvailableClassesPage() {
       >
         {pendingExternalClass && (
           <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-900 font-medium">
+            <div className="bg-champagne-100 border border-champagne-200 rounded-lg p-4">
+              <p className="text-charcoal-900 font-medium">
                 ✓ Great! Did you complete the signup for <strong>{pendingExternalClass.title}</strong>?
               </p>
             </div>
 
-            <p className="text-gray-700">
+            <p className="text-charcoal-700">
               If you've signed up through the external portal, click "Add to Calendar" to track this class in your schedule.
             </p>
 
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+            <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
+                <span className="text-charcoal-500">Date:</span>
                 <span className="font-medium">{formatDate(pendingExternalClass.start_time)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Time:</span>
+                <span className="text-charcoal-500">Time:</span>
                 <span className="font-medium">
                   {formatTime(pendingExternalClass.start_time)} - {formatTime(pendingExternalClass.end_time)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Instructor:</span>
+                <span className="text-charcoal-500">Instructor:</span>
                 <span className="font-medium">{pendingExternalClass.instructor.full_name}</span>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { NoteFeedItem } from '@/components/notes/NoteFeedItem'
 import { NoteViewContent } from '@/components/notes/NoteViewContent'
 import {
@@ -160,15 +161,7 @@ export default function DancerPortalPage() {
   return (
     <PortalLayout profile={profile}>
       <div className="space-y-8">
-        {/* Program-page header — date + name, no greeting */}
-        <header className="border-b border-champagne-200 pb-5">
-          <p className="text-xs text-charcoal-500 uppercase tracking-[0.14em]">
-            {today}
-          </p>
-          <h1 className="mt-1.5 text-3xl md:text-4xl text-charcoal-950 tracking-[-0.03em]">
-            {firstName}
-          </h1>
-        </header>
+        <PageHeader title={firstName} subtitle={today} />
 
         {loadingData ? (
           <div className="flex justify-center py-12">

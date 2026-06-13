@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { Badge, Button, EmptyState, PageHeader, StatusDot, Table } from '@/components/ui'
+import type { StatusTone } from '@/components/ui'
+import { DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { CreateWaiverTemplateDialog } from '@/components/CreateWaiverTemplateDialog'
 import { IssueWaiverDialog } from '@/components/IssueWaiverDialog'
 
@@ -87,23 +86,73 @@ export default function InstructorWaiversPage() {
     setShowIssueDialog(true)
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): StatusTone => {
     switch (status) {
       case 'signed':
-        return 'success'
-      case 'pending':
-        return 'warning'
+      case 'active':
+        return 'positive'
+      case 'expired':
       case 'declined':
-        return 'danger'
+        return 'attention'
       default:
-        return 'default'
+        return 'neutral'
     }
   }
 
+  const formatStatus = (status: string) =>
+    status ? status.charAt(0).toUpperCase() + status.slice(1) : status
+
+  const waiverColumns = [
+    {
+      key: 'title',
+      header: 'Title',
+      render: (waiver: IssuedWaiver) => (
+        <span className="font-medium">{waiver.title}</span>
+      )
+    },
+    {
+      key: 'waiver_type',
+      header: 'Type',
+      render: (waiver: IssuedWaiver) => (
+        <span className="capitalize">{waiver.waiver_type}</span>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (waiver: IssuedWaiver) => (
+        <StatusDot tone={getStatusTone(waiver.status)} label={formatStatus(waiver.status)} />
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'Issued',
+      render: (waiver: IssuedWaiver) => new Date(waiver.created_at).toLocaleDateString()
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right' as const,
+      hoverOnly: true,
+      render: (waiver: IssuedWaiver) => (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation()
+            router.push(`/instructor/waivers/${waiver.id}`)
+          }}
+        >
+          View
+        </Button>
+      )
+    }
+  ]
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <p className="text-charcoal-500">Loading...</p>
       </div>
     )
   }
@@ -114,67 +163,75 @@ export default function InstructorWaiversPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Waiver Management</h1>
-        <p className="text-gray-600">Create templates and issue waivers to students or studios</p>
-      </div>
+      <PageHeader
+        title="Waivers"
+        subtitle="Create templates and issue waivers to students or studios"
+        action={
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            New template
+          </Button>
+        }
+      />
 
-      <div className="grid gap-6">
+      <div className="mt-header-gap space-y-6">
         {/* Templates Section */}
-        <Card>
-          <CardTitle>Waiver Templates ({templates.length})</CardTitle>
-          <CardContent className="mt-4">
-            <div className="mb-4 flex gap-3">
-              <Button onClick={() => setShowCreateDialog(true)} aria-label="Create Template">
-                <PlusIcon className="w-5 h-5" />
-              </Button>
-              <Button variant="outline">
-                📄 Upload PDF Template
-              </Button>
-            </div>
+        <section>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-serif text-xl font-semibold text-charcoal-950">
+              Templates ({templates.length})
+            </h2>
+            <Button variant="secondary">
+              Upload PDF template
+            </Button>
+          </div>
 
+          <div className="mt-4">
             {loadingTemplates ? (
-              <p className="text-gray-500">Loading templates...</p>
+              <p className="text-charcoal-500">Loading templates...</p>
             ) : templates.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <p className="text-gray-500 mb-2">No templates yet</p>
-                <p className="text-sm text-gray-400">
-                  Create a template to get started with issuing waivers
-                </p>
+              <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+                <EmptyState
+                  icon={<DocumentTextIcon />}
+                  message="Create a template to start issuing waivers."
+                />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {templates.map((template) => (
                   <div
                     key={template.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="rounded-lg border border-champagne-200 bg-champagne-50 p-4"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{template.title}</h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-serif text-lg font-semibold text-charcoal-950">
+                        {template.title}
+                      </h3>
                       {template.content_type === 'pdf' && (
                         <Badge variant="default">PDF</Badge>
                       )}
                     </div>
                     {template.description && (
-                      <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                      <p className="mt-2 text-sm text-charcoal-500">{template.description}</p>
                     )}
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="mt-3 flex items-center gap-2">
                       <Badge variant="default">{template.waiver_type}</Badge>
                       {template.is_shared && (
                         <Badge variant="default">Shared</Badge>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="mt-4 flex gap-2">
                       <Button
                         size="sm"
+                        variant="secondary"
                         onClick={() => handleIssueWaiver(template)}
                         className="flex-1"
                       >
-                        Issue Waiver
+                        Issue waiver
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => router.push(`/instructor/waivers/templates/${template.id}`)}
                       >
                         Edit
@@ -184,59 +241,30 @@ export default function InstructorWaiversPage() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Issued Waivers Section */}
-        <Card>
-          <CardTitle>Issued Waivers ({issuedWaivers.length})</CardTitle>
-          <CardContent className="mt-4">
-            {loadingWaivers ? (
-              <p className="text-gray-500">Loading waivers...</p>
-            ) : issuedWaivers.length === 0 ? (
-              <p className="text-gray-500">No waivers issued yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-gray-200">
-                    <tr>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Title</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Type</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Issued</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {issuedWaivers.map((waiver) => (
-                      <tr key={waiver.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-900">{waiver.title}</td>
-                        <td className="py-3 px-4 text-gray-600 capitalize">{waiver.waiver_type}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant={getStatusColor(waiver.status)}>
-                            {waiver.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 text-xs">
-                          {new Date(waiver.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/instructor/waivers/${waiver.id}`)}
-                          >
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="font-serif text-xl font-semibold text-charcoal-950">
+            Issued waivers ({issuedWaivers.length})
+          </h2>
+
+          <div className="mt-4">
+            <Table
+              data={issuedWaivers}
+              columns={waiverColumns}
+              loading={loadingWaivers}
+              onRowClick={(waiver) => router.push(`/instructor/waivers/${waiver.id}`)}
+              empty={
+                <EmptyState
+                  icon={<DocumentTextIcon />}
+                  message="Waivers you issue will appear here."
+                />
+              }
+            />
+          </div>
+        </section>
       </div>
 
       {/* Dialogs */}

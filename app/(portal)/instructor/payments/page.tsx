@@ -4,12 +4,27 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardTitle, CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Spinner } from '@/components/ui/Spinner'
-import { Modal } from '@/components/ui/Modal'
-import { EarningsProgressWidget } from '@/components/EarningsProgressWidget'
+import {
+  Badge,
+  Button,
+  EmptyCell,
+  EmptyState,
+  Modal,
+  PageHeader,
+  SegmentedControl,
+  Select,
+  Spinner,
+  StatusDot,
+  Table,
+  Toolbar
+} from '@/components/ui'
+import type { Column, StatusTone } from '@/components/ui'
+import {
+  BanknotesIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline'
 
 interface PaymentData {
   id: string
@@ -111,6 +126,7 @@ function InstructorPaymentsContent() {
   const [loadingEarnings, setLoadingEarnings] = useState(true)
   const [earningsDateRange, setEarningsDateRange] = useState<EarningsDateRange>('all')
   const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
+  const [showUnpaidClasses, setShowUnpaidClasses] = useState(false)
   const [remindingClassId, setRemindingClassId] = useState<string | null>(null)
   const [remindMessage, setRemindMessage] = useState('')
   const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false)
@@ -133,7 +149,7 @@ function InstructorPaymentsContent() {
 
   // Auto-open request modal if coming from invoices page
   useEffect(() => {
-    if (searchParams.get('request') === 'true') {
+    if (searchParams?.get('request') === 'true') {
       handleOpenRequestModal()
       // Clear the query param
       router.replace('/instructor/payments', { scroll: false })
@@ -156,12 +172,12 @@ function InstructorPaymentsContent() {
     setLoadingEarnings(true)
     try {
       const params = new URLSearchParams()
-      
+
       if (earningsDateRange !== 'all') {
         const now = new Date()
         let startDate: Date
         let endDate: Date = now
-        
+
         switch (earningsDateRange) {
           case 'this_month':
             startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -176,7 +192,7 @@ function InstructorPaymentsContent() {
           default:
             startDate = new Date(0)
         }
-        
+
         params.append('start_date', startDate.toISOString())
         params.append('end_date', endDate.toISOString())
       }
@@ -315,6 +331,16 @@ function InstructorPaymentsContent() {
     return colors[status] || 'secondary'
   }
 
+  const getStatusTone = (status: string): StatusTone => {
+    const tones: Record<string, StatusTone> = {
+      confirmed: 'positive',
+      pending: 'neutral',
+      disputed: 'attention',
+      cancelled: 'attention'
+    }
+    return tones[status] || 'neutral'
+  }
+
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, string> = {
       stripe: 'Stripe',
@@ -423,10 +449,10 @@ function InstructorPaymentsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading...</p>
         </div>
       </div>
     )
@@ -436,266 +462,404 @@ function InstructorPaymentsContent() {
     return null
   }
 
+  const earningsColumns: Column<ClassEarning>[] = [
+    {
+      key: 'class',
+      header: 'Class',
+      render: (cls) => (
+        <div>
+          <div className="font-medium">{cls.title}</div>
+          {cls.studio && <div className="text-xs text-charcoal-500">{cls.studio.name}</div>}
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (cls) => <span className="capitalize">{cls.class_type.replace('_', ' ')}</span>
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (cls) =>
+        new Date(cls.start_time).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        })
+    },
+    {
+      key: 'students',
+      header: 'Students',
+      numeric: true,
+      render: (cls) => cls.enrollment_count
+    },
+    {
+      key: 'value',
+      header: 'Value',
+      numeric: true,
+      render: (cls) => formatCurrency(cls.calculated_value)
+    },
+    {
+      key: 'collected',
+      header: 'Collected',
+      numeric: true,
+      render: (cls) => (
+        <span className={cls.collected_amount >= cls.calculated_value ? '' : 'text-rose-700'}>
+          {formatCurrency(cls.collected_amount)}
+        </span>
+      )
+    }
+  ]
+
+  const paymentColumns: Column<PaymentData>[] = [
+    {
+      key: 'student',
+      header: 'Student',
+      render: (payment) => <span className="font-medium">{payment.student.full_name}</span>
+    },
+    {
+      key: 'class',
+      header: 'Class',
+      render: (payment) =>
+        payment.class || payment.studio ? (
+          <div>
+            <div>{payment.class ? payment.class.title : <EmptyCell />}</div>
+            {payment.studio && (
+              <div className="text-xs text-charcoal-500">{payment.studio.name}</div>
+            )}
+          </div>
+        ) : (
+          <EmptyCell />
+        )
+    },
+    {
+      key: 'method',
+      header: 'Method',
+      render: (payment) => getPaymentMethodLabel(payment.payment_method)
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (payment) => formatDate(payment.transaction_date)
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      numeric: true,
+      render: (payment) => formatCurrency(payment.amount)
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (payment) => (
+        <StatusDot
+          tone={getStatusTone(payment.payment_status)}
+          label={payment.payment_status}
+          className="capitalize"
+        />
+      )
+    }
+  ]
+
+  const paymentsEmptyState = (
+    <EmptyState
+      icon={<BanknotesIcon />}
+      message={
+        filterStatus === 'all'
+          ? 'No payments recorded yet.'
+          : `No ${filterStatus} payments in this view.`
+      }
+      action={
+        filterStatus === 'all' ? (
+          <Button onClick={handleOpenRecordPaymentModal}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Record payment
+          </Button>
+        ) : undefined
+      }
+    />
+  )
+
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
-          <p className="text-gray-600">View payments for your classes</p>
-        </div>
-        <Button
-          variant="primary"
-          onClick={handleOpenRecordPaymentModal}
-          className="w-10 h-10 p-0 flex items-center justify-center text-xl font-bold rounded-full"
-          title="Record Payment"
-        >
-          +
-        </Button>
-      </div>
+      <PageHeader
+        title="Earnings"
+        subtitle="Track your class earnings and payment history."
+        action={
+          <Button onClick={handleOpenRecordPaymentModal}>
+            <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+            Record payment
+          </Button>
+        }
+      />
 
-      {/* Class Earnings Dashboard */}
-      <div className="mb-10">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Class Earnings</h2>
-          <div className="flex gap-2">
-            <select
+      {/* Class Earnings */}
+      <section className="mt-header-gap">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-serif text-xl font-semibold text-charcoal-950">Class earnings</h2>
+          <div className="w-full sm:w-44">
+            <Select
+              aria-label="Earnings date range"
               value={earningsDateRange}
               onChange={(e) => setEarningsDateRange(e.target.value as EarningsDateRange)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
-            >
-              <option value="all">All Time</option>
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="this_year">This Year</option>
-            </select>
+              options={[
+                { value: 'all', label: 'All Time' },
+                { value: 'this_month', label: 'This Month' },
+                { value: 'last_month', label: 'Last Month' },
+                { value: 'this_year', label: 'This Year' }
+              ]}
+            />
           </div>
         </div>
 
         {loadingEarnings ? (
-          <div className="flex justify-center py-8">
+          <div className="mt-5 flex justify-center py-8">
             <Spinner size="md" />
           </div>
         ) : earningsSummary && (
           <>
             {remindMessage && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+              <div className="mt-5 rounded-lg border border-gold-200 bg-gold-100 px-4 py-3 text-sm text-gold-800">
                 {remindMessage}
               </div>
             )}
-            <div className="mb-8">
-              <EarningsProgressWidget
-                total={earningsSummary.total_value}
-                collected={earningsSummary.total_collected}
-                outstanding={earningsSummary.total_outstanding}
-                classes={earningsSummary.total_classes}
-                unpaidClasses={unpaidClasses}
-                onRemindClick={handleRemindClick}
-                isReminding={remindingClassId !== null}
-              />
+
+            {/* Inline summary row */}
+            <div className="mt-5 flex flex-wrap gap-y-4">
+              <div className="pr-5">
+                <div className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+                  {formatCurrency(earningsSummary.total_value)}
+                </div>
+                <div className="text-sm text-charcoal-500">Total value</div>
+              </div>
+              <div className="border-l border-champagne-200 px-5">
+                <div className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+                  {formatCurrency(earningsSummary.total_collected)}
+                </div>
+                <div className="text-sm text-charcoal-500">Collected</div>
+              </div>
+              <div className="border-l border-champagne-200 px-5">
+                <div className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+                  {formatCurrency(earningsSummary.total_outstanding)}
+                </div>
+                <div className="text-sm text-charcoal-500">Outstanding</div>
+              </div>
+              <div className="border-l border-champagne-200 pl-5">
+                <div className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+                  {earningsSummary.total_classes}
+                </div>
+                <div className="text-sm text-charcoal-500">
+                  {earningsSummary.total_classes === 1 ? 'Class' : 'Classes'}
+                </div>
+              </div>
             </div>
 
-            {/* Class Type Breakdown */}
-            {Object.keys(earningsSummary.by_class_type).length > 0 && (
-              <div className="mb-6">
+            {/* Outstanding classes with reminders */}
+            {unpaidClasses.length > 0 && (
+              <div className="mt-5">
                 <button
-                  onClick={() => setShowEarningsBreakdown(!showEarningsBreakdown)}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-3"
+                  onClick={() => setShowUnpaidClasses(!showUnpaidClasses)}
+                  className="flex items-center gap-2 text-sm font-medium text-charcoal-500 transition-colors hover:text-charcoal-900"
                 >
-                  <span>{showEarningsBreakdown ? '▼' : '▶'}</span>
-                  Breakdown by Class Type
+                  {showUnpaidClasses ? (
+                    <ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <ChevronRightIcon className="w-4 h-4" aria-hidden="true" />
+                  )}
+                  {unpaidClasses.length} {unpaidClasses.length === 1 ? 'class' : 'classes'} awaiting payment
                 </button>
-                
-                {showEarningsBreakdown && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Object.entries(earningsSummary.by_class_type).map(([type, data]) => (
-                      <Card key={type} className="bg-gray-50">
-                        <CardContent className="p-4">
-                          <div className="text-sm font-medium text-gray-500 capitalize mb-2">
-                            {type.replace('_', ' ')}
+
+                {showUnpaidClasses && (
+                  <div className="mt-3 max-h-[18rem] divide-y divide-champagne-200 overflow-y-auto rounded-lg border border-champagne-200 bg-champagne-50">
+                    {unpaidClasses.map((cls) => (
+                      <div key={cls.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-charcoal-900">{cls.title}</div>
+                          <div className="text-xs text-charcoal-500">
+                            {cls.studio?.name && <span>{cls.studio.name}, </span>}
+                            {new Date(cls.start_time).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
                           </div>
-                          <div className="text-lg font-bold text-gray-900">{formatCurrency(data.value)}</div>
-                          <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>{data.count} classes</span>
-                            <span className="text-green-600">{formatCurrency(data.collected)} collected</span>
-                          </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-3">
+                          <span className="text-sm font-medium tabular-nums text-rose-700">
+                            {formatCurrency(cls.outstanding)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemindClick(cls.id, cls.title)}
+                            disabled={remindingClassId !== null}
+                          >
+                            {remindingClassId === cls.id ? 'Sending...' : 'Remind'}
+                          </Button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Top Classes by Value */}
+            {/* Class Type Breakdown */}
+            {Object.keys(earningsSummary.by_class_type).length > 0 && (
+              <div className="mt-5">
+                <button
+                  onClick={() => setShowEarningsBreakdown(!showEarningsBreakdown)}
+                  className="flex items-center gap-2 text-sm font-medium text-charcoal-500 transition-colors hover:text-charcoal-900"
+                >
+                  {showEarningsBreakdown ? (
+                    <ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <ChevronRightIcon className="w-4 h-4" aria-hidden="true" />
+                  )}
+                  Breakdown by class type
+                </button>
+
+                {showEarningsBreakdown && (
+                  <div className="mt-3 divide-y divide-champagne-200">
+                    {Object.entries(earningsSummary.by_class_type).map(([type, data]) => (
+                      <div key={type} className="flex flex-wrap items-baseline justify-between gap-3 py-3">
+                        <div className="text-sm font-medium capitalize text-charcoal-700">
+                          {type.replace('_', ' ')}
+                          <span className="ml-2 font-normal text-charcoal-500">
+                            {data.count} {data.count === 1 ? 'class' : 'classes'}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-5">
+                          <span className="text-sm tabular-nums text-charcoal-500">
+                            {formatCurrency(data.collected)} collected
+                          </span>
+                          <span className="font-serif text-lg font-semibold tabular-nums text-charcoal-950">
+                            {formatCurrency(data.value)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recent Classes by Value */}
             {classEarnings.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-600 mb-3">Recent Classes by Value</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="text-left px-4 py-2 font-medium text-gray-600">Class</th>
-                        <th className="text-left px-4 py-2 font-medium text-gray-600">Type</th>
-                        <th className="text-left px-4 py-2 font-medium text-gray-600">Date</th>
-                        <th className="text-center px-4 py-2 font-medium text-gray-600">Students</th>
-                        <th className="text-right px-4 py-2 font-medium text-gray-600">Value</th>
-                        <th className="text-right px-4 py-2 font-medium text-gray-600">Collected</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {classEarnings.slice(0, 10).map((cls) => (
-                        <tr key={cls.id} className="border-t border-gray-100 hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">{cls.title}</div>
-                            {cls.studio && (
-                              <div className="text-xs text-gray-500">{cls.studio.name}</div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge variant="secondary" size="sm">
-                              {cls.class_type.replace('_', ' ')}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3 text-gray-600">
-                            {new Date(cls.start_time).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </td>
-                          <td className="px-4 py-3 text-center text-gray-600">{cls.enrollment_count}</td>
-                          <td className="px-4 py-3 text-right font-medium text-gray-900">
-                            {formatCurrency(cls.calculated_value)}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className={cls.collected_amount >= cls.calculated_value ? 'text-green-600' : 'text-amber-600'}>
-                              {formatCurrency(cls.collected_amount)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <div className="mt-6">
+                <h3 className="font-serif text-lg font-semibold text-charcoal-950">Recent classes by value</h3>
+                <div className="mt-3">
+                  <Table data={classEarnings.slice(0, 10)} columns={earningsColumns} />
                 </div>
               </div>
             )}
           </>
         )}
-      </div>
+      </section>
 
-      <hr className="my-8 border-gray-200" />
+      <hr className="mt-6 border-champagne-200" />
 
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment History</h2>
+      {/* Payment History */}
+      <section className="mt-6">
+        <h2 className="font-serif text-xl font-semibold text-charcoal-950">Payment history</h2>
 
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Button
-          variant={filterStatus === 'all' ? 'primary' : 'outline'}
-          onClick={() => setFilterStatus('all')}
-        >
-          All
-        </Button>
-        <Button
-          variant={filterStatus === 'pending' ? 'primary' : 'outline'}
-          onClick={() => setFilterStatus('pending')}
-        >
-          Pending
-        </Button>
-        <Button
-          variant={filterStatus === 'confirmed' ? 'primary' : 'outline'}
-          onClick={() => setFilterStatus('confirmed')}
-        >
-          Confirmed
-        </Button>
-        <Button
-          variant={filterStatus === 'disputed' ? 'primary' : 'outline'}
-          onClick={() => setFilterStatus('disputed')}
-        >
-          Disputed
-        </Button>
-        <Button
-          variant={filterStatus === 'cancelled' ? 'primary' : 'outline'}
-          onClick={() => setFilterStatus('cancelled')}
-        >
-          Cancelled
-        </Button>
-      </div>
+        <Toolbar
+          filters={
+            <SegmentedControl<FilterStatus>
+              aria-label="Filter payments by status"
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'confirmed', label: 'Confirmed' },
+                { value: 'disputed', label: 'Disputed' },
+                { value: 'cancelled', label: 'Cancelled' }
+              ]}
+              value={filterStatus}
+              onChange={setFilterStatus}
+            />
+          }
+        />
 
-      {/* Payments List */}
-      {loadingPayments ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+        {/* Desktop Table View */}
+        <div className="mt-toolbar-gap hidden md:block">
+          <Table
+            data={payments}
+            columns={paymentColumns}
+            onRowClick={handleViewPayment}
+            loading={loadingPayments}
+            empty={paymentsEmptyState}
+          />
         </div>
-      ) : payments.length > 0 ? (
-        <div className="space-y-4">
-          {payments.map((payment) => (
-            <Card
-              key={payment.id}
-              hover
-              className="cursor-pointer"
-              onClick={() => handleViewPayment(payment)}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+
+        {/* Mobile Card View */}
+        <div className="mt-toolbar-gap md:hidden">
+          {loadingPayments ? (
+            <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-8 text-center">
+              <Spinner size="md" className="mx-auto" />
+              <p className="mt-2 text-charcoal-500">Loading...</p>
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+              {paymentsEmptyState}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((payment) => (
+                <div
+                  key={payment.id}
+                  onClick={() => handleViewPayment(payment)}
+                  className="cursor-pointer rounded-lg border border-champagne-200 bg-champagne-50 p-4 transition-colors hover:bg-champagne-100 active:bg-champagne-200"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-serif text-lg font-semibold text-charcoal-950">
                         {payment.student.full_name}
                       </h3>
-                      <Badge variant={getStatusColor(payment.payment_status)}>
-                        {payment.payment_status}
-                      </Badge>
+                      <div className="mt-2 flex flex-wrap gap-2 text-sm text-charcoal-700">
+                        {payment.class && (
+                          <span className="inline-flex items-center">
+                            <span className="text-charcoal-400 mr-1">Class:</span>
+                            {payment.class.title}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center">
+                          <span className="text-charcoal-400 mr-1">Method:</span>
+                          {getPaymentMethodLabel(payment.payment_method)}
+                        </span>
+                        <span className="inline-flex items-center">
+                          <span className="text-charcoal-400 mr-1">Date:</span>
+                          {formatDate(payment.transaction_date)}
+                        </span>
+                        {payment.studio && (
+                          <span className="inline-flex items-center">
+                            <span className="text-charcoal-400 mr-1">Studio:</span>
+                            {payment.studio.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <StatusDot
+                          tone={getStatusTone(payment.payment_status)}
+                          label={payment.payment_status}
+                          className="capitalize"
+                        />
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                      {payment.class && (
-                        <div>
-                          <span className="font-medium">Class:</span> {payment.class.title}
-                        </div>
+                    <div className="text-right">
+                      <div className="font-serif text-xl font-semibold tabular-nums text-charcoal-950">
+                        {formatCurrency(payment.amount)}
+                      </div>
+                      {payment.confirmed_by_instructor_at && (
+                        <div className="mt-1 text-xs text-gold-700">Confirmed</div>
                       )}
-                      <div>
-                        <span className="font-medium">Method:</span> {getPaymentMethodLabel(payment.payment_method)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Date:</span> {formatDate(payment.transaction_date)}
-                      </div>
-                      {payment.studio && (
-                        <div>
-                          <span className="font-medium">Studio:</span> {payment.studio.name}
-                        </div>
-                      )}
                     </div>
-                  </div>
-
-                  <div className="text-right ml-4">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(payment.amount)}
-                    </div>
-                    {payment.confirmed_by_instructor_at && (
-                      <div className="text-xs text-green-600 mt-1">
-                        ✓ Confirmed
-                      </div>
-                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">💰</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No Payments Found
-            </h3>
-            <p className="text-gray-600">
-              {filterStatus === 'all'
-                ? 'No payment requests have been created yet.'
-                : `No ${filterStatus} payments found.`}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      </section>
 
       {/* Request Payment Modal */}
       <Modal
@@ -706,41 +870,25 @@ function InstructorPaymentsContent() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Recipient Type *
             </label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setRequestFormData2({ ...requestFormData2, recipient_type: 'student', recipient_id: '', recipient_name: '' })
-                  fetchStudentsAndStudios()
-                }}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  requestFormData2.recipient_type === 'student'
-                    ? 'bg-rose-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Student
-              </button>
-              <button
-                onClick={() => {
-                  setRequestFormData2({ ...requestFormData2, recipient_type: 'studio', recipient_id: '', recipient_name: '' })
-                  fetchStudentsAndStudios()
-                }}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  requestFormData2.recipient_type === 'studio'
-                    ? 'bg-rose-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Studio
-              </button>
-            </div>
+            <SegmentedControl<'student' | 'studio'>
+              aria-label="Recipient type"
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'studio', label: 'Studio' }
+              ]}
+              value={requestFormData2.recipient_type}
+              onChange={(value) => {
+                setRequestFormData2({ ...requestFormData2, recipient_type: value, recipient_id: '', recipient_name: '' })
+                fetchStudentsAndStudios()
+              }}
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               {requestFormData2.recipient_type === 'student' ? 'Student' : 'Studio'} *
             </label>
             <select
@@ -769,7 +917,7 @@ function InstructorPaymentsContent() {
                   }
                 }
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- Select {requestFormData2.recipient_type} --</option>
               {requestFormData2.recipient_type === 'student'
@@ -784,7 +932,7 @@ function InstructorPaymentsContent() {
                     </option>
                   ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-charcoal-500 mt-1">
               {requestFormData2.recipient_id ? 'Selected from existing records' : 'Or enter new details below'}
             </p>
           </div>
@@ -792,7 +940,7 @@ function InstructorPaymentsContent() {
           {!requestFormData2.recipient_id && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-charcoal-500 mb-2">
                   New {requestFormData2.recipient_type === 'student' ? 'Student' : 'Studio'} Name
                 </label>
                 <input
@@ -800,12 +948,12 @@ function InstructorPaymentsContent() {
                   value={requestFormData2.recipient_name}
                   onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_name: e.target.value })}
                   placeholder={requestFormData2.recipient_type === 'student' ? 'e.g., Sarah Johnson' : 'e.g., Downtown Dance Studio'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-charcoal-500 mb-2">
                   Email
                 </label>
                 <input
@@ -813,14 +961,14 @@ function InstructorPaymentsContent() {
                   value={requestFormData2.recipient_email}
                   onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_email: e.target.value })}
                   placeholder="e.g., sarah@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Amount * (USD)
             </label>
             <input
@@ -830,18 +978,18 @@ function InstructorPaymentsContent() {
               value={requestFormData2.amount}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Payment Method *
             </label>
             <select
               value={requestFormData2.payment_method}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, payment_method: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="cash">Cash</option>
               <option value="check">Check</option>
@@ -851,14 +999,14 @@ function InstructorPaymentsContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Notes
             </label>
             <textarea
               value={requestFormData2.notes}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, notes: e.target.value })}
               placeholder="Additional notes or description..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               rows={3}
             />
           </div>
@@ -892,18 +1040,18 @@ function InstructorPaymentsContent() {
         size="lg"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-charcoal-500">
             Record a cash or check payment that you've already received from a student.
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Student *
             </label>
             <select
               value={recordPaymentData.student_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, student_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- Select Student --</option>
               {students.map(s => (
@@ -915,7 +1063,7 @@ function InstructorPaymentsContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Amount * (USD)
             </label>
             <input
@@ -925,18 +1073,18 @@ function InstructorPaymentsContent() {
               value={recordPaymentData.amount}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Payment Method *
             </label>
             <select
               value={recordPaymentData.payment_method}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, payment_method: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="cash">Cash</option>
               <option value="check">Check</option>
@@ -945,25 +1093,25 @@ function InstructorPaymentsContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Payment Date *
             </label>
             <input
               type="date"
               value={recordPaymentData.transaction_date}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, transaction_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Class (Optional)
             </label>
             <select
               value={recordPaymentData.class_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, class_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- None --</option>
               {classEarnings.map(cls => (
@@ -972,19 +1120,19 @@ function InstructorPaymentsContent() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-charcoal-500 mt-1">
               Link this payment to a specific class
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Studio (Optional)
             </label>
             <select
               value={recordPaymentData.studio_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, studio_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- None --</option>
               {studios.map(s => (
@@ -996,14 +1144,14 @@ function InstructorPaymentsContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-charcoal-500 mb-2">
               Notes (Optional)
             </label>
             <textarea
               value={recordPaymentData.notes}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, notes: e.target.value })}
               placeholder="Additional notes about this payment..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               rows={3}
             />
           </div>
@@ -1037,17 +1185,17 @@ function InstructorPaymentsContent() {
         size="lg"
       >
         {selectedPayment && (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-champagne-200">
             {/* Payment Info */}
             <div className="pb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Information</h3>
+              <h3 className="font-serif text-lg font-semibold text-charcoal-950 mb-3">Payment Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Amount</label>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(selectedPayment.amount)}</p>
+                  <label className="text-sm font-medium text-charcoal-500">Amount</label>
+                  <p className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">{formatCurrency(selectedPayment.amount)}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <label className="text-sm font-medium text-charcoal-500">Status</label>
                   <div className="mt-1">
                     <Badge variant={getStatusColor(selectedPayment.payment_status)} size="sm">
                       {selectedPayment.payment_status}
@@ -1055,52 +1203,52 @@ function InstructorPaymentsContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Payment Method</label>
-                  <p className="text-gray-900">{getPaymentMethodLabel(selectedPayment.payment_method)}</p>
+                  <label className="text-sm font-medium text-charcoal-500">Payment Method</label>
+                  <p className="text-charcoal-950">{getPaymentMethodLabel(selectedPayment.payment_method)}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Transaction Date</label>
-                  <p className="text-gray-900">{formatDate(selectedPayment.transaction_date)}</p>
+                  <label className="text-sm font-medium text-charcoal-500">Transaction Date</label>
+                  <p className="text-charcoal-950">{formatDate(selectedPayment.transaction_date)}</p>
                 </div>
                 {selectedPayment.confirmed_by_instructor_at && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Instructor Confirmed</label>
-                    <p className="text-gray-900">{formatDate(selectedPayment.confirmed_by_instructor_at)}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Instructor Confirmed</label>
+                    <p className="text-charcoal-950">{formatDate(selectedPayment.confirmed_by_instructor_at)}</p>
                   </div>
                 )}
                 {selectedPayment.confirmed_by_studio_at && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Studio Confirmed</label>
-                    <p className="text-gray-900">{formatDate(selectedPayment.confirmed_by_studio_at)}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Studio Confirmed</label>
+                    <p className="text-charcoal-950">{formatDate(selectedPayment.confirmed_by_studio_at)}</p>
                   </div>
                 )}
               </div>
               {selectedPayment.notes && (
                 <div className="mt-4">
-                  <label className="text-sm font-medium text-gray-700">Notes</label>
-                  <p className="text-gray-900 mt-1">{selectedPayment.notes}</p>
+                  <label className="text-sm font-medium text-charcoal-500">Notes</label>
+                  <p className="text-charcoal-950 mt-1">{selectedPayment.notes}</p>
                 </div>
               )}
             </div>
 
             {/* Student Info */}
             <div className="py-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Student</h3>
+              <h3 className="font-serif text-lg font-semibold text-charcoal-950 mb-3">Student</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Name</label>
-                  <p className="text-gray-900">{selectedPayment.student.full_name}</p>
+                  <label className="text-sm font-medium text-charcoal-500">Name</label>
+                  <p className="text-charcoal-950">{selectedPayment.student.full_name}</p>
                 </div>
                 {selectedPayment.student.email && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{selectedPayment.student.email}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Email</label>
+                    <p className="text-charcoal-950">{selectedPayment.student.email}</p>
                   </div>
                 )}
                 {selectedPayment.student.phone && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Phone</label>
-                    <p className="text-gray-900">{selectedPayment.student.phone}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Phone</label>
+                    <p className="text-charcoal-950">{selectedPayment.student.phone}</p>
                   </div>
                 )}
               </div>
@@ -1109,19 +1257,19 @@ function InstructorPaymentsContent() {
             {/* Class Info */}
             {selectedPayment.class && (
               <div className="py-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Class</h3>
+                <h3 className="font-serif text-lg font-semibold text-charcoal-950 mb-3">Class</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Title</label>
-                    <p className="text-gray-900">{selectedPayment.class.title}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Title</label>
+                    <p className="text-charcoal-950">{selectedPayment.class.title}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Type</label>
-                    <p className="text-gray-900 capitalize">{selectedPayment.class.class_type.replace('_', ' ')}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Type</label>
+                    <p className="text-charcoal-950 capitalize">{selectedPayment.class.class_type.replace('_', ' ')}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Date</label>
-                    <p className="text-gray-900">{formatDate(selectedPayment.class.start_time)}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Date</label>
+                    <p className="text-charcoal-950">{formatDate(selectedPayment.class.start_time)}</p>
                   </div>
                 </div>
               </div>
@@ -1130,16 +1278,16 @@ function InstructorPaymentsContent() {
             {/* Studio Info */}
             {selectedPayment.studio && (
               <div className="pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Studio</h3>
+                <h3 className="font-serif text-lg font-semibold text-charcoal-950 mb-3">Studio</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Name</label>
-                    <p className="text-gray-900">{selectedPayment.studio.name}</p>
+                    <label className="text-sm font-medium text-charcoal-500">Name</label>
+                    <p className="text-charcoal-950">{selectedPayment.studio.name}</p>
                   </div>
                   {(selectedPayment.studio.city || selectedPayment.studio.state) && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Location</label>
-                      <p className="text-gray-900">
+                      <label className="text-sm font-medium text-charcoal-500">Location</label>
+                      <p className="text-charcoal-950">
                         {selectedPayment.studio.city}
                         {selectedPayment.studio.city && selectedPayment.studio.state && ', '}
                         {selectedPayment.studio.state}
@@ -1159,7 +1307,7 @@ function InstructorPaymentsContent() {
 export default function InstructorPaymentsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <Spinner size="lg" />
       </div>
     }>

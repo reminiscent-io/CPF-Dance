@@ -4,8 +4,15 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent, Button, Badge, Spinner } from '@/components/ui'
-import { Skeleton } from '@/components/ui/Skeleton'
+import {
+  Badge,
+  Button,
+  EmptyState,
+  PageHeader,
+  Skeleton,
+  Spinner,
+  StatusDot,
+} from '@/components/ui'
 import type { DashboardStats, RecentActivity } from '@/lib/types'
 import {
   CalendarIcon,
@@ -156,42 +163,39 @@ export default function InstructorPortalPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="space-y-8">
-        {/* Header — program-book style: serif title, restrained subline, utility chips */}
-        <header className="flex flex-wrap justify-between items-end gap-4">
-          <div>
-            <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">
-              Today
-            </h1>
-            <p className="text-charcoal-500 mt-1">{formatHeaderDate(today)}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/instructor/notes?compose=1')}
-            >
-              <PencilSquareIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
-              New note
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/instructor/classes')}
-            >
-              <CalendarIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
-              New class
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/instructor/students')}
-            >
-              <UserGroupIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
-              Students
-            </Button>
-          </div>
-        </header>
+      <PageHeader
+        title="Dashboard"
+        subtitle={`${formatHeaderDate(today)} at a glance.`}
+      />
+
+      <div className="mt-header-gap space-y-8">
+        {/* Quick links kept from the old header, now a quiet utility row */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/instructor/notes?compose=1')}
+          >
+            <PencilSquareIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            New note
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/instructor/classes')}
+          >
+            <CalendarIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            New class
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/instructor/students')}
+          >
+            <UserGroupIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            Students
+          </Button>
+        </div>
 
         {/* Today's schedule */}
         <section>
@@ -207,148 +211,134 @@ export default function InstructorPortalPage() {
             }
           />
 
-          <Card padding="none">
-            <CardContent className="p-0">
-              {loadingData ? (
-                <ScheduleSkeleton />
-              ) : hasSchedule ? (
-                <ul className="divide-y divide-champagne-200">
-                  {todaysClasses.map((classItem) => {
-                    const startTime = new Date(classItem.start_time)
-                    const endTime = new Date(classItem.end_time)
-                    const isPast = endTime < new Date()
-                    return (
-                      <li
-                        key={classItem.id}
-                        className={`px-6 py-5 ${isPast ? 'opacity-60' : ''}`}
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-serif text-xl font-semibold text-charcoal-950">
-                                {classItem.title}
-                              </h3>
-                              {isPast && (
-                                <Badge variant="default" size="sm">
-                                  Completed
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
-                              <span className="flex items-center gap-1.5">
-                                <CalendarIcon className="w-4 h-4" aria-hidden="true" />
-                                {formatTime(classItem.start_time)} – {formatTime(classItem.end_time)}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
-                                {classItem.studio_name}
-                              </span>
-                            </div>
+          <div className="overflow-hidden rounded-lg border border-champagne-200 bg-champagne-50">
+            {loadingData ? (
+              <ScheduleSkeleton />
+            ) : hasSchedule ? (
+              <ul className="divide-y divide-champagne-200">
+                {todaysClasses.map((classItem) => {
+                  const endTime = new Date(classItem.end_time)
+                  const isPast = endTime < new Date()
+                  return (
+                    <li
+                      key={classItem.id}
+                      className={`px-6 py-5 ${isPast ? 'opacity-60' : ''}`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <h3 className="font-serif text-xl font-semibold text-charcoal-950">
+                              {classItem.title}
+                            </h3>
+                            {isPast && <StatusDot tone="neutral" label="Completed" />}
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              router.push(`/instructor/classes?class_id=${classItem.id}`)
-                            }
-                          >
-                            Open
-                          </Button>
+                          <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
+                            <span className="flex items-center gap-1.5">
+                              <CalendarIcon className="w-4 h-4" aria-hidden="true" />
+                              {formatTime(classItem.start_time)} – {formatTime(classItem.end_time)}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
+                              {classItem.studio_name}
+                            </span>
+                          </div>
                         </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              ) : nextClass ? (
-                <div className="px-6 py-6">
-                  <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500 mb-3">
-                    Next up
-                  </p>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-xl font-semibold text-charcoal-950">
-                        {nextClass.title}
-                      </h3>
-                      <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarIcon className="w-4 h-4" aria-hidden="true" />
-                          {new Date(nextClass.start_time).toLocaleString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            dayPeriod: 'short',
-                          })}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
-                          {nextClass.studio_name}
-                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/instructor/classes?class_id=${classItem.id}`)
+                          }
+                        >
+                          Open
+                        </Button>
                       </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : nextClass ? (
+              <div className="px-6 py-6">
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500 mb-3">
+                  Next up
+                </p>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif text-xl font-semibold text-charcoal-950">
+                      {nextClass.title}
+                    </h3>
+                    <div className="flex flex-col sm:flex-row sm:gap-5 text-sm text-charcoal-500 mt-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <CalendarIcon className="w-4 h-4" aria-hidden="true" />
+                        {new Date(nextClass.start_time).toLocaleString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          dayPeriod: 'short',
+                        })}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <BuildingOfficeIcon className="w-4 h-4" aria-hidden="true" />
+                        {nextClass.studio_name}
+                      </span>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        router.push(`/instructor/classes?class_id=${nextClass.id}`)
-                      }
-                    >
-                      Open
-                    </Button>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      router.push(`/instructor/classes?class_id=${nextClass.id}`)
+                    }
+                  >
+                    Open
+                  </Button>
                 </div>
-              ) : (
-                <div className="px-6 py-10 text-center">
-                  <p className="font-serif text-2xl text-charcoal-700">Nothing on the calendar.</p>
-                  <p className="text-sm text-charcoal-500 mt-1.5">
-                    Add a class when you&apos;re ready.
-                  </p>
-                  <div className="mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push('/instructor/classes')}
-                    >
-                      Create class
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <EmptyState
+                icon={<CalendarIcon />}
+                message="Nothing on the calendar."
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/instructor/classes')}
+                  >
+                    Create class
+                  </Button>
+                }
+              />
+            )}
+          </div>
         </section>
 
-        {/* Operational metrics — restrained, only what drives action */}
+        {/* Operational stats — restrained inline summary row, no card chrome */}
         <section>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-champagne-200 rounded-lg overflow-hidden border border-champagne-200">
-            <MetricTile
+          <div className="flex items-start">
+            <StatItem
               label="Pending requests"
               value={pendingRequests}
-              caption={pendingRequests > 0 ? 'Awaiting your reply' : 'All caught up'}
               actionLabel={pendingRequests > 0 ? 'Review' : undefined}
               onAction={() => router.push('/instructor/requests')}
               loading={loadingData}
             />
-            <MetricTile
+            <StatItem
               label="Unpaid invoices"
               value={unpaidInvoices}
-              caption={unpaidInvoices > 0 ? 'Outstanding balances' : 'All settled'}
               actionLabel={unpaidInvoices > 0 ? 'Follow up' : undefined}
               onAction={() => router.push('/instructor/payments')}
               loading={loadingData}
+              divider
             />
-            <MetricTile
+            <StatItem
               label="Active students"
               value={activeStudents}
-              caption={
-                stats
-                  ? `${stats.total_students ?? 0} on the roster`
-                  : ''
-              }
               actionLabel="Roster"
               onAction={() => router.push('/instructor/students')}
               loading={loadingData}
+              divider
             />
           </div>
         </section>
@@ -379,11 +369,7 @@ export default function InstructorPortalPage() {
                   onClick={() => router.push('/instructor/notes')}
                   className="text-left group"
                 >
-                  <Card
-                    hover
-                    padding="md"
-                    className="h-full flex flex-col"
-                  >
+                  <div className="h-full flex flex-col rounded-lg border border-champagne-200 bg-champagne-50 p-6 transition-colors group-hover:bg-champagne-100">
                     <div className="flex items-baseline justify-between gap-3 mb-2">
                       <p className="font-serif text-lg font-semibold text-charcoal-950 truncate">
                         {note.student_name}
@@ -420,18 +406,16 @@ export default function InstructorPortalPage() {
                         )}
                       </div>
                     )}
-                  </Card>
+                  </div>
                 </button>
               ))}
             </div>
           ) : (
-            <Card padding="lg">
-              <CardContent>
-                <div className="text-center py-4">
-                  <p className="font-serif text-2xl text-charcoal-700">No notes yet.</p>
-                  <p className="text-sm text-charcoal-500 mt-1.5 mb-4">
-                    Notes you leave after a lesson appear here.
-                  </p>
+            <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+              <EmptyState
+                icon={<DocumentTextIcon />}
+                message="No notes yet."
+                action={
                   <Button
                     variant="outline"
                     size="sm"
@@ -439,68 +423,66 @@ export default function InstructorPortalPage() {
                   >
                     Write a note
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                }
+              />
+            </div>
           )}
         </section>
 
         {/* Recent activity — single graphite vocabulary, no rainbow badges */}
         <section>
           <SectionLabel label="Recent activity" />
-          <Card padding="none">
-            <CardContent className="p-0">
-              {loadingData ? (
-                <ActivitySkeleton />
-              ) : recentActivity.length === 0 ? (
-                <p className="text-charcoal-500 text-sm px-6 py-6">No recent activity.</p>
-              ) : (
-                <ul className="divide-y divide-champagne-200">
-                  {recentActivity.map((activity) => {
-                    const Icon = ACTIVITY_ICON[activity.type] ?? DocumentTextIcon
-                    const label = ACTIVITY_LABEL[activity.type] ?? activity.type
-                    const className =
-                      'w-full flex items-start gap-4 px-6 py-4 text-left transition-colors hover:bg-champagne-100'
-                    const body = (
-                      <>
-                        <span className="shrink-0 mt-0.5 text-charcoal-400">
-                          <Icon className="w-5 h-5" aria-hidden="true" />
+          <div className="overflow-hidden rounded-lg border border-champagne-200 bg-champagne-50">
+            {loadingData ? (
+              <ActivitySkeleton />
+            ) : recentActivity.length === 0 ? (
+              <EmptyState message="No recent activity." />
+            ) : (
+              <ul className="divide-y divide-champagne-200">
+                {recentActivity.map((activity) => {
+                  const Icon = ACTIVITY_ICON[activity.type] ?? DocumentTextIcon
+                  const label = ACTIVITY_LABEL[activity.type] ?? activity.type
+                  const className =
+                    'w-full flex items-start gap-4 px-6 py-4 text-left transition-colors hover:bg-champagne-100'
+                  const body = (
+                    <>
+                      <span className="shrink-0 mt-0.5 text-charcoal-400">
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm text-charcoal-900">
+                          {activity.description}
                         </span>
-                        <span className="flex-1 min-w-0">
-                          <span className="block text-sm text-charcoal-900">
-                            {activity.description}
-                          </span>
-                          <span className="block text-xs text-charcoal-500 mt-1 tabular-nums">
-                            {formatActivityTimestamp(activity.timestamp)}
-                          </span>
+                        <span className="block text-xs text-charcoal-500 mt-1 tabular-nums">
+                          {formatActivityTimestamp(activity.timestamp)}
                         </span>
-                        <span className="shrink-0 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-charcoal-500 self-center">
-                          {label}
-                        </span>
-                      </>
-                    )
-                    return (
-                      <li key={activity.id}>
-                        {activity.link ? (
-                          <button
-                            type="button"
-                            onClick={() => router.push(activity.link as string)}
-                            className={className}
-                          >
-                            {body}
-                          </button>
-                        ) : (
-                          <div className={`${className} cursor-default hover:bg-transparent`}>
-                            {body}
-                          </div>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                      </span>
+                      <span className="shrink-0 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-charcoal-500 self-center">
+                        {label}
+                      </span>
+                    </>
+                  )
+                  return (
+                    <li key={activity.id}>
+                      {activity.link ? (
+                        <button
+                          type="button"
+                          onClick={() => router.push(activity.link as string)}
+                          className={className}
+                        >
+                          {body}
+                        </button>
+                      ) : (
+                        <div className={`${className} cursor-default hover:bg-transparent`}>
+                          {body}
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
     </PortalLayout>
@@ -533,50 +515,40 @@ function SectionLabel({
   )
 }
 
-function MetricTile({
+function StatItem({
   label,
   value,
-  caption,
   actionLabel,
   onAction,
   loading,
+  divider = false,
 }: {
   label: string
   value: number | string
-  caption: string
   actionLabel?: string
   onAction: () => void
   loading: boolean
+  divider?: boolean
 }) {
   return (
-    <div className="bg-champagne-50 px-6 py-5">
-      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
-        {label}
-      </p>
+    <div className={`pr-4 sm:pr-6 ${divider ? 'border-l border-champagne-200 pl-4 sm:pl-6' : ''}`}>
       {loading ? (
-        <div className="mt-3 space-y-2">
-          <Skeleton variant="text" width="40%" height={28} />
-          <Skeleton variant="text" width="65%" height={12} />
-        </div>
+        <Skeleton variant="text" width={48} height={28} />
       ) : (
-        <>
-          <p className="font-serif text-3xl font-semibold text-charcoal-950 mt-2 tabular-nums">
-            {value}
-          </p>
-          <div className="flex items-center justify-between mt-1.5 gap-3">
-            <p className="text-sm text-charcoal-500 truncate">{caption}</p>
-            {actionLabel && (
-              <button
-                type="button"
-                onClick={onAction}
-                className="shrink-0 text-xs font-medium text-rose-700 hover:text-rose-800 inline-flex items-center gap-0.5 transition-colors"
-              >
-                {actionLabel}
-                <ArrowRightIcon className="w-3 h-3" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </>
+        <p className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+          {value}
+        </p>
+      )}
+      <p className="text-sm text-charcoal-500 mt-1">{label}</p>
+      {!loading && actionLabel && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-1 inline-flex items-center gap-0.5 text-xs font-medium text-rose-700 hover:text-rose-800 transition-colors"
+        >
+          {actionLabel}
+          <ArrowRightIcon className="w-3 h-3" aria-hidden="true" />
+        </button>
       )}
     </div>
   )
@@ -619,7 +591,7 @@ function ActivitySkeleton() {
 
 function NoteCardSkeleton() {
   return (
-    <Card padding="md">
+    <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-6">
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-3">
           <Skeleton variant="text" width="50%" height={20} />
@@ -632,6 +604,6 @@ function NoteCardSkeleton() {
           <Skeleton variant="text" width="78%" height={12} />
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

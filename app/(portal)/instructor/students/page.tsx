@@ -4,9 +4,29 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Badge, Button, Input, Modal, ModalFooter, Select, Textarea, Table, useToast, Spinner } from '@/components/ui'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import {
+  Badge,
+  Button,
+  EmptyCell,
+  EmptyState,
+  Input,
+  Modal,
+  ModalFooter,
+  PageHeader,
+  PersonChip,
+  SegmentedControl,
+  Select,
+  StatusDot,
+  Table,
+  Textarea,
+  Toolbar,
+  useToast,
+  Spinner
+} from '@/components/ui'
+import { PlusIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import type { Student, CreateStudentData } from '@/lib/types'
+
+type StudentFilter = 'all' | 'active' | 'inactive'
 
 export default function StudentsPage() {
   const { user, profile, loading: authLoading } = useUser()
@@ -169,43 +189,54 @@ export default function StudentsPage() {
         getStudentName(a).localeCompare(getStudentName(b))
     )
 
+  // Sparse columns stay hidden until the data exists.
+  const hasAgeGroups = filteredStudents.some((s) => s.age_group)
+  const hasSkillLevels = filteredStudents.some((s) => s.skill_level)
+
+  let studentFilter: StudentFilter = 'all'
+  if (filterActive !== null) studentFilter = filterActive ? 'active' : 'inactive'
+
   const baseColumns = [
     {
       key: 'name',
       header: 'Name',
       render: (student: Student) => (
         <div className="flex items-center gap-2">
-          <span>{student.full_name || student.profile?.full_name || 'N/A'}</span>
+          <span className="font-medium">{getStudentName(student) || <EmptyCell />}</span>
           {!student.profile_id && (
             <Badge variant="warning" size="sm">Not linked</Badge>
           )}
         </div>
       )
     },
-    {
-      key: 'age_group',
-      header: 'Age Group',
-      render: (student: Student) => student.age_group || 'N/A'
-    },
-    {
-      key: 'skill_level',
-      header: 'Skill Level',
-      render: (student: Student) => student.skill_level || 'N/A'
-    },
+    ...(hasAgeGroups
+      ? [{
+          key: 'age_group',
+          header: 'Age Group',
+          render: (student: Student) => student.age_group || <EmptyCell />
+        }]
+      : []),
+    ...(hasSkillLevels
+      ? [{
+          key: 'skill_level',
+          header: 'Skill Level',
+          render: (student: Student) => student.skill_level || <EmptyCell />
+        }]
+      : []),
     {
       key: 'classes_taken',
       header: 'Classes',
-      render: (student: Student) => (
-        <span className="tabular-nums">{student.classes_taken ?? 0}</span>
-      )
+      numeric: true,
+      render: (student: Student) => student.classes_taken ?? 0
     },
     {
       key: 'status',
       header: 'Status',
       render: (student: Student) => (
-        <Badge variant={student.is_active ? 'primary' : 'default'} size="sm">
-          {student.is_active ? 'Active' : 'Inactive'}
-        </Badge>
+        <StatusDot
+          tone={student.is_active ? 'positive' : 'neutral'}
+          label={student.is_active ? 'Active' : 'Inactive'}
+        />
       )
     }
   ]
@@ -214,40 +245,36 @@ export default function StudentsPage() {
     ...baseColumns,
     {
       key: 'instructors',
-      header: 'Tagged Instructors',
+      header: 'Instructors',
       render: (student: Student) => {
         const taggedInstructors = getStudentInstructors(student.id)
-        return (
-          <div className="flex items-center gap-2">
-            {taggedInstructors.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {taggedInstructors.map((instructor: any) => (
-                  <Badge key={instructor.id} variant="default" size="sm">
-                    {instructor.full_name}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <span className="text-charcoal-400 text-sm">No instructors</span>
-            )}
+        return taggedInstructors.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {taggedInstructors.map((instructor: any) => (
+              <PersonChip key={instructor.id} name={instructor.full_name} />
+            ))}
           </div>
+        ) : (
+          <EmptyCell />
         )
       }
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: '',
+      align: 'right' as const,
+      hoverOnly: true,
       render: (student: Student) => (
         <Button
           size="sm"
-          variant="outline"
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation()
             setSelectedStudent(student)
             setShowTagModal(true)
           }}
         >
-          Tag Instructor
+          + Tag
         </Button>
       )
     }
@@ -257,73 +284,85 @@ export default function StudentsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="mb-8">
-        <div className="flex flex-wrap justify-between items-end gap-4 mb-6">
-          <div>
-            <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">Students</h1>
-            <p className="text-charcoal-500 mt-1">Manage your student roster</p>
-          </div>
+      <PageHeader
+        title="Students"
+        subtitle="Manage your student roster"
+        action={
           <Button onClick={() => setShowAddModal(true)}>
             <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
             Add student
           </Button>
-        </div>
+        }
+      />
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <Input
-              placeholder="Search students..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={filterActive === null ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(null)}
-              size="sm"
-            >
-              All
-            </Button>
-            <Button
-              variant={filterActive === true ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(true)}
-              size="sm"
-            >
-              Active
-            </Button>
-            <Button
-              variant={filterActive === false ? 'primary' : 'outline'}
-              onClick={() => setFilterActive(false)}
-              size="sm"
-            >
-              Inactive
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Toolbar
+        search={
+          <Input
+            placeholder="Search students..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search students"
+          />
+        }
+        filters={
+          <SegmentedControl<StudentFilter>
+            aria-label="Filter students by status"
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' }
+            ]}
+            value={studentFilter}
+            onChange={(value) => setFilterActive(value === 'all' ? null : value === 'active')}
+          />
+        }
+      />
 
       {/* Desktop Table View */}
-      <div className="hidden md:block">
+      <div className="mt-toolbar-gap hidden md:block">
         <Table
           data={filteredStudents}
           columns={columns}
           onRowClick={(student) => router.push(`/instructor/students/${student.id}`)}
           loading={loading}
-          emptyMessage="No students found"
+          empty={
+            <EmptyState
+              icon={<UserGroupIcon />}
+              message={
+                search || filterActive !== null
+                  ? 'No students match this view.'
+                  : 'Your roster is empty.'
+              }
+              action={
+                !search && filterActive === null ? (
+                  <Button onClick={() => setShowAddModal(true)}>
+                    <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
+                    Add student
+                  </Button>
+                ) : undefined
+              }
+            />
+          }
         />
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden">
+      <div className="mt-toolbar-gap md:hidden">
         {loading ? (
-          <div className="bg-champagne-50 rounded-lg shadow-soft p-8 text-center">
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-8 text-center">
             <Spinner size="md" className="mx-auto" />
             <p className="mt-2 text-charcoal-500">Loading...</p>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="bg-champagne-50 rounded-lg shadow-soft p-8 text-center text-charcoal-500">
-            No students found
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<UserGroupIcon />}
+              message={
+                search || filterActive !== null
+                  ? 'No students match this view.'
+                  : 'Your roster is empty.'
+              }
+            />
           </div>
         ) : (
           <div className="space-y-3">
@@ -331,13 +370,13 @@ export default function StudentsPage() {
               <div
                 key={student.id}
                 onClick={() => router.push(`/instructor/students/${student.id}`)}
-                className="bg-champagne-50 rounded-lg shadow-soft p-4 cursor-pointer hover:bg-champagne-100 active:bg-champagne-200 transition-colors"
+                className="rounded-lg border border-champagne-200 bg-champagne-50 p-4 cursor-pointer hover:bg-champagne-100 active:bg-champagne-200 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">
-                        {student.full_name || student.profile?.full_name || 'N/A'}
+                        {getStudentName(student) || '–'}
                       </h3>
                       {!student.profile_id && (
                         <Badge variant="warning" size="sm" className="whitespace-nowrap">
@@ -366,11 +405,9 @@ export default function StudentsPage() {
                     {profile?.role === 'admin' && (
                       <div className="mt-2">
                         {getStudentInstructors(student.id).length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1.5">
                             {getStudentInstructors(student.id).map((instructor: any) => (
-                              <Badge key={instructor.id} variant="default" size="sm">
-                                {instructor.full_name}
-                              </Badge>
+                              <PersonChip key={instructor.id} name={instructor.full_name} />
                             ))}
                           </div>
                         ) : (
@@ -380,21 +417,21 @@ export default function StudentsPage() {
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Badge variant={student.is_active ? 'primary' : 'default'} size="sm">
-                      {student.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <StatusDot
+                      tone={student.is_active ? 'positive' : 'neutral'}
+                      label={student.is_active ? 'Active' : 'Inactive'}
+                    />
                     {profile?.role === 'admin' && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedStudent(student)
                           setShowTagModal(true)
                         }}
-                        className="text-xs"
                       >
-                        Tag
+                        + Tag
                       </Button>
                     )}
                   </div>

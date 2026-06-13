@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusDot } from '@/components/ui/StatusDot'
 import { useToast } from '@/components/ui/Toast'
 import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
 import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
@@ -260,16 +262,10 @@ export default function DancerSchedulePage() {
   const getClassTypeClassName = (type: string, isPersonal?: boolean) => {
     if (isPersonal) return 'bg-rose-100 text-rose-800 border-rose-200'
     switch (type) {
-      case 'private':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'group':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'workshop':
-        return 'bg-green-100 text-green-800 border-green-200'
       case 'master_class':
-        return 'bg-amber-100 text-amber-800 border-amber-200'
+        return 'bg-gold-100 text-gold-800 border-gold-200'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-champagne-100 text-charcoal-700 border-champagne-200'
     }
   }
 
@@ -277,13 +273,13 @@ export default function DancerSchedulePage() {
     if (!status) return null
     switch (status) {
       case 'present':
-        return <Badge className="bg-green-100 text-green-800">Present</Badge>
+        return <StatusDot tone="positive" label="Present" />
       case 'absent':
-        return <Badge className="bg-red-100 text-red-800">Absent</Badge>
+        return <StatusDot tone="attention" label="Absent" />
       case 'late':
-        return <Badge className="bg-yellow-100 text-yellow-800">Late</Badge>
+        return <StatusDot tone="attention" label="Late" />
       case 'excused':
-        return <Badge className="bg-gray-100 text-gray-800">Excused</Badge>
+        return <StatusDot tone="neutral" label="Excused" />
       default:
         return null
     }
@@ -388,10 +384,10 @@ export default function DancerSchedulePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading...</p>
         </div>
       </div>
     )
@@ -404,15 +400,17 @@ export default function DancerSchedulePage() {
   return (
     <PortalLayout profile={profile}>
       <div className="flex flex-col h-[calc(100dvh-15rem)] md:h-[calc(100dvh-11rem)]">
-        {/* Header */}
+        {/* Header — intentionally hidden on mobile so the calendar gets the full viewport */}
         <div className="hidden md:block mb-6 flex-shrink-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-family-display)' }}>My Schedule</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">View your upcoming classes and personal events</p>
+          <PageHeader
+            title="My Schedule"
+            subtitle="View your upcoming classes and personal events"
+          />
         </div>
 
         {error && (
-          <Card className="bg-red-50 border-red-200 mb-4 flex-shrink-0">
-            <p className="text-red-700">{error}</p>
+          <Card className="bg-rose-100 border-rose-200 mb-4 flex-shrink-0">
+            <p className="text-rose-700">{error}</p>
           </Card>
         )}
 
@@ -459,7 +457,7 @@ export default function DancerSchedulePage() {
         {selectedEvent && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-2xl font-bold text-charcoal-950 mb-2">
                 {selectedEvent.title}
               </h3>
               <div className="flex items-center gap-2 flex-wrap">
@@ -467,17 +465,17 @@ export default function DancerSchedulePage() {
                   {getClassTypeLabel(selectedEvent.class_type, selectedEvent.isPersonal)}
                 </Badge>
                 {selectedEvent.isRecurring && (
-                  <Badge className="bg-indigo-100 text-indigo-800">Recurring</Badge>
+                  <Badge className="bg-champagne-100 text-charcoal-700">Recurring</Badge>
                 )}
                 {getAttendanceStatusBadge(selectedEvent.attendanceStatus)}
               </div>
             </div>
 
             {selectedEvent.is_cancelled && (
-              <Card className="bg-red-50 border-red-200">
+              <Card className="bg-rose-100 border-rose-200">
                 <div className="flex items-start gap-2">
                   <svg
-                    className="w-5 h-5 text-red-600 mt-0.5"
+                    className="w-5 h-5 text-rose-700 mt-0.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -490,7 +488,7 @@ export default function DancerSchedulePage() {
                     />
                   </svg>
                   <div>
-                    <p className="font-semibold text-red-900">This class is cancelled</p>
+                    <p className="font-semibold text-rose-900">This class is cancelled</p>
                   </div>
                 </div>
               </Card>
@@ -498,14 +496,14 @@ export default function DancerSchedulePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Start Time</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-charcoal-500 mb-1">Start Time</p>
+                <p className="font-medium text-charcoal-950">
                   {formatDateTime(selectedEvent.start_time)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">End Time</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-charcoal-500 mb-1">End Time</p>
+                <p className="font-medium text-charcoal-950">
                   {new Date(selectedEvent.end_time).toLocaleTimeString('en-US', {
                     hour: 'numeric',
                     minute: '2-digit',
@@ -517,46 +515,46 @@ export default function DancerSchedulePage() {
 
             {selectedEvent.instructorName && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Instructor</p>
-                <p className="font-medium text-gray-900">{selectedEvent.instructorName}</p>
+                <p className="text-sm text-charcoal-500 mb-1">Instructor</p>
+                <p className="font-medium text-charcoal-950">{selectedEvent.instructorName}</p>
               </div>
             )}
 
             {selectedEvent.location && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Location</p>
-                <p className="font-medium text-gray-900">{selectedEvent.location}</p>
+                <p className="text-sm text-charcoal-500 mb-1">Location</p>
+                <p className="font-medium text-charcoal-950">{selectedEvent.location}</p>
               </div>
             )}
 
             {selectedEvent.studios && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Studio</p>
-                <p className="font-medium text-gray-900">{selectedEvent.studios.name}</p>
+                <p className="text-sm text-charcoal-500 mb-1">Studio</p>
+                <p className="font-medium text-charcoal-950">{selectedEvent.studios.name}</p>
                 {selectedEvent.studios.address && (
-                  <p className="text-sm text-gray-600">{selectedEvent.studios.address}</p>
+                  <p className="text-sm text-charcoal-500">{selectedEvent.studios.address}</p>
                 )}
               </div>
             )}
 
             {selectedEvent.description && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Description</p>
-                <p className="text-gray-900">{selectedEvent.description}</p>
+                <p className="text-sm text-charcoal-500 mb-1">Description</p>
+                <p className="text-charcoal-950">{selectedEvent.description}</p>
               </div>
             )}
 
             {selectedEvent.enrollmentNotes && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-1">Notes</p>
-                <p className="text-sm text-gray-900">{selectedEvent.enrollmentNotes}</p>
+              <div className="p-3 bg-champagne-100 border border-champagne-200 rounded-lg">
+                <p className="text-sm font-medium text-charcoal-700 mb-1">Notes</p>
+                <p className="text-sm text-charcoal-900">{selectedEvent.enrollmentNotes}</p>
               </div>
             )}
 
             {selectedEvent.personalNotes && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-1">Personal Notes</p>
-                <p className="text-sm text-gray-900">{selectedEvent.personalNotes}</p>
+                <p className="text-sm font-medium text-charcoal-700 mb-1">Personal Notes</p>
+                <p className="text-sm text-charcoal-900">{selectedEvent.personalNotes}</p>
               </div>
             )}
 
@@ -640,22 +638,22 @@ export default function DancerSchedulePage() {
                   + Add to Calendar
                 </Button>
                 {showCalendarMenu && (
-                  <div className="absolute bottom-full mb-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                  <div className="absolute bottom-full mb-2 w-full bg-champagne-50 border border-champagne-300 rounded-lg shadow-lg z-10">
                     <button
                       onClick={handleAddToAppleCalendar}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-champagne-100 border-b last:border-b-0 text-sm"
                     >
                       Apple Calendar / Outlook (download)
                     </button>
                     <button
                       onClick={handleAddToGoogleCalendar}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-champagne-100 border-b last:border-b-0 text-sm"
                     >
                       Google Calendar
                     </button>
                     <button
                       onClick={handleAddToOutlook}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-champagne-100 text-sm"
                     >
                       Microsoft Outlook
                     </button>

@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import dynamic from 'next/dynamic'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Spinner } from '@/components/ui/Spinner'
 import {
@@ -109,49 +110,33 @@ const DeltaBadge = memo(function DeltaBadge({
   )
 })
 
-const MetricCard = memo(function MetricCard({
-  title,
+/* Restrained inline stat: serif number over a quiet label, divided from its
+   neighbors by a hairline. No card chrome. */
+function SummaryStat({
   value,
-  delta,
-  deltaType,
+  label,
+  loading,
 }: {
-  title: string
   value: string | number
-  delta: string
-  deltaType: DeltaTone
+  label: string
+  loading?: boolean
 }) {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
-              {title}
-            </p>
-            <p className="font-serif text-[2.25rem] leading-none font-semibold text-charcoal-950 mt-3">
-              {value}
-            </p>
-          </div>
-          <DeltaBadge value={delta} type={deltaType} />
+    <div className="min-w-0 border-l border-champagne-200 pl-5 pr-5 first:border-l-0 first:pl-0">
+      {loading ? (
+        <div className="space-y-2 py-1">
+          <Skeleton variant="text" width={56} height={22} />
+          <Skeleton variant="text" width={120} height={12} />
         </div>
-      </CardContent>
-    </Card>
-  )
-})
-
-function MetricSkeleton() {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-3 w-full">
-            <Skeleton variant="text" width="50%" height={12} />
-            <Skeleton variant="text" width="65%" height={32} />
-          </div>
-          <Skeleton variant="rectangular" width={70} height={22} />
-        </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <>
+          <p className="font-serif text-2xl font-semibold tabular-nums text-charcoal-950">
+            {value}
+          </p>
+          <p className="text-sm text-charcoal-500">{label}</p>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -250,16 +235,14 @@ export default function AdminDashboard() {
     return null
   }
 
+  const statsLoading = loadingStats || !stats
+
   return (
     <PortalLayout profile={profile}>
-      <div className="space-y-6">
-        <div className="flex flex-wrap justify-between items-end gap-4">
-          <div>
-            <h1 className="font-serif text-4xl font-semibold text-charcoal-950 tracking-[-0.02em]">
-              Admin
-            </h1>
-            <p className="text-charcoal-500 mt-1">Platform overview and management</p>
-          </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Platform overview and management"
+        action={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={goUsers}>
               <UsersIcon className="w-4 h-4 mr-1" aria-hidden="true" />
@@ -274,208 +257,178 @@ export default function AdminDashboard() {
               Inquiries
             </Button>
           </div>
+        }
+      />
+
+      <div className="mt-header-gap space-y-6">
+        <div className="flex flex-wrap gap-y-4">
+          <SummaryStat
+            loading={statsLoading}
+            value={stats?.users.total ?? 0}
+            label={`Total users · +${stats?.users.new_this_month ?? 0} this month`}
+          />
+          <SummaryStat
+            loading={statsLoading}
+            value={formatCurrency(stats?.revenue.total ?? 0)}
+            label={`Total revenue · ${stats?.revenue.payment_count ?? 0} payments`}
+          />
+          <SummaryStat
+            loading={statsLoading}
+            value={stats?.classes.total ?? 0}
+            label={`Active classes · ${stats?.classes.enrollments ?? 0} enrollments`}
+          />
+          <SummaryStat
+            loading={statsLoading}
+            value={stats?.notes.total ?? 0}
+            label={`Total notes · +${stats?.notes.this_month ?? 0} this month`}
+          />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loadingStats || !stats ? (
-            <>
-              <MetricSkeleton />
-              <MetricSkeleton />
-              <MetricSkeleton />
-              <MetricSkeleton />
-            </>
-          ) : (
-            <>
-              <MetricCard
-                title="Total users"
-                value={stats.users.total}
-                delta={`+${stats.users.new_this_month} this month`}
-                deltaType={stats.users.new_this_month > 0 ? 'increase' : 'unchanged'}
-              />
-              <MetricCard
-                title="Total revenue"
-                value={formatCurrency(stats.revenue.total)}
-                delta={`${stats.revenue.payment_count} payments`}
-                deltaType="moderateIncrease"
-              />
-              <MetricCard
-                title="Active classes"
-                value={stats.classes.total}
-                delta={`${stats.classes.enrollments} enrollments`}
-                deltaType="moderateIncrease"
-              />
-              <MetricCard
-                title="Total notes"
-                value={stats.notes.total}
-                delta={`+${stats.notes.this_month} this month`}
-                deltaType={stats.notes.this_month > 0 ? 'increase' : 'unchanged'}
-              />
-            </>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6">
-              <div className="flex items-baseline justify-between mb-4">
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
-                  Revenue trend
-                </p>
-                <p className="text-xs text-charcoal-400">Last 30 days</p>
-              </div>
-              <div className="h-72">
-                {loadingStats || !stats ? (
-                  <ChartSkeleton height="h-full" />
-                ) : (
-                  <RevenueTrendChart data={revenueTrendData} formatCurrency={formatCurrency} />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500 mb-4">
-                User demographics
-              </p>
-              <div className="h-48">
-                {loadingStats || !stats ? (
-                  <ChartSkeleton height="h-full" />
-                ) : (
-                  <DemographicsPieChart data={userDemographics} />
-                )}
-              </div>
-              <div className="mt-4 space-y-2">
-                {(loadingStats || !stats ? [] : userDemographics).map((item, idx) => (
-                  <div key={item.name} className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: PIE_PALETTE[idx % PIE_PALETTE.length] }}
-                        aria-hidden="true"
-                      />
-                      <span className="text-sm text-charcoal-700">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardContent className="p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 rounded-lg border border-champagne-200 bg-champagne-50 p-5">
             <div className="flex items-baseline justify-between mb-4">
               <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
-                Notes activity
+                Revenue trend
               </p>
               <p className="text-xs text-charcoal-400">Last 30 days</p>
             </div>
-            <div className="h-60">
-              {loadingStats || !stats ? (
+            <div className="h-72">
+              {statsLoading ? (
                 <ChartSkeleton height="h-full" />
               ) : (
-                <NotesTrendChart data={notesTrendData} />
+                <RevenueTrendChart data={revenueTrendData} formatCurrency={formatCurrency} />
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-charcoal-950">Pending inquiries</p>
-                {stats && (
-                  <DeltaBadge
-                    value={`${stats.inquiries.pending} pending`}
-                    type={stats.inquiries.pending > 0 ? 'moderateIncrease' : 'unchanged'}
-                  />
-                )}
-              </div>
-              {loadingStats || !stats ? (
-                <ListSkeleton />
-              ) : stats.inquiries.recent.length > 0 ? (
-                <ul className="divide-y divide-champagne-200">
-                  {stats.inquiries.recent.map((inquiry) => (
-                    <li key={inquiry.id} className="py-3 flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-charcoal-950 truncate">{inquiry.name}</p>
-                        <p className="text-xs text-charcoal-500 truncate">{inquiry.email}</p>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={goInquiries}>
-                        View
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500 mb-4">
+              User demographics
+            </p>
+            <div className="h-48">
+              {statsLoading ? (
+                <ChartSkeleton height="h-full" />
               ) : (
-                <p className="text-charcoal-500 text-sm">No pending inquiries.</p>
+                <DemographicsPieChart data={userDemographics} />
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-charcoal-950">Pending waivers</p>
-                {stats && (
-                  <DeltaBadge
-                    value={`${stats.waivers.pending} pending`}
-                    type={stats.waivers.pending > 0 ? 'moderateIncrease' : 'unchanged'}
-                  />
-                )}
-              </div>
-              {loadingStats || !stats ? (
-                <ListSkeleton />
-              ) : stats.waivers.recent.length > 0 ? (
-                <ul className="divide-y divide-champagne-200">
-                  {stats.waivers.recent.map((waiver) => (
-                    <li key={waiver.id} className="py-3 flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-charcoal-950 truncate">
-                          {waiver.student_name}
-                        </p>
-                        <p className="text-xs text-charcoal-500 truncate">{waiver.waiver_title}</p>
-                      </div>
-                      <span className="text-xs text-charcoal-500 tabular-nums">
-                        {new Date(waiver.created_at).toLocaleDateString()}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-charcoal-500 text-sm">No pending waivers.</p>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+            <div className="mt-4 space-y-2">
+              {(statsLoading ? [] : userDemographics).map((item, idx) => (
+                <div key={item.name} className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: PIE_PALETTE[idx % PIE_PALETTE.length] }}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm text-charcoal-700">{item.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-champagne-200 rounded-lg overflow-hidden border border-champagne-200">
-          <SummaryTile
-            label="Studio inquiries"
+        <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-5">
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">
+              Notes activity
+            </p>
+            <p className="text-xs text-charcoal-400">Last 30 days</p>
+          </div>
+          <div className="h-60">
+            {statsLoading ? (
+              <ChartSkeleton height="h-full" />
+            ) : (
+              <NotesTrendChart data={notesTrendData} />
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-charcoal-950">Pending inquiries</p>
+              {stats && (
+                <DeltaBadge
+                  value={`${stats.inquiries.pending} pending`}
+                  type={stats.inquiries.pending > 0 ? 'moderateIncrease' : 'unchanged'}
+                />
+              )}
+            </div>
+            {statsLoading ? (
+              <ListSkeleton />
+            ) : stats.inquiries.recent.length > 0 ? (
+              <ul className="divide-y divide-champagne-200">
+                {stats.inquiries.recent.map((inquiry) => (
+                  <li key={inquiry.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-charcoal-950 truncate">{inquiry.name}</p>
+                      <p className="text-xs text-charcoal-500 truncate">{inquiry.email}</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={goInquiries}>
+                      View
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState message="No inquiries are waiting." />
+            )}
+          </div>
+
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-charcoal-950">Pending waivers</p>
+              {stats && (
+                <DeltaBadge
+                  value={`${stats.waivers.pending} pending`}
+                  type={stats.waivers.pending > 0 ? 'moderateIncrease' : 'unchanged'}
+                />
+              )}
+            </div>
+            {statsLoading ? (
+              <ListSkeleton />
+            ) : stats.waivers.recent.length > 0 ? (
+              <ul className="divide-y divide-champagne-200">
+                {stats.waivers.recent.map((waiver) => (
+                  <li key={waiver.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-charcoal-950 truncate">
+                        {waiver.student_name}
+                      </p>
+                      <p className="text-xs text-charcoal-500 truncate">{waiver.waiver_title}</p>
+                    </div>
+                    <span className="text-xs text-charcoal-500 tabular-nums">
+                      {new Date(waiver.created_at).toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState message="No waivers are waiting." />
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-y-4 border-t border-champagne-200 pt-5">
+          <SummaryStat
+            loading={statsLoading}
             value={stats?.inquiries.total ?? 0}
-            sub={stats ? `${stats.inquiries.pending} pending` : ''}
-            loading={loadingStats || !stats}
+            label={`Studio inquiries · ${stats?.inquiries.pending ?? 0} pending`}
           />
-          <SummaryTile
-            label="Waivers"
+          <SummaryStat
+            loading={statsLoading}
             value={stats?.waivers.total ?? 0}
-            sub={stats ? `${stats.waivers.signed} signed · ${stats.waivers.pending} pending` : ''}
-            loading={loadingStats || !stats}
+            label={`Waivers · ${stats?.waivers.signed ?? 0} signed · ${stats?.waivers.pending ?? 0} pending`}
           />
-          <SummaryTile
-            label="Private lessons"
+          <SummaryStat
+            loading={statsLoading}
             value={stats?.lesson_packs.available ?? 0}
-            sub={
-              stats
-                ? `${stats.lesson_packs.total_purchased} purchased · ${stats.lesson_packs.total_used} used`
-                : ''
-            }
-            loading={loadingStats || !stats}
+            label={`Private lessons available · ${stats?.lesson_packs.total_purchased ?? 0} purchased · ${stats?.lesson_packs.total_used ?? 0} used`}
           />
         </div>
 
@@ -502,36 +455,5 @@ function ListSkeleton() {
         </li>
       ))}
     </ul>
-  )
-}
-
-function SummaryTile({
-  label,
-  value,
-  sub,
-  loading,
-}: {
-  label: string
-  value: string | number
-  sub: string
-  loading: boolean
-}) {
-  return (
-    <div className="bg-champagne-50 p-6">
-      <p className="text-xs font-medium uppercase tracking-[0.08em] text-charcoal-500">{label}</p>
-      {loading ? (
-        <div className="mt-3 space-y-2">
-          <Skeleton variant="text" width="50%" height={28} />
-          <Skeleton variant="text" width="70%" height={12} />
-        </div>
-      ) : (
-        <>
-          <p className="font-serif text-3xl font-semibold text-charcoal-950 mt-2 tabular-nums">
-            {value}
-          </p>
-          <p className="text-sm text-charcoal-500 mt-1">{sub}</p>
-        </>
-      )}
-    </div>
   )
 }

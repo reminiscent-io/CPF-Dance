@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 interface Waiver {
   id: string
@@ -111,8 +112,8 @@ export default function EditWaiverPage() {
 
   if (loading || loadingWaiver) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <p className="text-charcoal-500">Loading...</p>
       </div>
     )
   }
@@ -124,25 +125,26 @@ export default function EditWaiverPage() {
   return (
     <PortalLayout profile={profile}>
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/instructor/waivers/${params?.id}`)}
-            className="mb-4"
-          >
-            ← Back to Waiver
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Waiver</h1>
-          <p className="text-gray-600">Update waiver details before it's signed</p>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/instructor/waivers/${params?.id}`)}
+          className="mb-4"
+        >
+          ← Back to Waiver
+        </Button>
 
-        <Card>
+        <PageHeader
+          title="Edit Waiver"
+          subtitle="Update waiver details before it's signed."
+        />
+
+        <Card className="mt-header-gap">
           <CardTitle>Waiver Details</CardTitle>
           <CardContent className="mt-4">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                  Title <span className="text-rose-600">*</span>
                 </label>
                 <Input
                   value={title}
@@ -153,7 +155,7 @@ export default function EditWaiverPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-charcoal-700 mb-1">
                   Description
                 </label>
                 <textarea
@@ -161,13 +163,13 @@ export default function EditWaiverPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief description (optional)"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                   disabled={saving}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-charcoal-700 mb-1">
                   Expiration Date (Optional)
                 </label>
                 <Input
@@ -176,19 +178,19 @@ export default function EditWaiverPage() {
                   onChange={(e) => setExpiresAt(e.target.value)}
                   disabled={saving}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-charcoal-500 mt-1">
                   Leave empty for no expiration
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+              <div className="bg-champagne-100 border border-champagne-200 rounded-lg p-4">
+                <p className="text-sm text-charcoal-700">
                   <strong>Note:</strong> You can only edit the title, description, and expiration date.
                   The waiver content cannot be changed after issuance to maintain legal integrity.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-3 pt-4 border-t border-champagne-200">
                 <Button
                   variant="outline"
                   onClick={() => router.push(`/instructor/waivers/${params?.id}`)}

@@ -17,7 +17,6 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const currentYear = new Date().getFullYear()
 
   // Determine which portal we're in based on the current path
   const isInstructorPortal = pathname?.startsWith('/instructor')
@@ -83,7 +82,7 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
           }}
         >
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-page-x pt-5 lg:pt-page-top pb-8">
               {children}
             </div>
           </main>
@@ -104,25 +103,12 @@ export function PortalLayout({ children, profile }: PortalLayoutProps) {
         }}
       >
         <main className="flex-1 overflow-y-auto md:pt-0">
-          <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${
-            profile?.role ? 'pb-24 md:pb-8' : ''
+          <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-page-x pt-5 lg:pt-page-top ${
+            profile?.role ? 'pb-24 md:pb-8' : 'pb-8'
           }`}>
             {children}
           </div>
         </main>
-
-        <footer
-          className="bg-champagne-50 border-t border-champagne-200 flex-shrink-0 hidden md:block"
-          style={{
-            paddingBottom: 'env(safe-area-inset-bottom)'
-          }}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="text-center text-sm text-charcoal-500">
-              <p>&copy; {currentYear} CPF Dance LLC. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
       </div>
 
       {/* Bottom nav based on current portal path */}

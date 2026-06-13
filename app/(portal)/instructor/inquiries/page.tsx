@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { EmptyState, PageHeader, StatusDot } from '@/components/ui'
+import type { StatusTone } from '@/components/ui'
+import { InboxIcon } from '@heroicons/react/24/outline'
 
 interface StudioInquiry {
   id: string
@@ -47,24 +48,25 @@ export default function InquiriesPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): StatusTone => {
     switch (status?.toLowerCase()) {
-      case 'new':
-        return 'warning'
       case 'responded':
-        return 'success'
+        return 'positive'
       case 'contacted':
-        return 'secondary'
+        return 'accent'
       default:
-        return 'default'
+        return 'neutral'
     }
   }
+
+  const formatStatus = (status: string) =>
+    status ? status.charAt(0).toUpperCase() + status.slice(1) : 'New'
 
   if (loading || loadingInquiries) {
     return (
       <PortalLayout profile={profile}>
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-charcoal-600">Loading inquiries...</p>
+          <p className="text-charcoal-500">Loading inquiries...</p>
         </div>
       </PortalLayout>
     )
@@ -76,105 +78,99 @@ export default function InquiriesPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-charcoal-950 mb-2">Studio Inquiries</h1>
-          <p className="text-lg text-charcoal-800">
-            View partnership inquiries from studios where you teach
-          </p>
-        </div>
+      <PageHeader
+        title="Studio Inquiries"
+        subtitle="Partnership inquiries from studios where you teach"
+      />
 
+      <div className="mt-header-gap">
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
-            <p className="text-red-700">{error}</p>
+          <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 p-4">
+            <p className="text-rose-700">{error}</p>
           </div>
         )}
 
         {inquiries.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <p className="text-charcoal-600 mb-2">No inquiries yet</p>
-              <p className="text-charcoal-500 text-sm">
-                When studios submit partnership inquiries, they'll appear here
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg border border-champagne-200 bg-champagne-50">
+            <EmptyState
+              icon={<InboxIcon />}
+              message="Partnership inquiries from studios will appear here."
+            />
+          </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-4">
             {inquiries.map((inquiry) => (
-              <Card key={inquiry.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-charcoal-950 mb-4">
-                        {inquiry.studio_name}
-                      </h3>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-sm font-semibold text-charcoal-700">Contact Person</label>
-                          <p className="text-charcoal-900">{inquiry.contact_name}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-semibold text-charcoal-700">Email</label>
-                          <p>
-                            <a
-                              href={`mailto:${inquiry.contact_email}`}
-                              className="text-rose-600 hover:underline"
-                            >
-                              {inquiry.contact_email}
-                            </a>
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-semibold text-charcoal-700">Phone</label>
-                          <p>
-                            <a
-                              href={`tel:${inquiry.contact_phone}`}
-                              className="text-rose-600 hover:underline"
-                            >
-                              {inquiry.contact_phone}
-                            </a>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="mb-4">
-                        <label className="text-sm font-semibold text-charcoal-700 block mb-2">
-                          Status
-                        </label>
-                        <Badge variant={getStatusColor(inquiry.status)} className="text-base px-3 py-1">
-                          {inquiry.status || 'New'}
-                        </Badge>
+              <div
+                key={inquiry.id}
+                className="rounded-lg border border-champagne-200 bg-champagne-50 p-5"
+              >
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-charcoal-950">
+                      {inquiry.studio_name}
+                    </h3>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <div className="text-sm font-medium text-charcoal-500">Contact person</div>
+                        <p className="text-charcoal-900">{inquiry.contact_name}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-semibold text-charcoal-700 block mb-2">
-                          Received
-                        </label>
-                        <p className="text-charcoal-700">
-                          {new Date(inquiry.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                        <div className="text-sm font-medium text-charcoal-500">Email</div>
+                        <p>
+                          <a
+                            href={`mailto:${inquiry.contact_email}`}
+                            className="text-rose-600 hover:underline"
+                          >
+                            {inquiry.contact_email}
+                          </a>
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-charcoal-500">Phone</div>
+                        <p>
+                          <a
+                            href={`tel:${inquiry.contact_phone}`}
+                            className="text-rose-600 hover:underline"
+                          >
+                            {inquiry.contact_phone}
+                          </a>
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-charcoal-200 pt-6">
-                    <label className="text-sm font-semibold text-charcoal-700 block mb-2">
-                      Message
-                    </label>
-                    <p className="text-charcoal-800 leading-relaxed whitespace-pre-wrap">
-                      {inquiry.message}
-                    </p>
+                  <div>
+                    <div>
+                      <div className="text-sm font-medium text-charcoal-500">Status</div>
+                      <div className="mt-1">
+                        <StatusDot
+                          tone={getStatusTone(inquiry.status)}
+                          label={formatStatus(inquiry.status)}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="text-sm font-medium text-charcoal-500">Received</div>
+                      <p className="mt-1 text-charcoal-700">
+                        {new Date(inquiry.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <div className="mt-5 border-t border-champagne-200 pt-5">
+                  <div className="text-sm font-medium text-charcoal-500">Message</div>
+                  <p className="mt-1 whitespace-pre-wrap leading-relaxed text-charcoal-700">
+                    {inquiry.message}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         )}

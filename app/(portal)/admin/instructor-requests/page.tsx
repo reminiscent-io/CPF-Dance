@@ -4,9 +4,20 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Spinner } from '@/components/ui/Spinner'
-import { Badge } from '@/components/ui/Badge'
+import {
+  Avatar,
+  Badge,
+  EmptyState,
+  PageHeader,
+  Spinner,
+  StatusDot
+} from '@/components/ui'
+import {
+  AcademicCapIcon,
+  CalendarDaysIcon,
+  EnvelopeIcon,
+  PhoneIcon
+} from '@heroicons/react/24/outline'
 
 interface Instructor {
   id: string
@@ -57,10 +68,10 @@ export default function AdminInstructorRequestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-charcoal-500 mt-4">Loading...</p>
         </div>
       </div>
     )
@@ -72,132 +83,112 @@ export default function AdminInstructorRequestsPage() {
 
   return (
     <PortalLayout profile={profile}>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-family-display)' }}>
-            Instructor Accounts
-          </h1>
-          <p className="text-gray-600">View all instructor accounts and their activity</p>
-        </div>
+      <PageHeader
+        title="Instructor Accounts"
+        subtitle="View all instructor accounts and their activity"
+      />
 
+      <div className="mt-header-gap">
         {loadingInstructors ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
           </div>
         ) : (
           <>
-            <div className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-charcoal-500">
               {instructors.length} instructor{instructors.length !== 1 ? 's' : ''} registered
-            </div>
+            </p>
 
             {/* Instructors Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {instructors.map((instructor) => (
-                <Card key={instructor.id} hover className="bg-gradient-to-br from-white to-purple-50">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col h-full">
-                      {/* Header with Avatar Placeholder and Badge */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-rose-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">
-                              {instructor.full_name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">
-                              {instructor.full_name}
-                            </h3>
-                            <Badge variant="primary" size="sm">Instructor</Badge>
-                          </div>
-                        </div>
+                <div
+                  key={instructor.id}
+                  className="flex flex-col rounded-lg border border-champagne-200 bg-champagne-50 p-5"
+                >
+                  {/* Header with Avatar and Status */}
+                  <div className="flex items-center gap-3">
+                    <Avatar name={instructor.full_name} size="lg" />
+                    <div className="min-w-0">
+                      <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">
+                        {instructor.full_name}
+                      </h3>
+                      <StatusDot tone="positive" label="Approved" />
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-charcoal-500">
+                      <EnvelopeIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      <span className="truncate">{instructor.email}</span>
+                    </div>
+                    {instructor.phone && (
+                      <div className="flex items-center gap-2 text-sm text-charcoal-500">
+                        <PhoneIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                        <span>{instructor.phone}</span>
                       </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-charcoal-500">
+                      <CalendarDaysIcon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      <span className="text-xs">
+                        Joined {new Date(instructor.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                  </div>
 
-                      {/* Contact Info */}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          <span className="truncate">{instructor.email}</span>
-                        </div>
-                        {instructor.phone && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span>{instructor.phone}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-xs">
-                            Joined {new Date(instructor.created_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
+                  {/* Bio */}
+                  {instructor.bio && (
+                    <p className="mt-4 text-sm text-charcoal-700 line-clamp-3">{instructor.bio}</p>
+                  )}
+
+                  {/* Specialties */}
+                  {instructor.specialties && instructor.specialties.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {instructor.specialties.slice(0, 3).map((specialty, idx) => (
+                        <Badge key={idx} variant="default" size="sm">
+                          {specialty}
+                        </Badge>
+                      ))}
+                      {instructor.specialties.length > 3 && (
+                        <Badge variant="default" size="sm">
+                          +{instructor.specialties.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Stats Footer */}
+                  <div className="mt-auto pt-4">
+                    <div className="flex border-t border-champagne-200 pt-4">
+                      <div className="pr-5">
+                        <p className="font-serif text-xl font-semibold tabular-nums text-charcoal-950">
+                          {instructor.student_count}
+                        </p>
+                        <p className="text-xs text-charcoal-500">Students</p>
                       </div>
-
-                      {/* Bio */}
-                      {instructor.bio && (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-600 line-clamp-3">{instructor.bio}</p>
-                        </div>
-                      )}
-
-                      {/* Specialties */}
-                      {instructor.specialties && instructor.specialties.length > 0 && (
-                        <div className="mb-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            {instructor.specialties.slice(0, 3).map((specialty, idx) => (
-                              <Badge key={idx} variant="default" size="sm">
-                                {specialty}
-                              </Badge>
-                            ))}
-                            {instructor.specialties.length > 3 && (
-                              <Badge variant="default" size="sm">
-                                +{instructor.specialties.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Stats Footer */}
-                      <div className="mt-auto pt-4 border-t border-gray-200">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-purple-600">{instructor.student_count}</p>
-                            <p className="text-xs text-gray-600">Students</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-rose-600">{instructor.class_count}</p>
-                            <p className="text-xs text-gray-600">Classes</p>
-                          </div>
-                        </div>
+                      <div className="border-l border-champagne-200 pl-5">
+                        <p className="font-serif text-xl font-semibold tabular-nums text-charcoal-950">
+                          {instructor.class_count}
+                        </p>
+                        <p className="text-xs text-charcoal-500">Classes</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
 
             {instructors.length === 0 && (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <div className="text-6xl mb-4">🎓</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No Instructors Yet
-                  </h3>
-                  <p className="text-gray-600">
-                    No instructor accounts have been created yet.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="mt-3 rounded-lg border border-champagne-200 bg-champagne-50">
+                <EmptyState
+                  icon={<AcademicCapIcon />}
+                  message="No instructor accounts have been created yet."
+                />
+              </div>
             )}
           </>
         )}
