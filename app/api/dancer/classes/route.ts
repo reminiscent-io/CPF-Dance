@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
           end_time,
           class_type,
           is_cancelled,
+          is_virtual,
+          google_meet_url,
           instructor_id,
           studio_id,
           studios (

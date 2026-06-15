@@ -38,6 +38,8 @@ interface EnrolledClass {
   end_time: string
   class_type: string
   is_cancelled: boolean
+  is_virtual: boolean
+  google_meet_url: string | null
   enrollment_id: string
   enrolled_at: string
   attendance_status: string | null

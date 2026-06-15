@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 import { spendCreditForClass, getDayOfLessonPrice } from '@/lib/lesson-credits'
-import { notifyClassScheduled } from '@/lib/notifications/private-lessons'
+import { notifyClassScheduled, notifyDancerVirtualLesson } from '@/lib/notifications/private-lessons'
+import { createMeetEvent } from '@/lib/google/calendar'
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
       tiered_additional_cost,
       external_signup_url,
       is_public,
+      is_virtual, // Private lessons: create a Google Meet link
       student_id, // For automatically enrolling a student (private lessons)
       asset_id, // Optional promotional asset
       private_lesson_request_id // When created from a request, links + spends credit
@@ -168,6 +170,8 @@ export async function POST(request: NextRequest) {
       // Public features
       external_signup_url: external_signup_url || null,
       is_public: is_public || false,
+      // Virtual lesson (Google Meet) — link is populated below after the event is created
+      is_virtual: (class_type === 'private' && is_virtual) || false,
       // Asset
       asset_id: asset_id || null
     }
@@ -255,6 +259,53 @@ export async function POST(request: NextRequest) {
         })
       } catch (notifyError) {
         console.error('[classes POST] notifyClassScheduled failed:', notifyError)
+      }
+    }
+
+    // If this is a virtual private lesson, create a Google Meet on Courtney's
+    // calendar and notify the enrolled dancer. Best-effort: a Calendar/email
+    // failure must NOT fail class creation — the class still exists, just without a link.
+    if (classData?.is_virtual && class_type === 'private' && student_id) {
+      try {
+        const admin = createAdminClient()
+        const { data: studentRow } = await admin
+          .from('students')
+          .select('full_name, email, profile:profiles!students_profile_id_fkey(full_name, email)')
+          .eq('id', student_id)
+          .single()
+        const studentProfile = Array.isArray(studentRow?.profile)
+          ? studentRow?.profile[0]
+          : studentRow?.profile
+        const dancerName = studentRow?.full_name || studentProfile?.full_name || 'Dancer'
+        const dancerEmail = studentRow?.email || studentProfile?.email || ''
+
+        const { hangoutLink, eventId } = await createMeetEvent({
+          classId: classData.id,
+          summary: title,
+          description,
+          startIso: classData.start_time,
+          endIso: classData.end_time,
+          attendeeEmails: dancerEmail ? [dancerEmail] : [],
+        })
+
+        await admin
+          .from('classes')
+          .update({ google_meet_url: hangoutLink, google_calendar_event_id: eventId })
+          .eq('id', classData.id)
+
+        classData.google_meet_url = hangoutLink
+        classData.google_calendar_event_id = eventId
+
+        if (dancerEmail && hangoutLink) {
+          await notifyDancerVirtualLesson({
+            to: dancerEmail,
+            dancerName,
+            startTimeIso: classData.start_time,
+            meetUrl: hangoutLink,
+          })
+        }
+      } catch (meetError) {
+        console.error('[classes POST] Google Meet creation failed:', meetError)
       }
     }
 

@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
 import { refundCreditForClass } from '@/lib/lesson-credits'
+import { createMeetEvent, updateMeetEventTime, deleteMeetEvent } from '@/lib/google/calendar'
+import { notifyDancerVirtualLesson } from '@/lib/notifications/private-lessons'
 
 export async function GET(
   request: NextRequest,
@@ -43,6 +45,73 @@ export async function GET(
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Keep the backing Google Calendar event / Meet link in sync after a private lesson
+// is edited. Best-effort: a Calendar failure logs but never fails the class update.
+async function syncVirtualLessonCalendar(classData: any): Promise<void> {
+  try {
+    const admin = createAdminClient()
+    const eventId: string | null = classData.google_calendar_event_id
+
+    if (classData.is_virtual && classData.class_type === 'private') {
+      if (eventId) {
+        // Rescheduled — push the new time to the existing event.
+        await updateMeetEventTime({
+          eventId,
+          startIso: classData.start_time,
+          endIso: classData.end_time,
+        })
+      } else {
+        // Toggled virtual on — create a Meet and notify the enrolled dancer.
+        const { data: enrollment } = await admin
+          .from('enrollments')
+          .select('students(full_name, email, profile:profiles!students_profile_id_fkey(full_name, email))')
+          .eq('class_id', classData.id)
+          .limit(1)
+        const enr = Array.isArray(enrollment) ? enrollment[0] : enrollment
+        const student = Array.isArray(enr?.students) ? enr?.students[0] : enr?.students
+        const studentProfile = Array.isArray(student?.profile) ? student?.profile[0] : student?.profile
+        const dancerName = student?.full_name || studentProfile?.full_name || 'Dancer'
+        const dancerEmail = student?.email || studentProfile?.email || ''
+
+        const { hangoutLink, eventId: newEventId } = await createMeetEvent({
+          classId: classData.id,
+          summary: classData.title,
+          description: classData.description,
+          startIso: classData.start_time,
+          endIso: classData.end_time,
+          attendeeEmails: dancerEmail ? [dancerEmail] : [],
+        })
+        await admin
+          .from('classes')
+          .update({ google_meet_url: hangoutLink, google_calendar_event_id: newEventId })
+          .eq('id', classData.id)
+        classData.google_meet_url = hangoutLink
+        classData.google_calendar_event_id = newEventId
+
+        if (dancerEmail && hangoutLink) {
+          await notifyDancerVirtualLesson({
+            to: dancerEmail,
+            dancerName,
+            startTimeIso: classData.start_time,
+            meetUrl: hangoutLink,
+          })
+        }
+      }
+    } else if (eventId) {
+      // Toggled virtual off (or no longer private) — remove the event and clear the link.
+      await deleteMeetEvent(eventId)
+      await admin
+        .from('classes')
+        .update({ google_meet_url: null, google_calendar_event_id: null })
+        .eq('id', classData.id)
+      classData.google_meet_url = null
+      classData.google_calendar_event_id = null
+    }
+  } catch (error) {
+    console.error('[classes PATCH] virtual lesson calendar sync failed:', error)
   }
 }
 
@@ -87,6 +156,7 @@ export async function PATCH(
       actual_attendance_count,
       external_signup_url,
       is_public,
+      is_virtual,
       asset_id // Optional promotional asset
     } = body
 
@@ -152,6 +222,8 @@ export async function PATCH(
     // Public features
     if (external_signup_url !== undefined) updateData.external_signup_url = external_signup_url || null
     if (is_public !== undefined) updateData.is_public = is_public
+    // Virtual lesson flag (Meet link sync handled after the update below)
+    if (is_virtual !== undefined) updateData.is_virtual = is_virtual || false
     // Asset
     if (asset_id !== undefined) updateData.asset_id = asset_id || null
 
@@ -183,6 +255,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Class not found or unauthorized' }, { status: 404 })
     }
 
+    await syncVirtualLessonCalendar(classData)
+
     return NextResponse.json({ class: classData })
   } catch (error) {
     console.error('Unexpected error:', error)
@@ -211,6 +285,20 @@ export async function DELETE(
     // Refund any active credit attached to this class before deletion.
     // Uses the admin client because nobody has UPDATE on lesson_pack_usage under RLS.
     await refundCreditForClass({ supabase: createAdminClient(), classId: id, reason: 'class_deleted' })
+
+    // Remove the backing Google Calendar event / Meet for virtual lessons (best-effort).
+    try {
+      const { data: classRow } = await createAdminClient()
+        .from('classes')
+        .select('google_calendar_event_id')
+        .eq('id', id)
+        .single()
+      if (classRow?.google_calendar_event_id) {
+        await deleteMeetEvent(classRow.google_calendar_event_id)
+      }
+    } catch (meetError) {
+      console.error('[classes DELETE] deleteMeetEvent failed:', meetError)
+    }
 
     // Build query - admins can delete any class, instructors only their own
     let query = supabase
