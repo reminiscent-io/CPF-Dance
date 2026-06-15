@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Typography - CSS variables for fonts */
-  --font-family-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
-  --font-family-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  /* Typography - CSS variables for fonts (using next/font CSS variables) */
+  --font-family-display: var(--font-cormorant-garamond), 'Georgia', 'Garamond', serif;
+  --font-family-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 @theme {
   /* Font Families - registered so `font-serif` and `font-display`
      utilities resolve to the program-book serif. */
-  --font-serif: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
-  --font-display: 'Cormorant Garamond', 'Georgia', 'Garamond', serif;
-  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-serif: var(--font-cormorant-garamond), 'Georgia', 'Garamond', serif;
+  --font-display: var(--font-cormorant-garamond), 'Georgia', 'Garamond', serif;
+  --font-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
 
   /* Spacing System - Systematic scale for consistent rhythm */
   --spacing-1: 0.25rem;   /* 4px */
