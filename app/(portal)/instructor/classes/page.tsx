@@ -1360,6 +1360,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
   })
   const [isCreatingNewStudio, setIsCreatingNewStudio] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState(60) // Default 1 hour
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Recurring class state
   const [isRecurring, setIsRecurring] = useState(false)
@@ -1590,6 +1591,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     <Modal isOpen={true} onClose={onClose} title="Create Class" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
+          {/* 1. Class Title */}
           <Input
             label="Class Title *"
             required
@@ -1597,34 +1599,54 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
 
-          {/* Instructor selection - only for admins */}
-          {profile?.role === 'admin' && (
+          {/* 2. Class Type */}
+          <div>
+            <label className="block text-sm font-medium text-charcoal-700 mb-1">
+              Class Type *
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              value={formData.class_type}
+              onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
+            >
+              <option value="group">Group</option>
+              <option value="private">Private</option>
+              <option value="workshop">Workshop</option>
+              <option value="master_class">Master Class</option>
+            </select>
+          </div>
+
+          {/* 3. Start Time + Length */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Start Time (ET) *"
+              type="datetime-local"
+              step="300"
+              required
+              value={formData.start_time}
+              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+            />
             <div>
               <label className="block text-sm font-medium text-charcoal-700 mb-1">
-                Instructor (leave blank to use yourself)
+                Length *
               </label>
               <select
+                required
                 className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                value={formData.instructor_id || ''}
-                onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
               >
-                <option value="">Use me as the instructor</option>
-                {instructors.map(instructor => (
-                  <option key={instructor.id} value={instructor.id}>
-                    {instructor.full_name}
+                {durationOptions.map(minutes => (
+                  <option key={minutes} value={minutes}>
+                    {formatDuration(minutes)}
                   </option>
                 ))}
               </select>
             </div>
-          )}
+          </div>
 
-          <Textarea
-            label="Description"
-            rows={2}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
-
+          {/* 4. Studio */}
           <div>
             <label className="block text-sm font-medium text-charcoal-700 mb-2">
               Studio
@@ -1680,85 +1702,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-charcoal-700 mb-1">
-              Class Type *
-            </label>
-            <select
-              required
-              className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-              value={formData.class_type}
-              onChange={(e) => setFormData({ ...formData, class_type: e.target.value as ClassType })}
-            >
-              <option value="group">Group</option>
-              <option value="private">Private</option>
-              <option value="workshop">Workshop</option>
-              <option value="master_class">Master Class</option>
-            </select>
-          </div>
-
-          {formData.is_virtual ? (
-            <p className="text-xs text-charcoal-500">
-              A Google Meet link is created automatically on Courtney&rsquo;s calendar and shared with the
-              dancer by email and in the app. No in-person location needed.
-            </p>
-          ) : (
-            <GooglePlacesInput
-              label="Location"
-              value={formData.location || ''}
-              onChange={(value) => setFormData({ ...formData, location: value })}
-              placeholder="Search for class location..."
-            />
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Start Time (ET) *"
-              type="datetime-local"
-              step="300"
-              required
-              value={formData.start_time}
-              onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-            />
-            <div>
-              <label className="block text-sm font-medium text-charcoal-700 mb-1">
-                Length *
-              </label>
-              <select
-                required
-                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
-              >
-                {durationOptions.map(minutes => (
-                  <option key={minutes} value={minutes}>
-                    {formatDuration(minutes)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <Input
-            label="Max Capacity"
-            type="number"
-            min="1"
-            value={formData.max_capacity || ''}
-            onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
-          />
-
-          <Input
-            label="External Sign-up Link"
-            type="url"
-            placeholder="https://eventbrite.com/..."
-            value={formData.external_signup_url || ''}
-            onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
-          />
-          <p className="text-xs text-charcoal-500 -mt-2 mb-2">
-            Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
-          </p>
-
-          {/* Student selection for private lessons */}
+          {/* 5. Student selection for private lessons */}
           {formData.class_type === 'private' && (
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg">
               <label className="block text-sm font-medium text-charcoal-700 mb-1">
@@ -1799,91 +1743,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </div>
           )}
 
-          {/* Recurring Class Options */}
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="recurring_toggle"
-                checked={isRecurring}
-                onChange={(e) => {
-                  setIsRecurring(e.target.checked)
-                  if (!e.target.checked) {
-                    setSelectedDays([])
-                    setRecurringEndDate('')
-                  }
-                }}
-                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
-              />
-              <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
-                Make this a recurring class
-              </label>
-            </div>
-
-            {isRecurring && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-charcoal-700 mb-2">
-                    Repeat on these days *
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {dayNames.map((day, index) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => {
-                          if (selectedDays.includes(index)) {
-                            setSelectedDays(selectedDays.filter(d => d !== index))
-                          } else {
-                            setSelectedDays([...selectedDays, index])
-                          }
-                        }}
-                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                          selectedDays.includes(index)
-                            ? 'bg-rose-600 text-champagne-50 border-rose-600'
-                            : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Input
-                  label="Repeat until (end date) *"
-                  type="date"
-                  required={isRecurring}
-                  value={recurringEndDate}
-                  onChange={(e) => setRecurringEndDate(e.target.value)}
-                  min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
-                />
-
-                {recurringDates.length > 0 && (
-                  <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
-                    This will create <strong>{recurringDates.length}</strong> classes
-                    {recurringDates.length > 20 && (
-                      <span className="text-rose-800"> (confirmation required)</span>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
-            <input
-              type="checkbox"
-              id="create_is_public"
-              checked={formData.is_public || false}
-              onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-              className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
-            />
-            <label htmlFor="create_is_public" className="text-sm font-medium text-charcoal-700 cursor-pointer">
-              Make class public for dancers and guardians to view and enroll
-            </label>
-          </div>
-
+          {/* 5. Pricing */}
           <div>
             <label className="block text-sm font-medium text-charcoal-700 mb-1">
               Pricing Model *
@@ -1901,7 +1761,6 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </select>
           </div>
 
-          {/* Conditional pricing fields based on selected model */}
           {formData.pricing_model === 'per_person' && (
             <Input
               label="Cost Per Person ($) *"
@@ -1976,13 +1835,179 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </div>
           )}
 
-          {/* Asset Selection */}
-          <AssetSelector
-            selectedAssetId={formData.asset_id}
-            onSelect={(assetId) => setFormData({ ...formData, asset_id: assetId })}
-            label="Promotional Image/Document (Optional)"
-            showUploadButton={true}
-          />
+          {/* Advanced Section Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 text-sm font-medium text-charcoal-500 hover:text-charcoal-700 transition-colors w-full py-2"
+          >
+            <span className="text-xs">{showAdvanced ? '\u25BE' : '\u25B8'}</span>
+            Advanced options
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-4 pl-2 border-l-2 border-champagne-200">
+              {/* Location */}
+              {formData.is_virtual ? (
+                <p className="text-xs text-charcoal-500">
+                  A Google Meet link is created automatically on Courtney&rsquo;s calendar and shared with the
+                  dancer by email and in the app. No in-person location needed.
+                </p>
+              ) : (
+                <GooglePlacesInput
+                  label="Location"
+                  value={formData.location || ''}
+                  onChange={(value) => setFormData({ ...formData, location: value })}
+                  placeholder="Search for class location..."
+                />
+              )}
+
+              {/* Description */}
+              <Textarea
+                label="Description"
+                rows={2}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+
+              {/* Max Capacity */}
+              <Input
+                label="Max Capacity"
+                type="number"
+                min="1"
+                value={formData.max_capacity || ''}
+                onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value ? parseInt(e.target.value) : undefined })}
+              />
+
+              {/* Asset Selection */}
+              <AssetSelector
+                selectedAssetId={formData.asset_id}
+                onSelect={(assetId) => setFormData({ ...formData, asset_id: assetId })}
+                label="Promotional Image/Document (Optional)"
+                showUploadButton={true}
+              />
+
+              {/* Instructor selection - only for admins */}
+              {profile?.role === 'admin' && (
+                <div>
+                  <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                    Instructor (leave blank to use yourself)
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    value={formData.instructor_id || ''}
+                    onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
+                  >
+                    <option value="">Use me as the instructor</option>
+                    {instructors.map(instructor => (
+                      <option key={instructor.id} value={instructor.id}>
+                        {instructor.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* External Sign-up Link */}
+              <Input
+                label="External Sign-up Link"
+                type="url"
+                placeholder="https://eventbrite.com/..."
+                value={formData.external_signup_url || ''}
+                onChange={(e) => setFormData({ ...formData, external_signup_url: e.target.value })}
+              />
+              <p className="text-xs text-charcoal-500 -mt-2 mb-2">
+                Optional: Add a URL for classes booked through external platforms (e.g., Eventbrite)
+              </p>
+
+              {/* Make Class Public */}
+              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="create_is_public"
+                  checked={formData.is_public || false}
+                  onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                  className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                />
+                <label htmlFor="create_is_public" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                  Make class public for dancers and guardians to view and enroll
+                </label>
+              </div>
+
+              {/* Recurring Class Options */}
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="recurring_toggle"
+                    checked={isRecurring}
+                    onChange={(e) => {
+                      setIsRecurring(e.target.checked)
+                      if (!e.target.checked) {
+                        setSelectedDays([])
+                        setRecurringEndDate('')
+                      }
+                    }}
+                    className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                  />
+                  <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                    Make this a recurring class
+                  </label>
+                </div>
+
+                {isRecurring && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        Repeat on these days *
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {dayNames.map((day, index) => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              if (selectedDays.includes(index)) {
+                                setSelectedDays(selectedDays.filter(d => d !== index))
+                              } else {
+                                setSelectedDays([...selectedDays, index])
+                              }
+                            }}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                              selectedDays.includes(index)
+                                ? 'bg-rose-600 text-champagne-50 border-rose-600'
+                                : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Input
+                      label="Repeat until (end date) *"
+                      type="date"
+                      required={isRecurring}
+                      value={recurringEndDate}
+                      onChange={(e) => setRecurringEndDate(e.target.value)}
+                      min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
+                    />
+
+                    {recurringDates.length > 0 && (
+                      <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
+                        This will create <strong>{recurringDates.length}</strong> classes
+                        {recurringDates.length > 20 && (
+                          <span className="text-rose-800"> (confirmation required)</span>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+            </div>
+          )}
         </div>
 
         <ModalFooter className="mt-6">
