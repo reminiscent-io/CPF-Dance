@@ -9,8 +9,8 @@ import {
   Button,
   EmptyState,
   PageHeader,
+  PageSkeleton,
   Skeleton,
-  Spinner,
   StatusDot,
 } from '@/components/ui'
 import type { DashboardStats, RecentActivity } from '@/lib/types'
@@ -142,12 +142,9 @@ export default function InstructorPortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-charcoal-500 mt-4">Loading…</p>
-        </div>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="dashboard" />
+      </PortalLayout>
     )
   }
 

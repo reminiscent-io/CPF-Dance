@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { StatusDot } from '@/components/ui/StatusDot'
 import type { StatusTone } from '@/components/ui/StatusDot'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
@@ -159,9 +160,9 @@ export default function WaiverDetailPage() {
 
   if (loading || loadingWaiver) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <p className="text-charcoal-500">Loading...</p>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="detail" withAction />
+      </PortalLayout>
     )
   }
 

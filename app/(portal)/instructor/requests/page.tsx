@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Button, Badge, EmptyState, PageHeader, Spinner, StatusDot, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
+import { Button, Badge, EmptyState, PageHeader, PageSkeleton, StatusDot, useToast, Modal, ModalFooter, Input, Textarea, GooglePlacesInput } from '@/components/ui'
 import { InboxIcon } from '@heroicons/react/24/outline'
 import type { Studio, ClassType } from '@/lib/types'
 import { convertETToUTC } from '@/lib/utils/et-timezone'
@@ -153,9 +153,7 @@ export default function InstructorRequestsPage() {
   if (loading || loadingRequests) {
     return (
       <PortalLayout profile={profile}>
-        <div className="min-h-screen flex items-center justify-center">
-          <Spinner size="lg" />
-        </div>
+        <PageSkeleton variant="list" />
       </PortalLayout>
     )
   }

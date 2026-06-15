@@ -17,7 +17,8 @@ import {
   StatusDot,
   Toolbar,
   useToast,
-  Spinner,
+  PageSkeleton,
+  NoteListSkeleton,
   Avatar
 } from '@/components/ui'
 import { NotesRichTextEditor, RichTextDisplay, Editor } from '@/components/NotesRichTextEditor'
@@ -203,9 +204,9 @@ function NotesContent() {
 
   if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="list" withAction withToolbar />
+      </PortalLayout>
     )
   }
 
@@ -382,9 +383,7 @@ function NotesContent() {
 
       <div className="mt-toolbar-gap">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
+          <NoteListSkeleton count={4} />
         ) : displayNotes.length === 0 ? (
           <div className="rounded-lg border border-champagne-200 bg-champagne-50">
             <EmptyState
@@ -825,9 +824,9 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
 export default function NotesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={null}>
+        <PageSkeleton variant="list" withAction withToolbar />
+      </PortalLayout>
     }>
       <NotesContent />
     </Suspense>

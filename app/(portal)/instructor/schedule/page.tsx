@@ -14,8 +14,9 @@ import {
   EmptyState,
   Modal,
   PageHeader,
+  PageSkeleton,
   SegmentedControl,
-  Spinner,
+  SkeletonList,
   StatusDot,
   Toolbar,
   useToast
@@ -309,12 +310,9 @@ export default function InstructorSchedulePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-charcoal-500 mt-4">Loading...</p>
-        </div>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="list" withAction withToolbar />
+      </PortalLayout>
     )
   }
 
@@ -377,8 +375,8 @@ export default function InstructorSchedulePage() {
         )}
 
         {loading && classes.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+          <div className="mt-toolbar-gap">
+            <SkeletonList count={4} />
           </div>
         ) : (
           <>

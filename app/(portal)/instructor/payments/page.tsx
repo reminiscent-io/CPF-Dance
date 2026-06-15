@@ -11,9 +11,11 @@ import {
   EmptyState,
   Modal,
   PageHeader,
+  PageSkeleton,
   SegmentedControl,
   Select,
-  Spinner,
+  Skeleton,
+  SkeletonCardGrid,
   StatusDot,
   Table,
   Toolbar
@@ -449,12 +451,9 @@ function InstructorPaymentsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-charcoal-500 mt-4">Loading...</p>
-        </div>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="table" withAction withToolbar />
+      </PortalLayout>
     )
   }
 
@@ -613,8 +612,13 @@ function InstructorPaymentsContent() {
         </div>
 
         {loadingEarnings ? (
-          <div className="mt-5 flex justify-center py-8">
-            <Spinner size="md" />
+          <div className="mt-5 flex flex-wrap gap-x-12 gap-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton variant="text" width={72} height={26} />
+                <Skeleton variant="text" width={104} height={12} />
+              </div>
+            ))}
           </div>
         ) : earningsSummary && (
           <>
@@ -794,10 +798,7 @@ function InstructorPaymentsContent() {
         {/* Mobile Card View */}
         <div className="mt-toolbar-gap md:hidden">
           {loadingPayments ? (
-            <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-8 text-center">
-              <Spinner size="md" className="mx-auto" />
-              <p className="mt-2 text-charcoal-500">Loading...</p>
-            </div>
+            <SkeletonCardGrid count={4} cols="grid-cols-1" gap="gap-3" />
           ) : payments.length === 0 ? (
             <div className="rounded-lg border border-champagne-200 bg-champagne-50">
               {paymentsEmptyState}
@@ -1307,9 +1308,9 @@ function InstructorPaymentsContent() {
 export default function InstructorPaymentsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={null}>
+        <PageSkeleton variant="table" withAction withToolbar />
+      </PortalLayout>
     }>
       <InstructorPaymentsContent />
     </Suspense>

@@ -7,7 +7,7 @@ import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Spinner } from '@/components/ui/Spinner'
+import { PageSkeleton, SkeletonDetail } from '@/components/ui'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { CheckIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { HeadshotUpload } from '@/components/HeadshotUpload'
@@ -147,12 +147,9 @@ export default function InstructorProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="text-charcoal-500 mt-4">Loading...</p>
-        </div>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="detail" withAction />
+      </PortalLayout>
     )
   }
 
@@ -190,8 +187,8 @@ export default function InstructorProfilePage() {
       />
 
       {loadingData ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
+        <div className="mt-header-gap">
+          <SkeletonDetail />
         </div>
       ) : (
         <div className="mt-header-gap space-y-6">
