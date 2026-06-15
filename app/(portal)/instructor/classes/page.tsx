@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -14,7 +14,6 @@ import {
   ModalFooter,
   PageHeader,
   PageSkeleton,
-  PersonChip,
   SegmentedControl,
   Select,
   SkeletonCardGrid,
@@ -24,11 +23,14 @@ import {
   Toolbar,
   useToast
 } from '@/components/ui'
-import { CalendarDaysIcon, MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { CalendarDaysIcon, ClockIcon, MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 import { AssetSelector } from '@/components/AssetSelector'
+
+// All class times are authored and displayed in Eastern Time
+const ET = 'America/New_York'
 
 // Helper function to parse currency values and round to 2 decimal places
 const parseCurrency = (value: string): number | undefined => {
@@ -55,6 +57,51 @@ function ClassesContent() {
   const [filterStudio, setFilterStudio] = useState<string>('')
   const [filterType, setFilterType] = useState<ClassType | ''>('')
   const [upcomingOnly, setUpcomingOnly] = useState(true)
+
+  // Sort chronologically so the page reads top-to-bottom like a season's program,
+  // then break the run into month sections that anchor the eye.
+  const sortedClasses = useMemo(
+    () => [...classes].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()),
+    [classes]
+  )
+
+  const monthGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; month: string; year: string; classes: Class[] }>()
+    for (const cls of sortedClasses) {
+      const date = new Date(cls.start_time)
+      const month = date.toLocaleString('en-US', { timeZone: ET, month: 'long' })
+      const year = date.toLocaleString('en-US', { timeZone: ET, year: 'numeric' })
+      const mm = date.toLocaleString('en-US', { timeZone: ET, month: '2-digit' })
+      const key = `${year}-${mm}`
+      if (!groups.has(key)) groups.set(key, { key, month, year, classes: [] })
+      groups.get(key)!.classes.push(cls)
+    }
+    return [...groups.values()]
+  }, [sortedClasses])
+
+  // The class nearest to now (first upcoming, else the most recent) is the scroll target.
+  const nearestClassId = useMemo(() => {
+    if (sortedClasses.length === 0) return null
+    const now = Date.now()
+    const upcoming = sortedClasses.find((cls) => new Date(cls.start_time).getTime() >= now)
+    return (upcoming ?? sortedClasses[sortedClasses.length - 1]).id
+  }, [sortedClasses])
+
+  const currentMonthKey = (() => {
+    const now = new Date()
+    return `${now.toLocaleString('en-US', { timeZone: ET, year: 'numeric' })}-${now.toLocaleString('en-US', { timeZone: ET, month: '2-digit' })}`
+  })()
+
+  const scrollToNearestClass = () => {
+    if (!nearestClassId) return
+    const el = document.getElementById(`class-card-${nearestClassId}`)
+    if (!el) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
+    const ring = ['ring-2', 'ring-rose-400', 'ring-offset-2', 'ring-offset-champagne-50']
+    el.classList.add(...ring)
+    window.setTimeout(() => el.classList.remove(...ring), 1400)
+  }
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -366,6 +413,16 @@ function ClassesContent() {
               value={upcomingOnly ? 'upcoming' : 'all'}
               onChange={(value) => setUpcomingOnly(value === 'upcoming')}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={scrollToNearestClass}
+              disabled={!nearestClassId}
+              title="Jump to the class nearest to today"
+            >
+              <CalendarDaysIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Today
+            </Button>
           </div>
         }
       />
@@ -378,71 +435,114 @@ function ClassesContent() {
             <EmptyState icon={<CalendarDaysIcon />} message={emptyStateMessage} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {classes.map((cls: any) => (
-              <div
-                key={cls.id}
-                onClick={() => handleClassClick(cls)}
-                className={`cursor-pointer rounded-lg border p-5 transition-colors ${
-                  cls.class_type === 'private'
-                    ? 'border-rose-200 bg-rose-50 hover:bg-rose-100'
-                    : 'border-champagne-200 bg-champagne-50 hover:bg-champagne-100'
-                }`}
-              >
-                <div className="flex justify-between items-start gap-2 mb-3">
-                  <h3 className="font-serif text-lg font-semibold text-charcoal-950 flex-1">{cls.title}</h3>
-                  {cls.is_cancelled ? (
-                    <StatusDot tone="attention" label="Cancelled" />
-                  ) : (
-                    <Badge variant="primary">{cls.class_type.replace('_', ' ')}</Badge>
-                  )}
-                </div>
-
-                {cls.instructor_name && (
-                  <div className="mb-2">
-                    <PersonChip name={cls.instructor_name} full />
-                  </div>
-                )}
-
-                {cls.studio && (
-                  <p className="flex items-center gap-1.5 text-sm text-charcoal-500 mb-2">
-                    <MapPinIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
-                    <span className="truncate">
-                      {cls.studio.name}
-                      {cls.studio.city && `, ${cls.studio.city}`}
+          <div className="space-y-10">
+            {monthGroups.map((group) => (
+              <section key={group.key}>
+                {/* Program-section divider: pins to the top of the scroll area so the
+                    current month is always legible while paging through the schedule. */}
+                <div className="sticky top-0 z-10 bg-champagne-50 pt-2 pb-2">
+                  <div className="flex items-baseline justify-between gap-3 border-b border-champagne-200 pb-2">
+                    <h2 className="flex items-baseline gap-2.5">
+                      <span className="font-serif text-2xl font-semibold tracking-[-0.02em] text-charcoal-950">
+                        {group.month}
+                      </span>
+                      <span className="font-serif text-2xl font-normal text-charcoal-400">
+                        {group.year}
+                      </span>
+                      {group.key === currentMonthKey && (
+                        <span className="ml-0.5 rounded-sm bg-rose-50 px-2 py-0.5 text-[0.7rem] font-medium uppercase tracking-[0.06em] text-rose-700">
+                          This month
+                        </span>
+                      )}
+                    </h2>
+                    <span className="shrink-0 text-sm text-charcoal-500 tabular-nums">
+                      {group.classes.length} {group.classes.length === 1 ? 'class' : 'classes'}
                     </span>
-                  </p>
-                )}
-
-                <p className="flex items-center gap-1.5 text-sm text-charcoal-500 mb-3">
-                  <CalendarDaysIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
-                  <span>
-                    {new Date(cls.start_time).toLocaleString('en-US', {
-                      timeZone: 'America/New_York',
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })} ET
-                  </span>
-                </p>
-
-                {cls.description && (
-                  <p className="text-sm text-charcoal-700 mb-3 line-clamp-2">{cls.description}</p>
-                )}
-
-                <div className="flex justify-between items-center pt-3 border-t border-champagne-200">
-                  <span className="text-sm text-charcoal-500 tabular-nums">
-                    {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
-                      ? `${cls.actual_attendance_count} attended`
-                      : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
-                  </span>
-                  <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
-                    {getPricingModelDescription(cls)}
-                  </span>
+                  </div>
                 </div>
-              </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {group.classes.map((cls: any) => {
+                    const isPrivate = cls.class_type === 'private'
+                    const start = new Date(cls.start_time)
+                    const weekday = start.toLocaleString('en-US', { timeZone: ET, weekday: 'short' })
+                    const day = start.toLocaleString('en-US', { timeZone: ET, day: 'numeric' })
+                    const time = start.toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+                    return (
+                      <div
+                        key={cls.id}
+                        id={`class-card-${cls.id}`}
+                        onClick={() => handleClassClick(cls)}
+                        className={`cursor-pointer scroll-mt-[5.5rem] rounded-lg border p-5 transition-colors ${
+                          isPrivate
+                            ? 'border-rose-200 bg-rose-50 hover:bg-rose-100'
+                            : 'border-champagne-200 bg-champagne-50 hover:bg-champagne-100'
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Date tab: the month lives in the section header, so the card
+                              carries only the day, leading the eye like a calendar listing. */}
+                          <div
+                            className={`flex w-[3rem] shrink-0 flex-col items-center rounded-md border py-1.5 ${
+                              isPrivate ? 'border-rose-200 bg-champagne-50' : 'border-champagne-200 bg-champagne-100'
+                            }`}
+                          >
+                            <span className="text-[0.65rem] font-medium uppercase tracking-[0.08em] text-charcoal-500">
+                              {weekday}
+                            </span>
+                            <span className="font-serif text-2xl font-semibold leading-none text-charcoal-950">
+                              {day}
+                            </span>
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-serif text-lg font-semibold leading-snug text-charcoal-950">
+                                {cls.title}
+                              </h3>
+                              {cls.is_cancelled ? (
+                                <StatusDot tone="attention" label="Cancelled" />
+                              ) : (
+                                <Badge variant="primary">{cls.class_type.replace('_', ' ')}</Badge>
+                              )}
+                            </div>
+
+                            <p className="mt-1.5 flex items-center gap-1.5 text-sm text-charcoal-700">
+                              <ClockIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
+                              <span className="tabular-nums">{time} ET</span>
+                            </p>
+
+                            {cls.studio && (
+                              <p className="mt-1 flex items-center gap-1.5 text-sm text-charcoal-500">
+                                <MapPinIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
+                                <span className="truncate">
+                                  {cls.studio.name}
+                                  {cls.studio.city && `, ${cls.studio.city}`}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {cls.description && (
+                          <p className="mt-3 line-clamp-2 text-sm text-charcoal-700">{cls.description}</p>
+                        )}
+
+                        <div className="mt-4 flex items-center justify-between border-t border-champagne-200 pt-3">
+                          <span className="text-sm text-charcoal-500 tabular-nums">
+                            {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
+                              ? `${cls.actual_attendance_count} attended`
+                              : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
+                          </span>
+                          <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
+                            {getPricingModelDescription(cls)}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
             ))}
           </div>
         )}
