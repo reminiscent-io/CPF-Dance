@@ -1,51 +1,4 @@
-import { google } from 'googleapis';
-
-let connectionSettings: any;
-
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-mail',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Gmail not connected');
-  }
-  return accessToken;
-}
-
-export async function getGmailClient() {
-  const accessToken = await getAccessToken();
-
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken
-  });
-
-  return google.gmail({ version: 'v1', auth: oauth2Client });
-}
+import { ReplitConnectors } from '@replit/connectors-sdk';
 
 export interface EmailMessage {
   to: string;
@@ -56,13 +9,12 @@ export interface EmailMessage {
   references?: string;
 }
 
-// Strip CRLF sequences to prevent email header injection
 function sanitizeHeaderValue(value: string): string {
-  return value.replace(/[\r\n]/g, '').trim()
+  return value.replace(/[\r\n]/g, '').trim();
 }
 
 export async function sendEmail(message: EmailMessage): Promise<{ threadId: string; messageId: string }> {
-  const gmail = await getGmailClient();
+  const connectors = new ReplitConnectors();
 
   const headers = [
     `To: ${sanitizeHeaderValue(message.to)}`,
@@ -76,21 +28,32 @@ export async function sendEmail(message: EmailMessage): Promise<{ threadId: stri
   if (message.references) {
     headers.push(`References: ${sanitizeHeaderValue(message.references)}`);
   }
-  
+
   const emailContent = [...headers, '', message.body].join('\r\n');
-  const encodedMessage = Buffer.from(emailContent).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  
-  const response = await gmail.users.messages.send({
-    userId: 'me',
-    requestBody: {
+  const encodedMessage = Buffer.from(emailContent)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  const response = await connectors.proxy('google-mail', '/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    body: JSON.stringify({
       raw: encodedMessage,
       threadId: message.threadId,
-    },
+    }),
+    headers: { 'Content-Type': 'application/json' },
   });
-  
+
+  const data = await response.json() as any;
+
+  if (!response.ok) {
+    throw new Error(`Gmail API error: ${data?.error?.message || response.status}`);
+  }
+
   return {
-    threadId: response.data.threadId || '',
-    messageId: response.data.id || '',
+    threadId: data.threadId || '',
+    messageId: data.id || '',
   };
 }
 
@@ -106,39 +69,45 @@ export interface ThreadMessage {
 }
 
 export async function getThreadMessages(threadId: string): Promise<ThreadMessage[]> {
-  const gmail = await getGmailClient();
-  
-  const thread = await gmail.users.threads.get({
-    userId: 'me',
-    id: threadId,
-    format: 'full',
-  });
-  
+  const connectors = new ReplitConnectors();
+
+  const response = await connectors.proxy(
+    'google-mail',
+    `/gmail/v1/users/me/threads/${threadId}?format=full`,
+    { method: 'GET' }
+  );
+
+  const thread = await response.json() as any;
+
+  if (!response.ok) {
+    throw new Error(`Gmail API error: ${thread?.error?.message || response.status}`);
+  }
+
   const messages: ThreadMessage[] = [];
-  
-  for (const msg of thread.data.messages || []) {
-    const headers = msg.payload?.headers || [];
-    const getHeader = (name: string) => headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
-    
+
+  for (const msg of thread.messages || []) {
+    const msgHeaders: Array<{ name: string; value: string }> = msg.payload?.headers || [];
+    const getHeader = (name: string) =>
+      msgHeaders.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
+
     let body = '';
     if (msg.payload?.body?.data) {
       body = Buffer.from(msg.payload.body.data, 'base64url').toString('utf-8');
     } else if (msg.payload?.parts) {
-      const textPart = msg.payload.parts.find((p) => p.mimeType === 'text/plain' || p.mimeType === 'text/html');
+      const textPart = msg.payload.parts.find(
+        (p: any) => p.mimeType === 'text/plain' || p.mimeType === 'text/html'
+      );
       if (textPart?.body?.data) {
         body = Buffer.from(textPart.body.data, 'base64url').toString('utf-8');
       }
     }
-    
+
     const from = getHeader('From');
-    console.log(`[Gmail] Processing message ${msg.id} from ${from}. Labels: ${msg.labelIds?.join(', ')}`);
-    // Check if the message is from me by checking the 'From' header against known studio emails
-    // or by checking the SENT label
-    const isFromMe = from.toLowerCase().includes('cpfdance.com') || 
-                     from.toLowerCase().includes('gmail.com') || // Temporarily broaden to catch test accounts
-                     msg.labelIds?.includes('SENT') || 
-                     false;
-    
+    const isFromMe =
+      from.toLowerCase().includes('cpfdance.com') ||
+      msg.labelIds?.includes('SENT') ||
+      false;
+
     messages.push({
       id: msg.id || '',
       from,
@@ -150,43 +119,54 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
       isFromMe,
     });
   }
-  
+
   return messages;
 }
 
-export async function searchEmails(query: string): Promise<Array<{ threadId: string; messageId: string; snippet: string; subject: string; from: string; date: string }>> {
-  const gmail = await getGmailClient();
-  
-  const response = await gmail.users.messages.list({
-    userId: 'me',
-    q: query,
-    maxResults: 50,
-  });
-  
+export async function searchEmails(
+  query: string
+): Promise<Array<{ threadId: string; messageId: string; snippet: string; subject: string; from: string; date: string }>> {
+  const connectors = new ReplitConnectors();
+
+  const listResponse = await connectors.proxy(
+    'google-mail',
+    `/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`,
+    { method: 'GET' }
+  );
+
+  const listData = await listResponse.json() as any;
+
+  if (!listResponse.ok) {
+    throw new Error(`Gmail API error: ${listData?.error?.message || listResponse.status}`);
+  }
+
   const results: Array<{ threadId: string; messageId: string; snippet: string; subject: string; from: string; date: string }> = [];
-  
-  for (const msg of response.data.messages || []) {
+
+  for (const msg of listData.messages || []) {
     if (!msg.id) continue;
-    
-    const fullMessage = await gmail.users.messages.get({
-      userId: 'me',
-      id: msg.id,
-      format: 'metadata',
-      metadataHeaders: ['Subject', 'From', 'Date'],
-    });
-    
-    const headers = fullMessage.data.payload?.headers || [];
-    const getHeader = (name: string) => headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
-    
+
+    const msgResponse = await connectors.proxy(
+      'google-mail',
+      `/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+      { method: 'GET' }
+    );
+
+    const msgData = await msgResponse.json() as any;
+    if (!msgResponse.ok) continue;
+
+    const msgHeaders: Array<{ name: string; value: string }> = msgData.payload?.headers || [];
+    const getHeader = (name: string) =>
+      msgHeaders.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
+
     results.push({
-      threadId: fullMessage.data.threadId || '',
+      threadId: msgData.threadId || '',
       messageId: msg.id,
-      snippet: fullMessage.data.snippet || '',
+      snippet: msgData.snippet || '',
       subject: getHeader('Subject'),
       from: getHeader('From'),
       date: getHeader('Date'),
     });
   }
-  
+
   return results;
 }

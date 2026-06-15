@@ -1,54 +1,6 @@
-import { google } from 'googleapis';
-
-let connectionSettings: any;
-
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-calendar',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Google Calendar not connected');
-  }
-  return accessToken;
-}
-
-export async function getCalendarClient() {
-  const accessToken = await getAccessToken();
-
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken
-  });
-
-  return google.calendar({ version: 'v3', auth: oauth2Client });
-}
+import { ReplitConnectors } from '@replit/connectors-sdk';
 
 export interface CreateMeetEventArgs {
-  /** Used both as the event title and the conferenceData requestId. */
   classId: string;
   summary: string;
   description?: string | null;
@@ -57,36 +9,40 @@ export interface CreateMeetEventArgs {
   attendeeEmails: string[];
 }
 
-/**
- * Creates a Google Calendar event on the connected account's primary calendar
- * with an auto-generated Google Meet link. `sendUpdates: 'all'` makes Google
- * email each attendee a native calendar invite.
- */
 export async function createMeetEvent(args: CreateMeetEventArgs): Promise<{ hangoutLink: string; eventId: string }> {
-  const calendar = await getCalendarClient();
+  const connectors = new ReplitConnectors();
 
-  const response = await calendar.events.insert({
-    calendarId: 'primary',
-    conferenceDataVersion: 1,
-    sendUpdates: 'all',
-    requestBody: {
-      summary: args.summary,
-      description: args.description || undefined,
-      start: { dateTime: args.startIso },
-      end: { dateTime: args.endIso },
-      attendees: args.attendeeEmails.filter(Boolean).map(email => ({ email })),
-      conferenceData: {
-        createRequest: {
-          requestId: args.classId,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
+  const response = await connectors.proxy(
+    'google-calendar',
+    '/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        summary: args.summary,
+        description: args.description || undefined,
+        start: { dateTime: args.startIso },
+        end: { dateTime: args.endIso },
+        attendees: args.attendeeEmails.filter(Boolean).map(email => ({ email })),
+        conferenceData: {
+          createRequest: {
+            requestId: args.classId,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
         },
-      },
-    },
-  });
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+
+  const data = await response.json() as any;
+
+  if (!response.ok) {
+    throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
+  }
 
   return {
-    hangoutLink: response.data.hangoutLink || '',
-    eventId: response.data.id || '',
+    hangoutLink: data.hangoutLink || '',
+    eventId: data.id || '',
   };
 }
 
@@ -96,28 +52,39 @@ export interface UpdateMeetEventArgs {
   endIso: string;
 }
 
-/** Patches the time of an existing calendar event (e.g. when a lesson is rescheduled). */
 export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<void> {
-  const calendar = await getCalendarClient();
+  const connectors = new ReplitConnectors();
 
-  await calendar.events.patch({
-    calendarId: 'primary',
-    eventId: args.eventId,
-    sendUpdates: 'all',
-    requestBody: {
-      start: { dateTime: args.startIso },
-      end: { dateTime: args.endIso },
-    },
-  });
+  const response = await connectors.proxy(
+    'google-calendar',
+    `/calendars/primary/events/${args.eventId}?sendUpdates=all`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        start: { dateTime: args.startIso },
+        end: { dateTime: args.endIso },
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+
+  if (!response.ok) {
+    const data = await response.json() as any;
+    throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
+  }
 }
 
-/** Deletes a calendar event (e.g. when a virtual lesson is cancelled). */
 export async function deleteMeetEvent(eventId: string): Promise<void> {
-  const calendar = await getCalendarClient();
+  const connectors = new ReplitConnectors();
 
-  await calendar.events.delete({
-    calendarId: 'primary',
-    eventId,
-    sendUpdates: 'all',
-  });
+  const response = await connectors.proxy(
+    'google-calendar',
+    `/calendars/primary/events/${eventId}?sendUpdates=all`,
+    { method: 'DELETE' }
+  );
+
+  if (!response.ok && response.status !== 404) {
+    const data = await response.json() as any;
+    throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
+  }
 }
