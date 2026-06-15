@@ -17,7 +17,7 @@ deploymentTarget = "autoscale"
 
 [[ports]]
 localPort = 5000
-externalPort = 80
+externalPort = 5173
 
 [agent]
 expertMode = true
