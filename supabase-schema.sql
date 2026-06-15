@@ -83,6 +83,11 @@ CREATE TABLE classes (
   -- Legacy field (deprecated, use pricing_model fields instead)
   price DECIMAL(10, 2), -- Kept for backward compatibility
 
+  -- Virtual lessons (Google Meet) — see migration 42
+  is_virtual BOOLEAN NOT NULL DEFAULT false,
+  google_meet_url TEXT,
+  google_calendar_event_id TEXT,
+
   is_cancelled BOOLEAN DEFAULT false,
   cancellation_reason TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),

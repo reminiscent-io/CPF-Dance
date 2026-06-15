@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { LockClosedIcon, EyeIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Calendar, type ViewMode } from '@/components/Calendar'
@@ -44,6 +44,8 @@ interface EnrolledClass {
   end_time: string
   class_type: string
   is_cancelled: boolean
+  is_virtual?: boolean
+  google_meet_url?: string | null
   instructor_name: string
   attendance_status?: string
   enrollment_notes?: string
@@ -86,6 +88,8 @@ interface CalendarEvent {
   }
   // Extra fields for dancer view
   isPersonal?: boolean
+  isVirtual?: boolean
+  googleMeetUrl?: string | null
   instructorName?: string
   attendanceStatus?: string
   enrollmentNotes?: string
@@ -151,6 +155,8 @@ export default function DancerSchedulePage() {
         is_cancelled: c.is_cancelled,
         studios: c.studio ? { name: c.studio.name, address: `${c.studio.address}, ${c.studio.city}, ${c.studio.state}` } : undefined,
         isPersonal: false,
+        isVirtual: c.is_virtual,
+        googleMeetUrl: c.google_meet_url,
         instructorName: c.instructor_name,
         attendanceStatus: c.attendance_status,
         enrollmentNotes: c.enrollment_notes
@@ -467,6 +473,9 @@ export default function DancerSchedulePage() {
                 {selectedEvent.isRecurring && (
                   <Badge className="bg-champagne-100 text-charcoal-700">Recurring</Badge>
                 )}
+                {selectedEvent.isVirtual && (
+                  <Badge className="bg-gold-100 text-gold-800">Virtual</Badge>
+                )}
                 {getAttendanceStatusBadge(selectedEvent.attendanceStatus)}
               </div>
             </div>
@@ -492,6 +501,18 @@ export default function DancerSchedulePage() {
                   </div>
                 </div>
               </Card>
+            )}
+
+            {selectedEvent.isVirtual && selectedEvent.googleMeetUrl && !selectedEvent.is_cancelled && (
+              <a
+                href={selectedEvent.googleMeetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-medium rounded-lg transition-colors"
+              >
+                <VideoCameraIcon className="w-5 h-5" />
+                Join Google Meet
+              </a>
             )}
 
             <div className="grid grid-cols-2 gap-4">

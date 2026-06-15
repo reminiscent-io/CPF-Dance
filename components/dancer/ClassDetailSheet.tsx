@@ -13,6 +13,7 @@ import {
   ClockIcon,
   MapPinIcon,
   UserIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline'
 
 export interface DetailEnrolledClass {
@@ -25,6 +26,8 @@ export interface DetailEnrolledClass {
   end_time: string
   class_type: string
   is_cancelled: boolean
+  is_virtual: boolean
+  google_meet_url: string | null
   attendance_status: string | null
   enrollment_notes: string | null
   instructor_name: string
@@ -92,6 +95,7 @@ export function ClassDetailSheet({
   const enrollmentNote = enrolled?.enrollment_notes
   const personalNote = personal?.notes
   const typeLabel = enrolled ? CLASS_TYPE_LABEL[enrolled.class_type] ?? enrolled.class_type.replace('_', ' ') : null
+  const meetUrl = enrolled?.is_virtual ? enrolled.google_meet_url : null
 
   return (
     <Sheet
@@ -114,6 +118,11 @@ export function ClassDetailSheet({
               Personal
             </span>
           )}
+          {enrolled?.is_virtual && (
+            <span className="inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase px-2 py-0.5 rounded-sm bg-gold-100 text-gold-800">
+              Virtual
+            </span>
+          )}
           {cancelled && (
             <span className="inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase px-2 py-0.5 rounded-sm bg-rose-100 text-rose-700">
               Cancelled
@@ -133,6 +142,19 @@ export function ClassDetailSheet({
             </span>
           )}
         </div>
+
+        {/* Join virtual lesson */}
+        {meetUrl && !cancelled && (
+          <a
+            href={meetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-medium rounded-lg transition-colors"
+          >
+            <VideoCameraIcon className="w-5 h-5" />
+            Join Google Meet
+          </a>
+        )}
 
         {/* Meta — when, where, with whom */}
         <dl className="space-y-3 text-sm">

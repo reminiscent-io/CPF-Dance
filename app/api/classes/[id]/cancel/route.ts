@@ -5,6 +5,7 @@ import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges } from '@/lib/auth/privileges'
 import { refundCreditForClass } from '@/lib/lesson-credits'
 import { notifyCancellation } from '@/lib/notifications/private-lessons'
+import { deleteMeetEvent } from '@/lib/google/calendar'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -64,7 +65,7 @@ export async function POST(
     const { data: classRow, error: classError } = await admin
       .from('classes')
       .select(`
-        id, instructor_id, start_time, class_type, is_cancelled,
+        id, instructor_id, start_time, class_type, is_cancelled, google_calendar_event_id,
         enrollments(id, student_id, students(id, full_name, profile_id, profile:profiles!students_profile_id_fkey(full_name)))
       `)
       .eq('id', classId)
@@ -114,6 +115,15 @@ export async function POST(
       .from('private_lesson_requests')
       .update({ status: 'cancelled' })
       .eq('scheduled_class_id', classId)
+
+    // Remove the backing Google Calendar event / Meet for virtual lessons (best-effort).
+    if (classRow.google_calendar_event_id) {
+      try {
+        await deleteMeetEvent(classRow.google_calendar_event_id)
+      } catch (meetError) {
+        console.error('[classes cancel] deleteMeetEvent failed:', meetError)
+      }
+    }
 
     try {
       const dancerProfile = Array.isArray(enrolledStudent?.profile) ? enrolledStudent?.profile[0] : enrolledStudent?.profile

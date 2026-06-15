@@ -75,6 +75,11 @@ export interface Class {
   // Legacy field (deprecated)
   price: number | null
 
+  // Virtual lessons (Google Meet)
+  is_virtual: boolean // Whether this lesson is held over Google Meet
+  google_meet_url: string | null // Auto-generated Meet link
+  google_calendar_event_id: string | null // Calendar event backing the Meet, for update/cancel
+
   is_cancelled: boolean
   cancellation_reason: string | null
   actual_attendance_count: number | null // Manual override for actual attendance
@@ -225,6 +230,9 @@ export interface CreateClassData {
   // Public features
   external_signup_url?: string
   is_public?: boolean
+
+  // Virtual lessons (Google Meet) — private lessons only
+  is_virtual?: boolean
 }
 
 export interface CreateStudioData {

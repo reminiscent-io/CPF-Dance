@@ -524,6 +524,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     price: classData.price || undefined, // Legacy field
     external_signup_url: classData.external_signup_url || '',
     is_public: classData.is_public || false,
+    is_virtual: classData.is_virtual || false,
     newStudioName: '',
     instructor_id: (classData as any).instructor_id || undefined,
     asset_id: (classData as any).asset_id || null
@@ -975,12 +976,34 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             </div>
           )}
 
-          <GooglePlacesInput
-            label="Location"
-            value={formData.location || ''}
-            onChange={(value) => setFormData({ ...formData, location: value })}
-            placeholder="Search for class location..."
-          />
+          {formData.class_type === 'private' && (
+            <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+              <input
+                type="checkbox"
+                id="edit_is_virtual"
+                checked={formData.is_virtual || false}
+                onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
+                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+              />
+              <label htmlFor="edit_is_virtual" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                Virtual lesson (Google Meet) — a meeting link is created and shared with the dancer
+              </label>
+            </div>
+          )}
+
+          {formData.is_virtual ? (
+            <p className="text-xs text-charcoal-500">
+              A Google Meet link is created automatically on Courtney&rsquo;s calendar and shared with the
+              dancer by email and in the app. No in-person location needed.
+            </p>
+          ) : (
+            <GooglePlacesInput
+              label="Location"
+              value={formData.location || ''}
+              onChange={(value) => setFormData({ ...formData, location: value })}
+              placeholder="Search for class location..."
+            />
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -1282,6 +1305,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
     price: undefined, // Legacy field
     external_signup_url: '',
     is_public: false,
+    is_virtual: false,
     newStudioName: '',
     instructor_id: undefined,
     student_id: undefined,
@@ -1626,12 +1650,19 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </select>
           </div>
 
-          <GooglePlacesInput
-            label="Location"
-            value={formData.location || ''}
-            onChange={(value) => setFormData({ ...formData, location: value })}
-            placeholder="Search for class location..."
-          />
+          {formData.is_virtual ? (
+            <p className="text-xs text-charcoal-500">
+              A Google Meet link is created automatically on Courtney&rsquo;s calendar and shared with the
+              dancer by email and in the app. No in-person location needed.
+            </p>
+          ) : (
+            <GooglePlacesInput
+              label="Location"
+              value={formData.location || ''}
+              onChange={(value) => setFormData({ ...formData, location: value })}
+              placeholder="Search for class location..."
+            />
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -1700,6 +1731,23 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               </select>
               <p className="text-xs text-rose-700 mt-2">
                 Select a student to automatically enroll them in this private lesson
+              </p>
+
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-rose-200">
+                <input
+                  type="checkbox"
+                  id="create_is_virtual"
+                  checked={formData.is_virtual || false}
+                  onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
+                  className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                />
+                <label htmlFor="create_is_virtual" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                  Virtual lesson (Google Meet)
+                </label>
+              </div>
+              <p className="text-xs text-rose-700 mt-2">
+                Creates a Google Meet link on Courtney&rsquo;s calendar and shares it with the enrolled dancer
+                by email and in the app.
               </p>
             </div>
           )}

@@ -116,6 +116,30 @@ ${outcome}`,
   )
 }
 
+export async function notifyDancerVirtualLesson(args: {
+  to: string
+  dancerName: string
+  startTimeIso: string
+  meetUrl: string
+}): Promise<void> {
+  if (!args.to) return
+
+  await safeSend(
+    'Your virtual lesson with Courtney',
+    `<h2>You have a virtual lesson scheduled</h2>
+<p>Hi ${escape(args.dancerName)},</p>
+<p>Your private lesson with Courtney will be held over Google Meet.</p>
+<p><strong>When:</strong> ${escape(formatEt(args.startTimeIso))} ET</p>
+<p style="margin:24px 0">
+  <a href="${escape(args.meetUrl)}" style="background:#a4243b;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600">Join Google Meet</a>
+</p>
+<p>Or paste this link into your browser at lesson time:<br>
+<a href="${escape(args.meetUrl)}">${escape(args.meetUrl)}</a></p>
+<p>You should also receive a Google Calendar invite for this lesson.</p>`,
+    args.to
+  )
+}
+
 export async function notifyRescheduleRequested(args: {
   dancerName: string
   startTimeIso: string
