@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Badge, Button, EmptyState, PageHeader, StatusDot, Table } from '@/components/ui'
+import { Badge, Button, EmptyState, PageHeader, PageSkeleton, SkeletonCardGrid, StatusDot, Table } from '@/components/ui'
 import type { StatusTone } from '@/components/ui'
 import { DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { CreateWaiverTemplateDialog } from '@/components/CreateWaiverTemplateDialog'
@@ -151,9 +151,9 @@ export default function InstructorWaiversPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <p className="text-charcoal-500">Loading...</p>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="cards" withAction />
+      </PortalLayout>
     )
   }
 
@@ -188,7 +188,7 @@ export default function InstructorWaiversPage() {
 
           <div className="mt-4">
             {loadingTemplates ? (
-              <p className="text-charcoal-500">Loading templates...</p>
+              <SkeletonCardGrid count={3} cols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" gap="gap-4" />
             ) : templates.length === 0 ? (
               <div className="rounded-lg border border-champagne-200 bg-champagne-50">
                 <EmptyState

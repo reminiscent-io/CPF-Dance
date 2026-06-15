@@ -7,7 +7,7 @@ import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'
-import { Card, Button, Badge, useToast, Spinner, Input, Textarea, Select, Modal, ModalFooter } from '@/components/ui'
+import { Card, Button, Badge, useToast, Spinner, PageSkeleton, Input, Textarea, Select, Modal, ModalFooter } from '@/components/ui'
 import type { Student, Note, Enrollment, Payment, PrivateLessonRequest, UpdateStudentData } from '@/lib/types'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
@@ -309,9 +309,9 @@ export default function StudentDetailPage() {
 
   if (authLoading || loading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="detail" withAction />
+      </PortalLayout>
     )
   }
 

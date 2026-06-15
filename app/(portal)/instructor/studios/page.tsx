@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Button, EmptyState, Input, Modal, ModalFooter, PageHeader, SegmentedControl, StatusDot, Textarea, Toolbar, useToast, Spinner, GooglePlacesInput, PlaceDetails } from '@/components/ui'
+import { Button, EmptyState, Input, Modal, ModalFooter, PageHeader, PageSkeleton, SegmentedControl, SkeletonCardGrid, StatusDot, Textarea, Toolbar, useToast, GooglePlacesInput, PlaceDetails } from '@/components/ui'
 import { BuildingStorefrontIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { CommunicationsSection } from '@/components/CommunicationsSection'
 import type { Studio, CreateStudioData } from '@/lib/types'
@@ -103,9 +103,9 @@ export default function StudiosPage() {
 
   if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="cards" withAction withToolbar cardCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" />
+      </PortalLayout>
     )
   }
 
@@ -146,9 +146,7 @@ export default function StudiosPage() {
 
       <div className="mt-toolbar-gap">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
+          <SkeletonCardGrid count={6} cols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" gap="gap-4" />
         ) : filteredStudios.length === 0 ? (
           <div className="rounded-lg border border-champagne-200 bg-champagne-50">
             <EmptyState

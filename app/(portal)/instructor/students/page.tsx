@@ -21,7 +21,8 @@ import {
   Textarea,
   Toolbar,
   useToast,
-  Spinner
+  PageSkeleton,
+  SkeletonCardGrid
 } from '@/components/ui'
 import { PlusIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import type { Student, CreateStudentData } from '@/lib/types'
@@ -171,9 +172,9 @@ export default function StudentsPage() {
 
   if (authLoading || !profile || profile.role !== 'instructor' && profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="table" withAction withToolbar />
+      </PortalLayout>
     )
   }
 
@@ -349,10 +350,7 @@ export default function StudentsPage() {
       {/* Mobile Card View */}
       <div className="mt-toolbar-gap md:hidden">
         {loading ? (
-          <div className="rounded-lg border border-champagne-200 bg-champagne-50 p-8 text-center">
-            <Spinner size="md" className="mx-auto" />
-            <p className="mt-2 text-charcoal-500">Loading...</p>
-          </div>
+          <SkeletonCardGrid count={4} cols="grid-cols-1" gap="gap-3" />
         ) : filteredStudents.length === 0 ? (
           <div className="rounded-lg border border-champagne-200 bg-champagne-50">
             <EmptyState

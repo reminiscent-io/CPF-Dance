@@ -8,6 +8,7 @@ import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 
 interface Waiver {
   id: string
@@ -112,9 +113,9 @@ export default function EditWaiverPage() {
 
   if (loading || loadingWaiver) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <p className="text-charcoal-500">Loading...</p>
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="detail" withAction />
+      </PortalLayout>
     )
   }
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Button, EmptyState, PageHeader, useToast, Spinner } from '@/components/ui'
+import { Button, EmptyState, PageHeader, useToast, PageSkeleton, SkeletonCardGrid } from '@/components/ui'
 import { PhotoIcon, DocumentIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { UploadAssetModal } from '@/components/UploadAssetModal'
 
@@ -99,9 +99,9 @@ export default function AssetsPage() {
 
   if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="cards" withAction cardCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" />
+      </PortalLayout>
     )
   }
 
@@ -120,9 +120,7 @@ export default function AssetsPage() {
 
       <div className="mt-header-gap">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
+          <SkeletonCardGrid count={8} cols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" gap="gap-5" />
         ) : assets.length === 0 ? (
           <div className="rounded-lg border border-champagne-200 bg-champagne-50">
             <EmptyState

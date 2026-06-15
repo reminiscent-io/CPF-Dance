@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
-import { EmptyState, PageHeader, StatusDot } from '@/components/ui'
+import { EmptyState, PageHeader, PageSkeleton, StatusDot } from '@/components/ui'
 import type { StatusTone } from '@/components/ui'
 import { InboxIcon } from '@heroicons/react/24/outline'
 
@@ -65,9 +65,7 @@ export default function InquiriesPage() {
   if (loading || loadingInquiries) {
     return (
       <PortalLayout profile={profile}>
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-charcoal-500">Loading inquiries...</p>
-        </div>
+        <PageSkeleton variant="list" />
       </PortalLayout>
     )
   }

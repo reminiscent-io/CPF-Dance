@@ -46,7 +46,20 @@ export type { PersonChipProps } from './PersonChip'
 export { EmptyState } from './EmptyState'
 export type { EmptyStateProps } from './EmptyState'
 
-export { Skeleton } from './Skeleton'
+export {
+  Skeleton,
+  SkeletonText,
+  PageHeaderSkeleton,
+  SkeletonToolbar,
+  SkeletonCard,
+  SkeletonCardGrid,
+  SkeletonList,
+  SkeletonTable,
+  SkeletonDetail,
+  PageSkeleton,
+  NoteCardSkeleton,
+  NoteListSkeleton,
+} from './Skeleton'
 export type { SkeletonProps } from './Skeleton'
 
 export { GooglePlacesInput } from './GooglePlacesInput'

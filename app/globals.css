@@ -284,6 +284,38 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Skeleton shimmer: a warm champagne-silk highlight sweeping across a
+   champagne-200 base. Paper-on-paper, not a crisp gray pulse. The sweep
+   reads as the page settling rather than as a spinner spinning. */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background-color: var(--color-champagne-200);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(250, 248, 245, 0.7) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background-image: none;
+  }
+}
+
 @keyframes typewriter {
   0% {
     width: 0;
