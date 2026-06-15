@@ -14,7 +14,7 @@ export async function createMeetEvent(args: CreateMeetEventArgs): Promise<{ hang
 
   const response = await connectors.proxy(
     'google-calendar',
-    '/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
+    '/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
     {
       method: 'POST',
       body: JSON.stringify({
@@ -57,7 +57,7 @@ export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<vo
 
   const response = await connectors.proxy(
     'google-calendar',
-    `/calendars/primary/events/${args.eventId}?sendUpdates=all`,
+    `/calendar/v3/calendars/primary/events/${args.eventId}?sendUpdates=all`,
     {
       method: 'PATCH',
       body: JSON.stringify({
@@ -79,7 +79,7 @@ export async function deleteMeetEvent(eventId: string): Promise<void> {
 
   const response = await connectors.proxy(
     'google-calendar',
-    `/calendars/primary/events/${eventId}?sendUpdates=all`,
+    `/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=all`,
     { method: 'DELETE' }
   );
 
