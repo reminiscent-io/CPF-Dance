@@ -42,7 +42,7 @@ tests/                # Vitest setup and test utils
 ## Commands
 
 ```bash
-npm run dev          # Dev server on port 5000 (not 3000)
+npm run dev          # Dev server on port 3434 (not 3000)
 npm run build        # Production build
 npm start            # Production server on port 5000
 npm run lint         # Linting
@@ -53,7 +53,7 @@ npm run test:ui       # Vitest UI
 npm run test:watch    # Watch mode (alias for npm test)
 ```
 
-Port 5000 maps to external port 80 on Replit. Dev server binds to `0.0.0.0`.
+Production port 5000 maps to external port 80 on Replit. Dev server runs on port 3434 and binds to `0.0.0.0`.
 
 ## Environment Variables
 
