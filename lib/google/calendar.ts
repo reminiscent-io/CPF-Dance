@@ -1,3 +1,6 @@
+// Google Calendar/Meet via Replit Connectors (@replit/connectors-sdk).
+// IMPORTANT: the proxy base is generic Google — every path MUST keep the
+// `/calendar/v3` version prefix or the call silently 404s. See GOOGLE_INTEGRATIONS_GUIDE.md.
 import { ReplitConnectors } from '@replit/connectors-sdk';
 
 export interface CreateMeetEventArgs {
