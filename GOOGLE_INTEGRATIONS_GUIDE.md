@@ -120,6 +120,21 @@ The current design is correct for **Courtney as the sole instructor** (per PRODU
 - **Leave Replit** → direct Google OAuth with stored refresh token.
 - **Email volume nears ~500/day** → dedicated transactional email provider.
 
+## Edge cases
+
+### Dancer has no email on file
+A student added by the instructor who hasn't signed up has no profile and may have no email. When a virtual private lesson is created for such a dancer:
+
+- The Meet event is still created (with **zero attendees**) and `google_meet_url` is saved on the class.
+- **No** Google calendar invite is sent (no attendee) and **no** in-app email is sent (`notifyDancerVirtualLesson` is gated on `dancerEmail`).
+- The dancer can't self-serve the link either: the dancer portal only shows it to students with an account.
+
+Mitigations in place:
+- **Instructor can copy the link.** The Edit-class modal (`app/(portal)/instructor/classes/page.tsx`, EditClassModal) shows the Meet link with a Copy button for virtual private lessons.
+- **Instructor is warned.** The POST `/api/classes` and PATCH `/api/classes/[id]` responses include a `meet` summary `{ url, dancerHasEmail, dancerNotified }`. When `meet.url && !meet.dancerHasEmail`, the UI shows a warning toast telling the instructor to copy and share the link manually.
+
+So the instructor must relay the link by hand for email-less dancers — by design, with UI support to make it easy.
+
 ## Key files
 
 - `lib/google/calendar.ts` — `createMeetEvent`, `updateMeetEventTime`, `deleteMeetEvent`

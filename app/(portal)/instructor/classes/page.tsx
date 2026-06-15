@@ -202,10 +202,16 @@ function ClassesContent() {
         throw new Error(errorData.error || 'Failed to create class')
       }
 
-      const { class: newClass } = await response.json()
+      const { class: newClass, meet } = await response.json()
       setClasses(prev => [newClass, ...prev])
       setShowCreateModal(false)
       addToast('Class created successfully', 'success')
+      if (meet?.url && !meet.dancerHasEmail) {
+        addToast(
+          'This dancer has no email on file, so they were not notified. Open the lesson to copy the Google Meet link and share it manually.',
+          'warning'
+        )
+      }
     } catch (error) {
       console.error('Error creating class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create class'
@@ -257,11 +263,17 @@ function ClassesContent() {
         throw new Error(errorData.error || 'Failed to update class')
       }
 
-      const { class: updatedClass } = await response.json()
+      const { class: updatedClass, meet } = await response.json()
       setClasses(prev => prev.map(cls => cls.id === classId ? updatedClass : cls))
       setShowEditModal(false)
       setSelectedClass(null)
       addToast('Class updated successfully', 'success')
+      if (meet?.url && !meet.dancerHasEmail) {
+        addToast(
+          'This dancer has no email on file, so they were not notified. Reopen the lesson to copy the Google Meet link and share it manually.',
+          'warning'
+        )
+      }
     } catch (error) {
       console.error('Error updating class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to update class'
@@ -1003,6 +1015,41 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               onChange={(value) => setFormData({ ...formData, location: value })}
               placeholder="Search for class location..."
             />
+          )}
+
+          {/* Meet link for the instructor to copy — useful when the dancer has no
+              email and so didn't receive the link automatically. */}
+          {classData.is_virtual && classData.class_type === 'private' && classData.google_meet_url && (
+            <div className="p-3 bg-champagne-100 border border-champagne-200 rounded-lg space-y-2">
+              <label className="block text-sm font-medium text-charcoal-700">Google Meet link</label>
+              <div className="flex items-center gap-2">
+                <a
+                  href={classData.google_meet_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 truncate text-sm text-rose-700 hover:text-rose-800 underline"
+                >
+                  {classData.google_meet_url}
+                </a>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(classData.google_meet_url!)
+                      addToast('Meet link copied to clipboard', 'success')
+                    } catch {
+                      addToast('Could not copy link', 'error')
+                    }
+                  }}
+                  className="shrink-0 px-3 py-1.5 text-xs font-medium text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-50"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="text-xs text-charcoal-500">
+                Share this link with the dancer manually if they have no email on file.
+              </p>
+            </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

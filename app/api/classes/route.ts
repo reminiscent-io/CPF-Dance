@@ -265,6 +265,9 @@ export async function POST(request: NextRequest) {
     // If this is a virtual private lesson, create a Google Meet on Courtney's
     // calendar and notify the enrolled dancer. Best-effort: a Calendar/email
     // failure must NOT fail class creation — the class still exists, just without a link.
+    // `meet` summarizes the outcome so the client can warn when the dancer has no
+    // email on file and therefore was not auto-notified of the link.
+    let meet: { url: string; dancerHasEmail: boolean; dancerNotified: boolean } | null = null
     if (classData?.is_virtual && class_type === 'private' && student_id) {
       try {
         const admin = createAdminClient()
@@ -296,6 +299,12 @@ export async function POST(request: NextRequest) {
         classData.google_meet_url = hangoutLink
         classData.google_calendar_event_id = eventId
 
+        meet = {
+          url: hangoutLink,
+          dancerHasEmail: Boolean(dancerEmail),
+          dancerNotified: Boolean(dancerEmail && hangoutLink),
+        }
+
         if (dancerEmail && hangoutLink) {
           await notifyDancerVirtualLesson({
             to: dancerEmail,
@@ -309,7 +318,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ class: classData }, { status: 201 })
+    return NextResponse.json({ class: classData, meet }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
