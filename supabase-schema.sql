@@ -553,8 +553,16 @@ CREATE POLICY "Instructors can view all inquiries"
   );
 
 -- Create function to automatically create profile when user signs up
+-- NOTE: `SET search_path` is REQUIRED. This trigger is fired by GoTrue as
+-- supabase_auth_admin, whose search_path excludes `public`; without it the
+-- unqualified `user_role` enum cast fails with "type user_role does not exist"
+-- and every signup dies with "Database error saving new user" (migration 41).
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   user_role TEXT;
   guardian_uuid UUID;
@@ -580,7 +588,7 @@ BEGIN
     NEW.email,
     NEW.raw_user_meta_data->>'phone',
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
-    user_role::user_role,
+    user_role::public.user_role,
     guardian_uuid,
     false
   );
@@ -593,7 +601,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Trigger to create profile automatically when user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
