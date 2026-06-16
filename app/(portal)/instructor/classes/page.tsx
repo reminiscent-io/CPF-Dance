@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import {
-  Badge,
   Button,
   EmptyState,
   GooglePlacesInput,
@@ -16,16 +15,15 @@ import {
   PageSkeleton,
   SegmentedControl,
   Select,
-  SkeletonCardGrid,
+  SkeletonList,
   Spinner,
   StatusDot,
   Textarea,
   Toolbar,
   useToast
 } from '@/components/ui'
-import { CalendarDaysIcon, ClockIcon, MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { CalendarDaysIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
-import { getPricingModelDescription, formatPrice } from '@/lib/utils/pricing'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 import { AssetSelector } from '@/components/AssetSelector'
 
@@ -40,6 +38,145 @@ const parseCurrency = (value: string): number | undefined => {
   if (isNaN(num)) return undefined
   // Allow 0 for free classes, and round to 2 decimal places to avoid floating point precision issues
   return Math.round(num * 100) / 100
+}
+
+const CLASS_TYPE_LABEL: Record<ClassType, string> = {
+  group: 'Group',
+  private: 'Private',
+  workshop: 'Workshop',
+  master_class: 'Master Class',
+}
+
+// Compact, glanceable price for an agenda row. The long-form pricing
+// description still lives in the edit modal; here a $200/hr private must
+// read at a different weight than a $6 drop-in, so we keep it terse.
+const compactPrice = (cls: Class): string | null => {
+  const money = (n: number) => {
+    const v = Math.round(n * 100) / 100
+    return Number.isInteger(v) ? `$${v}` : `$${v.toFixed(2)}`
+  }
+  switch (cls.pricing_model) {
+    case 'per_person':
+      return cls.cost_per_person ? `${money(cls.cost_per_person)}/student` : null
+    case 'per_class':
+      return cls.base_cost ? `${money(cls.base_cost)} flat` : null
+    case 'per_hour':
+      return cls.cost_per_hour ? `${money(cls.cost_per_hour)}/hr` : null
+    case 'tiered':
+      return cls.base_cost ? `from ${money(cls.base_cost)}` : null
+    default:
+      return null
+  }
+}
+
+// Temporal weight bakes the hierarchy into the layout: the next class and
+// today read loud, far-off and past sessions recede. Rose punctuation
+// (price + type) is layered on top for premium 1:1s, within the One Ribbon budget.
+type RowWeight = 'hero' | 'normal' | 'far' | 'past'
+
+const WEIGHT_STYLES: Record<
+  RowWeight,
+  { pad: string; title: string; time: string; meta: string; price: string; enroll: string }
+> = {
+  hero: { pad: 'py-4', title: 'text-xl text-charcoal-950', time: 'text-base text-charcoal-700', meta: 'text-charcoal-500', price: 'text-charcoal-950', enroll: 'text-charcoal-500' },
+  normal: { pad: 'py-3', title: 'text-lg text-charcoal-950', time: 'text-sm text-charcoal-600', meta: 'text-charcoal-500', price: 'text-charcoal-950', enroll: 'text-charcoal-500' },
+  far: { pad: 'py-3', title: 'text-lg text-charcoal-800', time: 'text-sm text-charcoal-400', meta: 'text-charcoal-400', price: 'text-charcoal-700', enroll: 'text-charcoal-400' },
+  past: { pad: 'py-2', title: 'text-base text-charcoal-500', time: 'text-sm text-charcoal-400', meta: 'text-charcoal-400', price: 'text-charcoal-400', enroll: 'text-charcoal-400' },
+}
+
+function ClassAgendaRow({
+  cls,
+  weight,
+  isNext,
+  onClick,
+}: {
+  cls: Class
+  weight: RowWeight
+  isNext: boolean
+  onClick: () => void
+}) {
+  const s = WEIGHT_STYLES[weight]
+  const isPrivate = cls.class_type === 'private'
+  const isPast = weight === 'past'
+  const cancelled = cls.is_cancelled
+  const start = new Date(cls.start_time)
+  const end = new Date(cls.end_time)
+  const startTime = start.toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+  const endTime = end.toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+  const price = compactPrice(cls)
+  const priceRose = isPrivate && !isPast && !cancelled
+  const enrollment =
+    cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
+      ? `${cls.actual_attendance_count} attended`
+      : `${cls.enrolled_count || 0}${cls.max_capacity ? `/${cls.max_capacity}` : ''} enrolled`
+
+  return (
+    <button
+      type="button"
+      id={`class-card-${cls.id}`}
+      onClick={onClick}
+      className={`group flex w-full scroll-mt-[5.5rem] items-start gap-3 px-3 text-left transition-colors sm:gap-4 ${s.pad} ${
+        isPrivate ? 'hover:bg-rose-50' : 'hover:bg-champagne-100'
+      }`}
+    >
+      {/* Time rail: start over end, leading the eye down the day's program */}
+      <div className="w-[4.25rem] shrink-0 sm:w-20">
+        <div className={`font-medium leading-tight tabular-nums ${s.time}`}>{startTime}</div>
+        <div className="text-[0.7rem] leading-tight tabular-nums text-charcoal-400">{endTime}</div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <h3
+            className={`font-serif font-semibold leading-snug ${s.title} ${
+              cancelled ? 'text-charcoal-400 line-through' : ''
+            }`}
+          >
+            {cls.title}
+          </h3>
+          {isNext && !cancelled && (
+            <span className="rounded-sm bg-rose-50 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-rose-700">
+              Up next
+            </span>
+          )}
+        </div>
+        <div className={`mt-1 flex flex-wrap items-center gap-x-1.5 text-sm ${s.meta}`}>
+          <span className={priceRose ? 'font-medium text-rose-700' : undefined}>
+            {CLASS_TYPE_LABEL[cls.class_type]}
+          </span>
+          {cls.is_virtual && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Online</span>
+            </>
+          )}
+          {cls.studio && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="truncate">
+                {cls.studio.name}
+                {cls.studio.city ? `, ${cls.studio.city}` : ''}
+              </span>
+            </>
+          )}
+          {cancelled && (
+            <>
+              <span aria-hidden="true">·</span>
+              <StatusDot tone="attention" label="Cancelled" />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Value rail: price carries the weight so premium sessions never blend in */}
+      <div className="shrink-0 pl-1 text-right">
+        <div className={`font-semibold tabular-nums ${priceRose ? 'text-rose-700' : s.price}`}>
+          {price ?? <span className="font-normal text-charcoal-300">—</span>}
+        </div>
+        <div className={`mt-0.5 text-xs tabular-nums ${s.enroll}`}>{enrollment}</div>
+      </div>
+    </button>
+  )
 }
 
 function ClassesContent() {
@@ -65,19 +202,47 @@ function ClassesContent() {
     [classes]
   )
 
+  // Group the chronological run into months, then days. The month is the
+  // serif heading of the program; days are labelled rules; classes are rows.
   const monthGroups = useMemo(() => {
-    const groups = new Map<string, { key: string; month: string; year: string; classes: Class[] }>()
+    type DayBucket = { dayKey: string; weekday: string; dayNum: string; classes: Class[] }
+    const months = new Map<
+      string,
+      { key: string; month: string; year: string; count: number; dayMap: Map<string, DayBucket> }
+    >()
     for (const cls of sortedClasses) {
       const date = new Date(cls.start_time)
       const month = date.toLocaleString('en-US', { timeZone: ET, month: 'long' })
       const year = date.toLocaleString('en-US', { timeZone: ET, year: 'numeric' })
       const mm = date.toLocaleString('en-US', { timeZone: ET, month: '2-digit' })
-      const key = `${year}-${mm}`
-      if (!groups.has(key)) groups.set(key, { key, month, year, classes: [] })
-      groups.get(key)!.classes.push(cls)
+      const monthKey = `${year}-${mm}`
+      if (!months.has(monthKey)) months.set(monthKey, { key: monthKey, month, year, count: 0, dayMap: new Map() })
+      const m = months.get(monthKey)!
+      m.count++
+      const dayKey = date.toLocaleDateString('en-CA', { timeZone: ET }) // YYYY-MM-DD in ET
+      if (!m.dayMap.has(dayKey)) {
+        m.dayMap.set(dayKey, {
+          dayKey,
+          weekday: date.toLocaleString('en-US', { timeZone: ET, weekday: 'short' }),
+          dayNum: date.toLocaleString('en-US', { timeZone: ET, day: 'numeric' }),
+          classes: [],
+        })
+      }
+      m.dayMap.get(dayKey)!.classes.push(cls)
     }
-    return [...groups.values()]
+    return [...months.values()].map((m) => ({
+      key: m.key,
+      month: m.month,
+      year: m.year,
+      count: m.count,
+      days: [...m.dayMap.values()],
+    }))
   }, [sortedClasses])
+
+  // "Now" anchors the temporal hierarchy; the ET day keys label Today / Tomorrow.
+  const nowTs = Date.now()
+  const todayKey = new Date(nowTs).toLocaleDateString('en-CA', { timeZone: ET })
+  const tomorrowKey = new Date(nowTs + 86_400_000).toLocaleDateString('en-CA', { timeZone: ET })
 
   // The class nearest to now (first upcoming, else the most recent) is the scroll target.
   const nearestClassId = useMemo(() => {
@@ -350,7 +515,7 @@ function ClassesContent() {
   if (authLoading || !profile || (profile.role !== 'instructor' && profile.role !== 'admin')) {
     return (
       <PortalLayout profile={profile}>
-        <PageSkeleton variant="cards" withAction withToolbar cardCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" />
+        <PageSkeleton variant="list" withAction withToolbar />
       </PortalLayout>
     )
   }
@@ -429,7 +594,7 @@ function ClassesContent() {
 
       <div className="mt-toolbar-gap">
         {loading ? (
-          <SkeletonCardGrid count={6} cols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" gap="gap-6" />
+          <SkeletonList count={6} />
         ) : classes.length === 0 ? (
           <div className="rounded-lg border border-champagne-200 bg-champagne-50">
             <EmptyState icon={<CalendarDaysIcon />} message={emptyStateMessage} />
@@ -456,87 +621,49 @@ function ClassesContent() {
                       )}
                     </h2>
                     <span className="shrink-0 text-sm text-charcoal-500 tabular-nums">
-                      {group.classes.length} {group.classes.length === 1 ? 'class' : 'classes'}
+                      {group.count} {group.count === 1 ? 'class' : 'classes'}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {group.classes.map((cls: any) => {
-                    const isPrivate = cls.class_type === 'private'
-                    const start = new Date(cls.start_time)
-                    const weekday = start.toLocaleString('en-US', { timeZone: ET, weekday: 'short' })
-                    const day = start.toLocaleString('en-US', { timeZone: ET, day: 'numeric' })
-                    const time = start.toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+                <div className="mt-3">
+                  {group.days.map((day) => {
+                    const relative =
+                      day.dayKey === todayKey ? 'Today' : day.dayKey === tomorrowKey ? 'Tomorrow' : null
                     return (
-                      <div
-                        key={cls.id}
-                        id={`class-card-${cls.id}`}
-                        onClick={() => handleClassClick(cls)}
-                        className={`cursor-pointer scroll-mt-[5.5rem] rounded-lg border p-5 transition-colors ${
-                          isPrivate
-                            ? 'border-rose-200 bg-rose-50 hover:bg-rose-100'
-                            : 'border-champagne-200 bg-champagne-50 hover:bg-champagne-100'
-                        }`}
-                      >
-                        <div className="flex items-start gap-4">
-                          {/* Date tab: the month lives in the section header, so the card
-                              carries only the day, leading the eye like a calendar listing. */}
-                          <div
-                            className={`flex w-[3rem] shrink-0 flex-col items-center rounded-md border py-1.5 ${
-                              isPrivate ? 'border-rose-200 bg-champagne-50' : 'border-champagne-200 bg-champagne-100'
-                            }`}
-                          >
-                            <span className="text-[0.65rem] font-medium uppercase tracking-[0.08em] text-charcoal-500">
-                              {weekday}
-                            </span>
-                            <span className="font-serif text-2xl font-semibold leading-none text-charcoal-950">
-                              {day}
-                            </span>
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-serif text-lg font-semibold leading-snug text-charcoal-950">
-                                {cls.title}
-                              </h3>
-                              {cls.is_cancelled ? (
-                                <StatusDot tone="attention" label="Cancelled" />
-                              ) : (
-                                <Badge variant="primary">{cls.class_type.replace('_', ' ')}</Badge>
-                              )}
-                            </div>
-
-                            <p className="mt-1.5 flex items-center gap-1.5 text-sm text-charcoal-700">
-                              <ClockIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
-                              <span className="tabular-nums">{time} ET</span>
-                            </p>
-
-                            {cls.studio && (
-                              <p className="mt-1 flex items-center gap-1.5 text-sm text-charcoal-500">
-                                <MapPinIcon className="h-4 w-4 shrink-0 text-charcoal-400" aria-hidden="true" />
-                                <span className="truncate">
-                                  {cls.studio.name}
-                                  {cls.studio.city && `, ${cls.studio.city}`}
-                                </span>
-                              </p>
+                      <div key={day.dayKey} className="mt-5 first:mt-3">
+                        {/* Day rule: a labelled hairline, the program's running order */}
+                        <div className="flex items-center gap-3 pb-0.5">
+                          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-charcoal-500">
+                            {day.weekday} {day.dayNum}
+                            {relative && (
+                              <span className={relative === 'Today' ? 'text-rose-700' : 'text-charcoal-400'}>
+                                {' · '}
+                                {relative}
+                              </span>
                             )}
-                          </div>
+                          </span>
+                          <span className="h-px flex-1 bg-champagne-200" aria-hidden="true" />
                         </div>
 
-                        {cls.description && (
-                          <p className="mt-3 line-clamp-2 text-sm text-charcoal-700">{cls.description}</p>
-                        )}
-
-                        <div className="mt-4 flex items-center justify-between border-t border-champagne-200 pt-3">
-                          <span className="text-sm text-charcoal-500 tabular-nums">
-                            {cls.actual_attendance_count !== null && cls.actual_attendance_count !== undefined
-                              ? `${cls.actual_attendance_count} attended`
-                              : `${cls.enrolled_count || 0}${cls.max_capacity ? ` / ${cls.max_capacity}` : ''} enrolled`}
-                          </span>
-                          <span className="text-sm font-semibold text-charcoal-950 tabular-nums">
-                            {getPricingModelDescription(cls)}
-                          </span>
+                        <div className="divide-y divide-champagne-200/70">
+                          {day.classes.map((cls) => {
+                            const startTs = new Date(cls.start_time).getTime()
+                            const endTs = new Date(cls.end_time).getTime()
+                            let weight: RowWeight
+                            if (endTs < nowTs) weight = 'past'
+                            else if (day.dayKey === todayKey || cls.id === nearestClassId) weight = 'hero'
+                            else weight = startTs - nowTs > 21 * 86_400_000 ? 'far' : 'normal'
+                            return (
+                              <ClassAgendaRow
+                                key={cls.id}
+                                cls={cls}
+                                weight={weight}
+                                isNext={cls.id === nearestClassId && endTs >= nowTs}
+                                onClick={() => handleClassClick(cls)}
+                              />
+                            )
+                          })}
                         </div>
                       </div>
                     )
@@ -2103,7 +2230,7 @@ export default function ClassesPage() {
   return (
     <Suspense fallback={
       <PortalLayout profile={null}>
-        <PageSkeleton variant="cards" withAction withToolbar cardCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" />
+        <PageSkeleton variant="list" withAction withToolbar />
       </PortalLayout>
     }>
       <ClassesContent />
