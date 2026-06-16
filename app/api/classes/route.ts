@@ -22,30 +22,46 @@ export async function GET(request: NextRequest) {
     const classType = searchParams.get('class_type')
     const upcoming = searchParams.get('upcoming')
 
-    let query = supabase
-      .from('classes')
-      .select(`
+    // The "Upcoming" view isn't strictly future: instructors check it the day
+    // before a class and want the just-happened sessions for context, while
+    // "All" is the full firehose. So upcoming = a couple of recent past classes
+    // as lead-in, plus everything still to come.
+    const RECENT_PAST_CONTEXT = 2
+
+    const SELECT = `
         *,
         studio:studios(name, city, state),
         instructor:profiles(full_name),
         asset:assets(id, title, file_url, file_type)
-      `)
-      .order('start_time', { ascending: true })
+      `
 
-    if (studioId) {
-      query = query.eq('studio_id', studioId)
+    const scoped = () => {
+      let q = supabase.from('classes').select(SELECT)
+      if (studioId) q = q.eq('studio_id', studioId)
+      if (classType) q = q.eq('class_type', classType)
+      return q
     }
 
-    if (classType) {
-      query = query.eq('class_type', classType)
-    }
+    let classes: any[] | null = null
+    let error: any = null
 
     if (upcoming === 'true') {
       const now = new Date().toISOString()
-      query = query.gte('start_time', now)
+      const [future, recentPast] = await Promise.all([
+        scoped().gte('start_time', now).order('start_time', { ascending: true }),
+        scoped().lt('start_time', now).order('start_time', { ascending: false }).limit(RECENT_PAST_CONTEXT),
+      ])
+      error = future.error || recentPast.error
+      if (!error) {
+        // recentPast came back newest-first; flip to chronological so it reads
+        // as lead-in above the upcoming run.
+        classes = [...(recentPast.data || []).reverse(), ...(future.data || [])]
+      }
+    } else {
+      const result = await scoped().order('start_time', { ascending: true })
+      classes = result.data
+      error = result.error
     }
-
-    const { data: classes, error } = await query
 
     if (error) {
       console.error('Error fetching classes:', error)
