@@ -18,6 +18,7 @@ const CLASS_TYPE_STYLES: Record<string, string> = {
   group: 'bg-blue-100 border border-blue-300 text-blue-900',
   workshop: 'bg-green-100 border border-green-300 text-green-900',
   master_class: 'bg-amber-100 border border-amber-300 text-amber-900',
+  competition_choreography: 'bg-fuchsia-100 border border-fuchsia-300 text-fuchsia-900',
   personal: 'bg-rose-100 border border-rose-300 text-rose-900',
 }
 const DEFAULT_CLASS_TYPE_STYLE = 'bg-gray-100 border border-gray-300 text-gray-900'

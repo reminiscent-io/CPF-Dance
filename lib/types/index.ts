@@ -1,7 +1,7 @@
 export type UserRole = 'instructor' | 'dancer' | 'guardian' | 'studio' | 'admin'
 export type PaymentStatus = 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 export type PaymentMethod = 'stripe' | 'cash' | 'check' | 'other'
-export type ClassType = 'group' | 'private' | 'workshop' | 'master_class'
+export type ClassType = 'group' | 'private' | 'workshop' | 'master_class' | 'competition_choreography'
 export type NoteVisibility = 'private' | 'shared_with_student' | 'shared_with_guardian' | 'shared_with_instructor'
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused'
 export type PrivateLessonRequestStatus = 'pending' | 'approved' | 'scheduled' | 'declined'

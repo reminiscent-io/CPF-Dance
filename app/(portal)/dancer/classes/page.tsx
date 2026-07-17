@@ -73,6 +73,7 @@ const CLASS_TYPE_LABEL: Record<string, string> = {
   private: 'Private',
   workshop: 'Workshop',
   master_class: 'Master class',
+  competition_choreography: 'Competition choreography',
 }
 
 export default function DancerClassesPage() {

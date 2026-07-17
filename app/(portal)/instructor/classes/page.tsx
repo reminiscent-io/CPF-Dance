@@ -45,6 +45,7 @@ const CLASS_TYPE_LABEL: Record<ClassType, string> = {
   private: 'Private',
   workshop: 'Workshop',
   master_class: 'Master Class',
+  competition_choreography: 'Competition Choreography',
 }
 
 // Compact, glanceable price for an agenda row. The long-form pricing
@@ -565,7 +566,8 @@ function ClassesContent() {
                   { value: 'group', label: 'Group' },
                   { value: 'private', label: 'Private' },
                   { value: 'workshop', label: 'Workshop' },
-                  { value: 'master_class', label: 'Master Class' }
+                  { value: 'master_class', label: 'Master Class' },
+                  { value: 'competition_choreography', label: 'Competition Choreography' }
                 ]}
               />
             </div>
@@ -1117,6 +1119,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               <option value="private">Private</option>
               <option value="workshop">Workshop</option>
               <option value="master_class">Master Class</option>
+              <option value="competition_choreography">Competition Choreography</option>
             </select>
           </div>
 
@@ -1874,6 +1877,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               <option value="private">Private</option>
               <option value="workshop">Workshop</option>
               <option value="master_class">Master Class</option>
+              <option value="competition_choreography">Competition Choreography</option>
             </select>
           </div>
 

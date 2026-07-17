@@ -260,6 +260,8 @@ export default function DancerSchedulePage() {
         return 'Workshop'
       case 'master_class':
         return 'Master Class'
+      case 'competition_choreography':
+        return 'Competition Choreography'
       default:
         return type
     }

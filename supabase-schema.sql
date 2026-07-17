@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TYPE user_role AS ENUM ('instructor', 'dancer', 'guardian', 'admin');
 CREATE TYPE payment_status AS ENUM ('pending', 'confirmed', 'disputed', 'cancelled');
 CREATE TYPE payment_method AS ENUM ('stripe', 'cash', 'check', 'other');
-CREATE TYPE class_type AS ENUM ('group', 'private', 'workshop', 'master_class');
+CREATE TYPE class_type AS ENUM ('group', 'private', 'workshop', 'master_class', 'competition_choreography');
 CREATE TYPE note_visibility AS ENUM ('private', 'shared_with_student', 'shared_with_guardian', 'shared_with_studio');
 CREATE TYPE pricing_model AS ENUM ('per_person', 'per_class', 'per_hour', 'tiered');
 
