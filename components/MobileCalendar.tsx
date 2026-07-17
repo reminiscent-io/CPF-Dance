@@ -45,6 +45,7 @@ const CLASS_TYPE_DOT: Record<string, string> = {
   group: 'bg-champagne-500',
   workshop: 'bg-gold-500',
   master_class: 'bg-charcoal-700',
+  competition_choreography: 'bg-rose-700',
   personal: 'bg-champagne-700',
 }
 const DEFAULT_CLASS_TYPE_DOT = 'bg-charcoal-300'
@@ -54,6 +55,7 @@ const CLASS_TYPE_BG: Record<string, string> = {
   group: 'bg-champagne-100 border-champagne-200 text-charcoal-900',
   workshop: 'bg-gold-100 border-gold-200 text-gold-900',
   master_class: 'bg-charcoal-100 border-charcoal-200 text-charcoal-900',
+  competition_choreography: 'bg-ballet-pink-50 border-ballet-pink-200 text-ballet-pink-900',
   personal: 'bg-champagne-200 border-champagne-300 text-charcoal-900',
 }
 const DEFAULT_CLASS_TYPE_BG = 'bg-champagne-100 border-champagne-200 text-charcoal-700'
@@ -63,6 +65,7 @@ const CLASS_TYPE_STYLE: Record<string, string> = {
   group: 'bg-champagne-100 border border-champagne-200',
   workshop: 'bg-gold-100 border border-gold-200',
   master_class: 'bg-charcoal-100 border border-charcoal-200',
+  competition_choreography: 'bg-ballet-pink-50 border border-ballet-pink-200',
   personal: 'bg-champagne-200 border border-champagne-300',
 }
 const DEFAULT_CLASS_TYPE_STYLE = 'bg-champagne-100 border border-champagne-200'
@@ -72,6 +75,7 @@ const CLASS_TYPE_LABEL: Record<string, string> = {
   group: 'Group',
   workshop: 'Workshop',
   master_class: 'Master',
+  competition_choreography: 'Competition',
   personal: 'Personal',
 }
 
