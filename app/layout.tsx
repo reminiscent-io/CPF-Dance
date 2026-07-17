@@ -1,9 +1,24 @@
 import type { Metadata, Viewport } from 'next'
+import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { ToastProvider } from '@/components/ui'
 import { RegisterServiceWorker } from './register-sw'
 import CookieConsentBanner from '@/components/CookieConsentBanner'
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant-garamond',
+  display: 'swap',
+})
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'CPF Dance — Precision. Passion. Performance.',
@@ -33,17 +48,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${cormorantGaramond.variable} ${manrope.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#c75a6d" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="CPF Dance" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Google Analytics with Consent Mode - defaults to denied, updated by CookieConsentBanner */}
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JYEPWDHDW0" />

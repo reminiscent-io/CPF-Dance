@@ -89,6 +89,9 @@ RLS policies that check the `profiles` table can cause infinite recursion. Use s
 ### HTML Sanitization
 All user HTML MUST be sanitized before rendering. Use `createSanitizedHtml()` from `@/lib/utils/sanitize` — never raw `dangerouslySetInnerHTML`.
 
+### Google Integrations (Gmail + Calendar/Meet)
+Both go through **Replit Connectors** via `@replit/connectors-sdk` (`connectors.proxy()`) — connector names `google-mail` and `google-calendar`, single account `courtney@cpfdance.com`. The proxy base is generic Google, so paths MUST include the full version segment: **`/calendar/v3/...`** and **`/gmail/v1/...`**. Omitting it = silent 404. Never hand-fetch OAuth tokens; the SDK handles refresh. Full reference + scaling limits: [GOOGLE_INTEGRATIONS_GUIDE.md](GOOGLE_INTEGRATIONS_GUIDE.md).
+
 ## Auth & Security
 
 Three-layer security: proxy routing → API route guards → database RLS.

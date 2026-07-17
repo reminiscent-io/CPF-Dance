@@ -5,7 +5,7 @@ modules = ["nodejs-22", "python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_11"
-packages = ["nix-output-monitor"]
+packages = ["nix-output-monitor", "undollar"]
 
 [env]
 NEXT_TELEMETRY_DISABLED = "1"
@@ -16,12 +16,16 @@ run = ["npm", "run", "start"]
 deploymentTarget = "autoscale"
 
 [[ports]]
+localPort = 3434
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
 [agent]
 expertMode = true
-integrations = ["stripe:1.0.0", "google-mail:1.0.0"]
+integrations = ["stripe:1.0.0", "google-mail:1.0.0", "google-calendar:1.0.0"]
 
 [workflows]
 runButton = "Project"

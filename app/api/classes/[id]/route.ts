@@ -50,7 +50,12 @@ export async function GET(
 
 // Keep the backing Google Calendar event / Meet link in sync after a private lesson
 // is edited. Best-effort: a Calendar failure logs but never fails the class update.
-async function syncVirtualLessonCalendar(classData: any): Promise<void> {
+async function syncVirtualLessonCalendar(
+  classData: any
+): Promise<{ url: string; dancerHasEmail: boolean; dancerNotified: boolean } | null> {
+  // Set only when a new Meet link is created (toggled virtual on), so the client
+  // can warn when the dancer has no email and therefore was not auto-notified.
+  let meet: { url: string; dancerHasEmail: boolean; dancerNotified: boolean } | null = null
   try {
     const admin = createAdminClient()
     const eventId: string | null = classData.google_calendar_event_id
@@ -91,6 +96,12 @@ async function syncVirtualLessonCalendar(classData: any): Promise<void> {
         classData.google_meet_url = hangoutLink
         classData.google_calendar_event_id = newEventId
 
+        meet = {
+          url: hangoutLink,
+          dancerHasEmail: Boolean(dancerEmail),
+          dancerNotified: Boolean(dancerEmail && hangoutLink),
+        }
+
         if (dancerEmail && hangoutLink) {
           await notifyDancerVirtualLesson({
             to: dancerEmail,
@@ -113,6 +124,7 @@ async function syncVirtualLessonCalendar(classData: any): Promise<void> {
   } catch (error) {
     console.error('[classes PATCH] virtual lesson calendar sync failed:', error)
   }
+  return meet
 }
 
 export async function PATCH(
@@ -255,9 +267,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Class not found or unauthorized' }, { status: 404 })
     }
 
-    await syncVirtualLessonCalendar(classData)
+    const meet = await syncVirtualLessonCalendar(classData)
 
-    return NextResponse.json({ class: classData })
+    return NextResponse.json({ class: classData, meet })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -27,14 +27,18 @@ const nextConfig: NextConfig = {
   },
   // Security headers
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development'
     return [
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+          // In prod, block all framing; in dev, no restriction for Replit preview
+          ...(isDev
+            ? []
+            : [{
+                key: 'X-Frame-Options',
+                value: 'DENY',
+              }]),
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
