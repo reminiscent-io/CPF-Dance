@@ -393,7 +393,7 @@ export default function AvailableClassesPage() {
             </div>
 
             <p className="text-charcoal-700">
-              If you've signed up through the external portal, click "Add to Calendar" to track this class in your schedule.
+              If you’ve signed up through the external portal, click “Add to Calendar” to track this class in your schedule.
             </p>
 
             <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">

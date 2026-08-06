@@ -417,7 +417,7 @@ export default function HomePage() {
               animate={{ opacity: heroRevealActive ? 1 : 0 }}
               transition={{ duration: 0.7, delay: heroRevealActive ? 1.35 : 0 }}
             >
-              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you've come.
+              Connect with a world-class instructor. Get detailed feedback after every lesson. See how far you’ve come.
             </motion.p>
             <motion.div
               className="lp-hero__ctas"
@@ -497,8 +497,8 @@ export default function HomePage() {
                   every dancer can reach their full potential while developing confidence and grace.
                 </p>
                 <p>
-                  Whether you're a beginner discovering your passion or an advanced dancer refining your skills,
-                  you'll receive personalized instruction tailored to your goals.
+                  Whether you’re a beginner discovering your passion or an advanced dancer refining your skills,
+                  you’ll receive personalized instruction tailored to your goals.
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -772,7 +772,7 @@ export default function HomePage() {
       >
         <div className="mb-4">
           <p className="text-charcoal-700 leading-relaxed">
-            Interested in bringing our expertise to your studio? Let's connect.
+            Interested in bringing our expertise to your studio? Let’s connect.
           </p>
         </div>
 
@@ -785,7 +785,7 @@ export default function HomePage() {
             </div>
             <div className="text-2xl font-semibold text-charcoal-950 mb-2">Thank You!</div>
             <p className="text-charcoal-800 leading-relaxed">
-              We've received your inquiry and will be in touch shortly.
+              We’ve received your inquiry and will be in touch shortly.
             </p>
           </div>
         ) : (

@@ -127,7 +127,7 @@ function InstructorRequestForm() {
           {config.title}
         </h1>
         <p className="text-center text-gray-600 mb-6">
-          Fill out the form below and we'll reach out to set up your account.
+          Fill out the form below and we’ll reach out to set up your account.
         </p>
 
         {error && (
@@ -453,7 +453,7 @@ function DancerSignupForm() {
                 Guardian Email
               </label>
               <p className="text-xs text-gray-600 mb-3">
-                Since you are under 13, we need your guardian's email. A guardian account will be created and they'll receive a notification to provide consent.
+                Since you are under 13, we need your guardian’s email. A guardian account will be created and they’ll receive a notification to provide consent.
               </p>
               <input
                 id="guardianEmail"

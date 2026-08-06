@@ -19,7 +19,7 @@ export function DeleteRequestDialog({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete this request?" size="sm">
       <p className="text-base text-charcoal-700 leading-relaxed">
-        You'll need to send a new one if you change your mind.
+        You’ll need to send a new one if you change your mind.
       </p>
       <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3">
         <Button

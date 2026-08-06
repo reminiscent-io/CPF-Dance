@@ -24,7 +24,8 @@ import {
 } from '@/components/ui'
 import { CalendarDaysIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
-import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
+import { convertETToUTC, convertUTCToET, etDayKey } from '@/lib/utils/et-timezone'
+import { useNow } from '@/lib/hooks/use-now'
 import { AssetSelector } from '@/components/AssetSelector'
 import { centsToDollars, parseCurrencyToCents } from '@/lib/utils/money'
 
@@ -220,7 +221,7 @@ function ClassesContent() {
       if (!months.has(monthKey)) months.set(monthKey, { key: monthKey, month, year, count: 0, dayMap: new Map() })
       const m = months.get(monthKey)!
       m.count++
-      const dayKey = date.toLocaleDateString('en-CA', { timeZone: ET }) // YYYY-MM-DD in ET
+      const dayKey = etDayKey(date)
       if (!m.dayMap.has(dayKey)) {
         m.dayMap.set(dayKey, {
           dayKey,
@@ -241,22 +242,20 @@ function ClassesContent() {
   }, [sortedClasses])
 
   // "Now" anchors the temporal hierarchy; the ET day keys label Today / Tomorrow.
-  const nowTs = Date.now()
-  const todayKey = new Date(nowTs).toLocaleDateString('en-CA', { timeZone: ET })
-  const tomorrowKey = new Date(nowTs + 86_400_000).toLocaleDateString('en-CA', { timeZone: ET })
+  // Ticking keeps those labels honest across midnight in a tab left open.
+  const now = useNow()
+  const nowTs = now.getTime()
+  const todayKey = etDayKey(now)
+  const tomorrowKey = etDayKey(new Date(nowTs + 86_400_000))
 
   // The class nearest to now (first upcoming, else the most recent) is the scroll target.
   const nearestClassId = useMemo(() => {
     if (sortedClasses.length === 0) return null
-    const now = Date.now()
-    const upcoming = sortedClasses.find((cls) => new Date(cls.start_time).getTime() >= now)
+    const upcoming = sortedClasses.find((cls) => new Date(cls.start_time).getTime() >= nowTs)
     return (upcoming ?? sortedClasses[sortedClasses.length - 1]).id
-  }, [sortedClasses])
+  }, [sortedClasses, nowTs])
 
-  const currentMonthKey = (() => {
-    const now = new Date()
-    return `${now.toLocaleString('en-US', { timeZone: ET, year: 'numeric' })}-${now.toLocaleString('en-US', { timeZone: ET, month: '2-digit' })}`
-  })()
+  const currentMonthKey = `${now.toLocaleString('en-US', { timeZone: ET, year: 'numeric' })}-${now.toLocaleString('en-US', { timeZone: ET, month: '2-digit' })}`
 
   const scrollToNearestClass = () => {
     if (!nearestClassId) return

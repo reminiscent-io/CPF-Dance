@@ -164,7 +164,7 @@ function CostLine({ balance, costMode, dayOfPrice, onAddPack }: CostLineProps) {
     const priceLabel = dayOfPrice != null ? `$${dayOfPrice.toFixed(2)}` : 'the single-lesson rate'
     return (
       <p className="mt-3 text-sm text-charcoal-500 leading-relaxed">
-        You don't have credits on a pack right now. 1 credit will be used when Courtney confirms and schedules a lesson —{' '}
+        You don’t have credits on a pack right now. 1 credit will be used when Courtney confirms and schedules a lesson —{' '}
         <button
           type="button"
           onClick={onAddPack}

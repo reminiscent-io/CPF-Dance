@@ -284,6 +284,11 @@ export function MobileCalendar({
   }
 
   const handleDayClick = (date: Date) => {
+    // Read at click time, not render time — this is the tap instant we compare
+    // against the previous one. Wall-clock is deliberate: event.timeStamp is
+    // monotonic from page load, so an initial lastTap of 0 would read a first
+    // click within 300ms of load as a double tap.
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now()
     const DOUBLE_TAP_DELAY = 300
     

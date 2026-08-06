@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
           <p>
-            This Privacy Policy describes how CPF Dance LLC ("Company," "we," "us") collects, uses, discloses, and protects personal information when you use our website and related services (the "Service"). By using the Service, you agree to the collection and use of information in accordance with this Policy.
+            This Privacy Policy describes how CPF Dance LLC (“Company,” “we,” “us”) collects, uses, discloses, and protects personal information when you use our website and related services (the “Service”). By using the Service, you agree to the collection and use of information in accordance with this Policy.
           </p>
 
           <div>
@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Student / Guardian Information</h3>
                 <p>
-                  For minors, we may collect the student's name, age or date of birth, and lesson history, along with the parent or legal guardian's contact information and relationship to the student.
+                  For minors, we may collect the student’s name, age or date of birth, and lesson history, along with the parent or legal guardian’s contact information and relationship to the student.
                 </p>
               </div>
 
@@ -171,7 +171,7 @@ export default function PrivacyPolicyPage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Children Under 13</h3>
                 <p>
-                  Children under 13 may not create accounts or provide information directly. A parent or legal guardian must create and manage the account on the child's behalf and consent to the child's participation in lessons managed through the Service.
+                  Children under 13 may not create accounts or provide information directly. A parent or legal guardian must create and manage the account on the child’s behalf and consent to the child’s participation in lessons managed through the Service.
                 </p>
               </div>
 
@@ -204,7 +204,7 @@ export default function PrivacyPolicyPage() {
               <li>Performance of a contract (providing the Service you request).</li>
               <li>Legitimate interests (such as securing and improving the Service, preventing misuse, and communicating essential information).</li>
               <li>Compliance with a legal obligation (such as record‑keeping or responding to lawful requests).</li>
-              <li>Consent (such as certain marketing or children's data practices where required).</li>
+              <li>Consent (such as certain marketing or children’s data practices where required).</li>
             </ul>
 
             <p className="mt-4">
@@ -376,7 +376,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">14. Changes to This Privacy Policy</h2>
             
             <p>
-              We may update this Privacy Policy from time to time. When we do, we will revise the "Last updated" date at the top of this page and may provide additional notice where required by law. Your continued use of the Service after any changes become effective signifies your acceptance of the updated Policy.
+              We may update this Privacy Policy from time to time. When we do, we will revise the “Last updated” date at the top of this page and may provide additional notice where required by law. Your continued use of the Service after any changes become effective signifies your acceptance of the updated Policy.
             </p>
           </div>
 

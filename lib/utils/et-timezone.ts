@@ -82,6 +82,15 @@ export function displayETLabel(): string {
 export const ET_TIMEZONE = 'America/New_York'
 
 /**
+ * The ET calendar day an instant falls on, as a sortable YYYY-MM-DD key.
+ * Grouping and "Today" / "Tomorrow" labels key off this, so it has to follow
+ * the studio's day boundary rather than UTC's.
+ */
+export function etDayKey(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: ET_TIMEZONE })
+}
+
+/**
  * Format time in ET (e.g., "2:30 PM")
  */
 export function formatTimeET(dateString: string | Date): string {

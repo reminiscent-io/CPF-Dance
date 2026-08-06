@@ -279,7 +279,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
           ) : messages.length === 0 ? (
             <div className="text-center py-8 text-charcoal-500">
               <p>No email conversation yet.</p>
-              <p className="text-sm">Click "Reply" to start an email thread.</p>
+              <p className="text-sm">Click “Reply” to start an email thread.</p>
             </div>
           ) : (
             messages.map((msg) => (

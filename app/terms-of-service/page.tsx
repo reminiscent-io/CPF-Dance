@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
           <p>
-            These Terms of Service ("Terms") govern your access to and use of the website, platform, and related services (collectively, the "Service") provided by CPF Dance LLC ("Company," "we," or "us"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the Service.
+            These Terms of Service (“Terms”) govern your access to and use of the website, platform, and related services (collectively, the “Service”) provided by CPF Dance LLC (“Company,” “we,” or “us”). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the Service.
           </p>
 
           <div>
@@ -21,14 +21,14 @@ export default function TermsOfServicePage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">1.1 Age Requirements; Children Under 13</h3>
                 <p>
-                  The Service is intended for individuals who are at least 13 years old or the age of digital consent in their jurisdiction. Individuals under 13 may not create an account or provide personal information directly through the Service. Instead, a parent or legal guardian must create and manage the account on the minor's behalf and consent to the minor's use of the Service. During signup, users will be asked to confirm that they are at least 13; if they indicate they are under 13, a parent or legal guardian must complete account creation and confirm access for the minor.
+                  The Service is intended for individuals who are at least 13 years old or the age of digital consent in their jurisdiction. Individuals under 13 may not create an account or provide personal information directly through the Service. Instead, a parent or legal guardian must create and manage the account on the minor’s behalf and consent to the minor’s use of the Service. During signup, users will be asked to confirm that they are at least 13; if they indicate they are under 13, a parent or legal guardian must complete account creation and confirm access for the minor.
                 </p>
               </div>
 
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">1.2 Parental / Guardian Accounts for Minors</h3>
                 <p>
-                  Where a minor participates in classes or lessons, the parent or legal guardian is the "account holder" and is responsible for: (a) ensuring the minor's compliance with these Terms; (b) any information provided about the minor; and (c) all bookings, payments, and communications related to the minor's use of the Service. If it is discovered that a child under 13 has created an account or provided personal information without verifiable parental consent, the Company may suspend or delete the account and take reasonable steps to remove the related personal information from its systems.
+                  Where a minor participates in classes or lessons, the parent or legal guardian is the “account holder” and is responsible for: (a) ensuring the minor’s compliance with these Terms; (b) any information provided about the minor; and (c) all bookings, payments, and communications related to the minor’s use of the Service. If it is discovered that a child under 13 has created an account or provided personal information without verifiable parental consent, the Company may suspend or delete the account and take reasonable steps to remove the related personal information from its systems.
                 </p>
               </div>
 
@@ -166,7 +166,7 @@ export default function TermsOfServicePage() {
                   The following exceptions apply to the private lesson validity period and no-refund policy:
                 </p>
                 <ul className="list-disc list-inside mt-2 space-y-2">
-                  <li><strong>Temporary Instructor Inability:</strong> If an instructor is temporarily unable to teach due to physical limitations, injury, illness, or other medical circumstances, the validity period for any outstanding lessons with that instructor will be extended by the duration of the instructor's unavailability. The Company will notify affected students of any such extensions.</li>
+                  <li><strong>Temporary Instructor Inability:</strong> If an instructor is temporarily unable to teach due to physical limitations, injury, illness, or other medical circumstances, the validity period for any outstanding lessons with that instructor will be extended by the duration of the instructor’s unavailability. The Company will notify affected students of any such extensions.</li>
                   <li><strong>Instructor Departure:</strong> If an instructor permanently ceases teaching and is no longer available to provide lessons through the Service, any outstanding, unused lessons purchased with that instructor will be eligible for refund. Such refunds will be processed less any applicable payment processing fees, transaction costs, or administrative fees incurred by the Company. Refunds will be issued to the original payment method where possible.</li>
                 </ul>
               </div>
@@ -181,7 +181,7 @@ export default function TermsOfServicePage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">5.6 Group Classes and Events</h3>
                 <p>
-                  For group classes, workshops, events, or other offerings not specifically identified as "private lessons," different cancellation and refund policies may apply. Such policies will be communicated at the time of booking or registration.
+                  For group classes, workshops, events, or other offerings not specifically identified as “private lessons,” different cancellation and refund policies may apply. Such policies will be communicated at the time of booking or registration.
                 </p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function TermsOfServicePage() {
                   <li>Email address</li>
                   <li>Phone number</li>
                   <li>Lesson, studio, and scheduling details</li>
-                  <li>Information you choose to add to your or your child's profile</li>
+                  <li>Information you choose to add to your or your child’s profile</li>
                 </ul>
                 <p className="mt-2">
                   This information is used to provide and improve the Service, process bookings and payments, and facilitate communication related to your use of the Service.
@@ -216,7 +216,7 @@ export default function TermsOfServicePage() {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">6.3 Access Controls</h3>
                 <p>
-                  Access to user data within the Company's systems is limited to personnel and contractors who require such access to operate, support, or improve the Service and who are subject to appropriate confidentiality obligations. The Company may access, preserve, or disclose information if it reasonably believes it is necessary to: (a) comply with legal obligations or process; (b) enforce these Terms; or (c) protect the rights, property, or safety of the Company, users, or others.
+                  Access to user data within the Company’s systems is limited to personnel and contractors who require such access to operate, support, or improve the Service and who are subject to appropriate confidentiality obligations. The Company may access, preserve, or disclose information if it reasonably believes it is necessary to: (a) comply with legal obligations or process; (b) enforce these Terms; or (c) protect the rights, property, or safety of the Company, users, or others.
                 </p>
               </div>
 
@@ -280,14 +280,14 @@ export default function TermsOfServicePage() {
                 <ul className="list-disc list-inside mt-2 space-y-2">
                   <li>Copy, modify, distribute, sell, lease, or create derivative works from any part of the Service or its content, except as expressly permitted by the Company.</li>
                   <li>Reverse engineer or otherwise attempt to extract the source code of any software used in the Service, except as allowed by law.</li>
-                  <li>Use the Company's trademarks, service marks, or logos without prior written permission.</li>
+                  <li>Use the Company’s trademarks, service marks, or logos without prior written permission.</li>
                 </ul>
               </div>
 
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">8.4 User Content</h3>
                 <p>
-                  You may submit or upload content, including profile information, messages, feedback, and other materials ("User Content"). You retain any rights you hold in your User Content but grant the Company a non‑exclusive, worldwide, royalty‑free license to use, host, store, reproduce, modify, and display User Content as reasonably necessary to operate and improve the Service.
+                  You may submit or upload content, including profile information, messages, feedback, and other materials (“User Content”). You retain any rights you hold in your User Content but grant the Company a non‑exclusive, worldwide, royalty‑free license to use, host, store, reproduce, modify, and display User Content as reasonably necessary to operate and improve the Service.
                 </p>
               </div>
             </div>
@@ -325,9 +325,9 @@ export default function TermsOfServicePage() {
             
             <div className="ml-4 space-y-4">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">10.1 Service Provided "As Is"</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">10.1 Service Provided “As Is”</h3>
                 <p>
-                  To the fullest extent permitted by law, the Service is provided "as is" and "as available," without warranties of any kind, whether express, implied, or statutory. Without limiting the foregoing, the Company does not warrant that the Service will meet your requirements, be uninterrupted, timely, secure, or error‑free, or that any defects will be corrected.
+                  To the fullest extent permitted by law, the Service is provided “as is” and “as available,” without warranties of any kind, whether express, implied, or statutory. Without limiting the foregoing, the Company does not warrant that the Service will meet your requirements, be uninterrupted, timely, secure, or error‑free, or that any defects will be corrected.
                 </p>
               </div>
 
@@ -347,7 +347,7 @@ export default function TermsOfServicePage() {
               <p>To the maximum extent permitted by law:</p>
               <ul className="list-disc list-inside space-y-2">
                 <li>The Company and its owners, members, managers, employees, contractors, and agents will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, including lost profits, lost data, or loss of goodwill, arising out of or in connection with your use of or inability to use the Service.</li>
-                <li>The Company's total aggregate liability for all claims arising out of or relating to the Service or these Terms will not exceed the greater of: (a) the total amount you paid directly to the Company for use of the Service giving rise to the claim during the twelve (12) months prior to the event giving rise to liability; or (b) one hundred U.S. dollars (USD $100).</li>
+                <li>The Company’s total aggregate liability for all claims arising out of or relating to the Service or these Terms will not exceed the greater of: (a) the total amount you paid directly to the Company for use of the Service giving rise to the claim during the twelve (12) months prior to the event giving rise to liability; or (b) one hundred U.S. dollars (USD $100).</li>
                 <li>Some jurisdictions do not allow certain exclusions or limitations of liability, so some of the above limitations may not apply to you.</li>
               </ul>
             </div>
@@ -357,7 +357,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">12. Indemnification</h2>
             
             <p>
-              You agree to indemnify, defend, and hold harmless CPF Dance LLC and its owners, members, managers, employees, contractors, and agents from and against any and all claims, demands, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms or any applicable law; or (c) your User Content or interactions with other users, instructors, or studios.
+              You agree to indemnify, defend, and hold harmless CPF Dance LLC and its owners, members, managers, employees, contractors, and agents from and against any and all claims, demands, liabilities, damages, losses, and expenses (including reasonable attorneys’ fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms or any applicable law; or (c) your User Content or interactions with other users, instructors, or studios.
             </p>
           </div>
 
@@ -400,7 +400,7 @@ export default function TermsOfServicePage() {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">14.2 Company's Termination Rights</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">14.2 Company’s Termination Rights</h3>
                 <p>
                   The Company may suspend or terminate your access to the Service at any time, with or without cause or notice, including if: (a) you violate these Terms or applicable law; (b) your conduct creates risk or potential legal exposure for the Company or others; or (c) providing the Service is no longer commercially or technically feasible.
                 </p>
@@ -419,7 +419,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">15. Changes to These Terms</h2>
             
             <p>
-              The Company may update these Terms from time to time. When changes are made, the "Last updated" date at the top of this page will be revised, and additional notice may be provided where required by law. Your continued use of the Service after changes become effective constitutes your acceptance of the updated Terms.
+              The Company may update these Terms from time to time. When changes are made, the “Last updated” date at the top of this page will be revised, and additional notice may be provided where required by law. Your continued use of the Service after changes become effective constitutes your acceptance of the updated Terms.
             </p>
           </div>
 

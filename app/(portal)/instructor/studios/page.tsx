@@ -377,7 +377,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
               <span className="text-sm font-medium text-charcoal-700">Active Studio</span>
             </label>
             <p className="text-xs text-charcoal-500 mt-1">
-              Inactive studios won't appear in class creation dropdowns
+              Inactive studios won’t appear in class creation dropdowns
             </p>
           </div>
         </div>

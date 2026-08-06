@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useNow } from '@/lib/hooks/use-now'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Textarea, Input } from '@/components/ui/Input'
@@ -28,7 +29,9 @@ export function PrivateLessonActions({
   const [proposedDates, setProposedDates] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const insideWindow = new Date(startTimeIso).getTime() - Date.now() < TWENTY_FOUR_HOURS_MS
+  // Ticks so the forfeiture warning stays honest in a tab left open across the boundary.
+  const now = useNow()
+  const insideWindow = new Date(startTimeIso).getTime() - now.getTime() < TWENTY_FOUR_HOURS_MS
 
   const handleCancelConfirm = async () => {
     setSubmitting(true)
