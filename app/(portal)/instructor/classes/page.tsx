@@ -26,18 +26,18 @@ import { CalendarDaysIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { convertETToUTC, convertUTCToET } from '@/lib/utils/et-timezone'
 import { AssetSelector } from '@/components/AssetSelector'
+import { centsToDollars, parseCurrencyToCents } from '@/lib/utils/money'
 
 // All class times are authored and displayed in Eastern Time
 const ET = 'America/New_York'
 
-// Helper function to parse currency values and round to 2 decimal places
+// Helper function to parse currency values and round to 2 decimal places.
+// Rounding runs through the shared money helper: Math.round(num * 100) drops a
+// cent at half-cent boundaries, because 1.005 * 100 is 100.49999999999999.
+// Allows 0 for free classes; returns undefined only for empty/non-numeric input.
 const parseCurrency = (value: string): number | undefined => {
-  // Return undefined only for empty string, not for "0"
-  if (value === '' || value === null || value === undefined) return undefined
-  const num = parseFloat(value)
-  if (isNaN(num)) return undefined
-  // Allow 0 for free classes, and round to 2 decimal places to avoid floating point precision issues
-  return Math.round(num * 100) / 100
+  const cents = parseCurrencyToCents(value)
+  return cents === undefined ? undefined : centsToDollars(cents)
 }
 
 const CLASS_TYPE_LABEL: Record<ClassType, string> = {

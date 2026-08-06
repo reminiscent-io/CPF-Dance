@@ -1,7 +1,12 @@
 import type { Class, PricingModel } from '@/lib/types'
+import { centsToDollars, dollarsToCents, sumCents } from './money'
 
 /**
- * Calculate the total cost of a class based on its pricing model and enrollment count
+ * Calculate the total cost of a class based on its pricing model and enrollment count.
+ *
+ * Multiplying a rate by an hour count or a head count can produce a fraction of
+ * a cent (1.5h x $33.33/hr is 49.995), which DECIMAL(10, 2) cannot hold. The
+ * arithmetic runs in integer cents so the result is always a storable amount.
  */
 export function calculateClassCost(
   classData: Pick<Class, 'pricing_model' | 'base_cost' | 'cost_per_person' | 'cost_per_hour' | 'tiered_base_students' | 'tiered_additional_cost' | 'start_time' | 'end_time'>,
@@ -13,7 +18,7 @@ export function calculateClassCost(
     case 'per_person':
       // Cost = Number of students × Cost per person
       if (!cost_per_person) return 0
-      return enrolledCount * cost_per_person
+      return centsToDollars(dollarsToCents(enrolledCount * cost_per_person))
 
     case 'per_class':
       // Flat rate regardless of enrollment
@@ -23,7 +28,7 @@ export function calculateClassCost(
       // Cost = Duration in hours × Cost per hour
       if (!cost_per_hour) return 0
       const durationHours = calculateDurationHours(start_time, end_time)
-      return durationHours * cost_per_hour
+      return centsToDollars(dollarsToCents(durationHours * cost_per_hour))
 
     case 'tiered':
       // Cost = Base cost + (Additional students × Additional cost per student)
@@ -31,11 +36,22 @@ export function calculateClassCost(
       const baseStudents = tiered_base_students || 0
       const additionalStudents = Math.max(0, enrolledCount - baseStudents)
       const additionalCost = additionalStudents * (tiered_additional_cost || 0)
-      return base_cost + additionalCost
+      return centsToDollars(dollarsToCents(base_cost) + dollarsToCents(additionalCost))
 
     default:
       return 0
   }
+}
+
+/**
+ * Total a list of dollar amounts without floating point drift.
+ * Accumulating doubles turns 1000.01 + 200.55 + 34.00 into 1234.5600000000002.
+ */
+export function sumPrices(amounts: Array<number | null | undefined>): number {
+  const cents = amounts
+    .filter((amount): amount is number => typeof amount === 'number' && Number.isFinite(amount))
+    .map(dollarsToCents)
+  return centsToDollars(sumCents(cents))
 }
 
 /**

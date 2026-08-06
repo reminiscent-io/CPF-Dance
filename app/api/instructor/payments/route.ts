@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
+import { sumPrices } from '@/lib/utils/pricing'
 
 export async function GET(request: NextRequest) {
   try {
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
     // Calculate summary stats
     const stats = {
       total_payments: formattedPayments.length,
-      total_amount: formattedPayments.reduce((sum, p) => sum + (p.amount || 0), 0),
+      total_amount: sumPrices(formattedPayments.map(p => p.amount)),
       pending: formattedPayments.filter(p => p.payment_status === 'pending').length,
       confirmed: formattedPayments.filter(p => p.payment_status === 'confirmed').length,
       disputed: formattedPayments.filter(p => p.payment_status === 'disputed').length,
