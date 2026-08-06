@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -59,18 +59,7 @@ export default function AvailableClassesPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchPublicClasses()
-      // Check for pending external signup when page loads or regains focus
-      checkForPendingExternalSignup()
-      window.addEventListener('focus', checkForPendingExternalSignup)
-      return () => window.removeEventListener('focus', checkForPendingExternalSignup)
-    }
-  }, [loading, user, profile])
-
-  const checkForPendingExternalSignup = () => {
+  const checkForPendingExternalSignup = useCallback(() => {
     try {
       const pendingSignup = sessionStorage.getItem(PENDING_EXTERNAL_SIGNUP_KEY)
       if (pendingSignup) {
@@ -82,9 +71,9 @@ export default function AvailableClassesPage() {
     } catch (error) {
       console.error('Error checking for pending signup:', error)
     }
-  }
+  }, [])
 
-  const fetchPublicClasses = async () => {
+  const fetchPublicClasses = useCallback(async () => {
     try {
       setLoadingClasses(true)
       const response = await fetch('/api/dancer/public-classes')
@@ -101,7 +90,18 @@ export default function AvailableClassesPage() {
     } finally {
       setLoadingClasses(false)
     }
-  }
+  }, [addToast])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchPublicClasses()
+      // Check for pending external signup when page loads or regains focus
+      checkForPendingExternalSignup()
+      window.addEventListener('focus', checkForPendingExternalSignup)
+      return () => window.removeEventListener('focus', checkForPendingExternalSignup)
+    }
+  }, [loading, user, profile, fetchPublicClasses, checkForPendingExternalSignup])
 
   const handleEnrollClick = (cls: PublicClass) => {
     if (cls.external_signup_url) {
