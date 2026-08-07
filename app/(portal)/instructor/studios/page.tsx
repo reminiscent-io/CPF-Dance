@@ -30,30 +30,32 @@ export default function StudiosPage() {
   }, [authLoading, profile, router])
 
   useEffect(() => {
-    if (user) {
-      fetchStudios()
-    }
-  }, [user?.id, filterActive])
+    if (!user?.id) return
+    let cancelled = false
 
-  const fetchStudios = async () => {
-    try {
-      const params = new URLSearchParams()
-      if (filterActive !== null) {
-        params.append('is_active', filterActive.toString())
+    const fetchStudios = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (filterActive !== null) {
+          params.append('is_active', filterActive.toString())
+        }
+
+        const response = await fetch(`/api/studios?${params}`)
+        if (!response.ok) throw new Error('Failed to fetch studios')
+
+        const data = await response.json()
+        if (!cancelled) setStudios(data.studios || [])
+      } catch (error) {
+        console.error('Error fetching studios:', error)
+        if (!cancelled) addToast('Failed to load studios', 'error')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-
-      const response = await fetch(`/api/studios?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch studios')
-
-      const data = await response.json()
-      setStudios(data.studios || [])
-    } catch (error) {
-      console.error('Error fetching studios:', error)
-      addToast('Failed to load studios', 'error')
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchStudios()
+    return () => { cancelled = true }
+  }, [user?.id, filterActive, addToast])
 
   const handleAddStudio = async (formData: CreateStudioData) => {
     try {

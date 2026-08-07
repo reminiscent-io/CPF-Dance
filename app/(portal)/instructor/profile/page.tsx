@@ -49,34 +49,39 @@ export default function InstructorProfilePage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && profile) {
-      fetchProfileData()
-    }
-  }, [loading, user, profile])
+    if (loading || !user || !profile) return
+    let cancelled = false
 
-  const fetchProfileData = async () => {
-    try {
-      const response = await fetch('/api/instructor/profile')
-      if (response.ok) {
-        const data = await response.json()
-        setProfileData(data.profile)
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch('/api/instructor/profile')
+        if (response.ok) {
+          const data = await response.json()
+          if (cancelled) return
+          setProfileData(data.profile)
 
-        setFormData({
-          full_name: data.profile.full_name || '',
-          phone: data.profile.phone || '',
-          date_of_birth: data.profile.date_of_birth || ''
-        })
+          setFormData({
+            full_name: data.profile.full_name || '',
+            phone: data.profile.phone || '',
+            date_of_birth: data.profile.date_of_birth || ''
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      } finally {
+        if (!cancelled) {
+          setLoadingData(false)
+          // Mark initial load complete after a short delay
+          setTimeout(() => {
+            isInitialLoad.current = false
+          }, 100)
+        }
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-    } finally {
-      setLoadingData(false)
-      // Mark initial load complete after a short delay
-      setTimeout(() => {
-        isInitialLoad.current = false
-      }, 100)
     }
-  }
+
+    fetchProfileData()
+    return () => { cancelled = true }
+  }, [loading, user, profile])
 
   const saveProfile = useCallback(async (data: typeof formData) => {
     setSaveStatus('saving')

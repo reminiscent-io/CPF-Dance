@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { EmptyState, PageHeader, PageSkeleton, StatusDot } from '@/components/ui'
@@ -26,27 +26,28 @@ export default function InquiriesPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!loading && profile && profile.role === 'instructor') {
-      fetchInquiries()
-    }
-  }, [loading, profile])
-
-  const fetchInquiries = async () => {
-    try {
-      const response = await fetch('/api/studio-inquiries')
-      if (response.ok) {
-        const data = await response.json()
-        setInquiries(data.inquiries || [])
-      } else {
-        setError('Failed to load inquiries')
+    if (loading || profile?.role !== 'instructor') return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const response = await fetch('/api/studio-inquiries')
+        if (cancelled) return
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) setInquiries(data.inquiries || [])
+        } else {
+          setError('Failed to load inquiries')
+        }
+      } catch (err) {
+        console.error('Error fetching inquiries:', err)
+        if (!cancelled) setError('An error occurred while loading inquiries')
+      } finally {
+        if (!cancelled) setLoadingInquiries(false)
       }
-    } catch (err) {
-      console.error('Error fetching inquiries:', err)
-      setError('An error occurred while loading inquiries')
-    } finally {
-      setLoadingInquiries(false)
     }
-  }
+    load()
+    return () => { cancelled = true }
+  }, [loading, profile])
 
   const getStatusTone = (status: string): StatusTone => {
     switch (status?.toLowerCase()) {

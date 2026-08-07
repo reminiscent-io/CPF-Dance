@@ -33,27 +33,30 @@ export default function SignWaiverPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && params?.id) {
-      fetchWaiver()
-    }
-  }, [loading, user, params?.id])
+    const waiverId = params?.id
+    if (loading || !user || !waiverId) return
+    let cancelled = false
 
-  const fetchWaiver = async () => {
-    if (!params?.id) return
-    try {
-      const response = await fetch(`/api/waivers/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setWaiver(data.waiver)
-      } else {
-        router.push('/dancer/waivers')
+    const fetchWaiver = async () => {
+      try {
+        const response = await fetch(`/api/waivers/${waiverId}`)
+        if (cancelled) return
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) setWaiver(data.waiver)
+        } else {
+          router.push('/dancer/waivers')
+        }
+      } catch (error) {
+        console.error('Error fetching waiver:', error)
+      } finally {
+        if (!cancelled) setLoadingWaiver(false)
       }
-    } catch (error) {
-      console.error('Error fetching waiver:', error)
-    } finally {
-      setLoadingWaiver(false)
     }
-  }
+
+    fetchWaiver()
+    return () => { cancelled = true }
+  }, [loading, user, params?.id, router])
 
   const handleSignWaiver = async () => {
     if (!signature || !agreeToTerms || !waiver || !params?.id) {
