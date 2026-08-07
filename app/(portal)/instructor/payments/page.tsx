@@ -91,6 +91,63 @@ interface EarningsSummary {
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'disputed' | 'cancelled'
 type EarningsDateRange = 'all' | 'this_month' | 'last_month' | 'this_year'
 
+/**
+ * Loaders that return data instead of setting state, so the mount effects and
+ * the post-record refreshes can share them and own their own setState.
+ */
+async function loadPayments(filterStatus: string) {
+  const params = new URLSearchParams()
+  if (filterStatus !== 'all') {
+    params.append('status', filterStatus)
+  }
+  const response = await fetch(`/api/instructor/payments?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch payments')
+  return response.json()
+}
+
+async function loadStudentsAndStudios() {
+  const [studentsRes, studiosRes] = await Promise.all([
+    fetch('/api/students'),
+    fetch('/api/studios')
+  ])
+  return {
+    students: studentsRes.ok ? (await studentsRes.json()).students || [] : [],
+    studios: studiosRes.ok ? (await studiosRes.json()).studios || [] : []
+  }
+}
+
+async function loadClassEarnings(earningsDateRange: EarningsDateRange) {
+  const params = new URLSearchParams()
+
+  if (earningsDateRange !== 'all') {
+    const now = new Date()
+    let startDate: Date
+    let endDate: Date = now
+
+    switch (earningsDateRange) {
+      case 'this_month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        break
+      case 'last_month':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        endDate = new Date(now.getFullYear(), now.getMonth(), 0)
+        break
+      case 'this_year':
+        startDate = new Date(now.getFullYear(), 0, 1)
+        break
+      default:
+        startDate = new Date(0)
+    }
+
+    params.append('start_date', startDate.toISOString())
+    params.append('end_date', endDate.toISOString())
+  }
+
+  const response = await fetch(`/api/instructor/class-earnings?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch class earnings')
+  return response.json()
+}
+
 function InstructorPaymentsContent() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
@@ -151,60 +208,80 @@ function InstructorPaymentsContent() {
 
   // Auto-open request modal if coming from invoices page
   useEffect(() => {
-    if (searchParams?.get('request') === 'true') {
-      handleOpenRequestModal()
+    if (searchParams?.get('request') !== 'true') return
+    let cancelled = false
+
+    const openRequestModal = async () => {
+      setShowRequestModal(true)
+      setLoadingOptions(true)
       // Clear the query param
       router.replace('/instructor/payments', { scroll: false })
+      try {
+        const loaded = await loadStudentsAndStudios()
+        if (cancelled) return
+        setStudents(loaded.students)
+        setStudios(loaded.studios)
+      } catch (error) {
+        console.error('Error fetching options:', error)
+      } finally {
+        if (!cancelled) setLoadingOptions(false)
+      }
     }
-  }, [searchParams])
+
+    openRequestModal()
+    return () => { cancelled = true }
+  }, [searchParams, router])
 
   useEffect(() => {
-    if (!loading && user && profile) {
-      fetchPayments()
+    if (loading || !user || !profile) return
+    let cancelled = false
+
+    const run = async () => {
+      setLoadingPayments(true)
+      try {
+        const data = await loadPayments(filterStatus)
+        if (cancelled) return
+        setPayments(data.payments)
+        setStats(data.stats)
+      } catch (error) {
+        console.error('Error fetching payments:', error)
+      } finally {
+        if (!cancelled) setLoadingPayments(false)
+      }
     }
+
+    run()
+    return () => { cancelled = true }
   }, [loading, user, profile, filterStatus])
 
   useEffect(() => {
-    if (!loading && user && profile) {
-      fetchClassEarnings()
-    }
-  }, [loading, user, profile, earningsDateRange])
+    if (loading || !user || !profile) return
+    let cancelled = false
 
-  const fetchClassEarnings = async () => {
-    setLoadingEarnings(true)
-    try {
-      const params = new URLSearchParams()
-
-      if (earningsDateRange !== 'all') {
-        const now = new Date()
-        let startDate: Date
-        let endDate: Date = now
-
-        switch (earningsDateRange) {
-          case 'this_month':
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-            break
-          case 'last_month':
-            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-            endDate = new Date(now.getFullYear(), now.getMonth(), 0)
-            break
-          case 'this_year':
-            startDate = new Date(now.getFullYear(), 0, 1)
-            break
-          default:
-            startDate = new Date(0)
-        }
-
-        params.append('start_date', startDate.toISOString())
-        params.append('end_date', endDate.toISOString())
-      }
-
-      const response = await fetch(`/api/instructor/class-earnings?${params}`)
-      if (response.ok) {
-        const data = await response.json()
+    const run = async () => {
+      setLoadingEarnings(true)
+      try {
+        const data = await loadClassEarnings(earningsDateRange)
+        if (cancelled) return
         setClassEarnings(data.classes)
         setEarningsSummary(data.summary)
+      } catch (error) {
+        console.error('Error fetching class earnings:', error)
+      } finally {
+        if (!cancelled) setLoadingEarnings(false)
       }
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [loading, user, profile, earningsDateRange])
+
+  const refreshClassEarnings = async () => {
+    setLoadingEarnings(true)
+    try {
+      const data = await loadClassEarnings(earningsDateRange)
+      setClassEarnings(data.classes)
+      setEarningsSummary(data.summary)
     } catch (error) {
       console.error('Error fetching class earnings:', error)
     } finally {
@@ -216,18 +293,9 @@ function InstructorPaymentsContent() {
     if (loadingOptions) return
     setLoadingOptions(true)
     try {
-      const [studentsRes, studiosRes] = await Promise.all([
-        fetch('/api/students'),
-        fetch('/api/studios')
-      ])
-      if (studentsRes.ok) {
-        const data = await studentsRes.json()
-        setStudents(data.students || [])
-      }
-      if (studiosRes.ok) {
-        const data = await studiosRes.json()
-        setStudios(data.studios || [])
-      }
+      const loaded = await loadStudentsAndStudios()
+      setStudents(loaded.students)
+      setStudios(loaded.studios)
     } catch (error) {
       console.error('Error fetching options:', error)
     } finally {
@@ -235,20 +303,12 @@ function InstructorPaymentsContent() {
     }
   }
 
-  const fetchPayments = async () => {
+  const refreshPayments = async () => {
     setLoadingPayments(true)
     try {
-      const params = new URLSearchParams()
-      if (filterStatus !== 'all') {
-        params.append('status', filterStatus)
-      }
-
-      const response = await fetch(`/api/instructor/payments?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setPayments(data.payments)
-        setStats(data.stats)
-      }
+      const data = await loadPayments(filterStatus)
+      setPayments(data.payments)
+      setStats(data.stats)
     } catch (error) {
       console.error('Error fetching payments:', error)
     } finally {
@@ -262,11 +322,6 @@ function InstructorPaymentsContent() {
 
   const handleCloseModal = () => {
     setSelectedPayment(null)
-  }
-
-  const handleOpenRequestModal = () => {
-    setShowRequestModal(true)
-    fetchStudentsAndStudios()
   }
 
   const handleCloseRequestModal = () => {
@@ -314,7 +369,7 @@ function InstructorPaymentsContent() {
       const data = await response.json()
       alert(data.message)
       handleCloseRequestModal()
-      await fetchPayments()
+      await refreshPayments()
     } catch (error) {
       console.error('Error submitting payment request:', error)
       alert(error instanceof Error ? error.message : 'Failed to create payment request')
@@ -439,8 +494,8 @@ function InstructorPaymentsContent() {
 
       alert('Payment recorded successfully!')
       handleCloseRecordPaymentModal()
-      await fetchPayments()
-      await fetchClassEarnings()
+      await refreshPayments()
+      await refreshClassEarnings()
     } catch (error) {
       console.error('Error recording payment:', error)
       alert(error instanceof Error ? error.message : 'Failed to record payment')
