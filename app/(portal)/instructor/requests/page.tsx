@@ -30,6 +30,24 @@ interface PrivateLessonRequest {
   }
 }
 
+/**
+ * Loaders that return data instead of setting state, so the mount effect and
+ * the post-scheduling refresh can share them and own their own setState.
+ */
+async function loadRequests(): Promise<PrivateLessonRequest[]> {
+  const response = await fetch('/api/instructor/requests')
+  if (!response.ok) throw new Error('Failed to load requests')
+  const data = await response.json()
+  return data.requests || []
+}
+
+async function loadActiveStudios(): Promise<Studio[]> {
+  const response = await fetch('/api/studios?is_active=true')
+  if (!response.ok) throw new Error('Failed to load studios')
+  const data = await response.json()
+  return data.studios || []
+}
+
 export default function InstructorRequestsPage() {
   const { user, profile, loading } = useUser()
   const { addToast } = useToast()
@@ -43,38 +61,30 @@ export default function InstructorRequestsPage() {
   const [studios, setStudios] = useState<Studio[]>([])
 
   useEffect(() => {
-    if (!loading && profile && (profile.role === 'instructor' || profile.role === 'admin')) {
-      fetchRequests()
-      fetchStudios()
-    }
-  }, [loading, profile])
+    if (loading || (profile?.role !== 'instructor' && profile?.role !== 'admin')) return
+    let cancelled = false
 
-  const fetchRequests = async () => {
+    loadRequests()
+      .then((loaded) => { if (!cancelled) setRequests(loaded) })
+      .catch((err) => {
+        console.error('Error fetching requests:', err)
+        if (!cancelled) addToast('Failed to load requests', 'error')
+      })
+      .finally(() => { if (!cancelled) setLoadingRequests(false) })
+
+    loadActiveStudios()
+      .then((loaded) => { if (!cancelled) setStudios(loaded) })
+      .catch((err) => console.error('Error fetching studios:', err))
+
+    return () => { cancelled = true }
+  }, [loading, profile, addToast])
+
+  const refreshRequests = async () => {
     try {
-      const response = await fetch('/api/instructor/requests')
-      if (response.ok) {
-        const data = await response.json()
-        setRequests(data.requests || [])
-      } else {
-        addToast('Failed to load requests', 'error')
-      }
+      setRequests(await loadRequests())
     } catch (err) {
       console.error('Error fetching requests:', err)
-      addToast('An error occurred while loading requests', 'error')
-    } finally {
-      setLoadingRequests(false)
-    }
-  }
-
-  const fetchStudios = async () => {
-    try {
-      const response = await fetch('/api/studios?is_active=true')
-      if (response.ok) {
-        const data = await response.json()
-        setStudios(data.studios || [])
-      }
-    } catch (err) {
-      console.error('Error fetching studios:', err)
+      addToast('Failed to load requests', 'error')
     }
   }
 
@@ -105,7 +115,7 @@ export default function InstructorRequestsPage() {
 
   const handleClassCreated = async () => {
     handleCloseCreateClassModal()
-    await fetchRequests()
+    await refreshRequests()
     addToast('Private lesson scheduled', 'success')
   }
 

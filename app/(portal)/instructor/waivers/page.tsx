@@ -29,6 +29,24 @@ interface IssuedWaiver {
   created_at: string
 }
 
+/**
+ * Loaders that return data instead of setting state, so the mount effect and
+ * the dialog success handlers can share them and own their own setState.
+ */
+async function loadTemplates(): Promise<WaiverTemplate[]> {
+  const response = await fetch('/api/waiver-templates')
+  if (!response.ok) throw new Error('Failed to fetch templates')
+  const data = await response.json()
+  return data.templates
+}
+
+async function loadIssuedWaivers(): Promise<IssuedWaiver[]> {
+  const response = await fetch('/api/waivers')
+  if (!response.ok) throw new Error('Failed to fetch waivers')
+  const data = await response.json()
+  return data.waivers
+}
+
 export default function InstructorWaiversPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
@@ -47,38 +65,32 @@ export default function InstructorWaiversPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user) {
-      fetchTemplates()
-      fetchIssuedWaivers()
-    }
+    if (loading || !user?.id) return
+    let cancelled = false
+
+    loadTemplates()
+      .then((loaded) => { if (!cancelled) setTemplates(loaded) })
+      .catch((error) => console.error('Error fetching templates:', error))
+      .finally(() => { if (!cancelled) setLoadingTemplates(false) })
+
+    loadIssuedWaivers()
+      .then((loaded) => { if (!cancelled) setIssuedWaivers(loaded) })
+      .catch((error) => console.error('Error fetching waivers:', error))
+      .finally(() => { if (!cancelled) setLoadingWaivers(false) })
+
+    return () => { cancelled = true }
   }, [loading, user?.id])
 
-  const fetchTemplates = async () => {
-    try {
-      const response = await fetch('/api/waiver-templates')
-      if (response.ok) {
-        const data = await response.json()
-        setTemplates(data.templates)
-      }
-    } catch (error) {
-      console.error('Error fetching templates:', error)
-    } finally {
-      setLoadingTemplates(false)
-    }
+  const refreshTemplates = () => {
+    loadTemplates()
+      .then(setTemplates)
+      .catch((error) => console.error('Error fetching templates:', error))
   }
 
-  const fetchIssuedWaivers = async () => {
-    try {
-      const response = await fetch('/api/waivers')
-      if (response.ok) {
-        const data = await response.json()
-        setIssuedWaivers(data.waivers)
-      }
-    } catch (error) {
-      console.error('Error fetching waivers:', error)
-    } finally {
-      setLoadingWaivers(false)
-    }
+  const refreshIssuedWaivers = () => {
+    loadIssuedWaivers()
+      .then(setIssuedWaivers)
+      .catch((error) => console.error('Error fetching waivers:', error))
   }
 
   const handleIssueWaiver = (template: WaiverTemplate) => {
@@ -271,9 +283,7 @@ export default function InstructorWaiversPage() {
       <CreateWaiverTemplateDialog
         isOpen={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
-        onSuccess={() => {
-          fetchTemplates()
-        }}
+        onSuccess={refreshTemplates}
       />
 
       {selectedTemplate && (
@@ -284,9 +294,7 @@ export default function InstructorWaiversPage() {
             setSelectedTemplate(null)
           }}
           template={selectedTemplate}
-          onSuccess={() => {
-            fetchIssuedWaivers()
-          }}
+          onSuccess={refreshIssuedWaivers}
         />
       )}
     </PortalLayout>
