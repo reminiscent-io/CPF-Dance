@@ -34,22 +34,25 @@ export function AssetSelector({
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   useEffect(() => {
-    fetchAssets()
-  }, [])
+    let cancelled = false
 
-  const fetchAssets = async () => {
-    try {
-      const response = await fetch('/api/assets')
-      if (!response.ok) throw new Error('Failed to fetch assets')
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch('/api/assets')
+        if (!response.ok) throw new Error('Failed to fetch assets')
 
-      const data = await response.json()
-      setAssets(data.assets || [])
-    } catch (error) {
-      console.error('Error fetching assets:', error)
-    } finally {
-      setLoading(false)
+        const data = await response.json()
+        if (!cancelled) setAssets(data.assets || [])
+      } catch (error) {
+        console.error('Error fetching assets:', error)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  }
+
+    fetchAssets()
+    return () => { cancelled = true }
+  }, [])
 
   const handleUploadSuccess = (asset: Asset) => {
     setAssets(prev => [asset, ...prev])
