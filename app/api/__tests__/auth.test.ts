@@ -75,24 +75,7 @@ describe('Auth API Routes', () => {
       expect(data.redirectUrl).toBe('/dancer')
     })
 
-    it('should redirect instructor to /instructor portal', async () => {
-      const newUser = {
-        id: 'new-instructor-id',
-        email: 'instructor@test.com',
-        user_metadata: { full_name: 'New Instructor', role: 'instructor' },
-      }
-
-      mockSignUp.mockResolvedValue({
-        data: { user: newUser, session: null },
-        error: null,
-      })
-
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })
-
+    it('should reject instructor self-signup to prevent role escalation', async () => {
       const request = new NextRequest('http://localhost:5000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,9 +91,9 @@ describe('Auth API Routes', () => {
       const response = await signupHandler(request)
       const data = await response.json()
 
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.redirectUrl).toBe('/instructor')
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Invalid role. Allowed roles: dancer, guardian')
+      expect(mockSignUp).not.toHaveBeenCalled()
     })
 
     it('should return error for signup failure', async () => {
@@ -134,8 +117,10 @@ describe('Auth API Routes', () => {
       const response = await signupHandler(request)
       const data = await response.json()
 
+      // The route intentionally returns a generic message instead of the
+      // Supabase error to prevent email enumeration.
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Email already in use')
+      expect(data.error).toBe('Failed to create account')
     })
 
     it('should handle guardian creation for under-13 dancers', async () => {
@@ -348,11 +333,7 @@ describe('Auth API Routes', () => {
     it('should sign out user successfully', async () => {
       mockSignOut.mockResolvedValue({ error: null })
 
-      const request = new NextRequest('http://localhost:5000/api/auth/signout', {
-        method: 'POST',
-      })
-
-      const response = await signoutHandler(request)
+      const response = await signoutHandler()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -365,11 +346,7 @@ describe('Auth API Routes', () => {
     it('should return success even if signOut has an error (current behavior)', async () => {
       mockSignOut.mockResolvedValue({ error: { message: 'Sign out failed' } })
 
-      const request = new NextRequest('http://localhost:5000/api/auth/signout', {
-        method: 'POST',
-      })
-
-      const response = await signoutHandler(request)
+      const response = await signoutHandler()
       const data = await response.json()
 
       // Current implementation ignores errors from signOut
@@ -380,11 +357,7 @@ describe('Auth API Routes', () => {
     it('should handle thrown exceptions', async () => {
       mockSignOut.mockRejectedValue(new Error('Network error'))
 
-      const request = new NextRequest('http://localhost:5000/api/auth/signout', {
-        method: 'POST',
-      })
-
-      const response = await signoutHandler(request)
+      const response = await signoutHandler()
       const data = await response.json()
 
       expect(response.status).toBe(500)
