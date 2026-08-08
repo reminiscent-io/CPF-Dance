@@ -201,7 +201,7 @@ export default function DancerPortalPage() {
                 <div className="border border-champagne-200 border-dashed rounded-lg p-8 text-center bg-champagne-100/50">
                   <DocumentTextIcon className="w-10 h-10 text-charcoal-400 mx-auto mb-3" />
                   <p className="text-charcoal-700 mb-4">
-                    No notes yet. Courtney's feedback will appear here after your next lesson.
+                    No notes yet. Courtney’s feedback will appear here after your next lesson.
                   </p>
                   <Button
                     variant="outline"

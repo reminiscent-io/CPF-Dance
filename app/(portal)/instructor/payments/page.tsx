@@ -1042,7 +1042,7 @@ function InstructorPaymentsContent() {
       >
         <div className="space-y-4">
           <p className="text-sm text-charcoal-500">
-            Record a cash or check payment that you've already received from a student.
+            Record a cash or check payment that you’ve already received from a student.
           </p>
 
           <div>

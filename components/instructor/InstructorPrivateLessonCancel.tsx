@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useNow } from '@/lib/hooks/use-now'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Input'
@@ -25,7 +26,10 @@ export function InstructorPrivateLessonCancel({
   const [reinstate, setReinstate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const insideWindow = new Date(startTimeIso).getTime() - Date.now() < TWENTY_FOUR_HOURS_MS
+  // Ticks so the reinstate choice — and the payload it feeds — stay honest in a
+  // tab left open across the boundary.
+  const now = useNow()
+  const insideWindow = new Date(startTimeIso).getTime() - now.getTime() < TWENTY_FOUR_HOURS_MS
 
   const handleConfirm = async () => {
     setSubmitting(true)
@@ -79,11 +83,11 @@ export function InstructorPrivateLessonCancel({
         <div className="space-y-4">
           {insideWindow ? (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-charcoal-900">
-              <strong>Inside 24 hours.</strong> By default, the dancer's credit is forfeited. You can choose to reinstate it.
+              <strong>Inside 24 hours.</strong> By default, the dancer’s credit is forfeited. You can choose to reinstate it.
             </div>
           ) : (
             <p className="text-sm text-charcoal-700">
-              Outside 24 hours: the dancer's credit will be refunded to their pack automatically.
+              Outside 24 hours: the dancer’s credit will be refunded to their pack automatically.
             </p>
           )}
 
@@ -104,7 +108,7 @@ export function InstructorPrivateLessonCancel({
                 className="mt-0.5"
               />
               <span className="text-sm text-charcoal-900">
-                Reinstate the dancer's credit to their pack.
+                Reinstate the dancer’s credit to their pack.
               </span>
             </label>
           )}

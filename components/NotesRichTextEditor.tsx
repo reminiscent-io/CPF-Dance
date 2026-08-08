@@ -147,7 +147,7 @@ export function NotesRichTextEditor({
           }`}
           title="Quote"
         >
-          "
+          ”
         </button>
       </div>
 

@@ -225,7 +225,7 @@ export default function WaiverDetailPage() {
                 </Button>
               </div>
               <p className="text-sm text-charcoal-500 mt-3">
-                This waiver can be edited or deleted because it hasn't been signed yet.
+                This waiver can be edited or deleted because it hasn’t been signed yet.
               </p>
             </CardContent>
           </Card>

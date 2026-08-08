@@ -137,7 +137,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           }`}
           title="Blockquote"
         >
-          "
+          ”
         </button>
         <button
           type="button"
