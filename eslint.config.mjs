@@ -11,6 +11,10 @@ const config = [
       'build/**',
       'coverage/**',
       'next-env.d.ts',
+      // Agent worktrees are full checkouts with their own .next output. The
+      // '.next/**' pattern above is root-relative and does not reach them, so
+      // without this ESLint lints bundled vendor chunks as if they were source.
+      '.claude/**',
     ],
   },
   ...nextCoreWebVitals,
