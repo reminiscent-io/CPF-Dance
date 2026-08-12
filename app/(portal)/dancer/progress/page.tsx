@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -51,14 +51,7 @@ export default function DancerProgressPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchNotes()
-    }
-  }, [loading, user, profile])
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const response = await fetch('/api/dancer/notes')
       if (response.ok) {
@@ -70,7 +63,14 @@ export default function DancerProgressPage() {
     } finally {
       setLoadingNotes(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchNotes()
+    }
+  }, [loading, user, profile, fetchNotes])
 
   if (loading) {
     return (

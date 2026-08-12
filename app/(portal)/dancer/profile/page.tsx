@@ -93,14 +93,7 @@ export default function DancerProfilePage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchProfileData()
-    }
-  }, [loading, user, profile])
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
     try {
       const response = await fetch('/api/dancer/profile')
       if (response.ok) {
@@ -138,7 +131,14 @@ export default function DancerProfilePage() {
         isInitialLoad.current = false
       }, 100)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchProfileData()
+    }
+  }, [loading, user, profile, fetchProfileData])
 
   const saveProfile = useCallback(async (data: typeof formData) => {
     setSaveStatus('saving')

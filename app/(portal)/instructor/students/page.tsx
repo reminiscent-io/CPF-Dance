@@ -29,6 +29,33 @@ import type { Student, CreateStudentData } from '@/lib/types'
 
 type StudentFilter = 'all' | 'active' | 'inactive'
 
+/**
+ * Loaders that return data instead of setting state, so the mount effect and
+ * the tag/untag handlers can share them and own their own setState.
+ */
+async function loadStudents(filterActive: boolean | null): Promise<Student[]> {
+  const params = new URLSearchParams()
+  if (filterActive !== null) {
+    params.append('is_active', filterActive.toString())
+  }
+  const response = await fetch(`/api/students?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch students')
+  const data = await response.json()
+  return data.students || []
+}
+
+async function loadInstructors(): Promise<any[]> {
+  const response = await fetch('/api/instructors')
+  const data = await response.json()
+  return data.instructors || []
+}
+
+async function loadRelationships(): Promise<any[]> {
+  const response = await fetch('/api/relationships')
+  const data = await response.json()
+  return data.data || []
+}
+
 export default function StudentsPage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -51,50 +78,33 @@ export default function StudentsPage() {
   }, [authLoading, profile, router])
 
   useEffect(() => {
-    if (user) {
-      fetchStudents()
-      if (profile?.role === 'admin') {
-        fetchInstructors()
-        fetchRelationships()
-      }
+    if (!user?.id) return
+    let cancelled = false
+
+    loadStudents(filterActive)
+      .then((loaded) => { if (!cancelled) setStudents(loaded) })
+      .catch((error) => {
+        console.error('Error fetching students:', error)
+        if (!cancelled) addToast('Failed to load students', 'error')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    if (profile?.role === 'admin') {
+      loadInstructors()
+        .then((loaded) => { if (!cancelled) setInstructors(loaded) })
+        .catch((error) => console.error('Error fetching instructors:', error))
+
+      loadRelationships()
+        .then((loaded) => { if (!cancelled) setRelationships(loaded) })
+        .catch((error) => console.error('Error fetching relationships:', error))
     }
-  }, [user?.id, filterActive, profile?.role])
 
-  const fetchStudents = async () => {
+    return () => { cancelled = true }
+  }, [user?.id, filterActive, profile?.role, addToast])
+
+  const refreshRelationships = async () => {
     try {
-      const params = new URLSearchParams()
-      if (filterActive !== null) {
-        params.append('is_active', filterActive.toString())
-      }
-
-      const response = await fetch(`/api/students?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch students')
-
-      const data = await response.json()
-      setStudents(data.students || [])
-    } catch (error) {
-      console.error('Error fetching students:', error)
-      addToast('Failed to load students', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch('/api/instructors')
-      const data = await response.json()
-      setInstructors(data.instructors || [])
-    } catch (error) {
-      console.error('Error fetching instructors:', error)
-    }
-  }
-
-  const fetchRelationships = async () => {
-    try {
-      const response = await fetch('/api/relationships')
-      const data = await response.json()
-      setRelationships(data.data || [])
+      setRelationships(await loadRelationships())
     } catch (error) {
       console.error('Error fetching relationships:', error)
     }
@@ -121,7 +131,7 @@ export default function StudentsPage() {
       addToast('Instructor tagged successfully', 'success')
       setShowTagModal(false)
       setSelectedStudent(null)
-      fetchRelationships()
+      refreshRelationships()
     } catch (error: any) {
       console.error('Error tagging instructor:', error)
       addToast(error.message || 'Failed to tag instructor', 'error')
@@ -137,7 +147,7 @@ export default function StudentsPage() {
       if (!response.ok) throw new Error('Failed to remove tag')
 
       addToast('Tag removed successfully', 'success')
-      fetchRelationships()
+      refreshRelationships()
     } catch (error) {
       console.error('Error removing tag:', error)
       addToast('Failed to remove tag', 'error')

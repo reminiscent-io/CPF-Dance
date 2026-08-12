@@ -51,71 +51,76 @@ export default function WaiverDetailPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && params?.id) {
-      fetchWaiver()
-    }
-  }, [loading, user, params?.id])
+    const waiverId = params?.id
+    if (loading || !user || !waiverId) return
+    let cancelled = false
 
-  const fetchWaiver = async () => {
-    if (!params?.id) return
-
-    try {
-      const response = await fetch(`/api/waivers/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setWaiver(data.waiver)
-
-        // Fetch recipient info
-        if (data.waiver.student_id) {
-          fetchStudentInfo(data.waiver.student_id)
-        } else if (data.waiver.recipient_id) {
-          fetchRecipientProfile(data.waiver.recipient_id)
-        }
-      } else {
-        router.push('/instructor/waivers')
-      }
-    } catch (error) {
-      console.error('Error fetching waiver:', error)
-    } finally {
-      setLoadingWaiver(false)
-    }
-  }
-
-  const fetchStudentInfo = async (studentId: string) => {
-    try {
-      const response = await fetch(`/api/students/${studentId}`)
-      if (response.ok) {
-        const data = await response.json()
-        const student = data.student
-        const profile = Array.isArray(student.profile) ? student.profile[0] : student.profile
-        setRecipientInfo({
-          name: profile?.full_name || student.full_name || 'Unknown Student',
-          email: profile?.email || student.email || 'No email',
-          phone: profile?.phone || student.phone || 'No phone'
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching student:', error)
-    }
-  }
-
-  const fetchRecipientProfile = async (profileId: string) => {
-    try {
-      const response = await fetch(`/api/profiles?id=${profileId}`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.profile) {
+    const fetchStudentInfo = async (studentId: string) => {
+      try {
+        const response = await fetch(`/api/students/${studentId}`)
+        if (response.ok) {
+          const data = await response.json()
+          const student = data.student
+          const studentProfile = Array.isArray(student.profile) ? student.profile[0] : student.profile
+          if (cancelled) return
           setRecipientInfo({
-            name: data.profile.full_name || 'Unknown',
-            email: data.profile.email || 'No email',
-            phone: data.profile.phone || 'No phone'
+            name: studentProfile?.full_name || student.full_name || 'Unknown Student',
+            email: studentProfile?.email || student.email || 'No email',
+            phone: studentProfile?.phone || student.phone || 'No phone'
           })
         }
+      } catch (error) {
+        console.error('Error fetching student:', error)
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
     }
-  }
+
+    const fetchRecipientProfile = async (profileId: string) => {
+      try {
+        const response = await fetch(`/api/profiles?id=${profileId}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.profile && !cancelled) {
+            setRecipientInfo({
+              name: data.profile.full_name || 'Unknown',
+              email: data.profile.email || 'No email',
+              phone: data.profile.phone || 'No phone'
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      }
+    }
+
+    const fetchWaiver = async () => {
+      try {
+        const response = await fetch(`/api/waivers/${waiverId}`)
+        if (cancelled) return
+
+        if (response.ok) {
+          const data = await response.json()
+          if (cancelled) return
+          setWaiver(data.waiver)
+
+          // Fetch recipient info
+          if (data.waiver.student_id) {
+            fetchStudentInfo(data.waiver.student_id)
+          } else if (data.waiver.recipient_id) {
+            fetchRecipientProfile(data.waiver.recipient_id)
+          }
+        } else {
+          router.push('/instructor/waivers')
+        }
+      } catch (error) {
+        console.error('Error fetching waiver:', error)
+      } finally {
+        if (!cancelled) setLoadingWaiver(false)
+      }
+    }
+
+    fetchWaiver()
+    return () => { cancelled = true }
+  }, [loading, user, params?.id, router])
 
   const handleDelete = async () => {
     if (!waiver) return

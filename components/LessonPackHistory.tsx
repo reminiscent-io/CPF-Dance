@@ -72,27 +72,30 @@ export function LessonPackHistory({ isOpen, onClose }: LessonPackHistoryProps) {
   const [expandedUsageId, setExpandedUsageId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isOpen) {
-      fetchHistory()
-    }
-  }, [isOpen])
+    if (!isOpen) return
+    let cancelled = false
 
-  const fetchHistory = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/dancer/lesson-packs/history')
-      if (response.ok) {
-        const data = await response.json()
-        setPurchases(data.purchases || [])
-        setUsage(data.usage || [])
-        setTotalRemaining(data.totalRemaining || 0)
+    const fetchHistory = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/dancer/lesson-packs/history')
+        if (response.ok) {
+          const data = await response.json()
+          if (cancelled) return
+          setPurchases(data.purchases || [])
+          setUsage(data.usage || [])
+          setTotalRemaining(data.totalRemaining || 0)
+        }
+      } catch (err) {
+        console.error('Error fetching history:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    } catch (err) {
-      console.error('Error fetching history:', err)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchHistory()
+    return () => { cancelled = true }
+  }, [isOpen])
 
   const purchasesFifo = [...purchases].sort(
     (a, b) => new Date(a.purchased_at).getTime() - new Date(b.purchased_at).getTime()

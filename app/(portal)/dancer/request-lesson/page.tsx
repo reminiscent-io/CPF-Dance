@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -80,6 +80,49 @@ export default function PrivateLessonsPage() {
     }
   }, [loading, profile, router])
 
+  const fetchRequests = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dancer/lesson-requests')
+      if (response.ok) {
+        const data = await response.json()
+        setRequests(data.requests)
+      }
+    } catch (err) {
+      console.error('Error fetching requests:', err)
+    } finally {
+      setLoadingRequests(false)
+    }
+  }, [])
+
+  const fetchBalance = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dancer/lesson-packs/history')
+      if (response.ok) {
+        const data = await response.json()
+        setBalance(data.totalRemaining || 0)
+        setEarliestExpiry(deriveEarliestExpiry(data.purchases || []))
+      }
+    } catch (err) {
+      console.error('Error fetching balance:', err)
+    } finally {
+      setLoadingBalance(false)
+    }
+  }, [])
+
+  const fetchInstructor = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dancer/instructors')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.instructors && data.instructors.length > 0) {
+          setInstructorId(data.instructors[0].id)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching instructors:', err)
+    }
+  }, [])
+
   useEffect(() => {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
@@ -87,7 +130,7 @@ export default function PrivateLessonsPage() {
       fetchBalance()
       fetchInstructor()
     }
-  }, [loading, user, profile])
+  }, [loading, user, profile, fetchRequests, fetchBalance, fetchInstructor])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -102,50 +145,7 @@ export default function PrivateLessonsPage() {
       setBanner({ tone: 'neutral', message: 'Payment canceled. Your packs are unchanged.' })
       router.replace('/dancer/request-lesson')
     }
-  }, [router])
-
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch('/api/dancer/lesson-requests')
-      if (response.ok) {
-        const data = await response.json()
-        setRequests(data.requests)
-      }
-    } catch (err) {
-      console.error('Error fetching requests:', err)
-    } finally {
-      setLoadingRequests(false)
-    }
-  }
-
-  const fetchBalance = async () => {
-    try {
-      const response = await fetch('/api/dancer/lesson-packs/history')
-      if (response.ok) {
-        const data = await response.json()
-        setBalance(data.totalRemaining || 0)
-        setEarliestExpiry(deriveEarliestExpiry(data.purchases || []))
-      }
-    } catch (err) {
-      console.error('Error fetching balance:', err)
-    } finally {
-      setLoadingBalance(false)
-    }
-  }
-
-  const fetchInstructor = async () => {
-    try {
-      const response = await fetch('/api/dancer/instructors')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.instructors && data.instructors.length > 0) {
-          setInstructorId(data.instructors[0].id)
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching instructors:', err)
-    }
-  }
+  }, [router, fetchBalance])
 
   const handleSubmit = async (data: {
     focus: string

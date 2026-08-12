@@ -37,25 +37,27 @@ export default function AssetsPage() {
   }, [authLoading, profile, router])
 
   useEffect(() => {
-    if (user) {
-      fetchAssets()
-    }
-  }, [user?.id])
+    if (!user?.id) return
+    let cancelled = false
 
-  const fetchAssets = async () => {
-    try {
-      const response = await fetch('/api/assets')
-      if (!response.ok) throw new Error('Failed to fetch assets')
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch('/api/assets')
+        if (!response.ok) throw new Error('Failed to fetch assets')
 
-      const data = await response.json()
-      setAssets(data.assets || [])
-    } catch (error) {
-      console.error('Error fetching assets:', error)
-      addToast('Failed to load assets', 'error')
-    } finally {
-      setLoading(false)
+        const data = await response.json()
+        if (!cancelled) setAssets(data.assets || [])
+      } catch (error) {
+        console.error('Error fetching assets:', error)
+        if (!cancelled) addToast('Failed to load assets', 'error')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  }
+
+    fetchAssets()
+    return () => { cancelled = true }
+  }, [user?.id, addToast])
 
   const handleUploadSuccess = (asset: Asset) => {
     setAssets(prev => [asset, ...prev])

@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import {
   Badge,
@@ -58,12 +58,27 @@ export default function AdminUsersPage() {
     }
   }, [loading, profile, router])
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data.users)
+        setFilteredUsers(data.users)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!loading && user && profile && profile.role === 'admin' && !hasFetched.current) {
       hasFetched.current = true
       fetchUsers()
     }
-  }, [loading, user, profile])
+  }, [loading, user, profile, fetchUsers])
 
   useEffect(() => {
     let filtered = users
@@ -81,21 +96,6 @@ export default function AdminUsersPage() {
 
     setFilteredUsers(filtered)
   }, [users, searchTerm, roleFilter])
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch('/api/admin/users')
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data.users)
-        setFilteredUsers(data.users)
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error)
-    } finally {
-      setLoadingUsers(false)
-    }
-  }
 
   if (loading) {
     return (
