@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -75,14 +75,7 @@ export default function DancerPortalPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchDashboardData()
-    }
-  }, [loading, user, profile])
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [statsRes, reviewsRes] = await Promise.all([
         fetch('/api/dancer/stats'),
@@ -103,7 +96,14 @@ export default function DancerPortalPage() {
     } finally {
       setLoadingData(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchDashboardData()
+    }
+  }, [loading, user, profile, fetchDashboardData])
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)

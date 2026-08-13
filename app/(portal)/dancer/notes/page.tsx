@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
+import { useCallback, useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
 import { NoteListSkeleton } from '@/components/ui/Skeleton'
@@ -63,15 +63,7 @@ function DancerNotesContent() {
     }
   }, [searchParams, focusModeOpen, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchNotes()
-      fetchClasses()
-    }
-  }, [loading, user, profile])
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const response = await fetch('/api/dancer/notes')
       if (response.ok) {
@@ -83,9 +75,9 @@ function DancerNotesContent() {
     } finally {
       setLoadingNotes(false)
     }
-  }
+  }, [])
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     setLoadingClasses(true)
     try {
       const [enrolledResponse, personalResponse] = await Promise.all([
@@ -123,7 +115,15 @@ function DancerNotesContent() {
     } finally {
       setLoadingClasses(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchNotes()
+      fetchClasses()
+    }
+  }, [loading, user, profile, fetchNotes, fetchClasses])
 
   // Get all unique tags from notes
   const allTags = useMemo(() => {
@@ -193,7 +193,6 @@ function DancerNotesContent() {
     setShowViewModal(false)
     setViewingNote(null)
   }
-
 
   const handleCloseFocusMode = () => {
     setFocusModeOpen(false)

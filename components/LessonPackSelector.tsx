@@ -13,6 +13,17 @@ interface LessonPackSelectorProps {
   instructorId?: string | null
 }
 
+/**
+ * Loads packs without touching component state, so both the mount effect and
+ * the post-payment refresh can share it and own their own setState.
+ */
+async function loadLessonPacks(): Promise<{ packs: LessonPack[]; purchases: LessonPackPurchase[] }> {
+  const response = await fetch('/api/dancer/lesson-packs')
+  if (!response.ok) throw new Error('Could not load lesson packs.')
+  const data = await response.json()
+  return { packs: data.packs, purchases: data.purchases }
+}
+
 export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId }: LessonPackSelectorProps) {
   const [packs, setPacks] = useState<LessonPack[]>([])
   const [purchases, setPurchases] = useState<LessonPackPurchase[]>([])
@@ -22,26 +33,24 @@ export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId 
   const [selectedPack, setSelectedPack] = useState<LessonPack | null>(null)
 
   useEffect(() => {
-    fetchPacks()
-  }, [])
+    let cancelled = false
 
-  const fetchPacks = async () => {
-    try {
-      const response = await fetch('/api/dancer/lesson-packs')
-      if (response.ok) {
-        const data = await response.json()
-        setPacks(data.packs)
-        setPurchases(data.purchases)
-      } else {
-        setError('Could not load lesson packs.')
-      }
-    } catch (err) {
-      console.error('Error fetching packs:', err)
-      setError('Could not load lesson packs.')
-    } finally {
-      setLoading(false)
-    }
-  }
+    loadLessonPacks()
+      .then(({ packs: loadedPacks, purchases: loadedPurchases }) => {
+        if (cancelled) return
+        setPacks(loadedPacks)
+        setPurchases(loadedPurchases)
+      })
+      .catch((err) => {
+        console.error('Error fetching packs:', err)
+        if (!cancelled) setError('Could not load lesson packs.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [])
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', {
@@ -69,7 +78,14 @@ export function LessonPackSelector({ onSelectPack, selectedPackId, instructorId 
   const handlePaymentSuccess = async () => {
     setPaymentDialogOpen(false)
     setSelectedPack(null)
-    await fetchPacks()
+    try {
+      const { packs: loadedPacks, purchases: loadedPurchases } = await loadLessonPacks()
+      setPacks(loadedPacks)
+      setPurchases(loadedPurchases)
+    } catch (err) {
+      console.error('Error fetching packs:', err)
+      setError('Could not load lesson packs.')
+    }
     if (selectedPack) {
       onSelectPack(
         selectedPack.id,

@@ -38,45 +38,49 @@ export default function EditWaiverPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (!loading && user && params?.id) {
-      fetchWaiver()
-    }
-  }, [loading, user, params?.id])
+    const waiverId = params?.id
+    if (loading || !user || !waiverId) return
+    let cancelled = false
 
-  const fetchWaiver = async () => {
-    if (!params?.id) return
+    const fetchWaiver = async () => {
+      try {
+        const response = await fetch(`/api/waivers/${waiverId}`)
+        if (cancelled) return
 
-    try {
-      const response = await fetch(`/api/waivers/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        const waiverData = data.waiver
+        if (response.ok) {
+          const data = await response.json()
+          const waiverData = data.waiver
+          if (cancelled) return
 
-        // Check if waiver can be edited
-        if (waiverData.status !== 'pending') {
-          alert('Only pending waivers can be edited')
-          router.push(`/instructor/waivers/${params.id}`)
-          return
+          // Check if waiver can be edited
+          if (waiverData.status !== 'pending') {
+            alert('Only pending waivers can be edited')
+            router.push(`/instructor/waivers/${waiverId}`)
+            return
+          }
+
+          setWaiver(waiverData)
+          setTitle(waiverData.title)
+          setDescription(waiverData.description || '')
+
+          // Format date for input (YYYY-MM-DD)
+          if (waiverData.expires_at) {
+            const date = new Date(waiverData.expires_at)
+            setExpiresAt(date.toISOString().split('T')[0])
+          }
+        } else {
+          router.push('/instructor/waivers')
         }
-
-        setWaiver(waiverData)
-        setTitle(waiverData.title)
-        setDescription(waiverData.description || '')
-
-        // Format date for input (YYYY-MM-DD)
-        if (waiverData.expires_at) {
-          const date = new Date(waiverData.expires_at)
-          setExpiresAt(date.toISOString().split('T')[0])
-        }
-      } else {
-        router.push('/instructor/waivers')
+      } catch (error) {
+        console.error('Error fetching waiver:', error)
+      } finally {
+        if (!cancelled) setLoadingWaiver(false)
       }
-    } catch (error) {
-      console.error('Error fetching waiver:', error)
-    } finally {
-      setLoadingWaiver(false)
     }
-  }
+
+    fetchWaiver()
+    return () => { cancelled = true }
+  }, [loading, user, params?.id, router])
 
   const handleSave = async () => {
     if (!title.trim()) {

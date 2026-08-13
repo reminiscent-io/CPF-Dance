@@ -40,11 +40,43 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (isOpen) {
-      fetchData()
-      setSuccess(false)
-      setError('')
+    if (!isOpen) return
+    let cancelled = false
+
+    const fetchData = async () => {
+      setLoadingData(true)
+      try {
+        const [instructorsRes, reviewsRes] = await Promise.all([
+          fetch('/api/dancer/instructors'),
+          fetch('/api/dancer/reviews'),
+        ])
+        if (cancelled) return
+
+        if (instructorsRes.ok) {
+          const data = await instructorsRes.json()
+          const list = data.instructors || []
+          if (cancelled) return
+          setInstructors(list)
+          if (list.length === 1) {
+            setSelectedInstructorId(list[0].id)
+          }
+        }
+
+        if (reviewsRes.ok) {
+          const data = await reviewsRes.json()
+          if (!cancelled) setExistingReviews(data.data || [])
+        }
+      } catch {
+        console.error('Error loading review data')
+      } finally {
+        if (!cancelled) setLoadingData(false)
+      }
     }
+
+    fetchData()
+    setSuccess(false)
+    setError('')
+    return () => { cancelled = true }
   }, [isOpen])
 
   // When instructor changes, populate existing review if one exists
@@ -62,34 +94,6 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
       }
     }
   }, [selectedInstructorId, existingReviews])
-
-  const fetchData = async () => {
-    setLoadingData(true)
-    try {
-      const [instructorsRes, reviewsRes] = await Promise.all([
-        fetch('/api/dancer/instructors'),
-        fetch('/api/dancer/reviews'),
-      ])
-
-      if (instructorsRes.ok) {
-        const data = await instructorsRes.json()
-        const list = data.instructors || []
-        setInstructors(list)
-        if (list.length === 1) {
-          setSelectedInstructorId(list[0].id)
-        }
-      }
-
-      if (reviewsRes.ok) {
-        const data = await reviewsRes.json()
-        setExistingReviews(data.data || [])
-      }
-    } catch {
-      console.error('Error loading review data')
-    } finally {
-      setLoadingData(false)
-    }
-  }
 
   const handleSubmit = async () => {
     if (!selectedInstructorId) {

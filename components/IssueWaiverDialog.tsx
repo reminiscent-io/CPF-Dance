@@ -54,38 +54,41 @@ export function IssueWaiverDialog({
   const [newPhone, setNewPhone] = useState('')
 
   useEffect(() => {
-    if (isOpen) {
-      if (recipientType === 'student') {
-        fetchStudents()
-      } else {
-        fetchStudios()
+    if (!isOpen) return
+    let cancelled = false
+
+    const fetchStudents = async () => {
+      try {
+        const response = await fetch('/api/students')
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) setStudents(data.students || [])
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error)
       }
     }
+
+    const fetchStudios = async () => {
+      try {
+        const response = await fetch('/api/studios')
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) setStudios(data.studios || [])
+        }
+      } catch (error) {
+        console.error('Error fetching studios:', error)
+      }
+    }
+
+    if (recipientType === 'student') {
+      fetchStudents()
+    } else {
+      fetchStudios()
+    }
+
+    return () => { cancelled = true }
   }, [isOpen, recipientType])
-
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch('/api/students')
-      if (response.ok) {
-        const data = await response.json()
-        setStudents(data.students || [])
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    }
-  }
-
-  const fetchStudios = async () => {
-    try {
-      const response = await fetch('/api/studios')
-      if (response.ok) {
-        const data = await response.json()
-        setStudios(data.studios || [])
-      }
-    } catch (error) {
-      console.error('Error fetching studios:', error)
-    }
-  }
 
   const handleCreateAndIssue = async () => {
     if (!newName.trim() || (!newEmail.trim() && !newPhone.trim())) {

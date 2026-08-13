@@ -181,6 +181,50 @@ function ClassAgendaRow({
   )
 }
 
+/**
+ * Loaders that return data instead of setting state, so mount effects and the
+ * various refresh handlers can share them and own their own setState.
+ */
+async function loadClasses(filters: { filterStudio: string; filterType: string; upcomingOnly: boolean }) {
+  const params = new URLSearchParams()
+  if (filters.filterStudio) params.append('studio_id', filters.filterStudio)
+  if (filters.filterType) params.append('class_type', filters.filterType)
+  if (filters.upcomingOnly) params.append('upcoming', 'true')
+
+  const response = await fetch(`/api/classes?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch classes')
+  const data = await response.json()
+  return data.classes || []
+}
+
+async function loadActiveStudios() {
+  const response = await fetch('/api/studios?is_active=true')
+  if (!response.ok) throw new Error('Failed to fetch studios')
+  const data = await response.json()
+  return data.studios || []
+}
+
+async function loadInstructorProfiles() {
+  const response = await fetch('/api/profiles?role=instructor')
+  if (!response.ok) throw new Error('Failed to fetch instructors')
+  const data = await response.json()
+  return data.profiles || []
+}
+
+async function loadStudents() {
+  const response = await fetch('/api/students')
+  if (!response.ok) throw new Error('Failed to fetch students')
+  const data = await response.json()
+  return data.students || []
+}
+
+async function loadEnrollments(classId: string) {
+  const response = await fetch(`/api/classes/${classId}/enrollments`)
+  if (!response.ok) throw new Error('Failed to fetch enrollments')
+  const result = await response.json()
+  return result.enrollments || []
+}
+
 function ClassesContent() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -275,11 +319,31 @@ function ClassesContent() {
   }, [authLoading, profile, router])
 
   useEffect(() => {
-    if (user) {
-      fetchClasses()
-      fetchStudios()
+    if (!user?.id) return
+    let cancelled = false
+
+    const run = async () => {
+      try {
+        const loaded = await loadClasses({ filterStudio, filterType, upcomingOnly })
+        if (!cancelled) setClasses(loaded)
+      } catch (error) {
+        console.error('Error fetching classes:', error)
+        if (!cancelled) addToast('Failed to load classes', 'error')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+
+      try {
+        const loaded = await loadActiveStudios()
+        if (!cancelled) setStudios(loaded)
+      } catch (error) {
+        console.error('Error fetching studios:', error)
+      }
     }
-  }, [user?.id, filterStudio, filterType, upcomingOnly])
+
+    run()
+    return () => { cancelled = true }
+  }, [user?.id, filterStudio, filterType, upcomingOnly, addToast])
 
   // Check for class_id query parameter and open modal
   useEffect(() => {
@@ -309,33 +373,9 @@ function ClassesContent() {
     }
   }, [searchParams, showCreateModal, router])
 
-  const fetchClasses = async () => {
+  const refreshStudios = async () => {
     try {
-      const params = new URLSearchParams()
-      if (filterStudio) params.append('studio_id', filterStudio)
-      if (filterType) params.append('class_type', filterType)
-      if (upcomingOnly) params.append('upcoming', 'true')
-      
-      const response = await fetch(`/api/classes?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch classes')
-      
-      const data = await response.json()
-      setClasses(data.classes || [])
-    } catch (error) {
-      console.error('Error fetching classes:', error)
-      addToast('Failed to load classes', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchStudios = async () => {
-    try {
-      const response = await fetch('/api/studios?is_active=true')
-      if (!response.ok) throw new Error('Failed to fetch studios')
-      
-      const data = await response.json()
-      setStudios(data.studios || [])
+      setStudios(await loadActiveStudios())
     } catch (error) {
       console.error('Error fetching studios:', error)
     }
@@ -365,7 +405,7 @@ function ClassesContent() {
         studioId = studio.id
 
         // Refresh studios list
-        fetchStudios()
+        refreshStudios()
         addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
       }
 
@@ -455,7 +495,7 @@ function ClassesContent() {
         studioId = studio.id
 
         // Refresh studios list
-        fetchStudios()
+        refreshStudios()
         addToast(`Studio "${formData.newStudioName}" created successfully`, 'success')
       }
 
@@ -773,43 +813,42 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
   // Fetch instructors for admin users, students for all, and enrolled students
   useEffect(() => {
-    if (profile?.role === 'admin') {
-      fetchInstructors()
-    }
-    fetchStudents()
-    if (classData.class_type === 'private') {
-      fetchEnrolledStudents()
-    }
-  }, [profile, classData.id])
+    let cancelled = false
 
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch('/api/profiles?role=instructor')
-      if (!response.ok) throw new Error('Failed to fetch instructors')
-      const data = await response.json()
-      setInstructors(data.profiles || [])
-    } catch (error) {
-      console.error('Error fetching instructors:', error)
-    }
-  }
+    const run = async () => {
+      if (profile?.role === 'admin') {
+        try {
+          const loaded = await loadInstructorProfiles()
+          if (!cancelled) setInstructors(loaded)
+        } catch (error) {
+          console.error('Error fetching instructors:', error)
+        }
+      }
 
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch('/api/students')
-      if (!response.ok) throw new Error('Failed to fetch students')
-      const data = await response.json()
-      setStudents(data.students || [])
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    }
-  }
+      try {
+        const loaded = await loadStudents()
+        if (!cancelled) setStudents(loaded)
+      } catch (error) {
+        console.error('Error fetching students:', error)
+      }
 
-  const fetchEnrolledStudents = async () => {
+      if (classData.class_type === 'private') {
+        try {
+          const loaded = await loadEnrollments(classData.id)
+          if (!cancelled) setEnrolledStudents(loaded)
+        } catch (error) {
+          console.error('Error fetching enrollments:', error)
+        }
+      }
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [profile, classData.id, classData.class_type])
+
+  const refreshEnrolledStudents = async () => {
     try {
-      const response = await fetch(`/api/classes/${classData.id}/enrollments`)
-      if (!response.ok) throw new Error('Failed to fetch enrollments')
-      const result = await response.json()
-      setEnrolledStudents(result.enrollments || [])
+      setEnrolledStudents(await loadEnrollments(classData.id))
     } catch (error) {
       console.error('Error fetching enrollments:', error)
     }
@@ -1192,7 +1231,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                           body: JSON.stringify({ student_id: studentId })
                         })
                         if (response.ok) {
-                          await fetchEnrolledStudents()
+                          await refreshEnrolledStudents()
                           addToast('Student enrolled successfully', 'success')
                           e.target.value = ''
                         } else {
@@ -1680,33 +1719,29 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
   // Fetch instructors for admin users and students for all users
   useEffect(() => {
-    if (profile?.role === 'admin') {
-      fetchInstructors()
+    let cancelled = false
+
+    const run = async () => {
+      if (profile?.role === 'admin') {
+        try {
+          const loaded = await loadInstructorProfiles()
+          if (!cancelled) setInstructors(loaded)
+        } catch (error) {
+          console.error('Error fetching instructors:', error)
+        }
+      }
+
+      try {
+        const loaded = await loadStudents()
+        if (!cancelled) setStudents(loaded)
+      } catch (error) {
+        console.error('Error fetching students:', error)
+      }
     }
-    fetchStudents()
+
+    run()
+    return () => { cancelled = true }
   }, [profile])
-
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch('/api/profiles?role=instructor')
-      if (!response.ok) throw new Error('Failed to fetch instructors')
-      const data = await response.json()
-      setInstructors(data.profiles || [])
-    } catch (error) {
-      console.error('Error fetching instructors:', error)
-    }
-  }
-
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch('/api/students')
-      if (!response.ok) throw new Error('Failed to fetch students')
-      const data = await response.json()
-      setStudents(data.students || [])
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    }
-  }
 
   // Helper function to format duration for display
   const formatDuration = (minutes: number): string => {

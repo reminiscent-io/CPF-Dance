@@ -18,6 +18,16 @@ const VISIBILITY_LABELS: Record<string, string> = {
   shared_with_instructor: 'From dancer'
 }
 
+/**
+ * Loads detail data without touching state, so the mount effect and the
+ * post-update refresh can share it and own their own setState.
+ */
+async function loadStudentDetails(id: string) {
+  const response = await fetch(`/api/students/${id}`)
+  if (!response.ok) throw new Error('Failed to fetch student')
+  return response.json()
+}
+
 export default function StudentDetailPage() {
   const params = useParams()
   const id = params?.id as string
@@ -58,17 +68,30 @@ export default function StudentDetailPage() {
   }, [authLoading, profile, router])
 
   useEffect(() => {
-    if (user && id) {
-      fetchStudentDetails()
-    }
-  }, [user?.id, id])
+    if (!user?.id || !id) return
+    let cancelled = false
 
-  const fetchStudentDetails = async () => {
+    loadStudentDetails(id)
+      .then((data) => {
+        if (cancelled) return
+        setStudent(data.student)
+        setEnrollments(data.enrollments || [])
+        setNotes(data.notes || [])
+        setPayments(data.payments || [])
+        setRequests(data.private_lesson_requests || [])
+      })
+      .catch((error) => {
+        console.error('Error fetching student:', error)
+        if (!cancelled) addToast('Failed to load student details', 'error')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    return () => { cancelled = true }
+  }, [user?.id, id, addToast])
+
+  const refreshStudentDetails = async () => {
     try {
-      const response = await fetch(`/api/students/${id}`)
-      if (!response.ok) throw new Error('Failed to fetch student')
-
-      const data = await response.json()
+      const data = await loadStudentDetails(id)
       setStudent(data.student)
       setEnrollments(data.enrollments || [])
       setNotes(data.notes || [])
@@ -77,8 +100,6 @@ export default function StudentDetailPage() {
     } catch (error) {
       console.error('Error fetching student:', error)
       addToast('Failed to load student details', 'error')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -179,7 +200,7 @@ export default function StudentDetailPage() {
         throw new Error(errorData.error || `Failed to ${editingNote ? 'update' : 'create'} note`)
       }
 
-      await fetchStudentDetails()
+      await refreshStudentDetails()
       handleCloseNoteModal()
       addToast(`Note ${editingNote ? 'updated' : 'created'} successfully`, 'success')
     } catch (error) {
@@ -206,7 +227,7 @@ export default function StudentDetailPage() {
         throw new Error(errorData.error || 'Failed to delete note')
       }
 
-      await fetchStudentDetails()
+      await refreshStudentDetails()
       addToast('Note deleted successfully', 'success')
     } catch (error) {
       console.error('Error deleting note:', error)

@@ -25,6 +25,16 @@ const GDPR_COUNTRIES = new Set([
   'CH'
 ])
 
+// Touches only the global gtag bridge, never component state, so it lives
+// outside the component and stays callable from the consent effect above it.
+function enableAnalytics() {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('consent', 'update', {
+      analytics_storage: 'granted'
+    })
+  }
+}
+
 export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false)
   const [showPreferences, setShowPreferences] = useState(false)
@@ -100,15 +110,6 @@ export default function CookieConsentBanner() {
     checkConsent()
   }, [])
 
-  const enableAnalytics = useCallback(() => {
-    // Initialize Google Analytics if not already done
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
-        analytics_storage: 'granted'
-      })
-    }
-  }, [])
-
   const saveConsent = useCallback((analytics: boolean) => {
     const consent: ConsentState = {
       necessary: true,
@@ -124,7 +125,7 @@ export default function CookieConsentBanner() {
 
     setShowBanner(false)
     setShowPreferences(false)
-  }, [enableAnalytics])
+  }, [])
 
   const handleAcceptAll = useCallback(() => {
     saveConsent(true)

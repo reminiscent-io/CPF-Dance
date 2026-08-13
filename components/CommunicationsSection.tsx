@@ -44,36 +44,40 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
   const { addToast } = useToast()
 
   useEffect(() => {
-    fetchInquiries()
-  }, [filterStatus, filterResponded])
+    let cancelled = false
 
-  const fetchInquiries = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (filterStatus) {
-        params.append('status', filterStatus)
+    const fetchInquiries = async () => {
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        if (filterStatus) {
+          params.append('status', filterStatus)
+        }
+
+        const response = await fetch(`/api/studio-inquiries?${params}`)
+        if (!response.ok) throw new Error('Failed to fetch inquiries')
+
+        const data = await response.json()
+        if (cancelled) return
+        let fetchedInquiries = data.inquiries || []
+
+        // Client-side filter for responded status
+        if (filterResponded !== null) {
+          fetchedInquiries = fetchedInquiries.filter((i: StudioInquiry) => i.is_responded === filterResponded)
+        }
+
+        setInquiries(fetchedInquiries)
+      } catch (error) {
+        console.error('Error fetching inquiries:', error)
+        if (!cancelled) addToast('Failed to load inquiries', 'error')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-
-      const response = await fetch(`/api/studio-inquiries?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch inquiries')
-
-      const data = await response.json()
-      let fetchedInquiries = data.inquiries || []
-      
-      // Client-side filter for responded status
-      if (filterResponded !== null) {
-        fetchedInquiries = fetchedInquiries.filter((i: StudioInquiry) => i.is_responded === filterResponded)
-      }
-      
-      setInquiries(fetchedInquiries)
-    } catch (error) {
-      console.error('Error fetching inquiries:', error)
-      addToast('Failed to load inquiries', 'error')
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchInquiries()
+    return () => { cancelled = true }
+  }, [filterStatus, filterResponded, addToast])
 
   const handleLinkStudio = async () => {
     if (!selectedInquiry || !selectedStudioId) return

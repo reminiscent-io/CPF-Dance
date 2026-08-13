@@ -29,6 +29,50 @@ import type { Note, Student, CreateNoteData, NoteVisibility } from '@/lib/types'
 
 type NotesTab = 'my-notes' | 'student-notes'
 
+/**
+ * Loaders that return data instead of setting state, so the mount effect and
+ * the post-edit refresh can share them and own their own setState.
+ */
+async function loadNotes(filters: {
+  filterStudent: string
+  filterVisibility: NoteVisibility | ''
+  filterTag: string
+}): Promise<Note[]> {
+  const params = new URLSearchParams()
+  if (filters.filterStudent) params.append('student_id', filters.filterStudent)
+  if (filters.filterVisibility) params.append('visibility', filters.filterVisibility)
+  if (filters.filterTag) params.append('tag', filters.filterTag)
+
+  const response = await fetch(`/api/notes?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch notes')
+  const data = await response.json()
+  return data.notes || []
+}
+
+async function loadStudentNotes(): Promise<Note[]> {
+  const params = new URLSearchParams()
+  params.append('visibility', 'shared_with_instructor')
+
+  const response = await fetch(`/api/notes?${params}`)
+  if (!response.ok) throw new Error('Failed to fetch student notes')
+  const data = await response.json()
+  return data.notes || []
+}
+
+async function loadActiveStudents(): Promise<Student[]> {
+  const response = await fetch('/api/students?is_active=true')
+  if (!response.ok) throw new Error('Failed to fetch students')
+  const data = await response.json()
+  return data.students || []
+}
+
+async function loadClasses(): Promise<Array<{ id: string; title: string; start_time: string }>> {
+  const response = await fetch('/api/classes')
+  if (!response.ok) throw new Error('Failed to fetch classes')
+  const data = await response.json()
+  return data.classes || []
+}
+
 function NotesContent() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
@@ -67,70 +111,38 @@ function NotesContent() {
   }, [searchParams, showAddModal, router])
 
   useEffect(() => {
-    if (user) {
-      fetchNotes()
-      fetchStudentNotes()
-      fetchStudents()
-      fetchClasses()
-    }
-  }, [user?.id, filterStudent, filterVisibility, filterTag, activeTab])
+    if (!user?.id) return
+    let cancelled = false
 
-  const fetchNotes = async () => {
+    loadNotes({ filterStudent, filterVisibility, filterTag })
+      .then((loaded) => { if (!cancelled) setNotes(loaded) })
+      .catch((error) => {
+        console.error('Error fetching notes:', error)
+        if (!cancelled) addToast('Failed to load notes', 'error')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    loadStudentNotes()
+      .then((loaded) => { if (!cancelled) setStudentNotes(loaded) })
+      .catch((error) => console.error('Error fetching student notes:', error))
+
+    loadActiveStudents()
+      .then((loaded) => { if (!cancelled) setStudents(loaded) })
+      .catch((error) => console.error('Error fetching students:', error))
+
+    loadClasses()
+      .then((loaded) => { if (!cancelled) setClasses(loaded) })
+      .catch((error) => console.error('Error fetching classes:', error))
+
+    return () => { cancelled = true }
+  }, [user?.id, filterStudent, filterVisibility, filterTag, activeTab, addToast])
+
+  const refreshNotes = async () => {
     try {
-      const params = new URLSearchParams()
-      if (filterStudent) params.append('student_id', filterStudent)
-      if (filterVisibility) params.append('visibility', filterVisibility)
-      if (filterTag) params.append('tag', filterTag)
-
-      const response = await fetch(`/api/notes?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch notes')
-
-      const data = await response.json()
-      setNotes(data.notes || [])
+      setNotes(await loadNotes({ filterStudent, filterVisibility, filterTag }))
     } catch (error) {
       console.error('Error fetching notes:', error)
       addToast('Failed to load notes', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchStudentNotes = async () => {
-    try {
-      const params = new URLSearchParams()
-      params.append('visibility', 'shared_with_instructor')
-
-      const response = await fetch(`/api/notes?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch student notes')
-
-      const data = await response.json()
-      setStudentNotes(data.notes || [])
-    } catch (error) {
-      console.error('Error fetching student notes:', error)
-    }
-  }
-
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch('/api/students?is_active=true')
-      if (!response.ok) throw new Error('Failed to fetch students')
-
-      const data = await response.json()
-      setStudents(data.students || [])
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    }
-  }
-
-  const fetchClasses = async () => {
-    try {
-      const response = await fetch('/api/classes')
-      if (!response.ok) throw new Error('Failed to fetch classes')
-
-      const data = await response.json()
-      setClasses(data.classes || [])
-    } catch (error) {
-      console.error('Error fetching classes:', error)
     }
   }
 
@@ -174,7 +186,7 @@ function NotesContent() {
 
       if (!response.ok) throw new Error('Failed to update note')
 
-      await fetchNotes()
+      await refreshNotes()
       setShowEditModal(false)
       setEditingNote(null)
       addToast('Note updated successfully', 'success')

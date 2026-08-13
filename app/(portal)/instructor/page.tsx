@@ -118,27 +118,30 @@ export default function InstructorPortalPage() {
   }, [loading, profile, router])
 
   useEffect(() => {
-    if (user && (profile?.role === 'instructor' || profile?.role === 'admin')) {
-      fetchDashboardData()
-    }
-  }, [user?.id, profile?.role])
+    if (!user?.id || (profile?.role !== 'instructor' && profile?.role !== 'admin')) return
+    let cancelled = false
 
-  const fetchDashboardData = async () => {
-    try {
-      const response = await fetch('/api/dashboard')
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      const data = await response.json()
-      setStats(data.stats)
-      setNextClass(data.next_class)
-      setTodaysClasses(data.todays_classes || [])
-      setRecentActivity(data.recent_activity || [])
-      setRecentNotes(data.recent_notes || [])
-    } catch (error) {
-      console.error('Error fetching dashboard:', error)
-    } finally {
-      setLoadingData(false)
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch('/api/dashboard')
+        if (!response.ok) throw new Error('Failed to fetch dashboard data')
+        const data = await response.json()
+        if (cancelled) return
+        setStats(data.stats)
+        setNextClass(data.next_class)
+        setTodaysClasses(data.todays_classes || [])
+        setRecentActivity(data.recent_activity || [])
+        setRecentNotes(data.recent_notes || [])
+      } catch (error) {
+        console.error('Error fetching dashboard:', error)
+      } finally {
+        if (!cancelled) setLoadingData(false)
+      }
     }
-  }
+
+    fetchDashboardData()
+    return () => { cancelled = true }
+  }, [user?.id, profile?.role])
 
   if (loading) {
     return (

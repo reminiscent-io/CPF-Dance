@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -100,14 +100,7 @@ export default function DancerPaymentsPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && !hasFetched.current) {
-      hasFetched.current = true
-      fetchData()
-    }
-  }, [loading, user, profile])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await fetch('/api/dancer/payments')
       if (response.ok) {
@@ -121,7 +114,14 @@ export default function DancerPaymentsPage() {
     } finally {
       setLoadingData(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && !hasFetched.current) {
+      hasFetched.current = true
+      fetchData()
+    }
+  }, [loading, user, profile, fetchData])
 
   if (loading) {
     return (

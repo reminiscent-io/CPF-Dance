@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import {
   Avatar,
@@ -45,14 +45,7 @@ export default function AdminInstructorRequestsPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && profile.role === 'admin' && !hasFetched.current) {
-      hasFetched.current = true
-      fetchInstructors()
-    }
-  }, [loading, user, profile])
-
-  const fetchInstructors = async () => {
+  const fetchInstructors = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/instructor-requests')
       if (response.ok) {
@@ -64,7 +57,14 @@ export default function AdminInstructorRequestsPage() {
     } finally {
       setLoadingInstructors(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && profile.role === 'admin' && !hasFetched.current) {
+      hasFetched.current = true
+      fetchInstructors()
+    }
+  }, [loading, user, profile, fetchInstructors])
 
   if (loading) {
     return (

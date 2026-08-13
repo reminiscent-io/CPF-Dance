@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import {
   Badge,
@@ -237,15 +237,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
   const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (inquiry.gmail_thread_id) {
-      fetchThread()
-    } else {
-      setLoading(false)
-    }
-  }, [inquiry.gmail_thread_id])
-
-  const fetchThread = async () => {
+  const fetchThread = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/studio-inquiries/thread?threadId=${inquiry.gmail_thread_id}`)
       if (response.ok) {
@@ -257,7 +249,15 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [inquiry.gmail_thread_id])
+
+  useEffect(() => {
+    if (inquiry.gmail_thread_id) {
+      fetchThread()
+    } else {
+      setLoading(false)
+    }
+  }, [inquiry.gmail_thread_id, fetchThread])
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -371,14 +371,7 @@ export default function AdminStudioInquiriesPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && profile && profile.role === 'admin' && !hasFetched.current) {
-      hasFetched.current = true
-      fetchInquiries()
-    }
-  }, [loading, user, profile])
-
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/studio-inquiries')
       if (response.ok) {
@@ -390,7 +383,14 @@ export default function AdminStudioInquiriesPage() {
     } finally {
       setLoadingInquiries(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && profile && profile.role === 'admin' && !hasFetched.current) {
+      hasFetched.current = true
+      fetchInquiries()
+    }
+  }, [loading, user, profile, fetchInquiries])
 
   const handleUpdateStatus = async (id: string, status: string) => {
     setUpdatingInquiry(id)

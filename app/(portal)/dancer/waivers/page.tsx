@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -34,14 +34,7 @@ export default function DancerWaiversPage() {
     }
   }, [loading, profile, router])
 
-  useEffect(() => {
-    if (!loading && user && !hasFetched.current) {
-      hasFetched.current = true
-      fetchWaivers()
-    }
-  }, [loading, user])
-
-  const fetchWaivers = async () => {
+  const fetchWaivers = useCallback(async () => {
     try {
       const response = await fetch('/api/waivers')
       if (response.ok) {
@@ -53,7 +46,14 @@ export default function DancerWaiversPage() {
     } finally {
       setLoadingWaivers(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user && !hasFetched.current) {
+      hasFetched.current = true
+      fetchWaivers()
+    }
+  }, [loading, user, fetchWaivers])
 
   const getStatusTone = (status: string): StatusTone => {
     switch (status) {
