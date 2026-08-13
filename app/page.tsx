@@ -16,46 +16,28 @@ const StudioCarousel = dynamic(() => import('@/components/StudioCarousel'), {
   ssr: false
 })
 
-const dancerFeatures = [
+// Matches --ease-out-soft in landing.css so JS-driven reveals and CSS
+// transitions on the same surface share one curve.
+const EASE_OUT_SOFT = [0.16, 1, 0.3, 1] as const
+
+// The lead item (Courtney's written feedback) carries the section headline
+// itself, so it is not in this list. These are the supporting entries in the
+// ruled index beneath it.
+const dancerIndex = [
   {
-    id: 'progress',
-    title: 'Track Your Progress',
-    description: 'See detailed feedback from your instructor — lesson by lesson',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    )
+    id: 'lessons',
+    title: 'Private lessons',
+    description: "One-on-one instruction, booked on Courtney's calendar."
   },
   {
     id: 'classes',
-    title: 'Browse Classes',
-    description: 'Find group classes and workshops near you',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    )
-  },
-  {
-    id: 'lessons',
-    title: 'Private Lessons',
-    description: 'Book personalized one-on-one instruction',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    )
+    title: 'Classes and workshops',
+    description: 'Group classes and workshops near you.'
   },
   {
     id: 'journal',
-    title: 'Personal Journal',
-    description: 'Capture your own notes, goals, and breakthroughs',
-    icon: (
-      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    )
+    title: 'Your own record',
+    description: 'Your notes, goals, and breakthroughs, in your own words.'
   }
 ]
 
@@ -312,6 +294,10 @@ export default function HomePage() {
   // Reduced-motion users skip the reveal.
   const heroAnimateEnabled = isMounted && !prefersReducedMotion
   const heroRevealActive = heroAnimateEnabled && heroImgLoaded
+
+  // The dancers section used to animate unconditionally, ignoring the
+  // reduced-motion preference the rest of the page respects.
+  const dancersAnimate = isMounted && !prefersReducedMotion
 
   return (
     <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
@@ -592,66 +578,77 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Dancer Portal Section - Editorial card style */}
+      {/* Dancer Portal Section — photographic plate beside a ruled index */}
       <section id="dancer-portal" className="lp lp-dancers">
-        <div className="lp-dancers__bg">
-          <img
-            src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c"
-            alt=""
-            aria-hidden="true"
-          />
-        </div>
-        <div className="lp-dancers__overlay" />
-
         <div className="lp-dancers__inner">
           <motion.div
             className="lp-dancers__head"
-            initial={isMounted ? { opacity: 0, y: 20 } : false}
-            whileInView={isMounted ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            initial={dancersAnimate ? { opacity: 0, y: 20 } : false}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: EASE_OUT_SOFT }}
           >
             <span className="lp-eyebrow">For Dancers</span>
-            <h2>Built for dancers who take their training seriously.</h2>
+            <h2 className="lp-dancers__lead">Every correction, in writing.</h2>
+            <p className="lp-dancers__stand">
+              Courtney writes after every lesson. Detailed feedback, lesson by
+              lesson, waiting on your phone so you know exactly what to take
+              into the studio tomorrow.
+            </p>
           </motion.div>
 
-          <div className="lp-dancers__grid">
-            {dancerFeatures.map((feature, index) => (
-              <motion.article
-                key={feature.id}
-                className="lp-dancer-card"
-                initial={{ opacity: 0, y: 24 }}
+          <motion.figure
+            className="lp-dancers__plate"
+            initial={dancersAnimate ? { opacity: 0 } : false}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.9, ease: EASE_OUT_SOFT }}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c?auto=format&fit=crop&w=1200&q=80"
+              alt="A dancer sitting on the studio floor tying the ribbons of her pointe shoes, the rest of the class behind her."
+              loading="lazy"
+              decoding="async"
+            />
+          </motion.figure>
+
+          <ul className="lp-dancers__index">
+            {dancerIndex.map((item, index) => (
+              <motion.li
+                key={item.id}
+                initial={dancersAnimate ? { opacity: 0, y: 16 } : false}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
+                viewport={{ once: true, margin: '-40px' }}
                 transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  ease: [0.25, 0.46, 0.45, 0.94]
+                  duration: 0.6,
+                  delay: index * 0.08,
+                  ease: EASE_OUT_SOFT
                 }}
               >
-                <div className="lp-dancer-card__num">
-                  {String(index + 1).padStart(2, '0')}
-                </div>
-                <h3 className="lp-dancer-card__title">{feature.title}</h3>
-                <p className="lp-dancer-card__body">{feature.description}</p>
-              </motion.article>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </motion.li>
             ))}
-          </div>
+          </ul>
 
-          <div className="lp-dancers__ctas">
-            <Link href="/signup?role=dancer">
-              <Button variant="gold" size="lg" className="text-lg px-8 py-3">
-                Join Now
-              </Button>
+          <motion.div
+            className="lp-dancers__ctas"
+            initial={dancersAnimate ? { opacity: 0, y: 16 } : false}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6, delay: 0.24, ease: EASE_OUT_SOFT }}
+          >
+            <Link href="/signup?role=dancer" className="lp-cta">
+              Create your account
             </Link>
             <Link
               href="/login?portal=dancer"
               className="lp-link"
               onClick={handleLoginClick}
             >
-              {loginLoading ? 'Logging in…' : 'Already a member? Sign In →'}
+              {loginLoading ? 'Signing in…' : 'Already a member? Sign in'}
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 

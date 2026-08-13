@@ -230,117 +230,195 @@
 }
 
 /* ============================================================
-   For Dancers — editorial cards over existing bg image
+   For Dancers — plate + ruled index
+
+   The photograph is a printed plate, not a scrim: it sits in its
+   own column at full fidelity instead of being flattened under an
+   80% overlay. Copy sits beside it on program ink. Hierarchy comes
+   from one lead statement plus a hairline-ruled index, not from a
+   grid of equal cards.
    ============================================================ */
 .lp-dancers {
+  /* Charcoal family, warmed toward the gilt hue. Never #000. */
+  --lp-ink: #1b1815;
+  --lp-rule: rgba(250, 250, 248, 0.14);
+
   position: relative;
   isolation: isolate;
+  background: var(--lp-ink);
   color: var(--lp-cream);
-  overflow: hidden;
-  padding: 96px 8vw;
   font-family: var(--lp-sans);
+  padding: clamp(72px, 9vw, 128px) 8vw;
+  overflow: hidden;
 }
-.lp-dancers__bg {
+
+.lp-dancers__inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(36px, 5vw, 52px);
+}
+
+/* ---------- The plate ---------- */
+.lp-dancers__plate {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  /* Portrait-leaning on phones so the plate carries weight in a stacked
+     column; on desktop it stretches to the copy column instead. */
+  aspect-ratio: 5 / 6;
+  background: #232019;
+}
+@media (min-width: 560px) {
+  .lp-dancers__plate {
+    aspect-ratio: 3 / 2;
+  }
+}
+.lp-dancers__plate img {
   position: absolute;
   inset: 0;
-  z-index: -2;
-}
-.lp-dancers__bg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Holds the ribbon-tying hands and shoes in frame as the crop narrows. */
+  object-position: 68% 50%;
   display: block;
 }
-.lp-dancers__overlay {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(rgba(26, 26, 26, 0.78), rgba(26, 26, 26, 0.86));
-}
-.lp-dancers::before {
+
+/* ---------- Lead ---------- */
+.lp-dancers__head::before {
   content: '';
-  position: absolute;
-  top: -200px;
-  right: -200px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(196, 160, 85, 0.22) 0%, rgba(196, 160, 85, 0) 65%);
-  pointer-events: none;
-  z-index: 0;
-}
-.lp-dancers__inner {
-  position: relative;
-  z-index: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-.lp-dancers__head {
-  text-align: center;
-  max-width: 720px;
-  margin: 0 auto 64px;
+  display: block;
+  width: 56px;
+  height: 1px;
+  background: var(--lp-gold);
+  margin-bottom: clamp(20px, 2.5vw, 28px);
 }
 .lp-dancers__head .lp-eyebrow {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
-.lp-dancers__head h2 {
+.lp-dancers__lead {
   font-family: var(--lp-display);
-  color: var(--lp-cream);
-  font-weight: 300;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  margin: 0;
-}
-
-.lp-dancers__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-bottom: 56px;
-}
-@media (max-width: 768px) {
-  .lp-dancers__grid { grid-template-columns: 1fr; gap: 12px; }
-}
-
-.lp-dancer-card {
-  position: relative;
-  background: rgba(45, 45, 45, 0.72);
-  padding: 40px 32px;
-  border-bottom: 1px solid rgba(196, 160, 85, 0.18);
-  transition: background 0.3s ease;
-}
-.lp-dancer-card:hover {
-  background: rgba(45, 45, 45, 0.85);
-}
-.lp-dancer-card__num {
-  font-family: var(--lp-display);
-  font-style: italic;
   font-weight: 400;
-  font-size: 1.05rem;
-  color: var(--lp-gold);
-  letter-spacing: 0.05em;
-  margin-bottom: 20px;
+  font-size: clamp(2.125rem, 4vw, 3.25rem);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--lp-cream);
+  margin: 0 0 20px;
+  /* Balance keeps the break on the comma instead of orphaning "in". */
+  text-wrap: balance;
+  max-width: 18ch;
 }
-.lp-dancer-card__title {
+.lp-dancers__stand {
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.65;
+  color: rgba(250, 250, 248, 0.76);
+  margin: 0;
+  max-width: 48ch;
+}
+
+/* ---------- Ruled index ---------- */
+.lp-dancers__index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--lp-rule);
+}
+.lp-dancers__index li {
+  display: grid;
+  gap: 6px;
+  padding: clamp(18px, 2.2vw, 26px) 0;
+  border-bottom: 1px solid var(--lp-rule);
+}
+.lp-dancers__index h3 {
   font-family: var(--lp-display);
   font-weight: 500;
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--lp-cream);
-  margin: 0 0 12px;
-  letter-spacing: -0.005em;
-  line-height: 1.15;
-}
-.lp-dancer-card__body {
-  font-family: var(--lp-sans);
-  font-size: 0.95rem;
-  color: rgba(250, 250, 248, 0.72);
-  line-height: 1.65;
   margin: 0;
 }
+.lp-dancers__index p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(250, 250, 248, 0.68);
+  margin: 0;
+  max-width: 46ch;
+}
 
+/* ---------- CTAs ---------- */
 .lp-dancers__ctas {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  gap: 18px 28px;
+}
+.lp-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 28px;
+  border-radius: 8px;
+  /* Ink on gilt, not cream on gilt: cream reads 2.4:1 and fails AA. */
+  background: var(--lp-gold);
+  color: var(--lp-ink);
+  font-family: var(--lp-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.3s var(--ease-out-soft);
+}
+.lp-cta:hover {
+  background: var(--lp-gold-light);
+}
+.lp-cta:focus-visible,
+.lp-dancers .lp-link:focus-visible {
+  outline: 2px solid var(--lp-gold-light);
+  outline-offset: 3px;
+}
+
+/* Two columns only once the plate column can hold a portrait that still
+   reads as a plate. Below this the copy grows taller as the plate column
+   narrows, and the stretched image degrades into a sliver. */
+@media (min-width: 1100px) {
+  .lp-dancers__inner {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(48px, 6vw, 88px);
+    row-gap: clamp(30px, 3.5vw, 44px);
+    align-items: start;
+  }
+  .lp-dancers__plate {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: stretch;
+    aspect-ratio: auto;
+    min-height: clamp(480px, 46vw, 620px);
+  }
+  .lp-dancers__head {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .lp-dancers__index {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .lp-dancers__ctas {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-cta {
+    transition: none;
+  }
+  .lp-dancers .lp-link::after {
+    transition: none;
+  }
 }
