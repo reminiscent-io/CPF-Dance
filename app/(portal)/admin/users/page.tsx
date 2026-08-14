@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import {
   Badge,
@@ -16,6 +16,7 @@ import {
   Toolbar
 } from '@/components/ui'
 import { UsersIcon } from '@heroicons/react/24/outline'
+import { filterUsers } from '@/lib/utils/filter-users'
 
 interface User {
   id: string
@@ -45,7 +46,6 @@ export default function AdminUsersPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
@@ -64,7 +64,6 @@ export default function AdminUsersPage() {
       if (response.ok) {
         const data = await response.json()
         setUsers(data.users)
-        setFilteredUsers(data.users)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -80,22 +79,12 @@ export default function AdminUsersPage() {
     }
   }, [loading, user, profile, fetchUsers])
 
-  useEffect(() => {
-    let filtered = users
-
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(u => u.role === roleFilter)
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(u =>
-        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    setFilteredUsers(filtered)
-  }, [users, searchTerm, roleFilter])
+  // Pure function of users + searchTerm + roleFilter, so it is derived during
+  // render rather than mirrored into state by an effect.
+  const filteredUsers = useMemo(
+    () => filterUsers(users, searchTerm, roleFilter),
+    [users, searchTerm, roleFilter]
+  )
 
   if (loading) {
     return (
