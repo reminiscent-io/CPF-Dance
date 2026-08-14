@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
@@ -27,57 +28,40 @@ interface ReviewModalProps {
 }
 
 export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: ReviewModalProps) {
-  const [instructors, setInstructors] = useState<Instructor[]>([])
-  const [existingReviews, setExistingReviews] = useState<ExistingReview[]>([])
-  const [selectedInstructorId, setSelectedInstructorId] = useState('')
+  const [pickedInstructorId, setPickedInstructorId] = useState('')
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [content, setContent] = useState('')
   const [showName, setShowName] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [loadingData, setLoadingData] = useState(true)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (!isOpen) return
-    let cancelled = false
+  const { data: reviewData, loading: loadingData } = useAsyncData(
+    async (signal) => {
+      const [instructorsRes, reviewsRes] = await Promise.all([
+        fetch('/api/dancer/instructors', { signal }),
+        fetch('/api/dancer/reviews', { signal }),
+      ])
+      const instructors: Instructor[] = instructorsRes.ok
+        ? (await instructorsRes.json()).instructors || []
+        : []
+      const reviews: ExistingReview[] = reviewsRes.ok
+        ? (await reviewsRes.json()).data || []
+        : []
+      return { instructors, reviews }
+    },
+    [],
+    { enabled: isOpen }
+  )
 
-    const fetchData = async () => {
-      setLoadingData(true)
-      try {
-        const [instructorsRes, reviewsRes] = await Promise.all([
-          fetch('/api/dancer/instructors'),
-          fetch('/api/dancer/reviews'),
-        ])
-        if (cancelled) return
+  const instructors = reviewData?.instructors ?? []
+  const existingReviews = reviewData?.reviews ?? []
 
-        if (instructorsRes.ok) {
-          const data = await instructorsRes.json()
-          const list = data.instructors || []
-          if (cancelled) return
-          setInstructors(list)
-          if (list.length === 1) {
-            setSelectedInstructorId(list[0].id)
-          }
-        }
-
-        if (reviewsRes.ok) {
-          const data = await reviewsRes.json()
-          if (!cancelled) setExistingReviews(data.data || [])
-        }
-      } catch {
-        console.error('Error loading review data')
-      } finally {
-        if (!cancelled) setLoadingData(false)
-      }
-    }
-
-    fetchData()
-    setSuccess(false)
-    setError('')
-    return () => { cancelled = true }
-  }, [isOpen])
+  // A dancer with exactly one instructor gets them preselected — derived
+  // rather than written back into state when the fetch lands.
+  const selectedInstructorId =
+    pickedInstructorId || (instructors.length === 1 ? instructors[0].id : '')
 
   // When instructor changes, populate existing review if one exists
   useEffect(() => {
@@ -135,7 +119,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
   }
 
   const handleClose = () => {
-    setSelectedInstructorId('')
+    setPickedInstructorId('')
     setRating(0)
     setHoveredRating(0)
     setContent('')
@@ -179,7 +163,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               <label className="block text-sm font-medium text-gray-700 mb-1">Instructor</label>
               <select
                 value={selectedInstructorId}
-                onChange={(e) => setSelectedInstructorId(e.target.value)}
+                onChange={(e) => setPickedInstructorId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm"
               >
                 <option value="">Select an instructor</option>
