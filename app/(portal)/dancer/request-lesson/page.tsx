@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/auth/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -42,7 +42,7 @@ function deriveEarliestExpiry(purchases: PurchaseRow[]): { date: string | null; 
   return { date: active[0].expiry, count: active[0].remaining_lessons }
 }
 
-export default function PrivateLessonsPage() {
+function PrivateLessonsContent() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -312,5 +312,19 @@ export default function PrivateLessonsPage() {
 
       <LessonPackHistory isOpen={showHistory} onClose={() => setShowHistory(false)} />
     </PortalLayout>
+  )
+}
+
+// useSearchParams() opts the tree into client-side rendering, so Next requires
+// a Suspense boundary above it for the page to prerender.
+export default function PrivateLessonsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <Spinner size="lg" />
+      </div>
+    }>
+      <PrivateLessonsContent />
+    </Suspense>
   )
 }
