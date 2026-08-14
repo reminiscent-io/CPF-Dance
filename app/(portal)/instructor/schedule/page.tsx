@@ -34,8 +34,15 @@ import {
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { AddNoteModal } from '@/components/AddNoteModal'
 import { InstructorPrivateLessonCancel } from '@/components/instructor/InstructorPrivateLessonCancel'
+import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
 import { getClassTypeStyle, getClassTypeLabel } from '@/lib/utils/class-type-styles'
-import { resolveNoteTarget, noteButtonLabel, type NoteStudent } from '@/lib/utils/lesson-notes'
+import {
+  resolveNoteTarget,
+  noteButtonLabel,
+  noteRowTitle,
+  noteVisibilityLabel,
+  type NoteStudent
+} from '@/lib/utils/lesson-notes'
 import type { CreateNoteData } from '@/lib/types'
 
 interface ClassEvent {
@@ -87,6 +94,8 @@ export default function InstructorSchedulePage() {
   const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [noteInitialStudentId, setNoteInitialStudentId] = useState<string | undefined>(undefined)
+  const [lessonNotes, setLessonNotes] = useState<DetailNote[]>([])
+  const [openNote, setOpenNote] = useState<DetailNote | null>(null)
   const [viewType, setViewType] = useState<ViewType>('month')
 
   // Guards against a slow response for a previously-clicked lesson landing
@@ -148,10 +157,14 @@ export default function InstructorSchedulePage() {
     // Clear the previous lesson's roster so a stale one can never render
     // under a newly-opened lesson.
     setEnrolledStudents([])
+    setLessonNotes([])
     setShowEventModal(true)
 
     if (event.class_type === 'private') {
-      await fetchEnrolledStudents(event.id)
+      await Promise.all([
+        fetchEnrolledStudents(event.id),
+        fetchLessonNotes(event.id)
+      ])
     }
   }
 
@@ -169,6 +182,22 @@ export default function InstructorSchedulePage() {
       // Leaving this empty no longer hides the note button — handleCreateNote
       // falls back to the full student list.
       setEnrolledStudents([])
+    }
+  }
+
+  const fetchLessonNotes = async (classId: string) => {
+    try {
+      const response = await fetch(`/api/notes?class_id=${classId}`)
+      if (!response.ok) throw new Error('Failed to fetch notes')
+
+      const result = await response.json()
+      if (activeClassIdRef.current !== classId) return
+      setLessonNotes(result.notes || [])
+    } catch (err: any) {
+      console.error('Error fetching lesson notes:', err)
+      if (activeClassIdRef.current !== classId) return
+      // Supplementary information — the modal's primary job still works.
+      setLessonNotes([])
     }
   }
 
@@ -228,6 +257,7 @@ export default function InstructorSchedulePage() {
       addToast('Note created successfully', 'success')
       setShowNoteModal(false)
       setShowEventModal(true)
+      await fetchLessonNotes(selectedEvent.id)
     } catch (err: any) {
       addToast(err.message, 'error')
       setShowNoteModal(false)
@@ -621,6 +651,40 @@ export default function InstructorSchedulePage() {
               </section>
             )}
 
+            {selectedEvent.class_type === 'private' && lessonNotes.length > 0 && (
+              <section className="mt-7">
+                <h3 className="font-sans text-[11px] font-medium uppercase tracking-[0.1em] text-charcoal-500 mb-2">
+                  Notes from this lesson
+                </h3>
+                <ul className="rounded-lg border border-champagne-200 divide-y divide-champagne-200 overflow-hidden">
+                  {lessonNotes.map((note) => (
+                    <li key={note.id}>
+                      <button
+                        type="button"
+                        onClick={() => setOpenNote(note)}
+                        className="w-full text-left px-4 py-2.5 bg-champagne-100/60 hover:bg-champagne-100 transition-colors flex items-baseline justify-between gap-3"
+                      >
+                        <span className="text-sm text-charcoal-900 truncate">
+                          {noteRowTitle(note)}
+                        </span>
+                        <span className="flex items-center gap-2 flex-shrink-0">
+                          <Badge className="bg-champagne-100 text-charcoal-700 border-champagne-200">
+                            {noteVisibilityLabel(note.visibility)}
+                          </Badge>
+                          <span className="text-xs text-charcoal-500">
+                            {new Date(note.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {/* Action stack — generous gap above; internal rhythm separates do-something / leave */}
             <div className="mt-9 space-y-3">
               {selectedEvent.class_type === 'private' && (
@@ -710,6 +774,21 @@ export default function InstructorSchedulePage() {
           onSubmit={handleSubmitNote}
           initialStudentId={noteInitialStudentId}
           initialClassId={selectedEvent?.id}
+        />
+      )}
+
+      {openNote && (
+        <NoteDetailModal
+          note={openNote}
+          isOwn={openNote.author_id === profile?.id}
+          onClose={() => setOpenNote(null)}
+          onBack={() => setOpenNote(null)}
+          onSaved={(updated) => {
+            setLessonNotes(prev =>
+              prev.map(n => (n.id === updated.id ? updated : n))
+            )
+            setOpenNote(null)
+          }}
         />
       )}
     </PortalLayout>
