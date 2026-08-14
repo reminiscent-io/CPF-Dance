@@ -49,7 +49,7 @@ outputType = "webview"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
-waitForPort = 5000
+waitForPort = 3434
 
 [postMerge]
 path = "scripts/post-merge.sh"

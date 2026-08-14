@@ -266,6 +266,7 @@ export default function DancerClassesPage() {
       </div>
 
       <ClassEditSheet
+        key={`${sheetOpen}:${editing?.id ?? 'new'}`}
         isOpen={sheetOpen}
         onClose={() => setSheetOpen(false)}
         editing={editing}

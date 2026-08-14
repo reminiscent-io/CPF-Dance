@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui/Toast'
 import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
 import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
 import { PrivateLessonActions } from '@/components/dancer/PrivateLessonActions'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
@@ -101,10 +102,7 @@ export default function DancerSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
   const { addToast } = useToast()
-  const [events, setEvents] = useState<CalendarEvent[]>([])
   const [classNotes, setClassNotes] = useState<DancerNote[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
@@ -119,18 +117,14 @@ export default function DancerSchedulePage() {
     }
   }, [authLoading, profile, router])
 
-  const fetchSchedule = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
+  const fetchSchedule = async (signal: AbortSignal) => {
       // Fetch enrolled classes, personal classes, and the dancer's notes in parallel.
       // Notes are pre-loaded so the event-details modal can show class-linked notes
       // inline without an extra round-trip on each open.
       const [enrolledResponse, personalResponse, notesResponse] = await Promise.all([
-        fetch('/api/dancer/classes'),
-        fetch('/api/dancer/personal-classes'),
-        fetch('/api/dancer/notes')
+        fetch('/api/dancer/classes', { signal }),
+        fetch('/api/dancer/personal-classes', { signal }),
+        fetch('/api/dancer/notes', { signal })
       ])
 
       const enrolledData = await enrolledResponse.json()
@@ -140,8 +134,6 @@ export default function DancerSchedulePage() {
       if (!enrolledResponse.ok) {
         throw new Error(enrolledData.error || 'Failed to fetch enrolled classes')
       }
-
-      setClassNotes(notesData.notes ?? [])
 
       // Transform enrolled classes to CalendarEvent format
       const enrolledEvents: CalendarEvent[] = (enrolledData.classes || []).map((c: EnrolledClass) => ({
@@ -182,19 +174,22 @@ export default function DancerSchedulePage() {
         (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
       )
 
-      setEvents(allEvents)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+      // classNotes stays local state because the page mutates it directly when
+      // a dancer edits or adds a note. Seeding it here rather than deriving it
+      // keeps that behaviour; this runs after an await, so it is not a
+      // synchronous setState in an effect.
+      setClassNotes(notesData.notes ?? [])
+
+      return allEvents
   }
 
-  useEffect(() => {
-    if (!authLoading && user && profile) {
-      fetchSchedule()
-    }
-  }, [authLoading, user, profile])
+  const { data: fetchedEvents, loading, error, refetch: refetchSchedule } = useAsyncData(
+    fetchSchedule,
+    [],
+    { enabled: !authLoading && !!user && !!profile }
+  )
+
+  const events = fetchedEvents ?? []
 
   const handleDateChange = (date: Date) => {
     // Dancer endpoint returns all enrolled classes, so no refetch is needed.
@@ -635,7 +630,7 @@ export default function DancerSchedulePage() {
                 startTimeIso={selectedEvent.start_time}
                 onCancelled={() => {
                   setShowEventModal(false)
-                  fetchSchedule()
+                  refetchSchedule()
                 }}
                 onRescheduleRequested={() => {
                   setShowEventModal(false)
@@ -712,6 +707,7 @@ export default function DancerSchedulePage() {
           the whole stack. */}
       {selectedNote && (
         <NoteDetailModal
+          key={selectedNote.id}
           note={selectedNote}
           isOwn={!!profile && selectedNote.author_id === profile.id}
           onBack={handleNoteDetailBack}

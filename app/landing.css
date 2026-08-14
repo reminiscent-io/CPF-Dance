@@ -117,6 +117,9 @@
 /* Mobile: hide desktop-only content background image */
 .lp-hero__content-bg {
   display: none;
+  /* Positioned at every width, not just from 768px up: next/image fill needs a
+     positioned ancestor even while the element is display:none. */
+  position: relative;
 }
 .lp-hero__content .lp-eyebrow {
   margin-bottom: 20px;
@@ -149,6 +152,10 @@
 /* Desktop-only media split */
 .lp-hero__media-split {
   display: none;
+}
+.lp-hero__media-split > div {
+  /* Same reason as .lp-hero__content-bg above. */
+  position: relative;
 }
 
 @media (min-width: 768px) {
@@ -219,6 +226,8 @@
   .lp-hero__media-split > div {
     flex: 1;
     overflow: hidden;
+    /* next/image fill positions against the nearest positioned ancestor. */
+    position: relative;
   }
   .lp-hero__media-split img {
     width: 100%;

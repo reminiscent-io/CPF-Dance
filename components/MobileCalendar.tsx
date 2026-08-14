@@ -39,57 +39,50 @@ interface DayBucket {
 const EMPTY_BUCKET: DayBucket = { events: [], uniqueTypes: [] }
 const EMPTY_EVENTS: CalendarEvent[] = []
 
-export function MobileCalendar({ 
-  events, 
-  currentDate,
-  onEventClick, 
-  onMonthChange 
-}: MobileCalendarProps) {
-  const getInitialSelectedDate = () => {
-    const today = new Date()
-    if (currentDate.getFullYear() === today.getFullYear() && 
-        currentDate.getMonth() === today.getMonth()) {
-      return today
-    }
-    return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-  }
+function sameYearAndMonth(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+}
 
-  const [selectedDate, setSelectedDate] = useState<Date>(getInitialSelectedDate)
+/** Today when the month contains it, otherwise the 1st of that month. */
+function defaultDateForMonth(month: Date): Date {
+  const today = new Date()
+  return sameYearAndMonth(today, month)
+    ? today
+    : new Date(month.getFullYear(), month.getMonth(), 1)
+}
+
+export function MobileCalendar({
+  events,
+  currentDate,
+  onEventClick,
+  onMonthChange
+}: MobileCalendarProps) {
+  const [pickedDate, setPickedDate] = useState<Date>(() => defaultDateForMonth(currentDate))
   const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [lastTap, setLastTap] = useState<number>(0)
-  const [currentTime, setCurrentTime] = useState<Date>(new Date())
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date())
   const containerRef = useRef<HTMLDivElement>(null)
   const timelineScrollRef = useRef<HTMLDivElement>(null)
-  const isUserSelectionRef = useRef<boolean>(false)
 
-  useEffect(() => {
-    if (isUserSelectionRef.current) {
-      isUserSelectionRef.current = false
-      return
-    }
-    
-    const currentMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
-    const selectedMonthKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`
-    
-    if (currentMonthKey !== selectedMonthKey) {
-      const today = new Date()
-      const todayMonthKey = `${today.getFullYear()}-${today.getMonth()}`
-      
-      if (currentMonthKey === todayMonthKey) {
-        setSelectedDate(today)
-      } else {
-        setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1))
-      }
-    }
-  }, [currentDate])
+  // The selection follows the visible month: the user's pick while it belongs
+  // to that month, otherwise today (if the month contains today) or the 1st.
+  // Derived rather than synced by an effect, which also removes the ref that
+  // existed to stop the effect overriding a fresh user selection.
+  const selectedDate = sameYearAndMonth(pickedDate, currentDate)
+    ? pickedDate
+    : defaultDateForMonth(currentDate)
 
   // Only tick the clock when a timeline view is mounted; the month-view list
   // doesn't show the now-line, so a per-minute setState there is wasted work
   // that triggers full re-renders of the entire calendar tree.
   useEffect(() => {
     if (viewMode !== 'week' && viewMode !== 'day') return
+    // Resync on entry, not just on the next tick. The state was last written
+    // whenever a timeline view was open, which may be hours ago — without this
+    // the now-line renders at a stale position for up to a minute.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronising with the wall clock, an external system; nothing here feeds back into viewMode.
     setCurrentTime(new Date())
     const timer = setInterval(() => {
       setCurrentTime(new Date())
@@ -144,14 +137,14 @@ export function MobileCalendar({
     } else if (viewMode === 'week') {
       const newDate = new Date(selectedDate)
       newDate.setDate(newDate.getDate() - 7)
-      setSelectedDate(newDate)
+      setPickedDate(newDate)
       if (newDate.getMonth() !== currentDate.getMonth()) {
         onMonthChange?.(newDate)
       }
     } else {
       const newDate = new Date(selectedDate)
       newDate.setDate(newDate.getDate() - 1)
-      setSelectedDate(newDate)
+      setPickedDate(newDate)
       if (newDate.getMonth() !== currentDate.getMonth()) {
         onMonthChange?.(newDate)
       }
@@ -166,14 +159,14 @@ export function MobileCalendar({
     } else if (viewMode === 'week') {
       const newDate = new Date(selectedDate)
       newDate.setDate(newDate.getDate() + 7)
-      setSelectedDate(newDate)
+      setPickedDate(newDate)
       if (newDate.getMonth() !== currentDate.getMonth()) {
         onMonthChange?.(newDate)
       }
     } else {
       const newDate = new Date(selectedDate)
       newDate.setDate(newDate.getDate() + 1)
-      setSelectedDate(newDate)
+      setPickedDate(newDate)
       if (newDate.getMonth() !== currentDate.getMonth()) {
         onMonthChange?.(newDate)
       }
@@ -182,7 +175,7 @@ export function MobileCalendar({
 
   const navigateToday = () => {
     const today = new Date()
-    setSelectedDate(today)
+    setPickedDate(today)
     onMonthChange?.(today)
   }
 
@@ -260,12 +253,11 @@ export function MobileCalendar({
       }
       setLastTap(0)
     } else {
-      setSelectedDate(date)
+      setPickedDate(date)
       setLastTap(now)
       
       if (date.getMonth() !== currentDate.getMonth() || 
           date.getFullYear() !== currentDate.getFullYear()) {
-        isUserSelectionRef.current = true
         onMonthChange?.(date)
       }
     }

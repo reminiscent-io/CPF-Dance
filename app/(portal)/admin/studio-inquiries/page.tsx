@@ -28,6 +28,7 @@ import { createSanitizedHtml } from '@/lib/utils/sanitize'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 
 interface StudioInquiry {
   id: string
@@ -234,30 +235,23 @@ interface ThreadViewModalProps {
 }
 
 function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
-  const [messages, setMessages] = useState<ThreadMessage[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: messagesData, loading } = useAsyncData<ThreadMessage[]>(
+    async (signal) => {
+      const response = await fetch(
+        `/api/admin/studio-inquiries/thread?threadId=${inquiry.gmail_thread_id}`,
+        { signal }
+      )
+      if (!response.ok) throw new Error('Failed to fetch thread')
+      const data = await response.json()
+      return data.messages ?? []
+    },
+    [inquiry.gmail_thread_id],
+    // An inquiry with no Gmail thread has nothing to load — this replaces the
+    // old `else { setLoading(false) }` branch.
+    { enabled: Boolean(inquiry.gmail_thread_id) }
+  )
 
-  const fetchThread = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/admin/studio-inquiries/thread?threadId=${inquiry.gmail_thread_id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages)
-      }
-    } catch (error) {
-      console.error('Error fetching thread:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [inquiry.gmail_thread_id])
-
-  useEffect(() => {
-    if (inquiry.gmail_thread_id) {
-      fetchThread()
-    } else {
-      setLoading(false)
-    }
-  }, [inquiry.gmail_thread_id, fetchThread])
+  const messages = messagesData ?? []
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

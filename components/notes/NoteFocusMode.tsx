@@ -44,9 +44,12 @@ export function NoteFocusMode({
   isPrivate = false,
   onVisibilityChange
 }: NoteFocusModeProps) {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
+  // Seeded once per mount. The call site keys this component on which note is
+  // open, so switching notes remounts and re-seeds instead of writing the new
+  // values back through an effect.
+  const [title, setTitle] = useState(() => note?.title || '')
+  const [content, setContent] = useState(() => note?.content ?? '')
+  const [tagsInput, setTagsInput] = useState(() => note?.tags?.join(', ') || '')
   const [saving, setSaving] = useState(false)
   const [formatting, setFormatting] = useState(false)
   const [previousContent, setPreviousContent] = useState<string | null>(null)
@@ -77,21 +80,6 @@ export function NoteFocusMode({
     if (!selectedClassId || !selectedClassType) return ''
     return `${selectedClassType}:${selectedClassId}`
   }
-
-  // Initialize form with note data when opening
-  useEffect(() => {
-    if (isOpen) {
-      if (note) {
-        setTitle(note.title || '')
-        setContent(note.content)
-        setTagsInput(note.tags?.join(', ') || '')
-      } else {
-        setTitle('')
-        setContent('')
-        setTagsInput('')
-      }
-    }
-  }, [isOpen, note])
 
   // Prevent body scroll when focus mode is open
   useEffect(() => {

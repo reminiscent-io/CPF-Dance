@@ -1,0 +1,88 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # Errors fail the build. The tree is warning-free as of this commit, so
+      # --max-warnings=0 keeps it that way; relax it rather than delete it if a
+      # deliberate warning is ever introduced.
+      - run: npx eslint . --max-warnings=0
+
+  types:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # lib/version.ts is generated and gitignored; app/api/version imports it.
+      # `npm run dev` and `npm run build` generate it via their pre* hooks, but
+      # tsc has no such hook.
+      - run: node scripts/generate-version.mjs
+
+      # next.config.ts sets typescript.ignoreBuildErrors, so `next build` does
+      # not typecheck. This job is the only thing that does.
+      - run: npx tsc --noEmit
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run test:run
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # Catches what the others cannot: prerender failures such as a
+      # useSearchParams() call with no Suspense boundary above it.
+      #
+      # Placeholders only. Nothing here reaches a real service — the build just
+      # needs these present, because route modules construct their Supabase and
+      # Stripe clients at import time while page data is collected.
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder

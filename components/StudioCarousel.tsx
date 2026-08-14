@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 interface StudioLogo {
@@ -11,17 +12,10 @@ interface StudioLogo {
 export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
     const fetchLogos = async () => {
       try {
         const supabase = createClient()
@@ -94,13 +88,15 @@ export default function StudioCarousel() {
     }
 
     fetchLogos()
-  }, [mounted])
+  }, [])
 
   const studiosWithImages = studios.filter(studio => studio.image)
   // Triple the logos for seamless infinite scroll
   const extendedStudios = [...studiosWithImages, ...studiosWithImages, ...studiosWithImages]
 
-  if (!mounted || loading) {
+  // `loading` starts true and only clears once the fetch settles, so it covers
+  // the server pass and the first client render on its own.
+  if (loading) {
     return null
   }
 
@@ -151,10 +147,12 @@ export default function StudioCarousel() {
                 <div className="relative w-full h-full p-2 flex items-center justify-center">
                   {studio.image && (
                     <>
-                      <img
+                      <Image
                         src={studio.image}
                         alt={studio.name}
-                        className="max-w-full max-h-full object-contain rounded-lg"
+                        fill
+                        sizes="(max-width: 768px) 40vw, 200px"
+                        className="object-contain rounded-lg p-2"
                         draggable={false}
                       />
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-2 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">

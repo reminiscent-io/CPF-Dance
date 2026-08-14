@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
+import { useSidebarOpen } from '@/lib/hooks/useSidebarOpen'
 import type { Profile } from '@/lib/auth/types'
 import {
   ChartBarIcon,
@@ -34,38 +36,15 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
-  const [internalIsOpen, setInternalIsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
   const pathname = usePathname()
   const router = useRouter()
-  
-  // Use controlled or internal state
-  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
-  const setIsOpen = controlledSetIsOpen || setInternalIsOpen
 
-  // Initialize sidebar state from localStorage and screen size (only for uncontrolled mode)
-  useEffect(() => {
-    if (controlledIsOpen === undefined) {
-      const isMobile = window.innerWidth < 768
-      const savedState = localStorage.getItem('sidebar-open')
-      
-      // On mobile, default to closed. On desktop, default to open (unless user saved preference)
-      if (savedState !== null) {
-        setIsOpen(JSON.parse(savedState))
-      } else {
-        setIsOpen(!isMobile)
-      }
-    }
-    setMounted(true)
-  }, [controlledIsOpen, setIsOpen])
-
-  // Persist sidebar state to localStorage (only for uncontrolled mode)
-  useEffect(() => {
-    if (mounted && controlledIsOpen === undefined) {
-      localStorage.setItem('sidebar-open', JSON.stringify(isOpen))
-    }
-  }, [isOpen, mounted, controlledIsOpen])
+  // Uncontrolled mode reads and writes the shared, persisted sidebar store;
+  // controlled mode defers entirely to the parent.
+  const [storedIsOpen, setStoredIsOpen] = useSidebarOpen()
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : storedIsOpen
+  const setIsOpen = controlledSetIsOpen || setStoredIsOpen
 
   const getCurrentPortal = () => {
     if (!pathname) return 'instructor'
@@ -243,17 +222,6 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
     </span>
   )
 
-  if (!mounted) {
-    return (
-      <aside className="fixed top-0 left-0 h-[100dvh] w-64 bg-champagne-100 border-r border-champagne-200 z-50 -translate-x-full md:static md:relative md:translate-x-0 md:h-[100dvh]">
-        <div className="flex flex-col h-full">
-          <div className="px-5 md:px-6 py-1 md:py-6 pt-[max(0.25rem,env(safe-area-inset-top))] md:pt-6 border-b border-champagne-200 min-h-[2.5rem] md:min-h-0 flex items-center md:block">
-            {renderWordmark()}
-          </div>
-        </div>
-      </aside>
-    )
-  }
 
   return (
     <>
@@ -454,9 +422,11 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-champagne-200/60 transition-colors text-left"
             >
               {profile?.avatar_url && (
-                <img
+                <Image
                   src={profile.avatar_url}
                   alt={profile.full_name}
+                  width={36}
+                  height={36}
                   className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                 />
               )}

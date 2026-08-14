@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -35,6 +35,7 @@ import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/
 import { AddNoteModal } from '@/components/AddNoteModal'
 import { InstructorPrivateLessonCancel } from '@/components/instructor/InstructorPrivateLessonCancel'
 import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { getClassTypeStyle, getClassTypeLabel } from '@/lib/utils/class-type-styles'
 import {
   resolveNoteTarget,
@@ -82,9 +83,6 @@ export default function InstructorSchedulePage() {
   const { user, profile, loading: authLoading } = useUser()
   const router = useRouter()
   const { addToast } = useToast()
-  const [classes, setClasses] = useState<ClassEvent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCalendarMenu, setShowCalendarMenu] = useState(false)
@@ -108,44 +106,37 @@ export default function InstructorSchedulePage() {
     }
   }, [authLoading, profile, router])
 
-  const fetchSchedule = useCallback(async (startDate?: Date, endDate?: Date) => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Calendar grid uses the configured week/month mode; the list view
+  // navigates day-by-day so we fetch the month containing currentDate.
+  const fetchMode: ViewMode = viewType === 'month' ? calendarMode : 'month'
+  const { start, end } = getVisibleDateRange(currentDate, fetchMode)
+  const startIso = start.toISOString()
+  const endIso = end.toISOString()
+  const canFetchSchedule =
+    !authLoading && (profile?.role === 'instructor' || profile?.role === 'admin')
 
-      const params = new URLSearchParams()
-      if (startDate) {
-        params.append('start_date', startDate.toISOString())
-      }
-      if (endDate) {
-        params.append('end_date', endDate.toISOString())
-      }
-
-      const response = await fetch(`/api/instructor/schedule?${params.toString()}`)
+  const {
+    data: scheduleData,
+    loading,
+    error,
+    refetch: refetchSchedule
+  } = useAsyncData<ClassEvent[]>(
+    async (signal) => {
+      const params = new URLSearchParams({ start_date: startIso, end_date: endIso })
+      const response = await fetch(`/api/instructor/schedule?${params.toString()}`, { signal })
       const result = await response.json()
-
       if (!response.ok) {
         throw new Error(result.error || 'Failed to fetch schedule')
       }
+      return result.data || []
+    },
+    // ISO strings, not the Date objects — a fresh Date each render would
+    // re-run the fetch forever.
+    [startIso, endIso],
+    { enabled: canFetchSchedule }
+  )
 
-      setClasses(result.data || [])
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (authLoading) return
-    if (profile?.role !== 'instructor' && profile?.role !== 'admin') return
-
-    // Calendar grid uses the configured week/month mode; the list view
-    // navigates day-by-day so we fetch the month containing currentDate.
-    const fetchMode: ViewMode = viewType === 'month' ? calendarMode : 'month'
-    const { start, end } = getVisibleDateRange(currentDate, fetchMode)
-    fetchSchedule(start, end)
-  }, [currentDate, calendarMode, viewType, fetchSchedule, authLoading, profile])
+  const classes = scheduleData ?? []
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date)
@@ -737,11 +728,10 @@ export default function InstructorSchedulePage() {
                   onCancelled={() => {
                     setShowEventModal(false)
                     setShowCalendarMenu(false)
-                    const now = new Date()
-                    fetchSchedule(
-                      new Date(now.getFullYear(), now.getMonth(), 1),
-                      new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-                    )
+                    // Refetches the range currently on screen. The old call
+                    // hardcoded the current month, so cancelling a lesson while
+                    // viewing any other month reloaded the wrong range.
+                    refetchSchedule()
                   }}
                 />
               )}
@@ -752,7 +742,7 @@ export default function InstructorSchedulePage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
+                  router.push(`/instructor/classes?class_id=${selectedEvent.id}`)
                 }}
                 className="w-full text-center text-sm text-ballet-pink-700 hover:text-ballet-pink-800 font-medium tracking-[0.02em] py-1.5 transition-colors"
               >
@@ -779,6 +769,7 @@ export default function InstructorSchedulePage() {
 
       {openNote && (
         <NoteDetailModal
+          key={openNote.id}
           note={openNote}
           isOwn={openNote.author_id === profile?.id}
           onClose={() => setOpenNote(null)}

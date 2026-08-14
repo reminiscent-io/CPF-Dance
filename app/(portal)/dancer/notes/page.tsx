@@ -34,7 +34,11 @@ function DancerNotesContent() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
-  const [focusModeOpen, setFocusModeOpen] = useState(false)
+  // ?create=true is a one-shot instruction from a deep link, so it seeds the
+  // initial value rather than being applied by an effect after first paint.
+  const [focusModeOpen, setFocusModeOpen] = useState(
+    () => searchParams?.get('create') === 'true'
+  )
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [viewingNote, setViewingNote] = useState<Note | null>(null)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -51,17 +55,12 @@ function DancerNotesContent() {
     }
   }, [loading, profile, router])
 
-  // Check for create query parameter to auto-open focus mode
+  // Strip the parameter so a refresh or a back navigation doesn't reopen it.
   useEffect(() => {
-    if (!searchParams) return
-
-    const shouldCreate = searchParams.get('create')
-    if (shouldCreate === 'true' && !focusModeOpen) {
-      setFocusModeOpen(true)
-      // Clear the query parameter after opening
+    if (searchParams?.get('create') === 'true') {
       router.replace('/dancer/notes', { scroll: false })
     }
-  }, [searchParams, focusModeOpen, router])
+  }, [searchParams, router])
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -377,6 +376,7 @@ function DancerNotesContent() {
 
           {/* Focus mode for creating/editing personal notes */}
           <NoteFocusMode
+            key={`${focusModeOpen}:${editingNote?.id ?? 'new'}`}
             note={editingNote}
             isOpen={focusModeOpen}
             onClose={handleCloseFocusMode}

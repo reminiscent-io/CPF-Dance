@@ -45,13 +45,9 @@ export function NoteDetailModal({
   const [editor, setEditor] = useState<Editor | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // When the parent swaps in a different note, reset local form state.
-  useEffect(() => {
-    setTitle(note.title ?? '')
-    setContent(note.content)
-    setVisibility(note.visibility === 'private' ? 'private' : 'shared_with_instructor')
-    setEditMode(false)
-  }, [note.id])
+  // Local form state resets by remounting — every call site passes
+  // key={note.id}, so a different note is a different component instance and
+  // the useState initialisers above run again.
 
   const enterEdit = () => {
     setTitle(note.title ?? '')

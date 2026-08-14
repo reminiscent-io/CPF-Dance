@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -329,10 +330,12 @@ export default function WaiverDetailPage() {
                   <div>
                     <label className="text-sm font-medium text-charcoal-700">Signature</label>
                     <div className="mt-2 border border-champagne-200 rounded-lg p-4 bg-champagne-50 inline-block">
-                      <img
+                      <Image
                         src={waiver.signature_image_url}
                         alt="Signature"
                         className="max-w-xs h-auto rounded-lg"
+                        width={600}
+                        height={200}
                       />
                     </div>
                   </div>

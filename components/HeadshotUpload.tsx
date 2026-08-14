@@ -163,6 +163,11 @@ export function HeadshotUpload({
       <div className="relative">
         <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
           {displayUrl ? (
+            /* displayUrl is a FileReader data: URL while a new headshot is
+               being previewed. next/image only accepts internal paths, static
+               imports, or remote URLs allowed by images.remotePatterns — a
+               data: URL is none of those. */
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={displayUrl}
               alt={userName}

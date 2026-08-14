@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 
 export interface AvatarProps {
   src?: string | null
@@ -63,16 +64,18 @@ export function Avatar({
     <div
       className={`
         ${sizes[size]}
-        rounded-full flex items-center justify-center flex-shrink-0
+        relative rounded-full flex items-center justify-center flex-shrink-0
         ${showImage ? 'bg-champagne-100' : tone.bg}
         ${className}
       `}
     >
       {showImage ? (
-        <img
+        <Image
           src={src}
           alt={alt || name || 'Avatar'}
-          className="w-full h-full rounded-full object-cover"
+          fill
+          sizes="48px"
+          className="rounded-full object-cover"
           onError={() => setImageError(true)}
         />
       ) : (
@@ -86,11 +89,15 @@ export function Avatar({
 
 export function AvatarImage({ src, alt }: { src: string; alt?: string }) {
   return (
-    <img
-      src={src}
-      alt={alt || 'Avatar'}
-      className="w-full h-full rounded-full object-cover"
-    />
+    <span className="relative block w-full h-full">
+      <Image
+        src={src}
+        alt={alt || 'Avatar'}
+        fill
+        sizes="48px"
+        className="rounded-full object-cover"
+      />
+    </span>
   )
 }
 

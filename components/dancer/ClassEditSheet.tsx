@@ -99,43 +99,42 @@ function generateRecurringInstances(
   return instances
 }
 
+function buildForm(editing: PersonalClass | null): FormState {
+  if (!editing) return emptyForm
+
+  const startDate = new Date(editing.start_time)
+  let duration = 60
+  if (editing.end_time) {
+    duration = Math.max(
+      5,
+      Math.round((new Date(editing.end_time).getTime() - startDate.getTime()) / 60000)
+    )
+  }
+
+  return {
+    title: editing.title,
+    instructor_name: editing.instructor_name ?? '',
+    location: editing.location ?? '',
+    start_time: toLocalInputValue(startDate),
+    notes: editing.notes ?? '',
+    duration_minutes: duration,
+    is_recurring: false, // editing only one instance — recurring rules don't apply.
+    recurring_days: [],
+    recurring_end: '',
+  }
+}
+
 export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditSheetProps) {
   const { addToast } = useToast()
-  const [form, setForm] = useState<FormState>(emptyForm)
+  // Seeded once per mount. The call site keys this component on which class is
+  // being edited, so opening a different one remounts and re-seeds rather than
+  // writing the new values back through an effect.
+  const [form, setForm] = useState<FormState>(() => buildForm(editing))
   const [errors, setErrors] = useState<FormErrors>({})
   const [saving, setSaving] = useState(false)
   const [confirmingBatch, setConfirmingBatch] = useState<
     { start_time: string; end_time: string }[] | null
   >(null)
-
-  useEffect(() => {
-    if (!isOpen) return
-    setErrors({})
-    setConfirmingBatch(null)
-    if (editing) {
-      const startDate = new Date(editing.start_time)
-      let duration = 60
-      if (editing.end_time) {
-        duration = Math.max(
-          5,
-          Math.round((new Date(editing.end_time).getTime() - startDate.getTime()) / 60000)
-        )
-      }
-      setForm({
-        title: editing.title,
-        instructor_name: editing.instructor_name ?? '',
-        location: editing.location ?? '',
-        start_time: toLocalInputValue(startDate),
-        notes: editing.notes ?? '',
-        duration_minutes: duration,
-        is_recurring: false, // editing only one instance — recurring rules don't apply.
-        recurring_days: [],
-        recurring_end: '',
-      })
-    } else {
-      setForm(emptyForm)
-    }
-  }, [isOpen, editing])
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
