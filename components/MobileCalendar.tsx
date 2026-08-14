@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { getClassTypeStyle } from '@/lib/utils/class-type-styles'
 
 interface CalendarEvent {
   id: string
@@ -37,47 +38,6 @@ interface DayBucket {
 
 const EMPTY_BUCKET: DayBucket = { events: [], uniqueTypes: [] }
 const EMPTY_EVENTS: CalendarEvent[] = []
-
-// Class types map onto the four-family Ballet Noir palette per DESIGN.md.
-// Hoisted so the lookup tables aren't rebuilt every render.
-const CLASS_TYPE_DOT: Record<string, string> = {
-  private: 'bg-rose-500',
-  group: 'bg-champagne-500',
-  workshop: 'bg-gold-500',
-  master_class: 'bg-charcoal-700',
-  competition_choreography: 'bg-rose-700',
-  personal: 'bg-champagne-700',
-}
-const DEFAULT_CLASS_TYPE_DOT = 'bg-charcoal-300'
-
-const CLASS_TYPE_BG: Record<string, string> = {
-  private: 'bg-ballet-pink-100 border-ballet-pink-200 text-ballet-pink-900',
-  group: 'bg-champagne-100 border-champagne-200 text-charcoal-900',
-  workshop: 'bg-gold-100 border-gold-200 text-gold-900',
-  master_class: 'bg-charcoal-100 border-charcoal-200 text-charcoal-900',
-  competition_choreography: 'bg-ballet-pink-50 border-ballet-pink-200 text-ballet-pink-900',
-  personal: 'bg-champagne-200 border-champagne-300 text-charcoal-900',
-}
-const DEFAULT_CLASS_TYPE_BG = 'bg-champagne-100 border-champagne-200 text-charcoal-700'
-
-const CLASS_TYPE_STYLE: Record<string, string> = {
-  private: 'bg-ballet-pink-100 border border-ballet-pink-200',
-  group: 'bg-champagne-100 border border-champagne-200',
-  workshop: 'bg-gold-100 border border-gold-200',
-  master_class: 'bg-charcoal-100 border border-charcoal-200',
-  competition_choreography: 'bg-ballet-pink-50 border border-ballet-pink-200',
-  personal: 'bg-champagne-200 border border-champagne-300',
-}
-const DEFAULT_CLASS_TYPE_STYLE = 'bg-champagne-100 border border-champagne-200'
-
-const CLASS_TYPE_LABEL: Record<string, string> = {
-  private: 'Private',
-  group: 'Group',
-  workshop: 'Workshop',
-  master_class: 'Master',
-  competition_choreography: 'Competition',
-  personal: 'Personal',
-}
 
 export function MobileCalendar({ 
   events, 
@@ -331,16 +291,13 @@ export function MobileCalendar({
     return new Date(dateString).getMinutes()
   }
 
-  const getClassTypeColor = (type: string) =>
-    CLASS_TYPE_DOT[type] ?? DEFAULT_CLASS_TYPE_DOT
+  const getClassTypeColor = (type: string) => getClassTypeStyle(type).dot
 
-  const getClassTypeBgColor = (type: string) =>
-    CLASS_TYPE_BG[type] ?? DEFAULT_CLASS_TYPE_BG
+  const getClassTypeBgColor = (type: string) => getClassTypeStyle(type).block
 
-  const getClassTypeStyles = (type: string) =>
-    CLASS_TYPE_STYLE[type] ?? DEFAULT_CLASS_TYPE_STYLE
+  const getClassTypeStyles = (type: string) => getClassTypeStyle(type).block
 
-  const getClassTypeLabel = (type: string) => CLASS_TYPE_LABEL[type] ?? type
+  const getClassTypeLabel = (type: string) => getClassTypeStyle(type).shortLabel
 
   const renderViewModeSelector = () => {
     return (
@@ -791,7 +748,7 @@ export function MobileCalendar({
               <button
                 key={event.id}
                 onClick={() => onEventClick?.(event)}
-                className={`w-full text-left px-4 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors ${getClassTypeStyles(event.class_type)}`}
+                className={`w-full text-left px-4 py-4 hover:bg-champagne-100 active:bg-champagne-200 transition-colors ${getClassTypeStyles(event.class_type)}`}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-14">
