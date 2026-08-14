@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -34,6 +34,8 @@ import {
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { AddNoteModal } from '@/components/AddNoteModal'
 import { InstructorPrivateLessonCancel } from '@/components/instructor/InstructorPrivateLessonCancel'
+import { getClassTypeStyle, getClassTypeLabel } from '@/lib/utils/class-type-styles'
+import { resolveNoteTarget, noteButtonLabel, type NoteStudent } from '@/lib/utils/lesson-notes'
 import type { CreateNoteData } from '@/lib/types'
 
 interface ClassEvent {
@@ -84,7 +86,12 @@ export default function InstructorSchedulePage() {
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([])
   const [studentsForNotes, setStudentsForNotes] = useState<StudentForNotes[]>([])
   const [showNoteModal, setShowNoteModal] = useState(false)
+  const [noteInitialStudentId, setNoteInitialStudentId] = useState<string | undefined>(undefined)
   const [viewType, setViewType] = useState<ViewType>('month')
+
+  // Guards against a slow response for a previously-clicked lesson landing
+  // after the instructor has already opened a different one.
+  const activeClassIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'instructor' && profile.role !== 'admin') {
@@ -136,10 +143,13 @@ export default function InstructorSchedulePage() {
   }
 
   const handleEventClick = async (event: ClassEvent) => {
+    activeClassIdRef.current = event.id
     setSelectedEvent(event)
+    // Clear the previous lesson's roster so a stale one can never render
+    // under a newly-opened lesson.
+    setEnrolledStudents([])
     setShowEventModal(true)
 
-    // For private lessons, fetch enrolled students
     if (event.class_type === 'private') {
       await fetchEnrolledStudents(event.id)
     }
@@ -151,20 +161,45 @@ export default function InstructorSchedulePage() {
       if (!response.ok) throw new Error('Failed to fetch enrollments')
 
       const result = await response.json()
+      if (activeClassIdRef.current !== classId) return
       setEnrolledStudents(result.enrollments || [])
     } catch (err: any) {
       console.error('Error fetching enrollments:', err)
+      if (activeClassIdRef.current !== classId) return
+      // Leaving this empty no longer hides the note button — handleCreateNote
+      // falls back to the full student list.
       setEnrolledStudents([])
     }
   }
 
-  const handleCreateNote = () => {
-    // Convert enrolled students to the format needed for AddNoteModal
-    const studentsForModal: StudentForNotes[] = enrolledStudents.map(s => ({
+  const handleCreateNote = async () => {
+    const enrolled: NoteStudent[] = enrolledStudents.map(s => ({
       id: s.id,
       full_name: s.full_name
     }))
-    setStudentsForNotes(studentsForModal)
+
+    let fallback: NoteStudent[] = []
+    if (enrolled.length === 0) {
+      // The lesson has no roster — either no student was picked when it was
+      // created, or the enrollment fetch failed. Offer every active student
+      // rather than hiding the button.
+      try {
+        const response = await fetch('/api/students?is_active=true')
+        if (!response.ok) throw new Error('Failed to load students')
+        const result = await response.json()
+        fallback = (result.students || []).map((s: any) => ({
+          id: s.id,
+          full_name: s.profile?.full_name || s.full_name || 'Unnamed student'
+        }))
+      } catch {
+        addToast('Could not load your students. Please try again.', 'error')
+        return
+      }
+    }
+
+    const target = resolveNoteTarget(enrolled, fallback)
+    setStudentsForNotes(target.students)
+    setNoteInitialStudentId(target.initialStudentId)
     setShowNoteModal(true)
     setShowEventModal(false)
   }
@@ -211,38 +246,7 @@ export default function InstructorSchedulePage() {
     })
   }
 
-  const getClassTypeLabel = (type: string) => {
-    switch (type) {
-      case 'private':
-        return 'Private Lesson'
-      case 'group':
-        return 'Group Class'
-      case 'workshop':
-        return 'Workshop'
-      case 'master_class':
-        return 'Master Class'
-      case 'competition_choreography':
-        return 'Competition Choreography'
-      default:
-        return type
-    }
-  }
-
-  const getClassTypeClassName = (type: string) => {
-    // Class type chips collapse onto the four-family palette per DESIGN.md.
-    // Private and master class earn an accent (rose for the intimate, gilt
-    // for the premium); the rest stay neutral champagne.
-    switch (type) {
-      case 'private':
-        return 'bg-ballet-pink-50 text-ballet-pink-800 border-ballet-pink-200'
-      case 'master_class':
-        return 'bg-gold-100 text-gold-800 border-gold-200'
-      case 'group':
-      case 'workshop':
-      default:
-        return 'bg-champagne-100 text-charcoal-700 border-champagne-200'
-    }
-  }
+  const getClassTypeClassName = (type: string) => getClassTypeStyle(type).chip
 
   const handleMobileMonthChange = (date: Date) => {
     setCurrentDate(date)
@@ -619,16 +623,13 @@ export default function InstructorSchedulePage() {
 
             {/* Action stack — generous gap above; internal rhythm separates do-something / leave */}
             <div className="mt-9 space-y-3">
-              {selectedEvent.class_type === 'private' && enrolledStudents.length > 0 && (
+              {selectedEvent.class_type === 'private' && (
                 <Button
                   onClick={handleCreateNote}
                   variant="primary"
                   className="w-full"
                 >
-                  Create note for{' '}
-                  {enrolledStudents.length === 1
-                    ? enrolledStudents[0].full_name.split(' ')[0]
-                    : 'student'}
+                  {noteButtonLabel(enrolledStudents)}
                 </Button>
               )}
 
@@ -707,7 +708,7 @@ export default function InstructorSchedulePage() {
             setShowEventModal(true)
           }}
           onSubmit={handleSubmitNote}
-          initialStudentId={enrolledStudents.length === 1 ? enrolledStudents[0].id : undefined}
+          initialStudentId={noteInitialStudentId}
           initialClassId={selectedEvent?.id}
         />
       )}
