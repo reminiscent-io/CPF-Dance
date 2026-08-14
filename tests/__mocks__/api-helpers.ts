@@ -252,7 +252,9 @@ export const createMockRequest = (
   body?: unknown,
   headers?: Record<string, string>
 ): NextRequest => {
-  const requestInit: RequestInit = {
+  // NextRequest's init type is narrower than the DOM RequestInit (its `signal`
+  // does not accept null), so borrow the constructor's own parameter type.
+  const requestInit: ConstructorParameters<typeof NextRequest>[1] = {
     method,
     headers: {
       'Content-Type': 'application/json',
