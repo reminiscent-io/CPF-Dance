@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Spinner } from '@/components/ui/Spinner'
@@ -45,6 +45,7 @@ function deriveEarliestExpiry(purchases: PurchaseRow[]): { date: string | null; 
 export default function PrivateLessonsPage() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
@@ -132,20 +133,22 @@ export default function PrivateLessonsPage() {
     }
   }, [loading, user, profile, fetchRequests, fetchBalance, fetchInstructor])
 
+  // Reacting to the Stripe redirect. This is a navigation event rather than
+  // render state, so the banner genuinely has to be set from an effect.
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const success = params.get('success')
-    const canceled = params.get('canceled')
-    if (success === 'true') {
-      setBanner({ tone: 'gilt', message: 'Pack added. Refreshing your balance…' })
-      fetchBalance()
-      router.replace('/dancer/request-lesson')
-    } else if (canceled === 'true') {
-      setBanner({ tone: 'neutral', message: 'Payment canceled. Your packs are unchanged.' })
-      router.replace('/dancer/request-lesson')
-    }
-  }, [router, fetchBalance])
+    const success = searchParams?.get('success')
+    const canceled = searchParams?.get('canceled')
+    if (success !== 'true' && canceled !== 'true') return
+
+    const nextBanner: BannerState = success === 'true'
+      ? { tone: 'gilt', message: 'Pack added. Refreshing your balance…' }
+      : { tone: 'neutral', message: 'Payment canceled. Your packs are unchanged.' }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Responding to a Stripe return URL; the parameter is stripped below so this cannot re-fire.
+    setBanner(nextBanner)
+    if (success === 'true') fetchBalance()
+    router.replace('/dancer/request-lesson')
+  }, [searchParams, router, fetchBalance])
 
   const handleSubmit = async (data: {
     focus: string

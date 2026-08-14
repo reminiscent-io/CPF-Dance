@@ -84,7 +84,11 @@ function NotesContent() {
   const [students, setStudents] = useState<Student[]>([])
   const [classes, setClasses] = useState<Array<{ id: string; title: string; start_time: string }>>([])
   const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
+  // ?create=true is a one-shot instruction from a deep link, so it seeds the
+  // initial value rather than being applied by an effect after first paint.
+  const [showAddModal, setShowAddModal] = useState(
+    () => searchParams?.get('create') === 'true'
+  )
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [activeTab, setActiveTab] = useState<NotesTab>('my-notes')
@@ -98,17 +102,12 @@ function NotesContent() {
     }
   }, [authLoading, profile, router])
 
-  // Check for create query parameter to auto-open add modal
+  // Strip the parameter so a refresh or a back navigation doesn't reopen it.
   useEffect(() => {
-    if (!searchParams) return
-
-    const shouldCreate = searchParams.get('create')
-    if (shouldCreate === 'true' && !showAddModal) {
-      setShowAddModal(true)
-      // Clear the query parameter after opening modal
+    if (searchParams?.get('create') === 'true') {
       router.replace('/instructor/notes', { scroll: false })
     }
-  }, [searchParams, showAddModal, router])
+  }, [searchParams, router])
 
   useEffect(() => {
     if (!user?.id) return

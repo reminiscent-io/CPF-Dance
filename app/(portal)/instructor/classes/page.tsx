@@ -234,7 +234,12 @@ function ClassesContent() {
   const [classes, setClasses] = useState<Class[]>([])
   const [studios, setStudios] = useState<Studio[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  // ?create=true is a one-shot instruction from a deep link with no data
+  // dependency, so it seeds the initial value instead of being applied by an
+  // effect after first paint.
+  const [showCreateModal, setShowCreateModal] = useState(
+    () => searchParams?.get('create') === 'true'
+  )
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedClass, setSelectedClass] = useState<Class | null>(null)
   const [filterStudio, setFilterStudio] = useState<string>('')
@@ -345,33 +350,29 @@ function ClassesContent() {
     return () => { cancelled = true }
   }, [user?.id, filterStudio, filterType, upcomingOnly, addToast])
 
-  // Check for class_id query parameter and open modal
+  // ?class_id= cannot seed initial state the way ?create= does: the class it
+  // names only exists once the list has loaded. This genuinely waits on async
+  // data, and stripping the parameter must not un-derive the open modal, so
+  // the state is set once when the class arrives.
   useEffect(() => {
-    if (!searchParams) return
+    const classId = searchParams?.get('class_id')
+    if (!classId || showEditModal) return
 
-    const classId = searchParams.get('class_id')
-    if (classId && classes.length > 0 && !showEditModal) {
-      const classToShow = classes.find(c => c.id === classId)
-      if (classToShow) {
-        setSelectedClass(classToShow)
-        setShowEditModal(true)
-        // Clear the query parameter after opening modal
-        router.replace('/instructor/classes', { scroll: false })
-      }
-    }
+    const classToShow = classes.find(c => c.id === classId)
+    if (!classToShow) return
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reacting to a deep link once its target has loaded; the parameter is stripped below so this cannot re-fire.
+    setSelectedClass(classToShow)
+    setShowEditModal(true)
+    router.replace('/instructor/classes', { scroll: false })
   }, [searchParams, classes, showEditModal, router])
 
-  // Check for create query parameter to auto-open create modal
+  // Strip ?create= so a refresh or a back navigation doesn't reopen it.
   useEffect(() => {
-    if (!searchParams) return
-
-    const shouldCreate = searchParams.get('create')
-    if (shouldCreate === 'true' && !showCreateModal) {
-      setShowCreateModal(true)
-      // Clear the query parameter after opening modal
+    if (searchParams?.get('create') === 'true') {
       router.replace('/instructor/classes', { scroll: false })
     }
-  }, [searchParams, showCreateModal, router])
+  }, [searchParams, router])
 
   const refreshStudios = async () => {
     try {
