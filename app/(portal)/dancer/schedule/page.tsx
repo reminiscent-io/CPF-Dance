@@ -707,6 +707,7 @@ export default function DancerSchedulePage() {
           the whole stack. */}
       {selectedNote && (
         <NoteDetailModal
+          key={selectedNote.id}
           note={selectedNote}
           isOwn={!!profile && selectedNote.author_id === profile.id}
           onBack={handleNoteDetailBack}

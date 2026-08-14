@@ -377,6 +377,7 @@ function DancerNotesContent() {
 
           {/* Focus mode for creating/editing personal notes */}
           <NoteFocusMode
+            key={`${focusModeOpen}:${editingNote?.id ?? 'new'}`}
             note={editingNote}
             isOpen={focusModeOpen}
             onClose={handleCloseFocusMode}

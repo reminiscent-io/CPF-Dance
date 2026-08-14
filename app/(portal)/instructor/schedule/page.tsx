@@ -769,6 +769,7 @@ export default function InstructorSchedulePage() {
 
       {openNote && (
         <NoteDetailModal
+          key={openNote.id}
           note={openNote}
           isOwn={openNote.author_id === profile?.id}
           onClose={() => setOpenNote(null)}

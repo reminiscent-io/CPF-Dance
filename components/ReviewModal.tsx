@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -21,6 +21,13 @@ interface ExistingReview {
   show_name: boolean
 }
 
+interface ReviewDraft {
+  instructorId: string
+  rating: number
+  content: string
+  showName: boolean
+}
+
 interface ReviewModalProps {
   isOpen: boolean
   onClose: () => void
@@ -29,10 +36,7 @@ interface ReviewModalProps {
 
 export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: ReviewModalProps) {
   const [pickedInstructorId, setPickedInstructorId] = useState('')
-  const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
-  const [content, setContent] = useState('')
-  const [showName, setShowName] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -63,21 +67,26 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
   const selectedInstructorId =
     pickedInstructorId || (instructors.length === 1 ? instructors[0].id : '')
 
-  // When instructor changes, populate existing review if one exists
-  useEffect(() => {
-    if (selectedInstructorId) {
-      const existing = existingReviews.find(r => r.instructor_id === selectedInstructorId)
-      if (existing) {
-        setRating(existing.rating)
-        setContent(existing.content || '')
-        setShowName(existing.show_name ?? false)
-      } else {
-        setRating(0)
-        setContent('')
-        setShowName(false)
-      }
-    }
-  }, [selectedInstructorId, existingReviews])
+  const existingReview = existingReviews.find(r => r.instructor_id === selectedInstructorId)
+
+  // The form is seeded from the instructor's existing review and then becomes
+  // the dancer's to edit. Tagging the draft with the instructor it belongs to
+  // means switching instructors falls back to that instructor's seed, without
+  // an effect writing the values back in.
+  const [draft, setDraft] = useState<ReviewDraft | null>(null)
+  const activeDraft: ReviewDraft =
+    draft && draft.instructorId === selectedInstructorId
+      ? draft
+      : {
+          instructorId: selectedInstructorId,
+          rating: existingReview?.rating ?? 0,
+          content: existingReview?.content ?? '',
+          showName: existingReview?.show_name ?? false,
+        }
+
+  const { rating, content, showName } = activeDraft
+  const updateDraft = (patch: Partial<Omit<ReviewDraft, 'instructorId'>>) =>
+    setDraft({ ...activeDraft, ...patch })
 
   const handleSubmit = async () => {
     if (!selectedInstructorId) {
@@ -120,16 +129,12 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
 
   const handleClose = () => {
     setPickedInstructorId('')
-    setRating(0)
+    setDraft(null)
     setHoveredRating(0)
-    setContent('')
-    setShowName(false)
     setError('')
     setSuccess(false)
     onClose()
   }
-
-  const existingReview = existingReviews.find(r => r.instructor_id === selectedInstructorId)
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Leave a Review">
@@ -199,7 +204,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
                   <button
                     key={star}
                     type="button"
-                    onClick={() => setRating(star)}
+                    onClick={() => updateDraft({ rating: star })}
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
                     className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
@@ -223,7 +228,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
             </label>
             <textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => updateDraft({ content: e.target.value })}
               placeholder="Share your experience..."
               rows={4}
               maxLength={1000}
@@ -237,7 +242,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
             <input
               type="checkbox"
               checked={showName}
-              onChange={(e) => setShowName(e.target.checked)}
+              onChange={(e) => updateDraft({ showName: e.target.checked })}
               className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
             />
             <span className="text-sm text-gray-600">

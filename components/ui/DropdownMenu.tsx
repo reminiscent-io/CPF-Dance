@@ -110,12 +110,20 @@ export interface DropdownMenuContentProps {
   align?: 'start' | 'end'
 }
 
-export function DropdownMenuContent({
+// Gate and body are separate components so the body genuinely unmounts when
+// the menu closes. Returning null from inside kept it mounted, which is why
+// the keyboard focus index had to be reset by hand on every close.
+export function DropdownMenuContent(props: DropdownMenuContentProps) {
+  const { isOpen } = useDropdownContext()
+  if (!isOpen) return null
+  return <DropdownMenuContentBody {...props} />
+}
+
+function DropdownMenuContentBody({
   children,
   className = '',
   align = 'end'
 }: DropdownMenuContentProps) {
-  const { isOpen } = useDropdownContext()
   const contentRef = useRef<HTMLDivElement>(null)
   const [focusedIndex, setFocusedIndex] = useState(-1)
 
@@ -129,11 +137,6 @@ export function DropdownMenuContent({
 
   // Keyboard navigation
   useEffect(() => {
-    if (!isOpen) {
-      setFocusedIndex(-1)
-      return
-    }
-
     const handleKeyDown = (event: KeyboardEvent) => {
       const items = getMenuItems()
       if (items.length === 0) return
@@ -160,7 +163,7 @@ export function DropdownMenuContent({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, getMenuItems])
+  }, [getMenuItems])
 
   // Focus the item at focusedIndex
   useEffect(() => {
@@ -169,8 +172,6 @@ export function DropdownMenuContent({
       items[focusedIndex]?.focus()
     }
   }, [focusedIndex, getMenuItems])
-
-  if (!isOpen) return null
 
   const alignClass = align === 'start' ? 'left-0' : 'right-0'
 
