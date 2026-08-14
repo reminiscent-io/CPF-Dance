@@ -11,17 +11,10 @@ interface StudioLogo {
 export default function StudioCarousel() {
   const [studios, setStudios] = useState<StudioLogo[]>([])
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
     const fetchLogos = async () => {
       try {
         const supabase = createClient()
@@ -94,13 +87,15 @@ export default function StudioCarousel() {
     }
 
     fetchLogos()
-  }, [mounted])
+  }, [])
 
   const studiosWithImages = studios.filter(studio => studio.image)
   // Triple the logos for seamless infinite scroll
   const extendedStudios = [...studiosWithImages, ...studiosWithImages, ...studiosWithImages]
 
-  if (!mounted || loading) {
+  // `loading` starts true and only clears once the fetch settles, so it covers
+  // the server pass and the first client render on its own.
+  if (loading) {
     return null
   }
 

@@ -1,22 +1,21 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardTitle, CardContent } from '@/components/ui/Card'
 
 export default function DevPage() {
   const router = useRouter()
-  const [allowed, setAllowed] = useState(false)
+  // SECURITY: only the dev build serves this page. NODE_ENV is inlined at
+  // build time, so this is a constant — not state.
+  const allowed = process.env.NODE_ENV === 'development'
 
   useEffect(() => {
-    // SECURITY: Only allow dev page in development mode
-    if (process.env.NODE_ENV !== 'development') {
+    if (!allowed) {
       router.replace('/login')
-      return
     }
-    setAllowed(true)
-  }, [router])
+  }, [allowed, router])
 
   if (!allowed) {
     return (

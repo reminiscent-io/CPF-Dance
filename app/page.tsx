@@ -103,7 +103,6 @@ export default function HomePage() {
   const [submitError, setSubmitError] = useState('')
   const [formStep, setFormStep] = useState(0)
   const [heroHeight] = useState(55)
-  const [showNav, setShowNav] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
@@ -262,11 +261,6 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    // Show nav immediately for faster perceived load
-    setShowNav(true)
-  }, [])
-
-  useEffect(() => {
     setIsMounted(true)
   }, [])
 
@@ -303,12 +297,8 @@ export default function HomePage() {
     <main className="min-h-screen bg-white marketing-page overflow-x-hidden">
       {/* Navigation Bar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 bg-cream-50/90 backdrop-blur-md border-b border-charcoal-950/10 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 bg-cream-50/90 backdrop-blur-md border-b border-charcoal-950/10 shadow-sm animate-navReveal"
         style={{
-          opacity: showNav ? 1 : 0,
-          transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
-          pointerEvents: showNav ? 'auto' : 'none',
           paddingTop: 'max(env(safe-area-inset-top), 0px)'
         }}
       >

@@ -263,6 +263,30 @@ h1, h2, h3, h4, h5, h6 {
   animation: slideDown 0.3s ease-out;
 }
 
+/* The marketing nav drops in once on load. This used to be an inline style
+   driven by a showNav state set from an effect; as CSS it needs no state and
+   picks up the reduced-motion preference the rest of the page respects. */
+@keyframes navReveal {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-navReveal {
+  animation: navReveal 0.5s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-navReveal {
+    animation: none;
+  }
+}
+
 @keyframes slideInRight {
   from {
     transform: translateX(24px);
