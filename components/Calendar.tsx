@@ -12,16 +12,7 @@ import {
   getDayOfMonthET,
   formatWeekdayET
 } from '@/lib/utils/et-timezone'
-
-const CLASS_TYPE_STYLES: Record<string, string> = {
-  private: 'bg-purple-100 border border-purple-300 text-purple-900',
-  group: 'bg-blue-100 border border-blue-300 text-blue-900',
-  workshop: 'bg-green-100 border border-green-300 text-green-900',
-  master_class: 'bg-amber-100 border border-amber-300 text-amber-900',
-  competition_choreography: 'bg-fuchsia-100 border border-fuchsia-300 text-fuchsia-900',
-  personal: 'bg-rose-100 border border-rose-300 text-rose-900',
-}
-const DEFAULT_CLASS_TYPE_STYLE = 'bg-gray-100 border border-gray-300 text-gray-900'
+import { getClassTypeStyle, CANCELLED_BLOCK_STYLE } from '@/lib/utils/class-type-styles'
 
 const ET_DATE_KEY_FORMATTER = new Intl.DateTimeFormat('en-CA', {
   timeZone: ET_TIMEZONE,
@@ -166,8 +157,7 @@ export function Calendar({
     return formatTimeET(dateString)
   }
 
-  const getClassTypeStyles = (type: string) =>
-    CLASS_TYPE_STYLES[type] ?? DEFAULT_CLASS_TYPE_STYLE
+  const getClassTypeStyles = (type: string) => getClassTypeStyle(type).block
 
   const todayDateString = useMemo(() => new Date().toDateString(), [])
   const isToday = (date: Date) => date.toDateString() === todayDateString
@@ -249,7 +239,7 @@ export function Calendar({
                         onClick={() => onEventClick?.(event)}
                         className={`absolute inset-0.5 sm:inset-1 rounded p-0.5 sm:p-1 cursor-pointer hover:shadow-md transition-shadow text-[10px] sm:text-xs overflow-hidden ${
                           event.is_cancelled
-                            ? 'bg-gray-200 opacity-50 border border-gray-300'
+                            ? CANCELLED_BLOCK_STYLE
                             : getClassTypeStyles(event.class_type)
                         }`}
                       >
@@ -340,7 +330,7 @@ export function Calendar({
                       onClick={() => onEventClick?.(event)}
                       className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded cursor-pointer hover:shadow-md transition-shadow ${
                         event.is_cancelled
-                          ? 'bg-gray-200 opacity-50 border border-gray-300'
+                          ? CANCELLED_BLOCK_STYLE
                           : getClassTypeStyles(event.class_type)
                       }`}
                     >

@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const studentId = searchParams.get('student_id')
+    const classId = searchParams.get('class_id')
     const visibility = searchParams.get('visibility')
     const tag = searchParams.get('tag')
 
@@ -34,6 +35,12 @@ export async function GET(request: NextRequest) {
 
     if (studentId) {
       query = query.eq('student_id', studentId)
+    }
+
+    // Lets the calendar's event modal list the notes attached to one lesson.
+    // RLS already scopes which notes the caller can read.
+    if (classId) {
+      query = query.eq('class_id', classId)
     }
 
     if (visibility) {
