@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
@@ -328,11 +329,14 @@ export default function HomePage() {
       <section className="lp lp-hero" aria-label="Hero">
         {/* Mobile-only single-photo background */}
         <div className="lp-hero__mobile-bg" aria-hidden="true">
-          <img
+          <Image
             src="https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images/CR6_4040.jpg"
             alt=""
             onLoad={() => setHeroImgLoaded(true)}
             onError={() => setHeroImgLoaded(true)}
+            fill
+            priority
+            sizes="(min-width: 768px) 0px, 100vw"
           />
           <motion.div
             className="lp-hero__mobile-overlay"
@@ -345,7 +349,13 @@ export default function HomePage() {
         <div className="lp-hero__grid">
           <div className="lp-hero__content" ref={heroContentRef}>
             <div className="lp-hero__content-bg" aria-hidden="true">
-              <img src={learnFromTheBestImages[0]} alt="" loading="eager" />
+              <Image
+                src={learnFromTheBestImages[0]}
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 767px) 100vw, 33vw"
+              />
               <div className="lp-hero__content-overlay" />
             </div>
             <motion.span
@@ -406,7 +416,13 @@ export default function HomePage() {
           <div className="lp-hero__media-split" aria-hidden="true">
             {learnFromTheBestImages.slice(1, 3).map((image, idx) => (
               <div key={idx}>
-                <img src={image} alt="" loading="eager" />
+                <Image
+                  src={image}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 767px) 0px, 33vw"
+                />
               </div>
             ))}
           </div>
@@ -511,12 +527,13 @@ export default function HomePage() {
                       key={idx}
                       className="flex-shrink-0 w-full snap-center"
                     >
-                      <div className="aspect-[3/4] rounded-2xl shadow-2xl overflow-hidden">
-                        <img
+                      <div className="relative aspect-[3/4] rounded-2xl shadow-2xl overflow-hidden">
+                        <Image
                           src={image}
                           alt={`Courtney - Professional Dancer and Instructor ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
+                          fill
+                          sizes="(max-width: 768px) 90vw, 420px"
+                          className="object-cover"
                         />
                       </div>
                     </div>
@@ -581,11 +598,11 @@ export default function HomePage() {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.9, ease: EASE_OUT_SOFT }}
           >
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1674221525704-f4b2aa13df2c?auto=format&fit=crop&w=1200&q=80"
               alt="A dancer sitting on the studio floor tying the ribbons of her pointe shoes, the rest of the class behind her."
-              loading="lazy"
-              decoding="async"
+              fill
+              sizes="(max-width: 768px) 90vw, 600px"
             />
           </motion.figure>
 
@@ -634,10 +651,11 @@ export default function HomePage() {
       <section id="instructor-portal" className="relative py-16 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1679389657556-f0d695d0dfc2"
             alt="Dance instructor"
-            className="w-full h-full object-cover"
+            fill
+            sizes="100vw"
           />
         </div>
 

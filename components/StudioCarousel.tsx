@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 interface StudioLogo {
@@ -146,10 +147,12 @@ export default function StudioCarousel() {
                 <div className="relative w-full h-full p-2 flex items-center justify-center">
                   {studio.image && (
                     <>
-                      <img
+                      <Image
                         src={studio.image}
                         alt={studio.name}
-                        className="max-w-full max-h-full object-contain rounded-lg"
+                        fill
+                        sizes="(max-width: 768px) 40vw, 200px"
+                        className="object-contain rounded-lg p-2"
                         draggable={false}
                       />
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-2 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">

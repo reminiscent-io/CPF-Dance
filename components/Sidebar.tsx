@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth/actions'
@@ -421,9 +422,11 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-champagne-200/60 transition-colors text-left"
             >
               {profile?.avatar_url && (
-                <img
+                <Image
                   src={profile.avatar_url}
                   alt={profile.full_name}
+                  width={36}
+                  height={36}
                   className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                 />
               )}

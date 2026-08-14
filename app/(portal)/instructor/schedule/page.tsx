@@ -742,7 +742,7 @@ export default function InstructorSchedulePage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = `/instructor/classes?class_id=${selectedEvent.id}`
+                  router.push(`/instructor/classes?class_id=${selectedEvent.id}`)
                 }}
                 className="w-full text-center text-sm text-ballet-pink-700 hover:text-ballet-pink-800 font-medium tracking-[0.02em] py-1.5 transition-colors"
               >

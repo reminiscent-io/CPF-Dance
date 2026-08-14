@@ -12,6 +12,24 @@ const nextConfig: NextConfig = {
     "cpfdance.replit.app"
   ],
 
+  images: {
+    // next/image refuses any external host that is not listed here, so every
+    // remote image in the app must come from one of these. Deliberately narrow:
+    // a wildcard hostname would turn the optimiser into an open image proxy for
+    // any URL an attacker could get the app to render.
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'nuuuzezbglgtsuorhinw.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
+
   experimental: {
     serverActions: {
       // SECURITY: Removed wildcard "*" - only allow trusted origins

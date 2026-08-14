@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Button, Spinner } from '@/components/ui'
 import { PhotoIcon, DocumentIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { UploadAssetModal } from '@/components/UploadAssetModal'
@@ -82,12 +83,14 @@ export function AssetSelector({
         // Show selected asset
         <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
+            <div className="relative w-20 h-20 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
               {isImage(selectedAsset.file_type) ? (
-                <img
+                <Image
                   src={selectedAsset.file_url}
                   alt={selectedAsset.title}
-                  className="w-full h-full object-cover"
+                  className="object-cover"
+                  fill
+                  sizes="80px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -181,12 +184,14 @@ export function AssetSelector({
                       }}
                       className="border border-gray-200 rounded-lg p-2 hover:border-rose-400 hover:bg-rose-50 transition-colors text-left"
                     >
-                      <div className="aspect-video bg-gray-100 rounded overflow-hidden mb-2">
+                      <div className="relative aspect-video bg-gray-100 rounded overflow-hidden mb-2">
                         {isImage(asset.file_type) ? (
-                          <img
+                          <Image
                             src={asset.file_url}
                             alt={asset.title}
-                            className="w-full h-full object-cover"
+                            className="object-cover"
+                            fill
+                            sizes="(max-width: 768px) 45vw, 200px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">

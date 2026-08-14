@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
@@ -144,12 +145,14 @@ export default function AssetsPage() {
                 className="group relative overflow-hidden rounded-lg border border-champagne-200 bg-champagne-50"
               >
                 {/* Preview */}
-                <div className="aspect-video bg-champagne-100 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-video bg-champagne-100 flex items-center justify-center overflow-hidden">
                   {isImage(asset.file_type) ? (
-                    <img
+                    <Image
                       src={asset.file_url}
                       alt={asset.title}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 90vw, 320px"
                     />
                   ) : (
                     <DocumentIcon className="w-10 h-10 text-champagne-400" aria-hidden="true" />
