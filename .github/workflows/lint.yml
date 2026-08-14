@@ -37,6 +37,11 @@ jobs:
 
       - run: npm ci
 
+      # lib/version.ts is generated and gitignored; app/api/version imports it.
+      # `npm run dev` and `npm run build` generate it via their pre* hooks, but
+      # tsc has no such hook.
+      - run: node scripts/generate-version.mjs
+
       # next.config.ts sets typescript.ignoreBuildErrors, so `next build` does
       # not typecheck. This job is the only thing that does.
       - run: npx tsc --noEmit
