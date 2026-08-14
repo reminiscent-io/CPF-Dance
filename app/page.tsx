@@ -8,6 +8,8 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { createClient } from '@/lib/supabase/client'
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
+import { useIsHydrated } from '@/lib/hooks/useIsHydrated'
 import dynamic from 'next/dynamic'
 import './landing.css'
 
@@ -104,9 +106,11 @@ export default function HomePage() {
   const [formStep, setFormStep] = useState(0)
   const [heroHeight] = useState(55)
   const [scrollY, setScrollY] = useState(0)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [loginLoading, setLoginLoading] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  // Framer Motion enter animations must not run during hydration, or the
+  // server HTML and the first client render disagree.
+  const isMounted = useIsHydrated()
   const [heroImgLoaded, setHeroImgLoaded] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [showInquiryModal, setShowInquiryModal] = useState(false)
@@ -246,23 +250,6 @@ export default function HomePage() {
   const handleLoginClick = () => {
     setLoginLoading(true)
   }
-
-  useEffect(() => {
-    // Check for prefers-reduced-motion
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mediaQuery.matches)
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches)
-    }
-    
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   // Safety fallback: if the hero image's onLoad never fires (cached image,
   // desktop where the mobile <img> is display:none, etc.), unblock the reveal
