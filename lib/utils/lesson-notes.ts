@@ -60,6 +60,20 @@ export function noteVisibilityLabel(visibility: string): string {
 
 const MAX_ROW_TITLE = 60
 
+const HTML_ENTITIES: Record<string, string> = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+}
+
+// One pass over the string, so each entity is decoded exactly once. Chaining
+// separate .replace() calls would decode "&amp;lt;" twice — first to "&lt;",
+// then to "<" — turning text the author wrote literally into markup.
+const ENTITY_PATTERN = /&(?:nbsp|amp|lt|gt|quot|#39);/g
+
 export function noteRowTitle(note: {
   title?: string | null
   content?: string | null
@@ -72,10 +86,7 @@ export function noteRowTitle(note: {
   // single-line label and is never injected as HTML.
   const text = (note.content ?? '')
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(ENTITY_PATTERN, entity => HTML_ENTITIES[entity] ?? entity)
     .replace(/\s+/g, ' ')
     .trim()
 

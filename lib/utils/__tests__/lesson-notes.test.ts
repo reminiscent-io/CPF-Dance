@@ -107,4 +107,25 @@ describe('noteRowTitle', () => {
     expect(noteRowTitle({ title: null, content: '<p></p>' })).toBe('Untitled note')
     expect(noteRowTitle({ title: null, content: null })).toBe('Untitled note')
   })
+
+  it('decodes each entity exactly once', () => {
+    // Chained replaces would turn "&amp;lt;" into "&lt;" and then into "<",
+    // promoting text the author typed literally into markup.
+    expect(noteRowTitle({ title: null, content: '<p>&amp;lt;</p>' })).toBe('&lt;')
+    expect(noteRowTitle({ title: null, content: '<p>&amp;amp;</p>' })).toBe('&amp;')
+    expect(noteRowTitle({ title: null, content: '<p>&amp;gt;</p>' })).toBe('&gt;')
+  })
+
+  it('decodes the entities a note editor actually emits', () => {
+    expect(noteRowTitle({ title: null, content: '<p>Tom &amp; Jerry</p>' }))
+      .toBe('Tom & Jerry')
+    expect(noteRowTitle({ title: null, content: '<p>5 &lt; 6 &gt; 4</p>' }))
+      .toBe('5 < 6 > 4')
+    expect(noteRowTitle({ title: null, content: '<p>&quot;pointe&quot; &#39;work&#39;</p>' }))
+      .toBe('"pointe" \'work\'')
+  })
+
+  it('leaves an unrecognised entity untouched', () => {
+    expect(noteRowTitle({ title: null, content: '<p>caf&eacute;</p>' })).toBe('caf&eacute;')
+  })
 })
