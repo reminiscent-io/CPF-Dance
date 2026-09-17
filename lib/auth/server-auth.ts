@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { hasAdminPrivileges, hasDancerPrivileges, hasInstructorPrivileges } from './privileges'
+import type { UserRole } from './types'
 
-export type UserRole = 'instructor' | 'dancer' | 'admin'
+export type { UserRole }
 
 export interface ProfileWithRole {
   id: string
@@ -55,6 +57,21 @@ export async function getCurrentUserWithRole(): Promise<ProfileWithRole | null> 
   return profile as ProfileWithRole
 }
 
+// Uses the same privilege helpers as the proxy and the portal pages, so admins
+// pass every guard and guardians pass dancer guards.
+function satisfiesRole(profile: ProfileWithRole, role: UserRole): boolean {
+  switch (role) {
+    case 'admin':
+      return hasAdminPrivileges(profile)
+    case 'instructor':
+      return hasInstructorPrivileges(profile)
+    case 'dancer':
+      return hasDancerPrivileges(profile)
+    case 'guardian':
+      return profile.role === 'guardian' || hasAdminPrivileges(profile)
+  }
+}
+
 export async function requireRole(role: UserRole): Promise<ProfileWithRole> {
   const profile = await getCurrentUserWithRole()
 
@@ -62,12 +79,7 @@ export async function requireRole(role: UserRole): Promise<ProfileWithRole> {
     throw new Error('Unauthorized: No authenticated user')
   }
 
-  // Admin role has access to all portals and functionalities
-  if (profile.role === 'admin') {
-    return profile
-  }
-
-  if (profile.role !== role) {
+  if (!satisfiesRole(profile, role)) {
     throw new Error(`Forbidden: Requires ${role} role, but user has ${profile.role} role`)
   }
 
@@ -77,18 +89,37 @@ export async function requireRole(role: UserRole): Promise<ProfileWithRole> {
 export async function getCurrentDancerStudent() {
   const supabase = await createClient()
   const profile = await requireRole('dancer')
-  
-  // First try to get student for current user
+
+  // Guardians act for the student linked through students.guardian_id (RLS
+  // grants them the same access). There's no student picker yet, so a guardian
+  // with several students always gets the oldest record.
+  if (profile.role === 'guardian') {
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, profile_id')
+      .eq('guardian_id', profile.id)
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (student) {
+      return student
+    }
+    throw new Error('Student record not found for this user')
+  }
+
+  // Dancers (and admins) use their own student record
   const { data: student, error } = await supabase
     .from('students')
     .select('id, profile_id')
     .eq('profile_id', profile.id)
     .single()
-  
+
   if (!error && student) {
     return student
   }
-  
+
   // SECURITY: Admins accessing dancer routes must have their own student record.
   // Previously this returned the first arbitrary student, allowing admin impersonation.
   throw new Error('Student record not found for this user')
