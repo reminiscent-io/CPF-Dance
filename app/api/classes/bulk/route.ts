@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privileges'
+import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  attachMeetToPrivateLesson,
+  getPrivateLessonDancer,
+  type PrivateLessonDancer
+} from '@/lib/google/private-lesson-meet'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +34,14 @@ export async function POST(request: NextRequest) {
     }
 
     const createdClasses = []
+    // Virtual private series: one dancer lookup, one Meet per lesson. The dancer
+    // gets a Google Calendar invite per lesson but no per-lesson email — a
+    // 12-week series shouldn't mean 12 extra emails.
+    let admin: ReturnType<typeof createAdminClient> | null = null
+    const dancerCache = new Map<string, PrivateLessonDancer>()
+    let meetsCreated = 0
+    let meetsFailed = 0
+    let dancerHasEmail = true
 
     for (const classData of classesToCreate) {
       const {
@@ -48,7 +62,10 @@ export async function POST(request: NextRequest) {
         tiered_base_students,
         tiered_additional_cost,
         external_signup_url,
-        is_public
+        is_public,
+        is_virtual, // Private lessons: create a Google Meet link per lesson
+        student_id, // Private lessons: enroll this student in every lesson
+        asset_id
       } = classData
 
       let finalInstructorId: string
@@ -106,7 +123,9 @@ export async function POST(request: NextRequest) {
         tiered_additional_cost: tiered_additional_cost || null,
         price: price || null,
         external_signup_url: external_signup_url || null,
-        is_public: is_public || false
+        is_public: is_public || false,
+        is_virtual: (class_type === 'private' && is_virtual) || false,
+        asset_id: asset_id || null
       }
 
       const { data: newClass, error } = await supabase
@@ -114,7 +133,8 @@ export async function POST(request: NextRequest) {
         .insert(insertData)
         .select(`
           *,
-          studio:studios(name, city, state)
+          studio:studios(name, city, state),
+          asset:assets(id, title, file_url, file_type)
         `)
         .single()
 
@@ -126,13 +146,59 @@ export async function POST(request: NextRequest) {
         }, { status: 500 })
       }
 
+      let enrolled = false
+      if (student_id) {
+        const { error: enrollError } = await supabase
+          .from('enrollments')
+          .insert({
+            student_id,
+            class_id: newClass.id,
+            enrolled_at: new Date().toISOString()
+          })
+        if (enrollError) {
+          // Don't fail the batch - the class exists, the instructor can enroll manually
+          console.error('Error auto-enrolling student:', enrollError)
+        } else {
+          enrolled = true
+        }
+      }
+
+      // Best-effort, same as single create: a Calendar failure leaves the lesson without a link
+      if (newClass.is_virtual && class_type === 'private' && student_id) {
+        try {
+          admin ??= createAdminClient()
+          let dancer = dancerCache.get(student_id)
+          if (!dancer) {
+            dancer = await getPrivateLessonDancer(admin, student_id)
+            dancerCache.set(student_id, dancer)
+          }
+          const meet = await attachMeetToPrivateLesson({
+            admin,
+            classData: newClass,
+            title,
+            description,
+            dancer,
+            emailDancer: false
+          })
+          meetsCreated++
+          if (!meet.dancerHasEmail) dancerHasEmail = false
+        } catch (meetError) {
+          meetsFailed++
+          console.error('[classes/bulk POST] Google Meet creation failed:', meetError)
+        }
+      }
+
       createdClasses.push({
         ...newClass,
-        enrolled_count: 0
+        enrolled_count: enrolled ? 1 : 0
       })
     }
 
-    return NextResponse.json({ classes: createdClasses }, { status: 201 })
+    const meet = meetsCreated + meetsFailed > 0
+      ? { created: meetsCreated, failed: meetsFailed, dancerHasEmail }
+      : null
+
+    return NextResponse.json({ classes: createdClasses, meet }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

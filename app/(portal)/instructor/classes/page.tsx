@@ -431,10 +431,23 @@ function ClassesContent() {
           throw new Error(errorData.error || 'Failed to create classes')
         }
 
-        const { classes: newClasses } = await response.json()
+        const { classes: newClasses, meet } = await response.json()
         setClasses(prev => [...newClasses, ...prev])
         setShowCreateModal(false)
-        addToast(`${newClasses.length} classes created successfully`, 'success')
+        const noun = formData.class_type === 'private' ? 'lessons' : 'classes'
+        addToast(`${newClasses.length} ${noun} created successfully`, 'success')
+        if (meet?.failed > 0) {
+          addToast(
+            `Google Meet links couldn't be created for ${meet.failed} of these lessons. Open each one to add a link manually.`,
+            'warning'
+          )
+        }
+        if (meet?.created > 0 && !meet.dancerHasEmail) {
+          addToast(
+            'This dancer has no email on file, so they were not sent calendar invites. Open each lesson to copy its Google Meet link and share it manually.',
+            'warning'
+          )
+        }
         return
       }
 
@@ -994,7 +1007,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           tiered_additional_cost: formData.tiered_additional_cost,
           external_signup_url: formData.external_signup_url,
           is_public: formData.is_public,
+          is_virtual: formData.is_virtual,
+          asset_id: formData.asset_id,
           instructor_id: formData.instructor_id,
+          // Private lessons carry their dancer into each copy
+          student_id: formData.class_type === 'private' ? enrolledStudents[0]?.id : undefined,
           start_time: startUTC,
           end_time: endDate.toISOString()
         }
@@ -1478,7 +1495,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-medium text-charcoal-950">Create Recurring Copies</h4>
-                <p className="text-xs text-charcoal-500">Generate additional classes based on this one</p>
+                <p className="text-xs text-charcoal-500">
+                  {formData.class_type === 'private' && enrolledStudents[0]
+                    ? `Generate additional lessons for ${enrolledStudents[0].full_name}`
+                    : 'Generate additional classes based on this one'}
+                </p>
               </div>
               <Button
                 type="button"
@@ -2101,6 +2122,79 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
             </div>
           )}
 
+          {/* Repeat — sits outside Advanced so private lessons can be booked as a series */}
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="recurring_toggle"
+                checked={isRecurring}
+                onChange={(e) => {
+                  setIsRecurring(e.target.checked)
+                  if (!e.target.checked) {
+                    setSelectedDays([])
+                    setRecurringEndDate('')
+                  }
+                }}
+                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+              />
+              <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                {formData.class_type === 'private' ? 'Repeat this lesson' : 'Make this a recurring class'}
+              </label>
+            </div>
+
+            {isRecurring && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                    Repeat on these days *
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {dayNames.map((day, index) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (selectedDays.includes(index)) {
+                            setSelectedDays(selectedDays.filter(d => d !== index))
+                          } else {
+                            setSelectedDays([...selectedDays, index])
+                          }
+                        }}
+                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                          selectedDays.includes(index)
+                            ? 'bg-rose-600 text-champagne-50 border-rose-600'
+                            : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Input
+                  label="Repeat until (end date) *"
+                  type="date"
+                  required={isRecurring}
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                  min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
+                />
+
+                {recurringDates.length > 0 && (
+                  <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
+                    This will create <strong>{recurringDates.length}</strong> {formData.class_type === 'private' ? 'lessons' : 'classes'}
+                    {formData.class_type === 'private' && formData.student_id && ', each with the selected student enrolled'}
+                    {recurringDates.length > 20 && (
+                      <span className="text-rose-800"> (confirmation required)</span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           {/* Advanced Section Toggle */}
           <button
             type="button"
@@ -2200,77 +2294,6 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 </label>
               </div>
 
-              {/* Recurring Class Options */}
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="recurring_toggle"
-                    checked={isRecurring}
-                    onChange={(e) => {
-                      setIsRecurring(e.target.checked)
-                      if (!e.target.checked) {
-                        setSelectedDays([])
-                        setRecurringEndDate('')
-                      }
-                    }}
-                    className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
-                  />
-                  <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
-                    Make this a recurring class
-                  </label>
-                </div>
-
-                {isRecurring && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
-                        Repeat on these days *
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {dayNames.map((day, index) => (
-                          <button
-                            key={day}
-                            type="button"
-                            onClick={() => {
-                              if (selectedDays.includes(index)) {
-                                setSelectedDays(selectedDays.filter(d => d !== index))
-                              } else {
-                                setSelectedDays([...selectedDays, index])
-                              }
-                            }}
-                            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                              selectedDays.includes(index)
-                                ? 'bg-rose-600 text-champagne-50 border-rose-600'
-                                : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
-                            }`}
-                          >
-                            {day}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Input
-                      label="Repeat until (end date) *"
-                      type="date"
-                      required={isRecurring}
-                      value={recurringEndDate}
-                      onChange={(e) => setRecurringEndDate(e.target.value)}
-                      min={formData.start_time ? formData.start_time.split('T')[0] : undefined}
-                    />
-
-                    {recurringDates.length > 0 && (
-                      <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
-                        This will create <strong>{recurringDates.length}</strong> classes
-                        {recurringDates.length > 20 && (
-                          <span className="text-rose-800"> (confirmation required)</span>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
 
             </div>
           )}
