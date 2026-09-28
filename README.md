@@ -6,7 +6,7 @@
 
 A sophisticated platform designed for professional dance instructors to nurture the next generation of performers. From former Rockettes to rising stars, CPF Dance brings elegance and efficiency to dance education management.
 
-**[Live Demo](#) • [Documentation](./CLAUDE.md) • [Database Setup](./DATABASE_SETUP.md)**
+**[Live Demo](#) • [Documentation](./CLAUDE.md) • [Database Setup](./docs/database-setup.md)**
 
 ---
 
@@ -96,7 +96,7 @@ cp .env.example .env.local
 5. Apply any migrations from `migrations/` directory in numerical order
 6. Verify tables appear in **Table Editor**
 
-See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed instructions.
+See [docs/database-setup.md](./docs/database-setup.md) for detailed instructions.
 
 ### Environment Variables
 
@@ -158,7 +158,6 @@ cpf-dance/
 ├── lib/
 │   ├── auth/
 │   │   ├── server-auth.ts     # Role guards (requireInstructor, requireDancer)
-│   │   ├── waiver-access.ts   # Waiver permission helpers
 │   │   └── privileges.ts      # Role privilege utilities
 │   ├── supabase/
 │   │   ├── client.ts          # Browser client
@@ -170,6 +169,7 @@ cpf-dance/
 │   └── types/                 # TypeScript definitions
 ├── migrations/                # 13 database migrations
 ├── supabase-schema.sql        # Complete database schema with RLS
+├── docs/                      # Setup guides, audits, plans
 ├── CLAUDE.md                  # Comprehensive project documentation
 └── proxy.ts                   # Next.js 16 middleware for auth routing
 ```
@@ -200,7 +200,7 @@ Built on **PostgreSQL** via Supabase with comprehensive **Row-Level Security (RL
 - **Admin Override**: Admin role can access all portals with most RLS bypasses
 - **XSS Prevention**: All user-generated HTML sanitized via DOMPurify
 
-See [SECURITY_FIXES.md](./SECURITY_FIXES.md) and [supabase-RLS.md](./supabase-RLS.md) for details.
+See the [security audit](./docs/security-audit-2026-03-13.md) and the RLS policies in [migrations/](./migrations/) for details.
 
 ## 🎯 User Roles
 
@@ -256,10 +256,14 @@ CPF Dance balances professionalism with elegance, creating an interface that fee
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Comprehensive development guide (architecture, patterns, best practices)
-- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Step-by-step database configuration
-- **[SECURITY_FIXES.md](./SECURITY_FIXES.md)** - Security model and implementation details
-- **[supabase-RLS.md](./supabase-RLS.md)** - Complete RLS policy documentation
-- **[CLASS_PRICING_GUIDE.md](./CLASS_PRICING_GUIDE.md)** - Pricing model usage guide
+- **[PRODUCT.md](./PRODUCT.md)** / **[DESIGN.md](./DESIGN.md)** - Product context and design system
+- **[docs/database-setup.md](./docs/database-setup.md)** - Step-by-step database configuration
+- **[docs/security-audit-2026-03-13.md](./docs/security-audit-2026-03-13.md)** - Security audit findings and remediation status
+- **[docs/class-pricing.md](./docs/class-pricing.md)** - Pricing model usage guide
+- **[docs/google-integrations.md](./docs/google-integrations.md)** - Gmail and Calendar via Replit connectors
+- **[docs/supabase-storage-setup.md](./docs/supabase-storage-setup.md)** - Assets storage bucket setup
+- **[docs/profile-linking.md](./docs/profile-linking.md)** - Dual-email login via linked profiles
+- **[docs/performance-optimization-notes.md](./docs/performance-optimization-notes.md)** - RLS performance work and follow-ups
 - **[migrations/README.md](./migrations/README.md)** - Database migration instructions
 
 ## 🚀 Roadmap
