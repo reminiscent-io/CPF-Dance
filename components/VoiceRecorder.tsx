@@ -42,10 +42,17 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  // The latest recording attempt. Cancel, unmount, or a newer attempt marks it
+  // cancelled, so a permission grant or 'stop' event that arrives afterwards
+  // releases the mic instead of recording or uploading.
+  const attemptRef = useRef<{ cancelled: boolean } | null>(null)
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (attemptRef.current) {
+        attemptRef.current.cancelled = true
+      }
       // Clear timer
       if (timerRef.current) {
         clearInterval(timerRef.current)
@@ -110,6 +117,11 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   }, [onTranscriptReady])
 
   const startRecording = useCallback(async () => {
+    if (attemptRef.current) {
+      attemptRef.current.cancelled = true
+    }
+    const attempt = { cancelled: false }
+    attemptRef.current = attempt
     setError(null)
     audioChunksRef.current = []
 
@@ -121,6 +133,12 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
           sampleRate: 44100
         }
       })
+      // Unmounted, or Voice to Text was clicked again, while the permission
+      // prompt was open.
+      if (attempt.cancelled) {
+        stream.getTracks().forEach(track => track.stop())
+        return
+      }
       streamRef.current = stream
 
       const mediaRecorder = new MediaRecorder(stream, {
@@ -153,6 +171,10 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
         try {
           // Stop all tracks
           stream.getTracks().forEach(track => track.stop())
+
+          // Cancel and unmount stop the recorder too, and stop() delivers one
+          // last chunk before this runs, so clearing the chunks isn't enough.
+          if (attempt.cancelled) return
 
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
           await processAudio(audioBlob)
@@ -196,6 +218,10 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   }, [])
 
   const cancelRecording = useCallback(() => {
+    if (attemptRef.current) {
+      attemptRef.current.cancelled = true
+    }
+
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
