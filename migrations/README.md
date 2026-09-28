@@ -356,4 +356,4 @@ All migrations are **additive and safe** - they don't delete data, only add secu
 
 **Run this after migration 19**
 
-For detailed information about these optimizations and future performance improvement opportunities, see `PERFORMANCE_OPTIMIZATION_NOTES.md` in the project root.
+For detailed information about these optimizations and future performance improvement opportunities, see `docs/performance-optimization-notes.md`.

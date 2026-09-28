@@ -134,3 +134,6 @@ dist
 
 # Playwright MCP scratch output (screenshots, console logs)
 .playwright-mcp/
+
+# Claude Code personal settings
+.claude/settings.local.json

@@ -360,7 +360,7 @@ If you later want to separate the accounts:
 - `migrations/15-add-profile-linking.sql` - Schema migration
 - `migrations/16-migrate-instructor-data-TEMPLATE.sql` - Data migration template
 - `migrations/get-profile-ids.sql` - Helper script to get IDs
-- `PROFILE_LINKING_GUIDE.md` - This guide
+- `docs/profile-linking.md` - This guide
 
 ### Modified Files
 - `lib/auth/server-auth.ts` - Added linked profile logic to `getCurrentUserWithRole()`
