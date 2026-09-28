@@ -65,9 +65,11 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
+          // Voice-to-text notes (VoiceRecorder) need the microphone on our own
+          // pages. An empty allowlist, microphone=(), blocks it for us too.
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(self), geolocation=()',
           },
           {
             key: 'Strict-Transport-Security',
