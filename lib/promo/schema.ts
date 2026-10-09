@@ -284,6 +284,7 @@ export const AssetPoseSchema = z.object({
   head: NormalizedPointSchema.optional(),
   feet: NormalizedPointSchema.optional(),
   source: z.enum(['pose', 'vision']),
+  shots: z.array(z.enum(SHOT_TYPES)).max(SHOT_TYPES.length).optional(),
 })
 
 // Compile-time checks that the schemas and the hand-written types agree.

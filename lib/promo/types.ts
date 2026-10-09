@@ -346,6 +346,8 @@ export interface AssetPose {
   head?: NormalizedPoint
   feet?: NormalizedPoint
   source: 'pose' | 'vision'
+  /** Shot types the pose rules found (arms up, kick, ...). */
+  shots?: ShotType[]
 }
 
 export interface PromoAsset {
