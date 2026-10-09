@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react'
 import { ArrowUpTrayIcon, PhotoIcon } from '@heroicons/react/24/outline'
-import { Button, EmptyState, Input, Sheet, SheetBody } from '@/components/ui'
+import { Button, EmptyState, Input, Sheet, SheetBody, SheetFooter } from '@/components/ui'
 import type { PromoAsset } from '@/lib/promo/types'
 import { useAssetLibrary } from '../hooks'
 import { ToggleChip } from '../ToggleChip'
@@ -13,19 +13,42 @@ export interface PhotoPickerSheetProps {
   isOpen: boolean
   title: string
   onClose: () => void
-  onPick: (asset: PromoAsset) => void
+  /** Single choice: called with the photo she taps. */
+  onPick?: (asset: PromoAsset) => void
+  /** Several choices: the ids in pick order, toggled by taps. */
+  selectedIds?: string[]
+  onToggle?: (asset: PromoAsset) => void
+  max?: number
 }
 
-/** Choose one library photo, or upload new ones and pick from those. */
-export function PhotoPickerSheet({ isOpen, title, onClose, onPick }: PhotoPickerSheetProps) {
+/** Choose library photos, or upload new ones and pick from those. */
+export function PhotoPickerSheet({ isOpen, title, onClose, onPick, selectedIds, onToggle, max }: PhotoPickerSheetProps) {
   return (
     <Sheet isOpen={isOpen} onClose={onClose} title={title} size="lg">
-      {isOpen && <PickerBody onPick={onPick} />}
+      {isOpen && (
+        <>
+          <PickerBody onPick={onPick} selectedIds={selectedIds} onToggle={onToggle} max={max} />
+          {onToggle && (
+            <SheetFooter className="justify-between">
+              <span className="text-sm text-charcoal-500">
+                {selectedIds?.length ?? 0}
+                {max ? ` of ${max}` : ''} selected
+              </span>
+              <Button onClick={onClose}>Done</Button>
+            </SheetFooter>
+          )}
+        </>
+      )}
     </Sheet>
   )
 }
 
-function PickerBody({ onPick }: { onPick: (asset: PromoAsset) => void }) {
+function PickerBody({
+  onPick,
+  selectedIds,
+  onToggle,
+  max,
+}: Pick<PhotoPickerSheetProps, 'onPick' | 'selectedIds' | 'onToggle' | 'max'>) {
   const { me, assets, error, addFiles } = useAssetLibrary()
   const [query, setQuery] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
@@ -85,7 +108,21 @@ function PickerBody({ onPick }: { onPick: (asset: PromoAsset) => void }) {
             message={assets.length === 0 ? 'Your library is empty. Upload a few photos.' : 'No photos match.'}
           />
         ) : (
-          <PhotoGrid assets={visible} onOpen={onPick} className="sm:grid-cols-4 lg:grid-cols-4" />
+          <PhotoGrid
+            assets={visible}
+            onOpen={onPick}
+            selectedIds={selectedIds}
+            onToggle={
+              onToggle
+                ? (asset) => {
+                    const selected = selectedIds?.includes(asset.id)
+                    if (!selected && max !== undefined && (selectedIds?.length ?? 0) >= max) return
+                    onToggle(asset)
+                  }
+                : undefined
+            }
+            className="sm:grid-cols-4 lg:grid-cols-4"
+          />
         )}
       </div>
     </SheetBody>

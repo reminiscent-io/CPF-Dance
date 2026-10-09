@@ -7,6 +7,7 @@ import {
   locationFromClass,
   priceFromClass,
   sessionsFromClasses,
+  sharedClassTitle,
 } from '../facts'
 
 describe('formatTimeRange', () => {
@@ -91,5 +92,18 @@ describe('class facts', () => {
     expect(priceFromClass({ pricing_model: 'per_hour', cost_per_hour: 80 })).toBe('$80 per hour')
     expect(priceFromClass({ pricing_model: 'per_class', base_cost: 120.5 })).toBe('$120.50')
     expect(priceFromClass({ pricing_model: 'per_person', cost_per_person: null })).toBe('')
+  })
+})
+
+describe('sharedClassTitle', () => {
+  it('drops the per-day part of a multi-day workshop’s titles', () => {
+    expect(sharedClassTitle(['Precision Workshop, day one', 'Precision Workshop, day two'])).toBe('Precision Workshop')
+    expect(sharedClassTitle(['Kick Clinic – Part 1', 'Kick Clinic – Part 2'])).toBe('Kick Clinic')
+  })
+
+  it('falls back to the first title when nothing is shared', () => {
+    expect(sharedClassTitle(['Turns', 'Leaps'])).toBe('Turns')
+    expect(sharedClassTitle(['Jazz Technique'])).toBe('Jazz Technique')
+    expect(sharedClassTitle([])).toBe('')
   })
 })

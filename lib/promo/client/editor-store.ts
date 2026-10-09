@@ -34,7 +34,8 @@ export type EditorStore = StoreApi<EditorState> & { temporal: StoreApi<TemporalS
 
 const GROUP_WINDOW_MS = 1200
 
-function sameContent(a: DesignDocument, b: DesignDocument) {
+/** Same content, ignoring the frozen text layout. */
+export function sameContent(a: DesignDocument, b: DesignDocument) {
   return (
     a.variant === b.variant &&
     a.values === b.values &&

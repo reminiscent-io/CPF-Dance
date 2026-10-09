@@ -184,3 +184,17 @@ export const NUMBER_WORDS: Record<string, number> = {
   single: 1,
   double: 2,
 }
+
+/** "Precision Workshop" from "Precision Workshop, day one" and "Precision Workshop, day two". */
+export function sharedClassTitle(titles: string[]): string {
+  if (titles.length === 0) return ''
+  if (titles.length === 1) return titles[0]
+  const split = titles.map((title) => title.trim().split(/\s+/))
+  const common: string[] = []
+  for (let i = 0; i < split[0].length; i++) {
+    if (split.every((words) => words[i]?.toLowerCase() === split[0][i].toLowerCase())) common.push(split[0][i])
+    else break
+  }
+  const joined = common.join(' ').replace(/[\s,:;–—-]+(day|part|session|week)?$/i, '').replace(/[\s,:;–—-]+$/, '')
+  return joined || titles[0]
+}

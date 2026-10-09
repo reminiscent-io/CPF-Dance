@@ -18,6 +18,7 @@ import { FORMAT_SPECS } from '@/lib/promo/formats'
 import { applyNudge, buildScene, textLayoutChanged, type SceneNode, type SceneText } from '@/lib/promo/layout/scene'
 import { PROMO_FORMATS, type Box, type PromoAsset, type PromoFormat } from '@/lib/promo/types'
 import { promoFetch } from '../hooks'
+import { AskAi, useRevise } from './AskAi'
 import { ContentPanel } from './ContentPanel'
 import { EditorCanvas } from './EditorCanvas'
 import {
@@ -134,6 +135,7 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
   const [editing, setEditing] = useState<{ node: SceneText; target: TextEditTarget } | null>(null)
   const [making, setMaking] = useState(false)
   const [saverSlot] = useState(() => new SaverSlot(design.revision))
+  const revise = useRevise(store, design.id)
   const canvasBox = useRef<HTMLDivElement>(null)
   const { width: boxWidth } = useElementSize(canvasBox)
   const viewportHeight = useViewportHeight()
@@ -371,6 +373,15 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
   const formats = PROMO_FORMATS.filter((format) => definition.formats[format])
   const missing = formats.filter((format) => !data.siblings.some((sibling) => sibling.format === format))
   const warnings = scene?.warnings ?? []
+  // Copy that overflows can be shortened by the AI; naming the fields unlocks ones she wrote.
+  const tooLong = [
+    ...new Set(
+      warnings
+        .map((warning) => (warning.slotId ? getSlot(definition, warning.slotId) : undefined))
+        .filter((slot) => slot?.binding === 'copy')
+        .map((slot) => slot!.label.toLowerCase())
+    ),
+  ]
   const editingNode = editing?.node
 
   return (
@@ -455,17 +466,33 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
       <div className="mt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
         <div ref={canvasBox} className="min-w-0 lg:sticky lg:top-4 lg:self-start">
           {warnings.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                store.getState().select(warnings[0].layerId, warnings[0].slotId)
-                reveal(warnings[0].slotId)
-              }}
-              className="mb-3 flex w-full items-center gap-2 rounded-lg bg-ballet-pink-100 px-3 py-2 text-left text-sm text-ballet-pink-900"
-            >
-              <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-              {warnings.length === 1 ? warnings[0].message : `${warnings.length} items don’t fit their space. Tap to see the first.`}
-            </button>
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-ballet-pink-100 px-3 py-2 text-sm text-ballet-pink-900">
+              <button
+                type="button"
+                onClick={() => {
+                  store.getState().select(warnings[0].layerId, warnings[0].slotId)
+                  reveal(warnings[0].slotId)
+                }}
+                className="flex flex-1 items-center gap-2 text-left"
+              >
+                <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                {warnings.length === 1 ? warnings[0].message : `${warnings.length} items don’t fit their space. Tap to see the first.`}
+              </button>
+              {tooLong.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={revise.busy}
+                  onClick={() =>
+                    void revise.submit(
+                      `Shorten the ${tooLong.join(' and the ')} so ${tooLong.length === 1 ? 'it fits' : 'they fit'} the space.`
+                    )
+                  }
+                >
+                  {revise.busy ? 'Shortening…' : 'Shorten with AI'}
+                </Button>
+              )}
+            </div>
           )}
           {fonts === 'failed' ? (
             <div className="rounded-lg border border-champagne-200 bg-champagne-100 px-4 py-10 text-center">
@@ -513,7 +540,10 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
         </div>
 
         <div className="mt-6 min-w-0 lg:mt-0">
-          <SegmentedControl<Tab> aria-label="Editor panels" options={TABS} value={tab} onChange={setTab} />
+          <AskAi revise={revise} onUndo={() => store.getState().undo()} />
+          <div className="mt-4">
+            <SegmentedControl<Tab> aria-label="Editor panels" options={TABS} value={tab} onChange={setTab} />
+          </div>
           <div className="mt-5">
             {tab === 'content' && <ContentPanel />}
             {tab === 'photos' && <PhotosPanel />}
