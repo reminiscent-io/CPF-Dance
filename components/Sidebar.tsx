@@ -26,7 +26,11 @@ import {
   DocumentIcon,
   PhotoIcon,
   UsersIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  MegaphoneIcon,
+  Squares2X2Icon,
+  SwatchIcon,
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -67,7 +71,8 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           links: [
             { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4" /> },
             { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-4 h-4" /> },
-            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-4 h-4" /> }
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-4 h-4" /> },
+            { href: '/instructor/promo', label: 'Promo Studio', icon: <MegaphoneIcon className="w-4 h-4" /> }
           ]
         },
         {
@@ -140,6 +145,14 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
             { href: '/admin/users', label: 'All Users', icon: <UsersIcon className="w-4 h-4" /> },
             { href: '/admin/instructor-requests', label: 'Instructors', icon: <AcademicCapIcon className="w-4 h-4" /> },
             { href: '/admin/studio-inquiries', label: 'Inquiries', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> }
+          ]
+        },
+        {
+          label: 'Promo Studio',
+          links: [
+            { href: '/admin/promo/templates', label: 'Templates', icon: <Squares2X2Icon className="w-4 h-4" /> },
+            { href: '/admin/promo/brand', label: 'Brand kit', icon: <SwatchIcon className="w-4 h-4" /> },
+            { href: '/admin/promo/usage', label: 'AI usage', icon: <CurrencyDollarIcon className="w-4 h-4" /> }
           ]
         }
       ]

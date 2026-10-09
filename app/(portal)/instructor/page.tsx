@@ -24,6 +24,7 @@ import {
   BuildingOfficeIcon,
   PencilSquareIcon,
   ArrowRightIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline'
 
 interface NextClass {
@@ -194,6 +195,14 @@ export default function InstructorPortalPage() {
           >
             <UserGroupIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Students
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/instructor/promo/new')}
+          >
+            <MegaphoneIcon className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            New promo
           </Button>
         </div>
 
