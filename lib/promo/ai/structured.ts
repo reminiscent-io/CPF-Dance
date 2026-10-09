@@ -29,7 +29,16 @@ export function textModels(): { primary: string; fallback: string } {
 function openai(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new PromoError('AI isn’t set up yet (OPENAI_API_KEY is missing).', 503, 'no_api_key')
-  return new OpenAI({ apiKey, maxRetries: 1 })
+  // No hidden SDK retries: callStructured retries itself, so every attempt
+  // lands in the cost log.
+  return new OpenAI({ apiKey, maxRetries: 0 })
+}
+
+/** Worth one more try: rate limits, server errors and dropped connections, but not timeouts. */
+function isTransient(error: unknown): boolean {
+  if (error instanceof OpenAI.APIConnectionTimeoutError) return false
+  if (error instanceof OpenAI.APIConnectionError) return true
+  return error instanceof OpenAI.APIError && (error.status === 429 || (error.status ?? 0) >= 500)
 }
 
 /** Reasoning models take an effort setting; older chat models reject it. */
@@ -171,15 +180,25 @@ export async function callStructured<S extends z.ZodType>(
     return { data: output.data, model, callId, costMicros: cost }
   }
 
+  const withRetry = async (model: string) => {
+    try {
+      return await attempt(model)
+    } catch (error) {
+      if (!isTransient(error)) throw error
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      return attempt(model)
+    }
+  }
+
   const useFallback = primaryRejected && models.fallback !== models.primary
   try {
-    return await attempt(useFallback ? models.fallback : models.primary)
+    return await withRetry(useFallback ? models.fallback : models.primary)
   } catch (error) {
     if (!useFallback && isModelRejection(error) && models.fallback !== models.primary) {
       primaryRejected = true
       console.warn(`[promo] ${models.primary} was rejected; using ${models.fallback}`)
       try {
-        return await attempt(models.fallback)
+        return await withRetry(models.fallback)
       } catch (fallbackError) {
         throw toPromoError(fallbackError)
       }

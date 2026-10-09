@@ -80,26 +80,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ asset: existing, duplicate: true })
     }
 
+    // A retry after a lost response finds its own row: return it as it is now,
+    // tags included, instead of writing it again.
+    if (existing && existing.id === input.id) return NextResponse.json({ asset: existing })
+
     const orientation =
       input.width === input.height ? 'square' : input.width > input.height ? 'landscape' : 'portrait'
     const pose = input.pose ?? null
     const { data: asset, error } = await supabase
       .from('promo_assets')
-      .upsert(
-        {
-          id: input.id,
-          owner_id: ownerId,
-          ...paths,
-          width: input.width,
-          height: input.height,
-          bytes: input.bytes,
-          sha256: input.sha256,
-          original_filename: input.originalFilename ?? null,
-          pose,
-          tags: mergePoseTags({ orientation }, pose),
-        },
-        { onConflict: 'id' }
-      )
+      .insert({
+        id: input.id,
+        owner_id: ownerId,
+        ...paths,
+        width: input.width,
+        height: input.height,
+        bytes: input.bytes,
+        sha256: input.sha256,
+        original_filename: input.originalFilename ?? null,
+        pose,
+        tags: mergePoseTags({ orientation }, pose),
+      })
       .select(ASSET_COLUMNS)
       .single()
     if (error) throw error

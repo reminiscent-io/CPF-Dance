@@ -10,7 +10,7 @@ export const DESIGN_LIST_COLUMNS =
   'id, owner_id, title, format, group_id, class_ids, revision, thumbnail_updated_at, created_at, updated_at'
 
 export const PUBLICATION_COLUMNS =
-  'id, design_id, asset_id, public_path, public_url, class_id, previous_class_asset_id, revision, published_at'
+  'id, design_id, owner_id, asset_id, public_path, public_url, class_id, previous_class_asset_id, revision, published_at'
 
 /** Where publish copies go: the existing public bucket that classes.asset_id points into. */
 export const PUBLIC_ASSETS_BUCKET = 'assets'
@@ -48,14 +48,28 @@ export async function livePublication(
   return (data as Publication | null) ?? null
 }
 
+/** The public path a publish of this design writes; unpublish only ever deletes paths like it. */
+export function publicCopyPrefix(ownerId: string, designId: string): string {
+  return `${ownerId}/promo-${designId}-`
+}
+
 /**
  * Takes a published copy down: the class gets back the image it had before
- * (if it still shows this one), then the public file and its `assets` row go.
- * The service role does the class update and the public-bucket delete after
- * the caller's own session has read the publication, which proves ownership.
+ * (if it still shows this one), then the public file and its `assets` row go,
+ * unless a class still uses the copy because she picked it in the class form.
+ *
+ * Publication rows are written only by the publish route with the service
+ * role, after the caller's own session has read the design; the caller reads
+ * this row through her session too, which proves it's hers. The path check
+ * below is a second guard before deleting anything with the service role.
  */
-export async function unpublish(supabase: PromoContext['supabase'], publication: Publication): Promise<void> {
+export async function unpublish(publication: Publication): Promise<{ kept: boolean }> {
   const admin = createAdminClient()
+  const path = publication.public_path
+  if (!path.startsWith(publicCopyPrefix(publication.owner_id, publication.design_id)) || path.includes('..')) {
+    throw new Error(`Publication ${publication.id} points outside this promo's own copy`)
+  }
+
   if (publication.class_id && publication.asset_id) {
     const { error } = await admin
       .from('classes')
@@ -64,15 +78,44 @@ export async function unpublish(supabase: PromoContext['supabase'], publication:
       .eq('asset_id', publication.asset_id)
     if (error) throw error
   }
-  const { error: removeError } = await admin.storage.from(PUBLIC_ASSETS_BUCKET).remove([publication.public_path])
-  if (removeError) throw removeError
+
+  let kept = false
   if (publication.asset_id) {
-    const { error: deleteError } = await admin.from('assets').delete().eq('id', publication.asset_id)
-    if (deleteError) throw deleteError
+    // A live copy that later replaced this one on a class would restore this
+    // asset when it comes down. This asset is about to go, so hand that copy
+    // this one's earlier image instead, keeping the chain back to the original.
+    const { error: chainError } = await admin
+      .from('promo_publications')
+      .update({ previous_class_asset_id: publication.previous_class_asset_id })
+      .eq('previous_class_asset_id', publication.asset_id)
+      .is('unpublished_at', null)
+    if (chainError) throw chainError
+
+    const { count, error: countError } = await admin
+      .from('classes')
+      .select('id', { count: 'exact', head: true })
+      .eq('asset_id', publication.asset_id)
+    if (countError) throw countError
+    kept = (count ?? 0) > 0
   }
-  const { error: updateError } = await supabase
+
+  if (!kept) {
+    const { error: removeError } = await admin.storage.from(PUBLIC_ASSETS_BUCKET).remove([path])
+    if (removeError) throw removeError
+    if (publication.asset_id) {
+      const { error: deleteError } = await admin
+        .from('assets')
+        .delete()
+        .eq('id', publication.asset_id)
+        .eq('instructor_id', publication.owner_id)
+      if (deleteError) throw deleteError
+    }
+  }
+
+  const { error: updateError } = await admin
     .from('promo_publications')
     .update({ unpublished_at: new Date().toISOString() })
     .eq('id', publication.id)
   if (updateError) throw updateError
+  return { kept }
 }

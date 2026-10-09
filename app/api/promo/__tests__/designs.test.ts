@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { fakeSupabase, hasFilter, type Handler } from './fake-supabase'
+import { fakeSupabase, hasFilter, type Handler, type StorageHandler } from './fake-supabase'
 
 const OWNER = '11111111-1111-4111-8111-111111111111'
 const DESIGN = '22222222-2222-4222-8222-222222222222'
@@ -49,8 +49,9 @@ const design = {
 const publication = {
   id: 'pub-1',
   design_id: DESIGN,
+  owner_id: OWNER,
   asset_id: 'asset-1',
-  public_path: `${OWNER}/promo-old.jpg`,
+  public_path: `${OWNER}/promo-${DESIGN}-2-abc.jpg`,
   public_url: 'https://cdn.test/assets/old.jpg',
   class_id: CLASS,
   previous_class_asset_id: 'old-asset',
@@ -59,9 +60,9 @@ const publication = {
 }
 const params = { params: Promise.resolve({ id: DESIGN }) }
 
-function setup(session: Handler, admin: Handler = () => undefined) {
+function setup(session: Handler, admin: Handler = () => undefined, adminStorage?: StorageHandler) {
   state.session = fakeSupabase(session)
-  state.admin = fakeSupabase(admin)
+  state.admin = fakeSupabase(admin, adminStorage)
 }
 
 function jpeg() {
@@ -142,43 +143,51 @@ describe('POST /api/promo/designs/[id]/publish', () => {
     expect(state.admin.storageCalls).toHaveLength(0)
   })
 
+  const adminWrites: Handler = (query) => {
+    if (query.table === 'assets' && query.action === 'insert') return { data: { id: 'asset-2' }, error: null }
+    if (query.table === 'classes' && query.action === 'select') return { data: { asset_id: 'old-asset' }, error: null }
+    if (query.table === 'promo_publications' && query.action === 'insert') return { data: { ...publication, id: 'pub-2' }, error: null }
+  }
+  const ownClass: Handler = (query) => {
+    if (query.table === 'classes') return { data: { id: CLASS, instructor_id: OWNER }, error: null }
+    return designRead(query)
+  }
+
   it('publishes, sets the class image and remembers the old one', async () => {
-    setup(
-      (query) => {
-        if (query.table === 'classes') return { data: { id: CLASS, instructor_id: OWNER }, error: null }
-        if (query.table === 'promo_publications' && query.action === 'insert') {
-          return { data: { ...publication, id: 'pub-2' }, error: null }
-        }
-        return designRead(query)
-      },
-      (query) => {
-        if (query.table === 'assets' && query.action === 'insert') return { data: { id: 'asset-2' }, error: null }
-        if (query.table === 'classes' && query.action === 'select') return { data: { asset_id: 'old-asset' }, error: null }
-      }
-    )
+    setup(ownClass, adminWrites)
     const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
     expect(response.status).toBe(201)
     const upload = state.admin.storageCalls.find((call) => call.method === 'upload')!
     expect(upload.bucket).toBe('assets')
+    expect(upload.args[0]).toMatch(new RegExp(`^${OWNER}/promo-${DESIGN}-3-`))
     expect((upload.args[2] as { cacheControl: string }).cacheControl).toBe('300')
     const classUpdate = state.admin.queries.find((query) => query.table === 'classes' && query.action === 'update')!
     expect(classUpdate.payload).toEqual({ asset_id: 'asset-2' })
-    const insert = state.session.queries.find((query) => query.table === 'promo_publications' && query.action === 'insert')!
+    const insert = state.admin.queries.find((query) => query.table === 'promo_publications' && query.action === 'insert')!
     expect(insert.payload).toMatchObject({ asset_id: 'asset-2', class_id: CLASS, previous_class_asset_id: 'old-asset', revision: 3 })
+    expect(state.session.queries.some((query) => query.table === 'promo_publications' && query.action !== 'select')).toBe(false)
+  })
+
+  it('keeps the current copy live when the upload fails', async () => {
+    setup(
+      (query) => {
+        if (query.table === 'promo_publications' && query.action === 'select') return { data: publication, error: null }
+        return ownClass(query)
+      },
+      adminWrites,
+      (call) => (call.method === 'upload' ? { data: null, error: { message: 'storage down' } } : undefined)
+    )
+    const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
+    expect(response.status).toBe(500)
+    expect(state.admin.queries.some((query) => query.table === 'promo_publications')).toBe(false)
+    expect(state.admin.storageCalls.some((call) => call.method === 'remove')).toBe(false)
   })
 
   it('leaves nothing half-published when the last step fails', async () => {
-    setup(
-      (query) => {
-        if (query.table === 'classes') return { data: { id: CLASS, instructor_id: OWNER }, error: null }
-        if (query.table === 'promo_publications' && query.action === 'insert') return { data: null, error: { message: 'boom' } }
-        return designRead(query)
-      },
-      (query) => {
-        if (query.table === 'assets' && query.action === 'insert') return { data: { id: 'asset-2' }, error: null }
-        if (query.table === 'classes' && query.action === 'select') return { data: { asset_id: 'old-asset' }, error: null }
-      }
-    )
+    setup(ownClass, (query) => {
+      if (query.table === 'promo_publications' && query.action === 'insert') return { data: null, error: { message: 'boom' } }
+      return adminWrites(query)
+    })
     const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
     expect(response.status).toBe(500)
     const restore = state.admin.queries.filter((query) => query.table === 'classes' && query.action === 'update').at(-1)!
@@ -191,19 +200,54 @@ describe('POST /api/promo/designs/[id]/publish', () => {
 })
 
 describe('DELETE /api/promo/designs/[id]/publish', () => {
+  const unpublishRequest = () =>
+    UNPUBLISH(new NextRequest(`http://localhost/api/promo/designs/${DESIGN}/publish`, { method: 'DELETE' }), params)
+  const live = (row: typeof publication): Handler => (query) => {
+    if (query.table === 'promo_designs') return { data: design, error: null }
+    if (query.table === 'promo_publications' && query.action === 'select') return { data: row, error: null }
+  }
+  const classesUsing = (count: number): Handler => (query) =>
+    query.table === 'classes' && query.action === 'select' ? { data: null, error: null, count } : undefined
+
   it('gives the class its earlier image back only if it still shows this promo', async () => {
-    setup((query) => {
-      if (query.table === 'promo_designs') return { data: design, error: null }
-      if (query.table === 'promo_publications' && query.action === 'select') return { data: publication, error: null }
-    })
-    const response = await UNPUBLISH(new NextRequest(`http://localhost/api/promo/designs/${DESIGN}/publish`, { method: 'DELETE' }), params)
+    setup(live(publication), classesUsing(0))
+    const response = await unpublishRequest()
     expect(response.status).toBe(200)
+    expect((await response.json()).kept).toBe(false)
     const restore = state.admin.queries.find((query) => query.table === 'classes' && query.action === 'update')!
     expect(restore.payload).toEqual({ asset_id: 'old-asset' })
     expect(hasFilter(restore, 'eq', 'id', CLASS)).toBe(true)
     expect(hasFilter(restore, 'eq', 'asset_id', 'asset-1')).toBe(true)
     expect(state.admin.storageCalls).toContainEqual({ bucket: 'assets', method: 'remove', args: [[publication.public_path]] })
-    const marked = state.session.queries.find((query) => query.table === 'promo_publications' && query.action === 'update')!
+    const deleted = state.admin.queries.find((query) => query.table === 'assets' && query.action === 'delete')!
+    expect(hasFilter(deleted, 'eq', 'instructor_id', OWNER)).toBe(true)
+    const marked = state.admin.queries.filter((query) => query.table === 'promo_publications' && query.action === 'update').at(-1)!
     expect(marked.payload).toHaveProperty('unpublished_at')
+  })
+
+  it('hands its earlier image to a copy that later replaced it on the class', async () => {
+    setup(live(publication), classesUsing(0))
+    await unpublishRequest()
+    const chain = state.admin.queries.find(
+      (query) => query.table === 'promo_publications' && query.action === 'update' && hasFilter(query, 'eq', 'previous_class_asset_id', 'asset-1')
+    )!
+    expect(chain.payload).toEqual({ previous_class_asset_id: 'old-asset' })
+    expect(hasFilter(chain, 'is', 'unpublished_at', null)).toBe(true)
+  })
+
+  it('keeps the public copy while a class still uses it', async () => {
+    setup(live(publication), classesUsing(1))
+    const response = await unpublishRequest()
+    expect((await response.json()).kept).toBe(true)
+    expect(state.admin.storageCalls.some((call) => call.method === 'remove')).toBe(false)
+    expect(state.admin.queries.some((query) => query.table === 'assets')).toBe(false)
+  })
+
+  it('refuses a publication whose path isn’t this promo’s own copy', async () => {
+    setup(live({ ...publication, public_path: '99999999-9999-4999-8999-999999999999/their-file.jpg' }), classesUsing(0))
+    const response = await unpublishRequest()
+    expect(response.status).toBe(500)
+    expect(state.admin.storageCalls).toHaveLength(0)
+    expect(state.admin.queries).toHaveLength(0)
   })
 })

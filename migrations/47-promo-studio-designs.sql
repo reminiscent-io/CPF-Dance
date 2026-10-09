@@ -112,6 +112,16 @@ LANGUAGE plpgsql
 SET search_path = public, pg_temp
 AS $$
 BEGIN
+  -- Deleting a profile sets created_by / published_by to NULL; that touches
+  -- no content, so it passes.
+  IF TG_OP = 'UPDATE'
+     AND OLD.published_at IS NOT NULL
+     AND (NEW.template_id, NEW.version, NEW.definition, NEW.definition_format, NEW.notes, NEW.published_at)
+         IS NOT DISTINCT FROM
+         (OLD.template_id, OLD.version, OLD.definition, OLD.definition_format, OLD.notes, OLD.published_at)
+  THEN
+    RETURN NEW;
+  END IF;
   IF OLD.published_at IS NOT NULL THEN
     RAISE EXCEPTION 'Template version % of template % is published and cannot change',
       OLD.version, OLD.template_id
@@ -314,25 +324,17 @@ CREATE POLICY "promo_publications_select" ON public.promo_publications
   FOR SELECT TO authenticated
   USING (owner_id = (SELECT public.promo_owner_id()) OR (SELECT public.promo_is_admin()));
 
+-- No insert or update policies: the publish route writes these rows with the
+-- service role after checking the design and class belong to the caller.
+-- Unpublishing acts on public_path, asset_id and class_id with the service
+-- role, so letting a user write those columns would let her point it at
+-- someone else's files.
 DROP POLICY IF EXISTS "promo_publications_insert" ON public.promo_publications;
-CREATE POLICY "promo_publications_insert" ON public.promo_publications
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    owner_id = (SELECT public.promo_owner_id())
-    AND EXISTS (
-      SELECT 1 FROM public.promo_designs d
-      WHERE d.id = design_id AND d.owner_id = (SELECT public.promo_owner_id())
-    )
-  );
-
 DROP POLICY IF EXISTS "promo_publications_update" ON public.promo_publications;
-CREATE POLICY "promo_publications_update" ON public.promo_publications
-  FOR UPDATE TO authenticated
-  USING (owner_id = (SELECT public.promo_owner_id()) OR (SELECT public.promo_is_admin()))
-  WITH CHECK (owner_id = (SELECT public.promo_owner_id()) OR (SELECT public.promo_is_admin()));
 
 REVOKE ALL ON public.promo_publications FROM anon;
-GRANT SELECT, INSERT, UPDATE ON public.promo_publications TO authenticated;
+REVOKE INSERT, UPDATE, DELETE ON public.promo_publications FROM authenticated;
+GRANT SELECT ON public.promo_publications TO authenticated;
 
 -- =====================================================
 -- Link the AI log to designs now that the table exists

@@ -23,10 +23,18 @@ describe('fact guard', () => {
     expect(copyProblems('Description', 'Two weeks of drills', context)).toEqual([])
   })
 
+  it('catches days and months in any case, plurals and spoken times', () => {
+    const two = { ...context, sessionCount: 2 }
+    for (const text of ['every saturday this november', 'Sundays only', 'SATURDAYS', 'Fridays at seven', 'seven pm sharp', 'doors at nine am', 'until 7 o’clock', 'starts at noon', 'ends by six p.m. tonight']) {
+      expect(copyProblems('Pill', text, two), text).not.toEqual([])
+    }
+  })
+
   it('leaves ordinary words alone', () => {
     expect(copyProblems('Tagline', 'You may feel the burn', context)).toEqual([])
     expect(copyProblems('Tagline', 'March to the beat', context)).toHaveLength(1)
     expect(copyProblems('Description', 'Sharp lines and sun-warmed muscles', context)).toEqual([])
+    expect(copyProblems('Description', 'I am here to sharpen your kicks', context)).toEqual([])
   })
 
   it('catches banned words from the voice notes', () => {

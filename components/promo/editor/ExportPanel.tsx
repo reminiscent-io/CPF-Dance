@@ -120,10 +120,15 @@ export function ExportPanel() {
   const unpublish = async () => {
     setBusy('unpublish')
     try {
-      await promoFetch(`/api/promo/designs/${design.id}/publish`, { method: 'DELETE' })
+      const result = await promoFetch<{ kept?: boolean }>(`/api/promo/designs/${design.id}/publish`, { method: 'DELETE' })
       setPublication(null)
       setConfirmUnpublish(false)
-      addToast('Taken off the site', 'success')
+      addToast(
+        result.kept
+          ? 'Unpublished. The image stays in your assets because a class still uses it.'
+          : 'Taken off the site',
+        'success'
+      )
     } catch (error) {
       setMessage(error instanceof Error && error.message ? error.message : 'That didn’t work. Try again.')
     } finally {

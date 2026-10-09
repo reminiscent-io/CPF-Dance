@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
         for (let attempt = 0; attempt < 2; attempt++) {
           const remaining = DEADLINE_MS - (Date.now() - started)
           if (attempt > 0 && remaining < MIN_RETRY_MS) break
+          // The first calls may have used the rest of the month's budget.
+          if (attempt > 0) await assertWithinBudget(ownerId, 'generate')
           const retryNote = previous
             ? `\n\nYour previous answer:\n${JSON.stringify(previous)}\n\nIt had these problems. Fix all of them:\n- ${problems.join('\n- ')}`
             : ''

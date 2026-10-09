@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Applies migrations 46 and 47 (twice, to prove they re-run) to a throwaway
+# Applies migrations 46, 47 and 48 (twice, to prove they re-run) to a throwaway
 # local Postgres with minimal Supabase stand-ins, then runs RLS checks as a
 # linked login, another instructor, a dancer and anon.
 #
@@ -15,6 +15,7 @@ psql -q -v ON_ERROR_STOP=1 -d "$db" -f "$here/00-supabase-stubs.sql"
 for pass in 1 2; do
   psql -q -v ON_ERROR_STOP=1 -d "$db" -f "$root/migrations/46-promo-studio-foundation.sql" 2>/dev/null
   psql -q -v ON_ERROR_STOP=1 -d "$db" -f "$root/migrations/47-promo-studio-designs.sql" 2>/dev/null
+  psql -q -v ON_ERROR_STOP=1 -d "$db" -f "$root/migrations/48-lock-profile-role-and-link.sql" 2>/dev/null
 done
 echo "migrations applied twice"
 psql -d "$db" -f "$here/10-rls-checks.sql"

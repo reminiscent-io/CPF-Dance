@@ -6,6 +6,7 @@ import {
   loadDesign,
   PUBLIC_ASSETS_BUCKET,
   PUBLICATION_COLUMNS,
+  publicCopyPrefix,
   unpublish,
 } from '@/lib/promo/server/designs'
 
@@ -31,17 +32,19 @@ function isJpeg(bytes: Uint8Array) {
  * `assets` bucket with an `assets` row, so the class form's picker and
  * /instructor/assets see it, and optionally the class's image. Her session
  * proves she owns the promo and the class; the service role then writes the
- * public copy. Republishing replaces the previous copy.
+ * public copy and the publication row. Republishing replaces the previous
+ * copy, and the new one is in place before the old one comes down, so a
+ * failed upload leaves the current copy live.
  */
 export async function POST(request: NextRequest, { params }: Params) {
   let admin: ReturnType<typeof createAdminClient> | null = null
   let uploadedPath: string | null = null
   let assetId: string | null = null
+  let classRestore: { classId: string; assetId: string | null } | null = null
   try {
     const { supabase, ownerId, isAdmin } = await requirePromoInstructor()
     const design = await loadDesign(supabase, await designIdFrom(params))
     if (design.owner_id !== ownerId) throw new PromoError('Only the promo’s owner can publish it.', 403, 'not_owner')
-    admin = createAdminClient()
 
     const form = await request.formData()
     const file = form.get('file')
@@ -67,12 +70,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
     }
 
-    // One live copy per promo: the old one comes down (and the class gets its
-    // earlier image back) before the new one goes up.
-    const previous = await livePublication(supabase, design.id)
-    if (previous) await unpublish(supabase, previous)
-
-    const path = `${ownerId}/promo-${design.id}-${design.revision}-${Date.now().toString(36)}.jpg`
+    admin = createAdminClient()
+    const path = `${publicCopyPrefix(ownerId, design.id)}${design.revision}-${Date.now().toString(36)}.jpg`
     const { error: uploadError } = await admin.storage.from(PUBLIC_ASSETS_BUCKET).upload(path, bytes, {
       contentType: 'image/jpeg',
       // Short CDN lifetime, so an unpublish clears cached copies within minutes.
@@ -97,6 +96,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (assetError) throw assetError
     assetId = asset.id as string
 
+    // One live copy per promo. The old one comes down now, and its class
+    // gets back the image it had before, which the new copy then records.
+    const previous = await livePublication(supabase, design.id)
+    if (previous) await unpublish(previous)
+
     let previousClassAssetId: string | null = null
     if (classId) {
       const { data: cls, error: readError } = await admin.from('classes').select('asset_id').eq('id', classId).single()
@@ -104,9 +108,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       previousClassAssetId = (cls.asset_id as string | null) ?? null
       const { error: classUpdateError } = await admin.from('classes').update({ asset_id: assetId }).eq('id', classId)
       if (classUpdateError) throw classUpdateError
+      classRestore = { classId, assetId: previousClassAssetId }
     }
 
-    const { data: publication, error: publicationError } = await supabase
+    const { data: publication, error: publicationError } = await admin
       .from('promo_publications')
       .insert({
         design_id: design.id,
@@ -120,15 +125,17 @@ export async function POST(request: NextRequest, { params }: Params) {
       })
       .select(PUBLICATION_COLUMNS)
       .single()
-    if (publicationError) {
-      if (classId) {
-        await admin.from('classes').update({ asset_id: previousClassAssetId }).eq('id', classId).eq('asset_id', assetId)
-      }
-      throw publicationError
-    }
+    if (publicationError) throw publicationError
     return NextResponse.json({ publication }, { status: 201 })
   } catch (error) {
     // Leave nothing half-published behind.
+    if (admin && classRestore && assetId) {
+      await admin
+        .from('classes')
+        .update({ asset_id: classRestore.assetId })
+        .eq('id', classRestore.classId)
+        .eq('asset_id', assetId)
+    }
     if (admin && assetId) await admin.from('assets').delete().eq('id', assetId)
     if (admin && uploadedPath) await admin.storage.from(PUBLIC_ASSETS_BUCKET).remove([uploadedPath])
     return promoErrorResponse(error, 'POST /api/promo/designs/[id]/publish')
@@ -142,8 +149,8 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     const design = await loadDesign(supabase, await designIdFrom(params))
     const publication = await livePublication(supabase, design.id)
     if (!publication) return NextResponse.json({ unpublished: false })
-    await unpublish(supabase, publication)
-    return NextResponse.json({ unpublished: true })
+    const { kept } = await unpublish(publication)
+    return NextResponse.json({ unpublished: true, kept })
   } catch (error) {
     return promoErrorResponse(error, 'DELETE /api/promo/designs/[id]/publish')
   }

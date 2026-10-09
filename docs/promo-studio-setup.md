@@ -4,10 +4,13 @@ Promo Studio is built and on branch `claude/exciting-carson-33kkgm`. Nothing has
 
 ## 1. Apply the migrations
 
-In the Supabase SQL editor for the Dance project, run these files in order. Both are safe to re-run.
+In the Supabase SQL editor for the Dance project, run these files in order. All three are safe to re-run.
 
-1. `migrations/46-promo-studio-foundation.sql`: the owner and role helpers, `promo_assets`, the AI cost log, budgets, the monthly view, and the private `promo-private` bucket with its storage policies.
-2. `migrations/47-promo-studio-designs.sql`: brand kits, templates and frozen versions, designs, revisions and publications.
+1. `migrations/48-lock-profile-role-and-link.sql`, first and now, whatever happens with Promo Studio. In production today, the only UPDATE rule on `profiles` lets a signed-in user update her own row with no column limits, and `authenticated` holds UPDATE on `role` and `linked_profile_id` (checked against the live database on October 9). Any dancer can make herself an admin, or point `linked_profile_id` at Courtney's profile and be treated as Courtney by every API route. This migration refuses those two changes from API users; the dashboard and SQL editor can still make them. No app screen writes either column, so nothing else changes.
+2. `migrations/46-promo-studio-foundation.sql`: the owner and role helpers, `promo_assets`, the AI cost log, budgets, the monthly view, and the private `promo-private` bucket with its storage policies.
+3. `migrations/47-promo-studio-designs.sql`: brand kits, templates and frozen versions, designs, revisions and publications.
+
+`scripts/promo-studio-rls/run.sh` applies all three to a throwaway local Postgres and checks the policies as Courtney's linked login, another instructor, a dancer and anon.
 
 Check afterwards that Storage lists a private `promo-private` bucket with a 50 MB limit and JPEG and PNG only. If the SQL editor couldn't create it, create it by hand with those settings; the policies in 46 apply to it by name.
 

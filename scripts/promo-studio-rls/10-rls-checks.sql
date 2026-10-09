@@ -85,3 +85,31 @@ select set_config('request.jwt.claim.sub','33333333-3333-3333-3333-333333333333'
 set role authenticated;
 select 'other monthly rows: ' || count(*) from promo_ai_monthly;
 reset role;
+
+\echo '12 publication rows are service-role only (expect 1 visible, then 2 permission denied)'
+insert into assets (id, title, file_url, file_type, instructor_id) values
+ ('dddddddd-0000-0000-0000-000000000001','victim asset','https://x/v.jpg','image/jpeg','33333333-3333-3333-3333-333333333333');
+insert into promo_publications (design_id, owner_id, asset_id, public_path, public_url, revision)
+select id, owner_id, null, owner_id || '/promo-' || id || '-1-a.jpg', 'https://x/p.jpg', 1 from promo_designs limit 1;
+select set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222222',false) \g /dev/null
+set role authenticated;
+select 'publications visible to courtney: ' || count(*) from promo_publications;
+insert into promo_publications (design_id, owner_id, asset_id, public_path, public_url, revision)
+select id, owner_id, 'dddddddd-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333/x.jpg', 'https://x', 1 from promo_designs limit 1;
+update promo_publications set asset_id = 'dddddddd-0000-0000-0000-000000000001';
+reset role;
+
+\echo '13 a user cannot change her own role or link (expect ok, then 2 errors, then ok as postgres)'
+select set_config('request.jwt.claim.sub','44444444-4444-4444-4444-444444444444',false) \g /dev/null
+set role authenticated;
+update profiles set email = 'dancer+new@example.com' where id = '44444444-4444-4444-4444-444444444444';
+update profiles set role = 'admin' where id = '44444444-4444-4444-4444-444444444444';
+update profiles set linked_profile_id = '11111111-1111-1111-1111-111111111111' where id = '44444444-4444-4444-4444-444444444444';
+reset role;
+update profiles set role = 'instructor' where id = '44444444-4444-4444-4444-444444444444';
+select 'dancer role now (set by postgres): ' || role from profiles where id = '44444444-4444-4444-4444-444444444444';
+
+\echo '14 deleting a profile that published a version works (expect ok, ok, null)'
+update promo_template_versions set published_by = '33333333-3333-3333-3333-333333333333' where version = 1;
+delete from profiles where id = '33333333-3333-3333-3333-333333333333';
+select 'published_by after delete: ' || coalesce(published_by::text, 'null') from promo_template_versions where version = 1;

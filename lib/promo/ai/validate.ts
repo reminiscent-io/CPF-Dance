@@ -9,11 +9,17 @@ import type { SlotDef } from '../types'
  * for its one retry.
  */
 
-const MONTHS =
-  /\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\b|\b(JANUARY|FEBRUARY|MARCH|APRIL|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)\b/
-const WEEKDAYS =
-  /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tues?|Wed|Thu|Thurs?|Fri|Sat|Sun)\b|\b(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\b/
-const CLOCK = /\b(noon|midnight|o'clock|a\.m\.|p\.m\.)/i
+// Full names in any case, plurals included ("Saturdays", "every november").
+// Short or ambiguous forms ("May", "March", "Sun", "Wed") only count when
+// capitalized, so "you may" and "sun salutations" stay legal.
+const MONTHS_ANY_CASE = /\b(january|february|april|june|july|september|october|november|december)s?\b/i
+const MONTHS_CAPITALIZED = /\b(March|May|August|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec|MARCH|MAY|AUGUST)\b/
+const WEEKDAYS_ANY_CASE = /\b(mon|tues|wednes|thurs|fri|satur|sun)days?\b/i
+const WEEKDAYS_CAPITALIZED = /\b(Mon|Tues?|Wed|Thu|Thurs?|Fri|Sat|Sun)\b/
+const CLOCK = new RegExp(
+  `\\b(noon|midnight|o['’]clock|pm)\\b|\\b[ap]\\.m\\.|\\b(${Object.keys(NUMBER_WORDS).join('|')}|eleven|twelve)\\s?am\\b`,
+  'i'
+)
 const CURRENCY = /[$€£¥]|\b(dollars?|usd|bucks)\b/i
 const DIGITS = /\d/
 const COUNTED = new RegExp(
@@ -32,7 +38,7 @@ export function copyProblems(label: string, text: string, context: CopyContext):
   const problems: string[] = []
   if (text.includes('!')) problems.push(`${label}: remove the exclamation point.`)
   if (DIGITS.test(text)) problems.push(`${label}: no digits. Dates, times and prices are added separately.`)
-  if (MONTHS.test(text) || WEEKDAYS.test(text)) {
+  if (MONTHS_ANY_CASE.test(text) || MONTHS_CAPITALIZED.test(text) || WEEKDAYS_ANY_CASE.test(text) || WEEKDAYS_CAPITALIZED.test(text)) {
     problems.push(`${label}: don’t name months or weekdays. The dates are shown separately.`)
   }
   if (CLOCK.test(text)) problems.push(`${label}: don’t mention times of day.`)

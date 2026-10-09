@@ -39,7 +39,9 @@ Changes from the plan above:
 - "Update to latest template" (Phase 5, task 4) is built: the editor offers it when a newer version is live and lists anything that didn't carry over.
 - Text model: `gpt-6-luna` by default, falling back to `gpt-4.1-mini` if the API rejects it. Pose detection loads MediaPipe from jsDelivr and Google storage; both URLs are configurable.
 
-Verified here: 595 unit tests (134 of them for Promo Studio), lint, typecheck and a production build; both migrations and their RLS against a local Postgres; every page through Playwright against a fake API (`/dev/promo/*`). Not verified here: anything against the live Supabase project or OpenAI, which this environment can't reach.
+An independent review of the API routes and migrations led to these fixes before handoff: publication rows are written only by the service role, and unpublishing deletes only the promo's own public copy; unpublishing keeps the chain of class images intact and keeps a copy a class still uses; republishing puts the new copy up before the old one comes down; the fact guard catches lowercase and plural day and month names and spoken times; tagging and retried uploads no longer overwrite tags she edited; every AI attempt is logged, with no hidden SDK retries; and deleting a profile that published a template version works. It also found that production lets users change their own `role` and `linked_profile_id`, which migration 48 closes.
+
+Verified here: 610 unit and route tests (149 of them for Promo Studio), lint, typecheck and a production build; migrations 46 to 48 and their RLS against a local Postgres; every page through Playwright against a fake API (`/dev/promo/*`). Not verified here: anything against the live Supabase project or OpenAI, which this environment can't reach.
 
 ## 1. Codebase read
 

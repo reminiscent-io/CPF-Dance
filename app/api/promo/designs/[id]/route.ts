@@ -139,7 +139,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     const design = await loadDesign(supabase, await designId(params))
 
     const publication = await livePublication(supabase, design.id)
-    if (publication) await unpublish(supabase, publication)
+    if (publication) await unpublish(publication)
 
     const { error } = await supabase.from('promo_designs').delete().eq('id', design.id)
     if (error) throw error

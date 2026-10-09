@@ -95,13 +95,28 @@ describe('callStructured', () => {
     expect(logAiCall).toHaveBeenCalledWith(expect.objectContaining({ status: 'error', errorCode: 'http_404' }))
   })
 
-  it('turns rate limits and timeouts into messages she can act on', async () => {
+  it('retries a rate limit once, logging both attempts, then explains it', async () => {
     const { callStructured } = await load()
-    create.mockRejectedValueOnce(new OpenAI.RateLimitError(429, { message: 'slow down' }, 'slow down', new Headers()))
+    const limited = () => new OpenAI.RateLimitError(429, { message: 'slow down' }, 'slow down', new Headers())
+    create.mockRejectedValueOnce(limited()).mockRejectedValueOnce(limited())
     await expect(callStructured(call)).rejects.toMatchObject({ status: 429, code: 'rate_limited' })
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(logAiCall.mock.calls.filter(([entry]) => entry.errorCode === 'http_429')).toHaveLength(2)
+  })
+
+  it('recovers from one dropped connection', async () => {
+    const { callStructured } = await load()
+    create
+      .mockRejectedValueOnce(new OpenAI.APIConnectionError({ message: 'reset' }))
+      .mockResolvedValueOnce(reply('{"title":"A"}'))
+    expect((await callStructured(call)).data).toEqual({ title: 'A' })
+  })
+
+  it('doesn’t retry a timeout', async () => {
+    const { callStructured } = await load()
     create.mockRejectedValueOnce(new OpenAI.APIConnectionTimeoutError())
     await expect(callStructured(call)).rejects.toMatchObject({ status: 504, code: 'timeout' })
-    expect(create).toHaveBeenCalledTimes(2)
+    expect(create).toHaveBeenCalledTimes(1)
   })
 
   it('asks for low reasoning effort on reasoning models only', async () => {

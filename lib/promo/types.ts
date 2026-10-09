@@ -391,6 +391,7 @@ export interface PromoDesignRow {
 export interface PromoPublication {
   id: string
   design_id: string
+  owner_id: string
   asset_id: string | null
   public_path: string
   public_url: string

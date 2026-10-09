@@ -67,12 +67,14 @@ export async function POST(request: NextRequest) {
       const row = byId.get(photo.id)
       if (!row) continue
       const next = applyTagResult({ tags: (row.tags ?? {}) as AssetTags, pose: row.pose as AssetPose | null }, photo)
+      // Only if she hasn't corrected the tags while the call ran.
       const { data: asset, error: updateError } = await supabase
         .from('promo_assets')
         .update({ tags: next.tags, pose: next.pose, tagged_at: new Date().toISOString() })
         .eq('id', row.id)
+        .eq('tags_edited', false)
         .select(ASSET_COLUMNS)
-        .single()
+        .maybeSingle()
       if (!updateError && asset) updated.push(asset)
     }
     return NextResponse.json({ assets: updated })

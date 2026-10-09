@@ -15,9 +15,11 @@ export interface Query {
   columns?: string
 }
 
-export type Handler = (query: Query) => { data: unknown; error: unknown } | undefined
+export type Handler = (query: Query) => { data: unknown; error: unknown; count?: number } | undefined
 
-export function fakeSupabase(handler: Handler) {
+export type StorageHandler = (call: { bucket: string; method: string; args: unknown[] }) => unknown
+
+export function fakeSupabase(handler: Handler, storageHandler: StorageHandler = () => undefined) {
   const queries: Query[] = []
   const storageCalls: { bucket: string; method: string; args: unknown[] }[] = []
 
@@ -58,8 +60,9 @@ export function fakeSupabase(handler: Handler) {
     from: vi.fn((bucket: string) => {
       const call = (method: string, value: unknown) =>
         vi.fn(async (...args: unknown[]) => {
-          storageCalls.push({ bucket, method, args })
-          return value
+          const entry = { bucket, method, args }
+          storageCalls.push(entry)
+          return storageHandler(entry) ?? value
         })
       return {
         upload: call('upload', { data: { path: 'x' }, error: null }),

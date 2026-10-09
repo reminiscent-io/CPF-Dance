@@ -1,7 +1,11 @@
 -- Minimal stand-ins for the Supabase pieces the promo migrations touch.
-create role anon nologin;
-create role authenticated nologin;
-create role service_role nologin bypassrls;
+-- Roles are cluster-wide, so a second run finds them already there.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
+end $$;
 create schema auth;
 create function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
@@ -37,13 +41,17 @@ alter default privileges in schema public grant all on functions to anon, authen
 create type user_role as enum ('instructor', 'dancer', 'guardian', 'admin');
 create table public.profiles (
   id uuid primary key, email text, role user_role not null,
-  linked_profile_id uuid references public.profiles(id)
+  linked_profile_id uuid references public.profiles(id) on delete set null
 );
+-- As in production: anyone signed in reads profiles; a user updates her own row.
+alter table public.profiles enable row level security;
+create policy profiles_select on public.profiles for select using (true);
+create policy "Users can update their own profile" on public.profiles for update using ((select auth.uid()) = id);
 create function update_updated_at_column() returns trigger language plpgsql as
   $$ begin new.updated_at = now(); return new; end $$;
 create table public.assets (
   id uuid primary key default gen_random_uuid(), title text, file_url text, file_type text,
-  file_size bigint, instructor_id uuid references public.profiles(id),
+  file_size bigint, instructor_id uuid references public.profiles(id) on delete cascade,
   created_at timestamptz default now(), updated_at timestamptz default now()
 );
 create table public.classes (
