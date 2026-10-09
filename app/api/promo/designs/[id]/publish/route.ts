@@ -47,7 +47,8 @@ export async function POST(request: NextRequest, { params }: Params) {
     const file = form.get('file')
     const classIdRaw = form.get('classId')
     const classId = typeof classIdRaw === 'string' && classIdRaw ? classIdRaw : null
-    if (!(file instanceof Blob)) throw new PromoError('The image didn’t arrive. Try again.', 400)
+    // A form entry is a File or a string; instanceof Blob depends on which runtime made the File.
+    if (!file || typeof file === 'string') throw new PromoError('The image didn’t arrive. Try again.', 400)
     if (file.size > MAX_BYTES) throw new PromoError('That image is too large to publish.', 413)
     if (classId && !isUuid(classId)) throw new PromoError('That class wasn’t found.', 404)
     const bytes = new Uint8Array(await file.arrayBuffer())

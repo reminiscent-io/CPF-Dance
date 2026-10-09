@@ -30,7 +30,7 @@ app/
     login/ signup/    # Auth pages
   api/                # API routes (one folder per resource)
   auth/               # Auth callback handler
-components/           # Shared UI; ui/ = design-system kit (barrel `@/components/ui`); admin/ dancer/ instructor/ notes/ = portal-specific
+components/           # Shared UI; ui/ = design-system kit (barrel `@/components/ui`); admin/ dancer/ instructor/ notes/ promo/ = portal-specific
 lib/
   auth/               # server-auth.ts — role guards
   supabase/           # client.ts, server.ts, middleware.ts, admin.ts (service role)
@@ -38,8 +38,9 @@ lib/
   gmail/              # Gmail via Replit connectors
   google/             # Calendar/Meet via Replit connectors
   lesson-credits.ts   # Lesson-pack credit spend/refund
+  promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–45)
+migrations/           # Numbered SQL migrations (05–47)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -150,7 +151,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–45; next is 46). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
+Numbered SQL files in `migrations/` (05–47; next is 48). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
 
 ## Deployment Gotcha
 

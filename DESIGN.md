@@ -179,6 +179,16 @@ A four-family palette: champagne paper, stage charcoal, ballet rose, curtain gil
 
 **The No-All-Caps Rule.** Headings are never set in ALL CAPS. The display serif does not survive uppercase. Labels may be uppercase only when the typography spec for that component calls for it.
 
+### Promo Studio output roles
+
+Promo Studio renders posters and Instagram graphics that follow Courtney's own printed reference (the Precision Workshop poster). These faces exist only inside rendered promos, loaded from `public/fonts/promo/` by `lib/promo/fonts.ts`. They never appear in app chrome; the editor around a promo still uses Cormorant Garamond and Manrope.
+
+- **Poster Display** (Bodoni Moda 400–700, or Cormorant Garamond 500–700): promo titles and date numerals, set in capitals at zero tracking. A poster title is a printed display line, so capitals suit it; the No-All-Caps Rule covers portal headings.
+- **Poster Capitals** (Manrope 400–700, or Jost 400–600): eyebrows, taglines, keywords, pills and credentials, tracked out +0.12 to +0.45em.
+- **Signature Script** (Great Vibes, Allura or Mrs Saint Delafield): her name in the bio block, one line per promo. Script never carries information and never appears anywhere else. This is the single sanctioned script use; the anti-reference against script fonts still holds for the app and the site.
+
+Promo colors come from the palette above through the brand kit (paper Champagne Page, ink Stage Black, accent Curtain Gilt, dark block Stage Ink), so promos add no new colors.
+
 ## 4. Elevation
 
 The system is mostly flat. Surfaces sit on the champagne page; differentiation comes from tonal layering (champagne-silk on champagne-page) and from the global 1px champagne-stroke border, not from shadows. Shadows appear only as a quiet response to either elevation (a card lifted off the page) or focus state (a hovered link in a hover-capable context). When shadows do appear, they are diffuse and warm, not crisp and gray.

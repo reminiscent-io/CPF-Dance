@@ -2,7 +2,7 @@
 
 Date: 2026-10-09
 Owner: Kevin. First user: Courtney.
-Status: Draft for review. Section 7 lists the decisions to make before Phase 1.
+Status: MVP (Phases 1 to 5) built on `claude/exciting-carson-33kkgm`; see Build status. Setup steps are in [docs/promo-studio-setup.md](../../promo-studio-setup.md).
 Inputs: the Promo Studio feature request and the "Precision Workshop" reference poster (Template #1).
 
 ## Summary
@@ -14,6 +14,32 @@ Inputs: the Promo Studio feature request and the "Precision Workshop" reference 
 - The MVP (acceptance criteria 1 to 8) uses no image generation. AI photo prep is Phase 6, behind a feasibility spike on her actual photos.
 - Every library the MVP adds is MIT or Apache-2.0, and every font is OFL. OpenAI usage (your key) and the existing Replit hosting are the only costs. The Supabase project is on the Free plan, and its 1 GB storage cap is the tightest limit in the design.
 - Rough size: seven to nine weeks to MVP for one developer working with Claude Code.
+
+## Build status (October 9, 2026)
+
+Phases 1 to 5 are built: photo library, document model and renderer, editor and publishing, AI generation and revisions, and the template editor with brand kit and usage pages. Phases 6 and 7 are not started, and the S1 to S4 spikes still need her phone and her photos.
+
+Decisions as built:
+- D1. Courtney's profile is `admin`, so template, brand kit and usage pages sit under `/admin/promo` behind `requireRole('admin')` and admin-only RLS. There is no `promo_editors` table.
+- D2. DESIGN.md names three promo-only roles: Poster Display, Poster Capitals and Signature Script.
+- D3. Originals are capped at 16 MP.
+- D4. Tagging sends 400 px thumbnails as base64 from the server; every Responses API call sets `store: false`.
+- D5. Publishing copies a web-size JPEG into the public `assets` bucket and table and can set it as a class image. No new public page yet.
+- D6. No HEIC decoder; a browser that can't read a HEIC gets a clear message.
+- D7. Poster PDFs have no bleed by default. The exporter takes a bleed and writes trim and bleed boxes once a print shop's spec is known.
+- D8. Looks are render-time overlays across the whole photo, off with one tap. Courtney still needs to say whether that counts as altering her.
+- D9. The default monthly cap is $10, set per instructor on the usage page.
+- D10. A workshop is several class rows picked together.
+
+Changes from the plan above:
+- Photos and designs are deleted outright, files included; there are no `deleted_at` columns. Upload states live in the browser's IndexedDB queue, so `promo_assets.status` only holds ready, pending_review and rejected.
+- Publishing posts the render straight to the publish route instead of staging it in the private bucket first.
+- Format siblings copy values without AI shortening. Overflowing slots show a warning with "Shorten with AI", which goes through the revise route.
+- The revise route returns the revised document to the browser, which applies it as one undoable step and autosaves it. The route records a revision row and never writes the design row, so it can't race autosave.
+- "Update to latest template" (Phase 5, task 4) is built: the editor offers it when a newer version is live and lists anything that didn't carry over.
+- Text model: `gpt-6-luna` by default, falling back to `gpt-4.1-mini` if the API rejects it. Pose detection loads MediaPipe from jsDelivr and Google storage; both URLs are configurable.
+
+Verified here: 595 unit tests (134 of them for Promo Studio), lint, typecheck and a production build; both migrations and their RLS against a local Postgres; every page through Playwright against a fake API (`/dev/promo/*`). Not verified here: anything against the live Supabase project or OpenAI, which this environment can't reach.
 
 ## 1. Codebase read
 

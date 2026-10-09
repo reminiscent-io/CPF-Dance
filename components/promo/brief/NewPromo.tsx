@@ -169,7 +169,14 @@ export default function NewPromo() {
           : [...current, asset]
     )
 
-  const fullBrief = (): PromoBrief => ({ ...brief, photoIds: photos.map((asset) => asset.id) })
+  // Rows she added but didn't finish are left out rather than failing the request.
+  const fullBrief = (): PromoBrief => ({
+    ...brief,
+    photoIds: photos.map((asset) => asset.id),
+    sessions: brief.sessions.filter(
+      (session) => /^\d{4}-\d{2}-\d{2}$/.test(session.date) && /^\d{1,2}:\d{2}$/.test(session.start) && /^\d{1,2}:\d{2}$/.test(session.end)
+    ),
+  })
 
   const generate = () => {
     void run(fullBrief())
