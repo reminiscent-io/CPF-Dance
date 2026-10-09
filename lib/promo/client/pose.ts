@@ -19,6 +19,8 @@ const MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
 
 let landmarker: Promise<PoseLandmarker | null> | null = null
+// Set once the model fails or stalls, so the rest of a batch doesn't wait on it too.
+let unavailable = false
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([promise, new Promise<null>((resolve) => setTimeout(() => resolve(null), ms))])
@@ -45,9 +47,13 @@ async function create(): Promise<PoseLandmarker | null> {
 }
 
 export async function detectPose(source: HTMLCanvasElement): Promise<AssetPose | null> {
+  if (unavailable) return null
   landmarker ??= create()
   const instance = await withTimeout(landmarker, 20_000)
-  if (!instance) return null
+  if (!instance) {
+    unavailable = true
+    return null
+  }
   try {
     const result = instance.detect(source)
     const first = result.landmarks[0]
