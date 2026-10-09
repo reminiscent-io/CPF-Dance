@@ -8,7 +8,8 @@ import {
   DocumentTextIcon,
   UserGroupIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  MegaphoneIcon
 } from '@heroicons/react/24/outline'
 
 interface NavItem {
@@ -93,6 +94,11 @@ export function InstructorBottomNav() {
     router.push('/instructor/classes?create=true')
   }
 
+  const handleNewPromo = () => {
+    setShowPlusMenu(false)
+    router.push('/instructor/promo/new')
+  }
+
   const isActive = (href: string) => {
     return pathname === href || pathname?.startsWith(href + '/')
   }
@@ -164,7 +170,7 @@ export function InstructorBottomNav() {
                 </button>
                 <button
                   onClick={handleCreateClass}
-                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                     <AcademicCapIcon className="w-5 h-5 text-purple-600" />
@@ -172,6 +178,18 @@ export function InstructorBottomNav() {
                   <div>
                     <span className="block font-medium text-gray-900">Create Class</span>
                     <span className="block text-xs text-gray-500">Schedule a new class</span>
+                  </div>
+                </button>
+                <button
+                  onClick={handleNewPromo}
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center">
+                    <MegaphoneIcon className="w-5 h-5 text-gold-700" />
+                  </div>
+                  <div>
+                    <span className="block font-medium text-gray-900">New Promo</span>
+                    <span className="block text-xs text-gray-500">Design a class promo</span>
                   </div>
                 </button>
               </div>

@@ -175,7 +175,7 @@ export function exportFilename(title: string, format: string, kind: ExportKind):
   return `${base}-${format.replace('ig_', '')}.${ext}`
 }
 
-function prefersShareSheet(): boolean {
+export function prefersShareSheet(): boolean {
   if (typeof window === 'undefined') return false
   return window.matchMedia?.('(pointer: coarse)').matches ?? false
 }

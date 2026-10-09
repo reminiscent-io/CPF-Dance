@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { PROMO_BUCKET } from '../paths'
 
 /**
  * Private photos never get a URL anyone else could open. The browser
@@ -9,7 +10,7 @@ import { createClient } from '@/lib/supabase/client'
  * Blob URLs are same-origin, so Konva can export without tainting the canvas.
  */
 
-export const PROMO_BUCKET = 'promo-private'
+export { PROMO_BUCKET }
 
 export type Rendition = 'thumb' | 'display' | 'original'
 
@@ -99,4 +100,28 @@ export function forgetAsset(assetId: string) {
     blobUrls.delete(key)
     images.delete(key)
   }
+}
+
+const fileUrls = new Map<string, Promise<string | null>>()
+
+/**
+ * A blob: URL for any private file she owns (design thumbnails), keyed by a
+ * version so a newer upload is fetched again. Null when the file doesn't exist.
+ */
+export function privateFileUrl(path: string, version: string): Promise<string | null> {
+  const key = `${path}@${version}`
+  const cached = fileUrls.get(key)
+  if (cached) return cached
+  const promise = (async () => {
+    const { data, error } = await createClient().storage.from(PROMO_BUCKET).download(path)
+    if (error || !data) return null
+    return URL.createObjectURL(data)
+  })()
+  fileUrls.set(key, promise)
+  return promise
+}
+
+/** Dev harness only: serve a rendition from a local blob URL instead of storage. */
+export function primeRendition(assetId: string, rendition: Rendition, url: string) {
+  blobUrls.set(`${assetId}:${rendition}`, Promise.resolve(url))
 }

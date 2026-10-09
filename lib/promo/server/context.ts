@@ -58,20 +58,7 @@ export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value)
 }
 
-export function assetPaths(ownerId: string, assetId: string) {
-  const base = `${ownerId}/assets/${assetId}`
-  return {
-    original_path: `${base}/original.jpg`,
-    display_path: `${base}/display.jpg`,
-    thumb_path: `${base}/thumb.jpg`,
-  }
-}
-
-export function designThumbPath(ownerId: string, designId: string) {
-  return `${ownerId}/designs/${designId}/thumb.jpg`
-}
-
-export const PROMO_BUCKET = 'promo-private'
+export { assetPaths, designThumbPath, PROMO_BUCKET } from '../paths'
 
 export const ASSET_COLUMNS =
   'id, owner_id, parent_id, status, original_path, display_path, thumb_path, width, height, bytes, original_filename, tags, pose, tags_edited, tagged_at, favorite, created_at'

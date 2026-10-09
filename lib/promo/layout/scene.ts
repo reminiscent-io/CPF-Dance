@@ -75,6 +75,9 @@ export interface SceneLine extends SceneBase {
 export interface SceneText extends SceneBase {
   type: 'text'
   slotId?: string
+  /** Inside a repeater item: which part of the item value this shows. */
+  field?: TextLayer['field']
+  uppercase?: boolean
   x: number
   y: number
   width: number
@@ -332,6 +335,8 @@ export function buildScene(input: BuildSceneInput): Scene {
           ...base,
           type: 'text',
           slotId: layer.slot ?? ctx.repeaterSlot,
+          field: layer.field,
+          uppercase: style.uppercase,
           x: box.x + shift,
           y: box.y,
           width: box.width,
@@ -507,4 +512,20 @@ export function textLayoutChanged(
     if (previous[key]?.hash !== next[key]?.hash || previous[key]?.size !== next[key]?.size) return true
   }
   return false
+}
+
+/** Slots a format actually draws, so the editor only offers fields that show. */
+export function slotsInLayout(layout: FormatLayout): Set<string> {
+  const slots = new Set<string>()
+  const visit = (layers: Layer[]) => {
+    for (const layer of layers) {
+      if ((layer.kind === 'text' || layer.kind === 'photo') && layer.slot) slots.add(layer.slot)
+      if (layer.kind === 'repeater') {
+        slots.add(layer.slot)
+        visit(layer.item.layers)
+      }
+    }
+  }
+  visit(layout.layers)
+  return slots
 }

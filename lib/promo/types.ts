@@ -386,3 +386,16 @@ export interface PromoDesignRow {
   created_at: string
   updated_at: string
 }
+
+/** A live copy of a promo on the site (public `assets` bucket and table). */
+export interface PromoPublication {
+  id: string
+  design_id: string
+  asset_id: string | null
+  public_path: string
+  public_url: string
+  class_id: string | null
+  previous_class_asset_id: string | null
+  revision: number
+  published_at: string
+}

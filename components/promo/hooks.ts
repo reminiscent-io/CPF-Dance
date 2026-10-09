@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { assetBlobUrl, forgetAsset, type AssetFiles, type Rendition } from '@/lib/promo/client/images'
 import { enqueueFiles, onAssetChanged, resumeUploads } from '@/lib/promo/client/upload/queue'
 import type { AssetTags, PromoAsset } from '@/lib/promo/types'
@@ -38,21 +39,7 @@ export interface PromoMe {
 
 /** The primary profile Promo Studio works for (a linked login resolves to it). */
 export function usePromoMe() {
-  const [me, setMe] = useState<PromoMe | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    promoFetch<PromoMe>('/api/promo/me')
-      .then((value) => {
-        if (!cancelled) setMe(value)
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { data: me, error } = useAsyncData<PromoMe>((signal) => promoFetch<PromoMe>('/api/promo/me', { signal }), [])
   return { me, error }
 }
 

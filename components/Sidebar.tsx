@@ -26,7 +26,8 @@ import {
   DocumentIcon,
   PhotoIcon,
   UsersIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  MegaphoneIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -67,7 +68,8 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
           links: [
             { href: '/instructor/schedule', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4" /> },
             { href: '/instructor/classes', label: 'Classes', icon: <AcademicCapIcon className="w-4 h-4" /> },
-            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-4 h-4" /> }
+            { href: '/instructor/assets', label: 'Assets', icon: <PhotoIcon className="w-4 h-4" /> },
+            { href: '/instructor/promo', label: 'Promo Studio', icon: <MegaphoneIcon className="w-4 h-4" /> }
           ]
         },
         {
