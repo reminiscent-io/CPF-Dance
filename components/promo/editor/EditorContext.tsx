@@ -30,7 +30,13 @@ export interface LinkedClass {
 /** GET /api/promo/designs/[id] */
 export interface EditorData {
   design: PromoDesignRow
-  template: { versionId: string; version: number; definition: TemplateDefinition }
+  template: {
+    versionId: string
+    version: number
+    definition: TemplateDefinition
+    /** Set when the template has a newer published version than this design uses. */
+    latest?: { versionId: string; version: number } | null
+  }
   assets: PromoAsset[]
   siblings: DesignSibling[]
   publication: PromoPublication | null

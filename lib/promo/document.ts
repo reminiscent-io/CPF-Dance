@@ -263,3 +263,29 @@ export function clearNudge(document: DesignDocument, layerId?: string): DesignDo
   delete nudges[layerId]
   return { ...document, nudges }
 }
+
+/**
+ * Moves a design onto a newer version of its template: values and photos
+ * carry over by slot id, her moves by layer id. Returns what couldn't come
+ * along, named the way the old version labelled it.
+ */
+export function upgradeDocument(
+  document: DesignDocument,
+  from: TemplateDefinition,
+  to: TemplateDefinition,
+  format: keyof TemplateDefinition['formats']
+): { document: DesignDocument; dropped: string[] } {
+  const next = normalizeDocument(document, to)
+  const label = (slotId: string) => getSlot(from, slotId)?.label ?? slotId
+  const dropped: string[] = []
+  for (const id of Object.keys(document.values)) if (!(id in next.values)) dropped.push(label(id))
+  for (const id of Object.keys(document.photos)) if (!(id in next.photos)) dropped.push(label(id))
+  const layers = new Map((to.formats[format]?.layers ?? []).map((layer) => [layer.id, layer]))
+  const oldLayers = new Map((from.formats[format]?.layers ?? []).map((layer) => [layer.id, layer]))
+  const nudges: DesignDocument['nudges'] = {}
+  for (const [id, box] of Object.entries(next.nudges)) {
+    if (layers.has(id)) nudges[id] = box
+    else dropped.push(`your move of ${oldLayers.get(id)?.name ?? id}`)
+  }
+  return { document: { ...next, nudges, layout: {} }, dropped }
+}

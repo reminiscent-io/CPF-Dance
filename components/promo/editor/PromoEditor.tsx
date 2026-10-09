@@ -134,6 +134,7 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
   const [tab, setTab] = useState<Tab>('content')
   const [editing, setEditing] = useState<{ node: SceneText; target: TextEditTarget } | null>(null)
   const [making, setMaking] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
   const [saverSlot] = useState(() => new SaverSlot(design.revision))
   const revise = useRevise(store, design.id)
   const canvasBox = useRef<HTMLDivElement>(null)
@@ -346,6 +347,27 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
   const flushSave = useCallback(() => saverSlot.flush(), [saverSlot])
   const currentRevision = useCallback(() => saverSlot.revision(), [saverSlot])
 
+  const upgrade = async () => {
+    setUpgrading(true)
+    try {
+      await saverSlot.flush()
+      const result = await promoFetch<{ version: number; dropped: string[] }>(`/api/promo/designs/${design.id}/upgrade`, {
+        method: 'POST',
+        json: { revision: saverSlot.revision() },
+      })
+      addToast(
+        result.dropped.length
+          ? `Updated to version ${result.version}. Left behind: ${result.dropped.join(', ')}.`
+          : `Updated to template version ${result.version}.`,
+        'success'
+      )
+      onReload()
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'That didn’t work. Try again.', 'error')
+      setUpgrading(false)
+    }
+  }
+
   const context = useMemo<EditorContextValue | null>(
     () =>
       layout
@@ -451,6 +473,18 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
           </Button>
         )}
       </nav>
+
+      {data.template.latest && status !== 'conflict' && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-champagne-100 px-4 py-3 text-sm text-charcoal-800">
+          <p className="flex-1">
+            This promo uses version {data.template.version} of its template. Version {data.template.latest.version} is out;
+            updating keeps your words, photos and moves wherever they still fit.
+          </p>
+          <Button size="sm" variant="outline" onClick={upgrade} disabled={upgrading}>
+            {upgrading ? 'Updating…' : 'Update'}
+          </Button>
+        </div>
+      )}
 
       {status === 'conflict' && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-ballet-pink-100 px-4 py-3 text-sm text-ballet-pink-900" role="alert">

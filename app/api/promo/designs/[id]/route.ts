@@ -32,7 +32,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
     const version = await loadTemplateVersion(supabase, design.template_version_id)
 
     const assetIds = documentAssetIds(design.document)
-    const [assets, siblings, publication, classes] = await Promise.all([
+    const [assets, siblings, publication, classes, template] = await Promise.all([
       assetIds.length
         ? supabase.from('promo_assets').select(ASSET_COLUMNS).in('id', assetIds)
         : Promise.resolve({ data: [], error: null }),
@@ -45,14 +45,27 @@ export async function GET(_request: NextRequest, { params }: Params) {
       design.class_ids.length
         ? supabase.from('classes').select('id, title, start_time').in('id', design.class_ids)
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .from('promo_templates')
+        .select('current_version_id, current:promo_template_versions!promo_templates_current_version_fkey(version)')
+        .eq('id', version.templateId)
+        .maybeSingle(),
     ])
     if (assets.error) throw assets.error
     if (siblings.error) throw siblings.error
     if (classes.error) throw classes.error
 
+    const currentId = template.data?.current_version_id as string | undefined
+    const current = template.data?.current as { version: number } | { version: number }[] | null | undefined
+    const currentNumber = Array.isArray(current) ? current[0]?.version : current?.version
     return NextResponse.json({
       design,
-      template: { versionId: version.id, version: version.version, definition: version.definition },
+      template: {
+        versionId: version.id,
+        version: version.version,
+        definition: version.definition,
+        latest: currentId && currentId !== version.id && currentNumber ? { versionId: currentId, version: currentNumber } : null,
+      },
       assets: assets.data ?? [],
       siblings: siblings.data ?? [],
       publication,

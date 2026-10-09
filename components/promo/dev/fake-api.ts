@@ -127,10 +127,38 @@ export function installFakePromoApi(assets: PromoAsset[]): () => void {
   const definition = buildPrecisionWorkshopDefinition()
   let revision = 1
 
+  const requests: { url: string; method: string; body: unknown }[] = []
+  ;(window as unknown as { __promoRequests: typeof requests }).__promoRequests = requests
+
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.pathname + input.search : input.url
     const method = (init?.method ?? 'GET').toUpperCase()
+    if (url.startsWith('/api/')) {
+      let body: unknown = null
+      try {
+        body = typeof init?.body === 'string' ? JSON.parse(init.body) : null
+      } catch {
+        body = null
+      }
+      requests.push({ url, method, body })
+    }
     if (url.startsWith('/api/classes')) return json(200, { classes: SAMPLE_CLASSES })
+    if (url === '/api/admin/promo/templates/t1') {
+      return json(200, {
+        template: { id: 't1', slug: 'precision-workshop', name: definition.name, status: 'active' },
+        definition,
+        draft: null,
+        currentVersion: 1,
+        versions: [{ id: 'v1', version: 1, notes: 'Built-in template', published_at: '2026-10-09T12:00:00Z' }],
+      })
+    }
+    if (url === '/api/admin/promo/templates/t1/draft' && method === 'PUT') {
+      return json(200, { draft: { id: 'd1', version: 2, updated_at: new Date().toISOString() } })
+    }
+    if (url === '/api/admin/promo/templates/t1/publish') return json(200, { published: { id: 'd1', version: 2 } })
+    if (url === '/api/promo/brand-kit') {
+      return json(200, { tokens: method === 'PUT' ? (JSON.parse(String(init?.body)) as { tokens: unknown }).tokens : DEFAULT_BRAND_TOKENS })
+    }
     if (!url.startsWith('/api/promo/')) return realFetch(input, init)
     if (url === '/api/promo/me') return json(200, { ownerId: DEV_OWNER, isAdmin: true, name: 'Dev' })
     if (url === '/api/promo/assets' && method === 'GET') return json(200, { assets })

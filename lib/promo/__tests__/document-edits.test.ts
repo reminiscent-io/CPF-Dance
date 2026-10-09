@@ -71,3 +71,31 @@ describe('document edits', () => {
     expect(setSlotValue(doc, 'tagline', 'New', { byHand: false }).edited).not.toContain('tagline')
   })
 })
+
+describe('upgradeDocument', () => {
+  it('keeps what maps across and names what it leaves behind', async () => {
+    const { upgradeDocument } = await import('../document')
+    const { buildPrecisionWorkshopDefinition } = await import('../templates/precision-workshop')
+    const from = buildPrecisionWorkshopDefinition()
+    const to = {
+      ...from,
+      slots: from.slots.filter((slot) => slot.id !== 'location'),
+      formats: {
+        ...from.formats,
+        ig_post: { ...from.formats.ig_post!, layers: from.formats.ig_post!.layers.filter((layer) => layer.id !== 'tagline') },
+      },
+    }
+    const document = {
+      ...doc,
+      values: { ...doc.values, location: 'Studio 5', tagline: 'Mine' },
+      nudges: { tagline: { y: 10 }, sessions: { y: 400 } },
+      layout: { tagline: { hash: 'x', size: 10, lines: ['MINE'] } },
+    }
+    const result = upgradeDocument(document, from, to, 'ig_post')
+    expect(result.document.values.location).toBeUndefined()
+    expect(result.document.values.tagline).toBe('Mine')
+    expect(result.document.nudges).toEqual({ sessions: { y: 400 } })
+    expect(result.document.layout).toEqual({})
+    expect(result.dropped).toEqual(['Location', 'your move of Tagline'])
+  })
+})
