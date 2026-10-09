@@ -68,6 +68,18 @@ export function measureLine(
   return measure(line, { family, weight, size }) + tracking * graphemeCount(line)
 }
 
+/** Dashes and separators never start a line; they travel with the word before them. */
+const GLUE_TO_PREVIOUS = /^[–—\-|/]$/
+
+function splitWords(paragraph: string): string[] {
+  const words: string[] = []
+  for (const word of paragraph.split(/\s+/).filter(Boolean)) {
+    if (words.length > 0 && GLUE_TO_PREVIOUS.test(word)) words[words.length - 1] += ` ${word}`
+    else words.push(word)
+  }
+  return words
+}
+
 /** Greedy word wrap. A word wider than the box gets a line of its own (and overflows). */
 export function wrapWords(
   text: string,
@@ -76,7 +88,7 @@ export function wrapWords(
 ): string[] {
   const lines: string[] = []
   for (const paragraph of text.split('\n')) {
-    const words = paragraph.split(/\s+/).filter(Boolean)
+    const words = splitWords(paragraph)
     if (words.length === 0) {
       lines.push('')
       continue
@@ -97,9 +109,43 @@ export function wrapWords(
 }
 
 /**
+ * Splits items into exactly `lineCount` contiguous lines that all fit,
+ * keeping the widest line as narrow as possible. Lists are short (a dozen
+ * items at most), so trying every split is cheap.
+ */
+function bestPartition(
+  items: string[],
+  join: string,
+  lineCount: number,
+  maxWidth: number,
+  lineWidth: (line: string) => number
+): string[] | null {
+  let best: { lines: string[]; widest: number } | null = null
+  const search = (start: number, remaining: number, lines: string[], widest: number) => {
+    if (best && widest >= best.widest) return
+    if (remaining === 1) {
+      const line = items.slice(start).join(join)
+      const width = lineWidth(line)
+      if (width > maxWidth) return
+      const total = Math.max(widest, width)
+      if (!best || total < best.widest) best = { lines: [...lines, line], widest: total }
+      return
+    }
+    for (let end = start + 1; end <= items.length - (remaining - 1); end++) {
+      const line = items.slice(start, end).join(join)
+      const width = lineWidth(line)
+      if (width > maxWidth) break
+      search(end, remaining - 1, [...lines, line], Math.max(widest, width))
+    }
+  }
+  search(0, lineCount, [], 0)
+  return best ? (best as { lines: string[] }).lines : null
+}
+
+/**
  * List items stay whole. One line if they fit; otherwise the fewest lines
- * that fit with items spread evenly (6 focus words become 3 + 3, like the
- * reference poster); greedy as a last resort.
+ * that fit, split so the widest line is as narrow as possible (6 focus words
+ * become 3 + 3, like the reference poster); greedy as a last resort.
  */
 export function wrapList(
   items: string[],
@@ -114,12 +160,8 @@ export function wrapList(
   if (lineWidth(oneLine) <= maxWidth || maxLines <= 1) return [oneLine]
 
   for (let lineCount = 2; lineCount <= Math.min(maxLines, clean.length); lineCount++) {
-    const perLine = Math.ceil(clean.length / lineCount)
-    const lines: string[] = []
-    for (let i = 0; i < clean.length; i += perLine) {
-      lines.push(clean.slice(i, i + perLine).join(join))
-    }
-    if (lines.every((line) => lineWidth(line) <= maxWidth)) return lines
+    const best = bestPartition(clean, join, lineCount, maxWidth, lineWidth)
+    if (best) return best
   }
 
   const greedy: string[] = []
@@ -136,24 +178,58 @@ export function wrapList(
   return greedy
 }
 
+/**
+ * Same line count, narrowest width: evens out ragged lines and orphans
+ * ("11:00 AM – 1:00 / PM" becomes "11:00 AM – / 1:00 PM"). The canvas
+ * equivalent of CSS text-wrap: balance.
+ */
+export function balanceWords(
+  text: string,
+  maxWidth: number,
+  lineWidth: (line: string) => number
+): string[] {
+  const greedy = wrapWords(text, maxWidth, lineWidth)
+  if (greedy.length < 2 || text.includes('\n')) return greedy
+  const target = greedy.length
+  let lo = maxWidth / target
+  let hi = maxWidth
+  let best = greedy
+  for (let i = 0; i < 14 && hi - lo > 0.5; i++) {
+    const mid = (lo + hi) / 2
+    const attempt = wrapWords(text, mid, lineWidth)
+    const fits = attempt.length <= target && attempt.every((line) => lineWidth(line) <= mid)
+    if (fits) {
+      best = attempt
+      hi = mid
+    } else {
+      lo = mid
+    }
+  }
+  return best
+}
+
 /** Konva measures line widths slightly differently from our sum; leave a sliver. */
 const WIDTH_SLACK = 0.995
 
-function layoutAt(measure: MeasureText, input: TextFitInput, size: number) {
+function layoutAt(measure: MeasureText, input: TextFitInput, size: number, balance = false) {
   const { style, family } = input
   const tracking = trackingPx(style, size)
   const lineWidth = (line: string) => measureLine(measure, line, family, style.weight, size, tracking)
   const maxWidth = input.width * WIDTH_SLACK
   const maxLines = style.maxLines ?? 1
-  const lines = input.listItems
+  const wrap = balance ? balanceWords : wrapWords
+  // Plain text written as a " | " list (credential lines) wraps between items.
+  const items = input.listItems ?? (input.text.includes(' | ') ? input.text.split(' | ') : undefined)
+  const join = input.listItems ? (input.listJoin ?? ' ') : ' | '
+  const lines = items
     ? wrapList(
-        input.listItems.map((item) => applyCase(item, style)),
-        input.listJoin ?? ' ',
+        items.map((item) => applyCase(item, style)),
+        join,
         maxWidth,
         maxLines,
         lineWidth
       )
-    : wrapWords(applyCase(input.text, style), maxWidth, lineWidth)
+    : wrap(applyCase(input.text, style), maxWidth, lineWidth)
   const widths = lines.map(lineWidth)
   const maxLineWidth = widths.length ? Math.max(...widths) : 0
   const totalHeight = lines.length * size * (style.lineHeight ?? 1.2)
@@ -170,14 +246,17 @@ export function fitText(measure: MeasureText, input: TextFitInput): TextFit {
   const max = input.style.size
   const min = Math.min(max, input.style.minSize ?? max * 0.6)
 
+  // Search sizes with greedy wrapping, then balance the lines at the chosen
+  // size; balancing keeps the line count, so it never breaks the fit.
+  const finish = (size: number, overflow: boolean) => {
+    const balanced = layoutAt(measure, input, size, true)
+    return { size, lines: balanced.lines, maxLineWidth: balanced.maxLineWidth, overflow, frozen: false }
+  }
+
   const atMax = layoutAt(measure, input, max)
-  if (atMax.fits || max === min) {
-    return { size: max, lines: atMax.lines, maxLineWidth: atMax.maxLineWidth, overflow: !atMax.fits, frozen: false }
-  }
+  if (atMax.fits || max === min) return finish(max, !atMax.fits)
   const atMin = layoutAt(measure, input, min)
-  if (!atMin.fits) {
-    return { size: min, lines: atMin.lines, maxLineWidth: atMin.maxLineWidth, overflow: true, frozen: false }
-  }
+  if (!atMin.fits) return finish(min, true)
   // Binary search to a quarter pixel.
   let lo = min
   let hi = max
@@ -192,8 +271,7 @@ export function fitText(measure: MeasureText, input: TextFitInput): TextFit {
       hi = mid
     }
   }
-  const size = Math.floor(best.size * 4) / 4
-  return { size, lines: best.lines, maxLineWidth: best.maxLineWidth, overflow: false, frozen: false }
+  return finish(Math.floor(best.size * 4) / 4, false)
 }
 
 /** FNV-1a, 32-bit. Enough to tell whether a frozen layout still matches its inputs. */

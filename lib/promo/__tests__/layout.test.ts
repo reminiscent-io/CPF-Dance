@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { coverRect, defaultFocus, focusForOffset } from '../layout/crop'
 import { layoutRepeater } from '../layout/repeater'
 import {
+  balanceWords,
   fitText,
   fitTextWithFrozen,
   textLayoutHash,
@@ -27,6 +28,26 @@ describe('wrapWords', () => {
   })
 })
 
+describe('balanceWords', () => {
+  const width = (line: string) => line.length * 10
+
+  it('moves words up so the last line is not an orphan', () => {
+    // Greedy at 150 px gives "11:00 AM – 1:00" / "PM"
+    expect(wrapWords('11:00 AM – 1:00 PM', 150, width)).toEqual(['11:00 AM – 1:00', 'PM'])
+    expect(balanceWords('11:00 AM – 1:00 PM', 150, width)).toEqual(['11:00 AM –', '1:00 PM'])
+  })
+
+  it('leaves single lines alone', () => {
+    expect(balanceWords('Workshop', 500, width)).toEqual(['Workshop'])
+  })
+
+  it('never starts a line with a dash', () => {
+    for (const lines of [wrapWords('11:00 AM – 1:00 PM', 90, width), balanceWords('11:00 AM – 1:00 PM', 150, width)]) {
+      expect(lines.some((line) => line.startsWith('–'))).toBe(false)
+    }
+  })
+})
+
 describe('wrapList', () => {
   const width = (line: string) => line.length * 10
 
@@ -40,6 +61,11 @@ describe('wrapList', () => {
 
   it('stays on one line when everything fits', () => {
     expect(wrapList(['A', 'B'], ' | ', 1000, 2, width)).toEqual(['A | B'])
+  })
+
+  it('splits by width, not by count, so a short last item is not stranded', () => {
+    const items = ['PROFESSIONAL DANCER', 'CHOREOGRAPHER', 'TEACHER']
+    expect(wrapList(items, ' | ', 360, 2, width)).toEqual(['PROFESSIONAL DANCER', 'CHOREOGRAPHER | TEACHER'])
   })
 })
 
