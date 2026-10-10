@@ -17,9 +17,12 @@ import {
   ClockIcon,
   MapPinIcon,
   ChevronRightIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import ReviewModal from '@/components/ReviewModal'
+import { useExternalSignup } from '@/components/dancer/useExternalSignup'
+import { signupUrlFor } from '@/lib/signup-link'
 
 interface DancerStats {
   upcoming_classes: number
@@ -45,13 +48,19 @@ interface OpenClass {
   title: string
   location: string | null
   start_time: string
+  end_time: string
   class_type: string
   series_id: string | null
   max_capacity: number | null
   enrolled_count: number
   is_enrolled: boolean
+  external_signup_url: string | null
+  workshop_signup_url: string | null
   studio: {
     name: string
+  } | null
+  instructor: {
+    full_name: string | null
   } | null
 }
 
@@ -98,6 +107,7 @@ export default function DancerPortalPage() {
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([])
   const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
   const [openClasses, setOpenClasses] = useState<ReturnType<typeof openForSignup>>([])
+  const [studentId, setStudentId] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
   const [viewingNote, setViewingNote] = useState<RecentNote | null>(null)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -131,6 +141,7 @@ export default function DancerPortalPage() {
       if (openRes.ok) {
         const data = await openRes.json()
         setOpenClasses(openForSignup(data.classes || []))
+        setStudentId(data.student_id ?? null)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -145,6 +156,16 @@ export default function DancerPortalPage() {
       fetchDashboardData()
     }
   }, [loading, user, profile, fetchDashboardData])
+
+  const externalSignup = useExternalSignup({ studentId, onEnrolled: fetchDashboardData })
+
+  // Straight to the class's pay link when it has one; a multi-day workshop
+  // card sells the full run. Classes enrolled in-app go through Open Classes.
+  const handleSignUp = (classItem: OpenClass & { days: number }) => {
+    if (!externalSignup.start(classItem, classItem.days > 1 ? 'full' : undefined)) {
+      router.push('/dancer/available-classes')
+    }
+  }
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -274,6 +295,7 @@ export default function DancerPortalPage() {
                   <div className="flex flex-col gap-3">
                     {openClasses.slice(0, 3).map((classItem) => {
                       const { date, time } = formatDateTime(classItem.start_time)
+                      const external = !!signupUrlFor(classItem, classItem.days > 1 ? 'full' : undefined)
                       const spotsLeft = classItem.max_capacity !== null
                         ? classItem.max_capacity - classItem.enrolled_count
                         : null
@@ -283,7 +305,7 @@ export default function DancerPortalPage() {
                           hover
                           padding="none"
                           className="cursor-pointer border-rose-200"
-                          onClick={() => router.push('/dancer/available-classes')}
+                          onClick={() => handleSignUp(classItem)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between gap-2">
@@ -312,7 +334,9 @@ export default function DancerPortalPage() {
                               </div>
                               <span className="text-sm text-rose-700 flex items-center gap-0.5 flex-shrink-0 tracking-[0.04em]">
                                 Sign up
-                                <ChevronRightIcon className="w-4 h-4" />
+                                {external
+                                  ? <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                                  : <ChevronRightIcon className="w-4 h-4" />}
                               </span>
                             </div>
                           </CardContent>
@@ -503,6 +527,8 @@ export default function DancerPortalPage() {
           />
         )}
       </Modal>
+
+      {externalSignup.modal}
     </PortalLayout>
   )
 }

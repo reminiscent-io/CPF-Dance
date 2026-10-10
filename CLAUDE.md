@@ -131,6 +131,9 @@ Four models in `lib/utils/pricing.ts`: `per_person`, `per_class`, `per_hour`, `t
 
 Money columns are `DECIMAL(10,2)` — do arithmetic in integer cents via `dollarsToCents()` / `centsToDollars()` (`lib/utils/money.ts`).
 
+### External Class Sign-Ups
+"Sign up" on a class with `external_signup_url` (or `workshop_signup_url` for a full workshop) opens that link via `useExternalSignup` (`components/dancer/`). Stripe Payment Links (`buy.stripe.com`) get a `client_reference_id` from `lib/signup-link.ts`; the Stripe webhook enrolls the dancer once the paid link matches the class. Otherwise the dancer confirms by hand when they return to the tab. Both paths go through `enrollStudent()` in `lib/class-enrollment.ts`.
+
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.
 
