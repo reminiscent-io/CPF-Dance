@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Verify the class exists and is public
     const { data: classData, error: classError } = await supabase
       .from('classes')
-      .select('id, is_public, is_cancelled, max_capacity, start_time, enrollments(id)')
+      .select('id, class_type, series_id, is_public, is_cancelled, max_capacity, start_time, enrollments(id)')
       .eq('id', class_id)
       .single()
 
@@ -36,40 +36,63 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot enroll in a past class' }, { status: 400 })
     }
 
-    // Check if class is full
-    const enrolledCount = classData.enrollments?.length || 0
-    if (classData.max_capacity && enrolledCount >= classData.max_capacity) {
-      return NextResponse.json({ error: 'This class is full' }, { status: 400 })
+    // A multi-day workshop is one sign-up: enroll in every upcoming day.
+    let days = [classData]
+    if (classData.class_type === 'workshop' && classData.series_id) {
+      const { data: seriesDays, error: seriesError } = await supabase
+        .from('classes')
+        .select('id, class_type, series_id, is_public, is_cancelled, max_capacity, start_time, enrollments(id)')
+        .eq('series_id', classData.series_id)
+        .eq('is_public', true)
+        .eq('is_cancelled', false)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+
+      if (seriesError) {
+        console.error('Error fetching workshop days:', seriesError)
+        return NextResponse.json({ error: 'Failed to enroll in class' }, { status: 500 })
+      }
+      if (seriesDays && seriesDays.length > 0) days = seriesDays
     }
 
-    // Check if student is already enrolled
-    const { data: existingEnrollment } = await supabase
+    const { data: existingEnrollments } = await supabase
       .from('enrollments')
-      .select('id')
+      .select('class_id')
       .eq('student_id', student.id)
-      .eq('class_id', class_id)
-      .single()
+      .in('class_id', days.map(day => day.id))
 
-    if (existingEnrollment) {
+    const alreadyEnrolled = new Set((existingEnrollments || []).map(row => row.class_id))
+    const toEnroll = days.filter(day => !alreadyEnrolled.has(day.id))
+
+    if (toEnroll.length === 0) {
       return NextResponse.json({ error: 'You are already enrolled in this class' }, { status: 400 })
     }
 
-    // Create enrollment
-    const { data: enrollment, error: enrollmentError } = await supabase
-      .from('enrollments')
-      .insert({
-        student_id: student.id,
-        class_id: class_id
-      })
-      .select()
-      .single()
+    // Check if class is full (any day of a workshop being full blocks the sign-up)
+    const fullDay = toEnroll.find(day => day.max_capacity && (day.enrollments?.length || 0) >= day.max_capacity)
+    if (fullDay) {
+      return NextResponse.json({
+        error: days.length > 1 ? 'One of the workshop days is full' : 'This class is full'
+      }, { status: 400 })
+    }
 
-    if (enrollmentError) {
+    // Create enrollment
+    const { data: enrollments, error: enrollmentError } = await supabase
+      .from('enrollments')
+      .insert(toEnroll.map(day => ({
+        student_id: student.id,
+        class_id: day.id
+      })))
+      .select()
+
+    if (enrollmentError || !enrollments) {
       console.error('Error creating enrollment:', enrollmentError)
       return NextResponse.json({ error: 'Failed to enroll in class' }, { status: 500 })
     }
 
-    return NextResponse.json({ enrollment }, { status: 201 })
+    const enrollment = enrollments.find(row => row.class_id === class_id) ?? enrollments[0]
+
+    return NextResponse.json({ enrollment, enrolled_days: enrollments.length }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

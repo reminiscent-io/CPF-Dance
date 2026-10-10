@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
     const body = await request.json()
-    const { classes: classesToCreate } = body
+    // link_series: give the whole batch one series_id (a multi-day workshop).
+    // link_to_class_id: join an existing class's series (adding days to it).
+    const { classes: classesToCreate, link_series, link_to_class_id } = body
 
     if (!classesToCreate || !Array.isArray(classesToCreate) || classesToCreate.length === 0) {
       return NextResponse.json({ error: 'No classes provided' }, { status: 400 })
@@ -31,6 +33,34 @@ export async function POST(request: NextRequest) {
 
     if (classesToCreate.length > 100) {
       return NextResponse.json({ error: 'Cannot create more than 100 classes at once' }, { status: 400 })
+    }
+
+    let seriesId: string | null = null
+    if (link_to_class_id) {
+      const { data: source } = await supabase
+        .from('classes')
+        .select('id, series_id, instructor_id')
+        .eq('id', link_to_class_id)
+        .single()
+
+      if (!source || (profile.role !== 'admin' && source.instructor_id !== profile.id)) {
+        return NextResponse.json({ error: 'Class to add days to was not found' }, { status: 404 })
+      }
+
+      seriesId = source.series_id
+      if (!seriesId) {
+        seriesId = crypto.randomUUID()
+        const { error: linkError } = await supabase
+          .from('classes')
+          .update({ series_id: seriesId })
+          .eq('id', source.id)
+        if (linkError) {
+          console.error('Error linking source class to series:', linkError)
+          return NextResponse.json({ error: 'Failed to link classes' }, { status: 500 })
+        }
+      }
+    } else if (link_series) {
+      seriesId = crypto.randomUUID()
     }
 
     const createdClasses = []
@@ -125,7 +155,8 @@ export async function POST(request: NextRequest) {
         external_signup_url: external_signup_url || null,
         is_public: is_public || false,
         is_virtual: (class_type === 'private' && is_virtual) || false,
-        asset_id: asset_id || null
+        asset_id: asset_id || null,
+        series_id: seriesId
       }
 
       const { data: newClass, error } = await supabase

@@ -85,6 +85,9 @@ export interface Class {
   actual_attendance_count: number | null // Manual override for actual attendance
   external_signup_url: string | null // External URL for signup (e.g., Eventbrite)
   is_public: boolean // Whether class is visible to dancers/guardians
+  series_id?: string | null // Shared by every day of a multi-day workshop / recurring batch
+  series_position?: number // 1-based day within the series (set by GET /api/classes)
+  series_total?: number
   created_at: string
   updated_at: string
   studio?: Studio

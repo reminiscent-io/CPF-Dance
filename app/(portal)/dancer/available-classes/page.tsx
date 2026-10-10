@@ -24,6 +24,7 @@ interface PublicClass {
   start_time: string
   end_time: string
   class_type: string
+  series_id: string | null
   max_capacity: number | null
   pricing_model: string
   cost_per_person: number | null
@@ -38,6 +39,37 @@ interface PublicClass {
   instructor: {
     full_name: string
   }
+  // Set on the card for a multi-day workshop: every upcoming day, in order
+  days?: { id: string; start_time: string; end_time: string }[]
+}
+
+// One card per multi-day workshop. Enrolling in it enrolls in every day, so
+// the card carries the fullest day's count.
+function collapseWorkshops(classes: PublicClass[]): PublicClass[] {
+  const listings: PublicClass[] = []
+  const workshops = new Map<string, PublicClass>()
+  for (const cls of classes) {
+    if (cls.class_type !== 'workshop' || !cls.series_id) {
+      listings.push(cls)
+      continue
+    }
+    const day = { id: cls.id, start_time: cls.start_time, end_time: cls.end_time }
+    const existing = workshops.get(cls.series_id)
+    if (existing) {
+      existing.days!.push(day)
+      existing.enrolled_count = Math.max(existing.enrolled_count, cls.enrolled_count)
+      if (cls.max_capacity !== null) {
+        existing.max_capacity = existing.max_capacity === null
+          ? cls.max_capacity
+          : Math.min(existing.max_capacity, cls.max_capacity)
+      }
+    } else {
+      const listing = { ...cls, days: [day] }
+      workshops.set(cls.series_id, listing)
+      listings.push(listing)
+    }
+  }
+  return listings
 }
 
 export default function AvailableClassesPage() {
@@ -127,7 +159,11 @@ export default function AvailableClassesPage() {
       })
 
       if (response.ok) {
-        addToast('Successfully enrolled in class!', 'success')
+        const { enrolled_days } = await response.json()
+        addToast(
+          enrolled_days > 1 ? `Enrolled in all ${enrolled_days} workshop days!` : 'Successfully enrolled in class!',
+          'success'
+        )
         setShowEnrollModal(false)
         fetchPublicClasses() // Refresh the list
         router.push('/dancer/classes') // Redirect to enrolled classes
@@ -216,7 +252,11 @@ export default function AvailableClassesPage() {
     return cls.max_capacity ? cls.enrolled_count >= cls.max_capacity : false
   }
 
-  const upcomingClasses = classes.filter(cls => new Date(cls.start_time) > new Date())
+  const upcomingClasses = collapseWorkshops(
+    classes.filter(cls => new Date(cls.start_time) > new Date())
+  )
+
+  const isMultiDay = (cls: PublicClass) => (cls.days?.length ?? 0) > 1
 
   if (loading || loadingClasses) {
     return (
@@ -259,15 +299,30 @@ export default function AvailableClassesPage() {
                       <span>{cls.instructor.full_name}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Date:</span>
-                      <span>{formatDate(cls.start_time)}</span>
-                    </div>
+                    {isMultiDay(cls) ? (
+                      <div>
+                        <span className="font-medium">{cls.days!.length} days:</span>
+                        <ul className="mt-1 space-y-0.5">
+                          {cls.days!.map(day => (
+                            <li key={day.id} className="tabular-nums">
+                              {formatDate(day.start_time)} · {formatTime(day.start_time)} - {formatTime(day.end_time)}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Date:</span>
+                          <span>{formatDate(cls.start_time)}</span>
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Time:</span>
-                      <span>{formatTime(cls.start_time)} - {formatTime(cls.end_time)}</span>
-                    </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Time:</span>
+                          <span>{formatTime(cls.start_time)} - {formatTime(cls.end_time)}</span>
+                        </div>
+                      </>
+                    )}
 
                     {cls.location && (
                       <div className="flex items-center gap-2">
@@ -339,19 +394,33 @@ export default function AvailableClassesPage() {
           <div className="space-y-4">
             <p className="text-charcoal-700">
               Are you sure you want to enroll in <strong>{selectedClass.title}</strong>?
+              {isMultiDay(selectedClass) && ` This enrolls you in all ${selectedClass.days!.length} days.`}
             </p>
 
             <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Date:</span>
-                <span className="font-medium">{formatDate(selectedClass.start_time)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Time:</span>
-                <span className="font-medium">
-                  {formatTime(selectedClass.start_time)} - {formatTime(selectedClass.end_time)}
-                </span>
-              </div>
+              {isMultiDay(selectedClass) ? (
+                selectedClass.days!.map(day => (
+                  <div key={day.id} className="flex justify-between">
+                    <span className="text-charcoal-500">{formatDate(day.start_time)}</span>
+                    <span className="font-medium">
+                      {formatTime(day.start_time)} - {formatTime(day.end_time)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-charcoal-500">Date:</span>
+                    <span className="font-medium">{formatDate(selectedClass.start_time)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-charcoal-500">Time:</span>
+                    <span className="font-medium">
+                      {formatTime(selectedClass.start_time)} - {formatTime(selectedClass.end_time)}
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between">
                 <span className="text-charcoal-500">Price:</span>
                 <span className="font-medium">{formatPrice(selectedClass)}</span>

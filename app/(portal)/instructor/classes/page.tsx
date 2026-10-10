@@ -28,6 +28,7 @@ import { convertETToUTC, convertUTCToET, etDayKey } from '@/lib/utils/et-timezon
 import { useNow } from '@/lib/hooks/use-now'
 import { AssetSelector } from '@/components/AssetSelector'
 import { centsToDollars, parseCurrencyToCents } from '@/lib/utils/money'
+import { seriesLabel } from '@/lib/class-series'
 
 // All class times are authored and displayed in Eastern Time
 const ET = 'America/New_York'
@@ -146,6 +147,14 @@ function ClassAgendaRow({
           <span className={priceRose ? 'font-medium text-rose-700' : undefined}>
             {CLASS_TYPE_LABEL[cls.class_type]}
           </span>
+          {cls.series_position && cls.series_total && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="tabular-nums">
+                {seriesLabel(cls.class_type, { series_position: cls.series_position, series_total: cls.series_total })}
+              </span>
+            </>
+          )}
           {cls.is_virtual && (
             <>
               <span aria-hidden="true">·</span>
@@ -422,7 +431,7 @@ function ClassesContent() {
         const response = await fetch('/api/classes/bulk', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ classes: classesToCreate })
+          body: JSON.stringify({ classes: classesToCreate, link_series: true })
         })
 
         if (!response.ok) {
@@ -432,9 +441,15 @@ function ClassesContent() {
         }
 
         const { classes: newClasses, meet } = await response.json()
-        setClasses(prev => [...newClasses, ...prev])
+        const total = newClasses.length
+        setClasses(prev => [
+          ...(total > 1
+            ? newClasses.map((cls: Class, index: number) => ({ ...cls, series_position: index + 1, series_total: total }))
+            : newClasses),
+          ...prev
+        ])
         setShowCreateModal(false)
-        const noun = formData.class_type === 'private' ? 'lessons' : 'classes'
+        const noun = formData.class_type === 'private' ? 'lessons' : formData.class_type === 'workshop' ? 'workshop days' : 'classes'
         addToast(`${newClasses.length} ${noun} created successfully`, 'success')
         if (meet?.failed > 0) {
           addToast(
@@ -485,7 +500,19 @@ function ClassesContent() {
     }
   }
 
-  const handleUpdateClass = async (classId: string, formData: CreateClassData & { newStudioName?: string }) => {
+  const reloadClasses = async () => {
+    try {
+      setClasses(await loadClasses({ filterStudio, filterType, upcomingOnly }))
+    } catch (error) {
+      console.error('Error fetching classes:', error)
+    }
+  }
+
+  const handleUpdateClass = async (
+    classId: string,
+    formData: CreateClassData & { newStudioName?: string },
+    applyToSeries = false
+  ) => {
     try {
       let studioId = formData.studio_id
 
@@ -520,7 +547,7 @@ function ClassesContent() {
       const response = await fetch(`/api/classes/${classId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(classData)
+        body: JSON.stringify({ ...classData, apply_to_series: applyToSeries })
       })
 
       if (!response.ok) {
@@ -529,11 +556,23 @@ function ClassesContent() {
         throw new Error(errorData.error || 'Failed to update class')
       }
 
-      const { class: updatedClass, meet } = await response.json()
-      setClasses(prev => prev.map(cls => cls.id === classId ? updatedClass : cls))
+      const { class: updatedClass, meet, series_updated } = await response.json()
+      if (series_updated > 0) {
+        await reloadClasses()
+      } else {
+        // Keep the "Day 2 of 3" numbering the list computed; the PATCH response doesn't carry it
+        setClasses(prev => prev.map(cls => cls.id === classId
+          ? { ...updatedClass, series_position: cls.series_position, series_total: cls.series_total }
+          : cls))
+      }
       setShowEditModal(false)
       setSelectedClass(null)
-      addToast('Class updated successfully', 'success')
+      addToast(
+        series_updated > 0
+          ? `Class updated, along with ${series_updated} other ${series_updated === 1 ? 'day' : 'days'}`
+          : 'Class updated successfully',
+        'success'
+      )
       if (meet?.url && !meet.dancerHasEmail) {
         addToast(
           'This dancer has no email on file, so they were not notified. Reopen the lesson to copy the Google Meet link and share it manually.',
@@ -547,13 +586,10 @@ function ClassesContent() {
     }
   }
 
-  const handleDeleteClass = async (classId: string) => {
-    if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) {
-      return
-    }
-
+  // The edit modal confirms before calling this
+  const handleDeleteClass = async (classId: string, scope: 'single' | 'series') => {
     try {
-      const response = await fetch(`/api/classes/${classId}`, {
+      const response = await fetch(`/api/classes/${classId}${scope === 'series' ? '?scope=series' : ''}`, {
         method: 'DELETE'
       })
 
@@ -562,10 +598,17 @@ function ClassesContent() {
         throw new Error(errorData.error || 'Failed to delete class')
       }
 
-      setClasses(prev => prev.filter(cls => cls.id !== classId))
+      const { deleted_ids } = await response.json()
+      const deleted = new Set<string>(deleted_ids || [classId])
       setShowEditModal(false)
       setSelectedClass(null)
-      addToast('Class deleted successfully', 'success')
+      // Remaining days of a series need renumbering, so refetch rather than filter
+      if (selectedClass?.series_id) {
+        await reloadClasses()
+      } else {
+        setClasses(prev => prev.filter(cls => !deleted.has(cls.id)))
+      }
+      addToast(deleted.size > 1 ? `${deleted.size} classes deleted` : 'Class deleted successfully', 'success')
     } catch (error) {
       console.error('Error deleting class:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete class'
@@ -758,8 +801,8 @@ function ClassesContent() {
             setShowEditModal(false)
             setSelectedClass(null)
           }}
-          onSubmit={(formData) => handleUpdateClass(selectedClass.id, formData)}
-          onDelete={() => handleDeleteClass(selectedClass.id)}
+          onSubmit={(formData, applyToSeries) => handleUpdateClass(selectedClass.id, formData, applyToSeries)}
+          onDelete={(scope) => handleDeleteClass(selectedClass.id, scope)}
         />
       )}
     </PortalLayout>
@@ -770,8 +813,8 @@ interface EditClassModalProps {
   classData: Class
   studios: Studio[]
   onClose: () => void
-  onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
-  onDelete: () => void
+  onSubmit: (data: CreateClassData & { newStudioName?: string }, applyToSeries: boolean) => void
+  onDelete: (scope: 'single' | 'series') => void
 }
 
 function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: EditClassModalProps) {
@@ -790,6 +833,18 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const getStudentEmail = (student: { email?: string | null; profile?: { email?: string } }) => {
     return student.email || student.profile?.email || ''
   }
+
+  // Linked days of a multi-day workshop (or other recurring batch)
+  const [series, setSeries] = useState<{ id: string; start_time: string; end_time: string; is_cancelled: boolean }[]>([])
+  const [applyToSeries, setApplyToSeries] = useState(classData.class_type === 'workshop')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const now = useNow()
+  const isWorkshop = classData.class_type === 'workshop'
+  const otherUpcomingDays = series.filter(
+    day => day.id !== classData.id && new Date(day.start_time).getTime() >= now.getTime()
+  )
+  const seriesNoun = (n: number) =>
+    isWorkshop ? (n === 1 ? 'day' : 'days') : (n === 1 ? 'class' : 'classes')
 
   // Recurring copy state
   const [showRecurringSection, setShowRecurringSection] = useState(false)
@@ -854,11 +909,22 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           console.error('Error fetching enrollments:', error)
         }
       }
+
+      if (classData.series_id) {
+        try {
+          const response = await fetch(`/api/classes/${classData.id}`)
+          if (!response.ok) throw new Error('Failed to fetch class series')
+          const result = await response.json()
+          if (!cancelled) setSeries(result.series || [])
+        } catch (error) {
+          console.error('Error fetching class series:', error)
+        }
+      }
     }
 
     run()
     return () => { cancelled = true }
-  }, [profile, classData.id, classData.class_type])
+  }, [profile, classData.id, classData.class_type, classData.series_id])
 
   const refreshEnrolledStudents = async () => {
     try {
@@ -1020,7 +1086,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
       const response = await fetch('/api/classes/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classes: classesToCreate })
+        // New days join this class's series, so they stay linked to it
+        body: JSON.stringify({ classes: classesToCreate, link_to_class_id: classData.id })
       })
 
       if (!response.ok) {
@@ -1029,7 +1096,12 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
       }
 
       const { classes: newClasses } = await response.json()
-      addToast(`${newClasses.length} recurring classes created successfully`, 'success')
+      addToast(
+        isWorkshop
+          ? `${newClasses.length} workshop ${newClasses.length === 1 ? 'day' : 'days'} added`
+          : `${newClasses.length} recurring classes created successfully`,
+        'success'
+      )
       setShowRecurringSection(false)
       setRecurringSelectedDays([])
       setRecurringEndDate('')
@@ -1062,7 +1134,23 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
       ...formData,
       start_time: startUTC,
       end_time: endDate.toISOString()
-    })
+    }, applyToSeries && otherUpcomingDays.length > 0)
+  }
+
+  const handleDeleteClick = () => {
+    if (otherUpcomingDays.length > 0) {
+      setConfirmingDelete(true)
+    } else if (confirm('Are you sure you want to delete this class? This cannot be undone.')) {
+      onDelete('single')
+    }
+  }
+
+  const formatSeriesDay = (day: { start_time: string; end_time: string }) => {
+    const start = new Date(day.start_time)
+    const date = start.toLocaleString('en-US', { timeZone: ET, weekday: 'short', month: 'short', day: 'numeric' })
+    const from = start.toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+    const to = new Date(day.end_time).toLocaleString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' })
+    return `${date} · ${from} - ${to}`
   }
 
   return (
@@ -1103,6 +1191,54 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
+
+          {series.length > 1 && (
+            <div className="p-4 bg-champagne-100 border border-champagne-200 rounded-lg space-y-3">
+              <h4 className="text-sm font-medium text-charcoal-950">
+                {isWorkshop ? `Workshop days (${series.length})` : `Classes in this series (${series.length})`}
+              </h4>
+              <ol className="space-y-1 text-sm">
+                {series.map((day, index) => {
+                  const isThisDay = day.id === classData.id
+                  return (
+                    <li
+                      key={day.id}
+                      className={`flex flex-wrap items-baseline gap-x-2 tabular-nums ${
+                        day.is_cancelled
+                          ? 'line-through text-charcoal-400'
+                          : isThisDay ? 'font-medium text-charcoal-950' : 'text-charcoal-600'
+                      }`}
+                    >
+                      <span className="w-14 shrink-0">{isWorkshop ? `Day ${index + 1}` : `${index + 1}.`}</span>
+                      <span>{formatSeriesDay(day)}</span>
+                      {isThisDay && <span className="text-xs text-rose-700">Editing</span>}
+                    </li>
+                  )
+                })}
+              </ol>
+
+              {otherUpcomingDays.length > 0 && (
+                <div className="pt-3 border-t border-champagne-200">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="apply_to_series"
+                      checked={applyToSeries}
+                      onChange={(e) => setApplyToSeries(e.target.checked)}
+                      className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                    />
+                    <label htmlFor="apply_to_series" className="text-sm font-medium text-charcoal-700 cursor-pointer">
+                      Apply changes to the other {otherUpcomingDays.length} upcoming {seriesNoun(otherUpcomingDays.length)}
+                    </label>
+                  </div>
+                  <p className="text-xs text-charcoal-500 mt-1 ml-6">
+                    Title, description, studio, location, capacity, pricing, sign-up link and visibility.
+                    Start time and length stay as set on each day. Past days keep their details.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="bg-champagne-100 border border-champagne-200 rounded-lg p-4 mb-4">
             <Input
@@ -1494,11 +1630,15 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-medium text-charcoal-950">Create Recurring Copies</h4>
+                <h4 className="text-sm font-medium text-charcoal-950">
+                  {isWorkshop ? 'Add Workshop Days' : 'Create Recurring Copies'}
+                </h4>
                 <p className="text-xs text-charcoal-500">
-                  {formData.class_type === 'private' && enrolledStudents[0]
-                    ? `Generate additional lessons for ${enrolledStudents[0].full_name}`
-                    : 'Generate additional classes based on this one'}
+                  {isWorkshop
+                    ? 'New days are linked to this workshop'
+                    : formData.class_type === 'private' && enrolledStudents[0]
+                      ? `Generate additional lessons for ${enrolledStudents[0].full_name}`
+                      : 'Generate additional classes based on this one'}
                 </p>
               </div>
               <Button
@@ -1551,7 +1691,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
                 {recurringCopyDates.length > 0 && (
                   <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
-                    This will create <strong>{recurringCopyDates.length}</strong> additional classes
+                    This will create <strong>{recurringCopyDates.length}</strong> additional {isWorkshop ? 'workshop days' : 'classes'}
                   </div>
                 )}
 
@@ -1567,7 +1707,9 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                       Creating...
                     </>
                   ) : (
-                    `Create ${recurringCopyDates.length} Recurring Classes`
+                    isWorkshop
+                      ? `Add ${recurringCopyDates.length} Workshop ${recurringCopyDates.length === 1 ? 'Day' : 'Days'}`
+                      : `Create ${recurringCopyDates.length} Recurring Classes`
                   )}
                 </Button>
               </>
@@ -1583,8 +1725,29 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
           />
         </div>
 
+        {confirmingDelete && (
+          <div className="mt-6 p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-3">
+            <p className="text-sm text-charcoal-700">
+              {isWorkshop ? 'This day is part of a workshop.' : 'This class is part of a series.'} Delete just
+              this one, or this one and the other {otherUpcomingDays.length} upcoming {seriesNoun(otherUpcomingDays.length)}?
+              This cannot be undone.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => onDelete('single')}>
+                Delete this {isWorkshop ? 'day' : 'class'} only
+              </Button>
+              <Button type="button" size="sm" onClick={() => onDelete('series')}>
+                Delete all {otherUpcomingDays.length + 1} {seriesNoun(otherUpcomingDays.length + 1)}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
+                Keep
+              </Button>
+            </div>
+          </div>
+        )}
+
         <ModalFooter className="mt-6">
-          <button type="button" onClick={onDelete} className="text-rose-700 hover:text-rose-800 hover:bg-rose-50 p-2 rounded transition-colors" title="Delete class">
+          <button type="button" onClick={handleDeleteClick} className="text-rose-700 hover:text-rose-800 hover:bg-rose-50 p-2 rounded transition-colors" title="Delete class">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -2139,7 +2302,11 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
               />
               <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
-                {formData.class_type === 'private' ? 'Repeat this lesson' : 'Make this a recurring class'}
+                {formData.class_type === 'private'
+                  ? 'Repeat this lesson'
+                  : formData.class_type === 'workshop'
+                    ? 'This workshop runs over several days'
+                    : 'Make this a recurring class'}
               </label>
             </div>
 
@@ -2147,7 +2314,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
               <>
                 <div>
                   <label className="block text-sm font-medium text-charcoal-700 mb-2">
-                    Repeat on these days *
+                    {formData.class_type === 'workshop' ? 'Workshop meets on *' : 'Repeat on these days *'}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {dayNames.map((day, index) => (
@@ -2174,7 +2341,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
                 </div>
 
                 <Input
-                  label="Repeat until (end date) *"
+                  label={formData.class_type === 'workshop' ? 'Last day of the workshop *' : 'Repeat until (end date) *'}
                   type="date"
                   required={isRecurring}
                   value={recurringEndDate}
@@ -2184,7 +2351,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
 
                 {recurringDates.length > 0 && (
                   <div className="text-sm text-rose-700 bg-rose-100 px-3 py-2 rounded">
-                    This will create <strong>{recurringDates.length}</strong> {formData.class_type === 'private' ? 'lessons' : 'classes'}
+                    This will create <strong>{recurringDates.length}</strong> {formData.class_type === 'private' ? 'lessons' : formData.class_type === 'workshop' ? 'linked workshop days' : 'classes'}
                     {formData.class_type === 'private' && formData.student_id && ', each with the selected student enrolled'}
                     {recurringDates.length > 20 && (
                       <span className="text-rose-800"> (confirmation required)</span>

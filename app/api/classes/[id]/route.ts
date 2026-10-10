@@ -6,6 +6,7 @@ import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privile
 import { refundCreditForClass } from '@/lib/lesson-credits'
 import { createMeetEvent, updateMeetEventTime, deleteMeetEvent } from '@/lib/google/calendar'
 import { notifyDancerVirtualLesson } from '@/lib/notifications/private-lessons'
+import { pickSeriesFields } from '@/lib/class-series'
 
 export async function GET(
   request: NextRequest,
@@ -41,7 +42,22 @@ export async function GET(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ class: classData })
+    // Every day of a multi-day workshop, for the edit modal's day list
+    let series: { id: string; start_time: string; end_time: string; is_cancelled: boolean }[] = []
+    if (classData.series_id) {
+      const { data: seriesRows, error: seriesError } = await supabase
+        .from('classes')
+        .select('id, start_time, end_time, is_cancelled')
+        .eq('series_id', classData.series_id)
+        .order('start_time', { ascending: true })
+      if (seriesError) {
+        console.error('Error fetching class series:', seriesError)
+      } else {
+        series = seriesRows || []
+      }
+    }
+
+    return NextResponse.json({ class: classData, series })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -169,7 +185,8 @@ export async function PATCH(
       external_signup_url,
       is_public,
       is_virtual,
-      asset_id // Optional promotional asset
+      asset_id, // Optional promotional asset
+      apply_to_series // Carry shared fields to the other upcoming days of the series
     } = body
 
     // Convert datetime-local format to ISO 8601 if needed
@@ -269,7 +286,35 @@ export async function PATCH(
 
     const meet = await syncVirtualLessonCalendar(classData)
 
-    return NextResponse.json({ class: classData, meet })
+    // Days already held keep their details (price, title) as they ran.
+    let seriesUpdated = 0
+    if (apply_to_series && classData.series_id) {
+      const shared = pickSeriesFields(updateData)
+      if (Object.keys(shared).length > 0) {
+        let seriesQuery = supabase
+          .from('classes')
+          .update(shared)
+          .eq('series_id', classData.series_id)
+          .neq('id', id)
+          .gte('start_time', new Date().toISOString())
+
+        if (profile.role !== 'admin') {
+          seriesQuery = seriesQuery.eq('instructor_id', profile.id)
+        }
+
+        const { data: updatedDays, error: seriesError } = await seriesQuery.select('id')
+        if (seriesError) {
+          console.error('Supabase error updating class series:', seriesError)
+          return NextResponse.json({
+            error: 'This day was saved, but the other days could not be updated',
+            class: classData,
+          }, { status: 500 })
+        }
+        seriesUpdated = updatedDays?.length || 0
+      }
+    }
+
+    return NextResponse.json({ class: classData, meet, series_updated: seriesUpdated })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -293,30 +338,66 @@ export async function DELETE(
 
     const supabase = await createClient()
     const { id } = await params
+    // ?scope=series also deletes the other upcoming days of this class's series.
+    // Days already held stay, so their attendance and spent credits aren't undone.
+    const deleteSeries = request.nextUrl.searchParams.get('scope') === 'series'
 
-    // Refund any active credit attached to this class before deletion.
-    // Uses the admin client because nobody has UPDATE on lesson_pack_usage under RLS.
-    await refundCreditForClass({ supabase: createAdminClient(), classId: id, reason: 'class_deleted' })
-
-    // Remove the backing Google Calendar event / Meet for virtual lessons (best-effort).
-    try {
-      const { data: classRow } = await createAdminClient()
-        .from('classes')
-        .select('google_calendar_event_id')
-        .eq('id', id)
-        .single()
-      if (classRow?.google_calendar_event_id) {
-        await deleteMeetEvent(classRow.google_calendar_event_id)
+    let ids = [id]
+    if (deleteSeries) {
+      let ownQuery = supabase.from('classes').select('id, series_id').eq('id', id)
+      if (profile.role !== 'admin') {
+        ownQuery = ownQuery.eq('instructor_id', profile.id)
       }
-    } catch (meetError) {
-      console.error('[classes DELETE] deleteMeetEvent failed:', meetError)
+      const { data: target } = await ownQuery.single()
+      if (!target) {
+        return NextResponse.json({ error: 'Class not found or unauthorized' }, { status: 404 })
+      }
+
+      if (target.series_id) {
+        let siblingQuery = supabase
+          .from('classes')
+          .select('id')
+          .eq('series_id', target.series_id)
+          .neq('id', id)
+          .gte('start_time', new Date().toISOString())
+        if (profile.role !== 'admin') {
+          siblingQuery = siblingQuery.eq('instructor_id', profile.id)
+        }
+        const { data: siblings, error: siblingError } = await siblingQuery
+        if (siblingError) {
+          console.error('Error fetching class series:', siblingError)
+          return NextResponse.json({ error: 'Failed to delete classes' }, { status: 500 })
+        }
+        ids = [id, ...(siblings || []).map(row => row.id)]
+      }
+    }
+
+    const admin = createAdminClient()
+    for (const classId of ids) {
+      // Refund any active credit attached to this class before deletion.
+      // Uses the admin client because nobody has UPDATE on lesson_pack_usage under RLS.
+      await refundCreditForClass({ supabase: admin, classId, reason: 'class_deleted' })
+
+      // Remove the backing Google Calendar event / Meet for virtual lessons (best-effort).
+      try {
+        const { data: classRow } = await admin
+          .from('classes')
+          .select('google_calendar_event_id')
+          .eq('id', classId)
+          .single()
+        if (classRow?.google_calendar_event_id) {
+          await deleteMeetEvent(classRow.google_calendar_event_id)
+        }
+      } catch (meetError) {
+        console.error('[classes DELETE] deleteMeetEvent failed:', meetError)
+      }
     }
 
     // Build query - admins can delete any class, instructors only their own
     let query = supabase
       .from('classes')
       .delete()
-      .eq('id', id)
+      .in('id', ids)
 
     // Non-admin instructors can only delete their own classes
     if (profile.role !== 'admin') {
@@ -330,7 +411,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to delete class' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, deleted_ids: ids })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

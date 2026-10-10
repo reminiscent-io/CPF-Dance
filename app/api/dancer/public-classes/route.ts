@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
         start_time,
         end_time,
         class_type,
+        series_id,
         max_capacity,
         pricing_model,
         cost_per_person,
