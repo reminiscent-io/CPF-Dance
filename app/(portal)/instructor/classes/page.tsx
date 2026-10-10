@@ -26,6 +26,7 @@ import { CalendarDaysIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Class, Studio, CreateClassData, ClassType, PricingModel } from '@/lib/types'
 import { convertETToUTC, convertUTCToET, etDayKey } from '@/lib/utils/et-timezone'
 import { useNow } from '@/lib/hooks/use-now'
+import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { AssetSelector } from '@/components/AssetSelector'
 import { centsToDollars, parseCurrencyToCents } from '@/lib/utils/money'
 import { seriesLabel } from '@/lib/class-series'
@@ -895,8 +896,21 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const otherUpcomingDays = series.filter(
     day => day.id !== classData.id && new Date(day.start_time).getTime() >= now.getTime()
   )
-  // Only rendered once the modal opens, so window is always there
-  const signupLink = `${window.location.origin}/classes/${classData.id}`
+  // The readable /classes/<slug> link, minted on first open. Falls back to the
+  // id link (which still works) if the slug can't be made, e.g. before
+  // migration 51 has run. Only rendered once the modal opens, so window is there.
+  const isShareable = classData.is_public && !classData.is_cancelled
+  const { data: shareSlug, loading: loadingShareSlug } = useAsyncData(
+    async (signal) => {
+      const response = await fetch(`/api/classes/${classData.id}/share-link`, { method: 'POST', signal })
+      if (!response.ok) throw new Error('Could not create signup link')
+      const { slug } = await response.json()
+      return slug as string
+    },
+    [classData.id],
+    { enabled: isShareable }
+  )
+  const signupLink = `${window.location.origin}/classes/${shareSlug ?? classData.id}`
   const seriesNoun = (n: number) =>
     isWorkshop ? (n === 1 ? 'day' : 'days') : (n === 1 ? 'class' : 'classes')
 
@@ -1598,15 +1612,16 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 
           {/* Share link for a saved public class. It opens a public preview,
               and its buttons go through sign-in straight to this class. */}
-          {classData.is_public && !classData.is_cancelled && (
+          {isShareable && (
             <div className="p-3 bg-champagne-100 border border-champagne-200 rounded-lg space-y-2">
               <label className="block text-sm font-medium text-charcoal-700">Signup link</label>
               <div className="flex items-center gap-2">
                 <span className="flex-1 truncate text-sm text-charcoal-700">
-                  {signupLink}
+                  {loadingShareSlug ? 'Creating link…' : signupLink}
                 </span>
                 <button
                   type="button"
+                  disabled={loadingShareSlug}
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(signupLink)
@@ -1615,7 +1630,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                       addToast('Could not copy link', 'error')
                     }
                   }}
-                  className="shrink-0 px-3 py-1.5 text-xs font-medium text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-50"
+                  className="shrink-0 px-3 py-1.5 text-xs font-medium text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-50 disabled:opacity-50"
                 >
                   Copy
                 </button>

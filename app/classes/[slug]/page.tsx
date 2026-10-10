@@ -2,8 +2,9 @@ import { cache } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isClassId } from '@/lib/class-share-slug'
 import { getLoginPathFor, NEXT_PARAM } from '@/lib/auth/portal-routing'
 import { dollarsToCents, formatCents } from '@/lib/utils/money'
 import { formatDateET, formatTimeET } from '@/lib/utils/et-timezone'
@@ -16,6 +17,10 @@ import { formatDateET, formatTimeET } from '@/lib/utils/et-timezone'
  * Reads with the service role because there is no caller to authorize. It only
  * ever returns a class the instructor marked public, and only the fields the
  * dancer portal already shows on Available Classes.
+ *
+ * The URL key is the class's share slug (lib/class-share-slug.ts). Links sent
+ * before slugs existed use the class id; those redirect to the slug once the
+ * class has one.
  */
 
 interface ClassDay {
@@ -43,14 +48,39 @@ interface PublicClassRow extends ClassDay {
 
 interface PublicClassPreview {
   cls: PublicClassRow
+  /** The class's share slug, when it has one */
+  slug: string | null
   /** Days still ahead, in order. A plain class has at most one. */
   upcomingDays: ClassDay[]
   isFull: boolean
   instructorName: string | null
 }
 
-const getPublicClass = cache(async (id: string): Promise<PublicClassPreview | null> => {
+const getPublicClass = cache(async (key: string): Promise<PublicClassPreview | null> => {
   const supabase = createAdminClient()
+  const byId = isClassId(key)
+
+  // The class the key names, whatever its state. A workshop's slug sits on its
+  // first day, and that day being cancelled shouldn't take the link down.
+  const { data: anchor, error: anchorError } = await supabase
+    .from('classes')
+    .select('id, class_type, series_id')
+    .eq(byId ? 'id' : 'share_slug', key)
+    .maybeSingle()
+  if (anchorError || !anchor) return null
+
+  // A workshop link covers the whole run; anything else, just that class
+  const isWorkshop = anchor.class_type === 'workshop' && anchor.series_id
+  let daysQuery = supabase
+    .from('classes')
+    .select('id, start_time, end_time, max_capacity')
+    .eq('is_public', true)
+    .eq('is_cancelled', false)
+    .order('start_time', { ascending: true })
+  daysQuery = isWorkshop ? daysQuery.eq('series_id', anchor.series_id) : daysQuery.eq('id', anchor.id)
+  const { data: dayRows } = await daysQuery
+  const days = (dayRows || []) as ClassDay[]
+  if (days.length === 0) return null
 
   const { data, error } = await supabase
     .from('classes')
@@ -61,26 +91,18 @@ const getPublicClass = cache(async (id: string): Promise<PublicClassPreview | nu
       studio:studios(name),
       asset:assets(title, file_url, file_type)
     `)
-    .eq('id', id)
-    .eq('is_public', true)
-    .eq('is_cancelled', false)
+    .eq('id', days.some(day => day.id === anchor.id) ? anchor.id : days[0].id)
     .maybeSingle()
-
-  // A malformed id is a Postgres error, not a miss; both are a 404 here
   const cls = data as PublicClassRow | null
   if (error || !cls) return null
 
-  // A workshop link names one day; the preview shows the whole run
-  let days: ClassDay[] = [cls]
-  if (cls.class_type === 'workshop' && cls.series_id) {
-    const { data: seriesDays } = await supabase
-      .from('classes')
-      .select('id, start_time, end_time, max_capacity')
-      .eq('series_id', cls.series_id)
-      .eq('is_public', true)
-      .eq('is_cancelled', false)
-      .order('start_time', { ascending: true })
-    if (seriesDays?.length) days = seriesDays as ClassDay[]
+  let slug: string | null = byId ? null : key
+  if (byId) {
+    // Before migration 51 runs this column doesn't exist; the id link still works
+    let slugQuery = supabase.from('classes').select('share_slug').not('share_slug', 'is', null).limit(1)
+    slugQuery = isWorkshop ? slugQuery.eq('series_id', anchor.series_id) : slugQuery.eq('id', anchor.id)
+    const { data: slugged } = await slugQuery
+    slug = (slugged?.[0]?.share_slug as string | undefined) ?? null
   }
 
   const now = Date.now()
@@ -111,7 +133,7 @@ const getPublicClass = cache(async (id: string): Promise<PublicClassPreview | nu
     instructorName = instructor?.full_name ?? null
   }
 
-  return { cls, upcomingDays, isFull, instructorName }
+  return { cls, slug, upcomingDays, isFull, instructorName }
 })
 
 const money = (dollars: number) => formatCents(dollarsToCents(dollars))
@@ -126,9 +148,9 @@ function formatPrice(cls: PublicClassRow): string {
 const formatDay = (iso: string) => formatDateET(iso, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 const formatTimes = (day: ClassDay) => `${formatTimeET(day.start_time)} – ${formatTimeET(day.end_time)} ET`
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
-  const preview = await getPublicClass(id)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const preview = await getPublicClass(slug)
   if (!preview) return { title: 'Class not found | CPF Dance' }
 
   const { cls, upcomingDays } = preview
@@ -147,10 +169,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-export default async function PublicClassPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const preview = await getPublicClass(id)
+export default async function PublicClassPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: key } = await params
+  const preview = await getPublicClass(key)
   if (!preview) notFound()
+  // An old id link moves to the readable one
+  if (preview.slug && preview.slug !== key) redirect(`/classes/${preview.slug}`)
 
   const { cls, upcomingDays, isFull, instructorName } = preview
   const isOver = upcomingDays.length === 0
