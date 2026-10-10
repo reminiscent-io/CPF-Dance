@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { UserRole } from '@/lib/auth/types'
+import { getPostAuthPath, getSafeNextPath } from '@/lib/auth/portal-routing'
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password, portal } = body
+    const { email, password, portal, next } = body
 
     const supabase = await createClient()
 
@@ -36,8 +37,11 @@ export async function POST(request: Request) {
 
     let redirectUrl: string
 
-    // Admin users can access any portal they selected
-    if (userRole === 'admin' && portal) {
+    // A deep link (e.g. a shared class) wins over the portal default
+    if (getSafeNextPath(next)) {
+      redirectUrl = getPostAuthPath(userRole, next) || roleRedirects[userRole] || '/dancer'
+    } else if (userRole === 'admin' && portal) {
+      // Admin users can access any portal they selected
       const portalRedirects: Record<string, string> = {
         dancer: '/dancer',
         instructor: '/instructor',

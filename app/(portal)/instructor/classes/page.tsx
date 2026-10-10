@@ -895,6 +895,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const otherUpcomingDays = series.filter(
     day => day.id !== classData.id && new Date(day.start_time).getTime() >= now.getTime()
   )
+  // Only rendered once the modal opens, so window is always there
+  const signupLink = `${window.location.origin}/classes/${classData.id}`
   const seriesNoun = (n: number) =>
     isWorkshop ? (n === 1 ? 'day' : 'days') : (n === 1 ? 'class' : 'classes')
 
@@ -1593,6 +1595,36 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               Make class public for dancers and guardians to view and enroll
             </label>
           </div>
+
+          {/* Share link for a saved public class. It opens a public preview,
+              and its buttons go through sign-in straight to this class. */}
+          {classData.is_public && !classData.is_cancelled && (
+            <div className="p-3 bg-champagne-100 border border-champagne-200 rounded-lg space-y-2">
+              <label className="block text-sm font-medium text-charcoal-700">Signup link</label>
+              <div className="flex items-center gap-2">
+                <span className="flex-1 truncate text-sm text-charcoal-700">
+                  {signupLink}
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(signupLink)
+                      addToast('Signup link copied to clipboard', 'success')
+                    } catch {
+                      addToast('Could not copy link', 'error')
+                    }
+                  }}
+                  className="shrink-0 px-3 py-1.5 text-xs font-medium text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-50"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="text-xs text-charcoal-500">
+                Anyone with this link can see the class. Signing in or creating an account takes them straight to enroll.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-charcoal-700 mb-1">

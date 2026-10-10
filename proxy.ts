@@ -8,14 +8,15 @@ export default async function proxy(request: NextRequest) {
   // Role rules live in lib/auth/portal-routing.ts
   const redirectPath = resolvePortalRedirect({
     pathname: request.nextUrl.pathname,
+    search: request.nextUrl.search,
     isAuthenticated: !!user,
     profile,
   })
 
   if (redirectPath) {
-    const url = request.nextUrl.clone()
-    url.pathname = redirectPath
-    return NextResponse.redirect(url)
+    // The target carries its own query (`/login?next=...`), so it replaces the
+    // request's rather than inheriting it.
+    return NextResponse.redirect(new URL(redirectPath, request.nextUrl.origin))
   }
 
   return response

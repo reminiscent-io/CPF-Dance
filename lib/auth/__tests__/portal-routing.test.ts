@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { resolvePortalRedirect, getHomePathForRole } from '../portal-routing'
+import { resolvePortalRedirect, getHomePathForRole, getSafeNextPath, getPostAuthPath } from '../portal-routing'
 
-const signedIn = (pathname: string, role: unknown) =>
-  resolvePortalRedirect({ pathname, isAuthenticated: true, profile: { role } })
+const signedIn = (pathname: string, role: unknown, search = '') =>
+  resolvePortalRedirect({ pathname, search, isAuthenticated: true, profile: { role } })
 
 const PORTAL_PATHS = ['/admin', '/admin/users', '/instructor', '/instructor/classes', '/dancer', '/dancer/schedule']
 const AUTH_PATHS = ['/login', '/signup']
@@ -10,8 +10,21 @@ const PUBLIC_PATHS = ['/', '/privacy-policy', '/terms-of-service']
 
 describe('resolvePortalRedirect', () => {
   describe('signed out', () => {
-    it.each(PORTAL_PATHS)('sends %s to /login', (pathname) => {
-      expect(resolvePortalRedirect({ pathname, isAuthenticated: false, profile: null })).toBe('/login')
+    it.each(PORTAL_PATHS)('sends %s to /login with the path to come back to', (pathname) => {
+      expect(resolvePortalRedirect({ pathname, isAuthenticated: false, profile: null })).toBe(
+        `/login?next=${encodeURIComponent(pathname)}`
+      )
+    })
+
+    it('keeps the query string of a deep link', () => {
+      expect(
+        resolvePortalRedirect({
+          pathname: '/dancer/available-classes',
+          search: '?class=abc',
+          isAuthenticated: false,
+          profile: null,
+        })
+      ).toBe('/login?next=%2Fdancer%2Favailable-classes%3Fclass%3Dabc')
     })
 
     it.each([...AUTH_PATHS, ...PUBLIC_PATHS])('leaves %s alone', (pathname) => {
@@ -80,6 +93,23 @@ describe('resolvePortalRedirect', () => {
     })
   })
 
+  describe('signed in on an auth page with ?next=', () => {
+    const next = `?next=${encodeURIComponent('/dancer/available-classes?class=abc')}`
+
+    it('sends a dancer on to the deep link', () => {
+      expect(signedIn('/login', 'dancer', next)).toBe('/dancer/available-classes?class=abc')
+      expect(signedIn('/signup', 'guardian', next)).toBe('/dancer/available-classes?class=abc')
+    })
+
+    it('sends a role that cannot open the target to its home instead', () => {
+      expect(signedIn('/login', 'instructor', next)).toBe('/instructor')
+    })
+
+    it('ignores an off-site next', () => {
+      expect(signedIn('/login', 'dancer', '?next=https://evil.example')).toBe('/dancer')
+    })
+  })
+
   describe('signed in without a profile row', () => {
     it.each([...PORTAL_PATHS, ...AUTH_PATHS])('defers %s to the page guards', (pathname) => {
       expect(resolvePortalRedirect({ pathname, isAuthenticated: true, profile: null })).toBeNull()
@@ -114,6 +144,47 @@ describe('resolvePortalRedirect', () => {
         }
       })
     }
+  })
+})
+
+describe('getSafeNextPath', () => {
+  it.each(['/dancer', '/dancer/available-classes?class=abc', '/classes/abc#top', '/'])('keeps %s', (path) => {
+    expect(getSafeNextPath(path)).toBe(path)
+  })
+
+  it.each([
+    'https://evil.example',
+    '//evil.example',
+    '/\\evil.example',
+    '/\t/evil.example',
+    'javascript:alert(1)',
+    'dancer',
+    '',
+    '/login',
+    '/signup?next=/dancer',
+    null,
+    42,
+  ])('refuses %j', (value) => {
+    expect(getSafeNextPath(value)).toBeNull()
+  })
+})
+
+describe('getPostAuthPath', () => {
+  it('uses next when the role may open it', () => {
+    expect(getPostAuthPath('dancer', '/dancer/available-classes?class=abc')).toBe('/dancer/available-classes?class=abc')
+    expect(getPostAuthPath('admin', '/dancer/available-classes')).toBe('/dancer/available-classes')
+    expect(getPostAuthPath('instructor', '/classes/abc')).toBe('/classes/abc')
+  })
+
+  it('falls back to the home portal', () => {
+    expect(getPostAuthPath('dancer', undefined)).toBe('/dancer')
+    expect(getPostAuthPath('dancer', '/instructor/classes')).toBe('/dancer')
+    expect(getPostAuthPath('instructor', '/dancer/available-classes')).toBe('/instructor')
+    expect(getPostAuthPath('dancer', 'https://evil.example')).toBe('/dancer')
+  })
+
+  it('returns null for a role with no portal', () => {
+    expect(getPostAuthPath('studio', '/dancer')).toBeNull()
   })
 })
 

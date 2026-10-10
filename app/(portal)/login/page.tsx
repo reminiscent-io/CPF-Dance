@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { NEXT_PARAM, getSafeNextPath } from '@/lib/auth/portal-routing'
 
 const portalConfig = {
   dancer: {
@@ -38,6 +39,9 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const portal = (searchParams?.get('portal') || 'dancer') as keyof typeof portalConfig
   const config = portalConfig[portal] || portalConfig.dancer
+  // Where a shared link was headed before the visitor was asked to sign in
+  const next = getSafeNextPath(searchParams?.get(NEXT_PARAM))
+  const signupHref = `/signup?portal=${portal}${next ? `&${NEXT_PARAM}=${encodeURIComponent(next)}` : ''}`
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -59,6 +63,7 @@ function LoginForm() {
           email: email.trim(),
           password,
           portal,
+          next,
         }),
       })
 
@@ -157,7 +162,7 @@ function LoginForm() {
           <p className="text-sm text-gray-600">
             Don’t have an account?{' '}
             <Link
-              href={`/signup?portal=${portal}`}
+              href={signupHref}
               className={`${config.textColor} hover:underline font-medium`}
             >
               Sign up
