@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireDancer } from '@/lib/auth/server-auth'
+import { getCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,11 +74,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // The caller's own spots, so the dashboard can show only classes still
+    // open to them. An admin without a student record has none.
+    const ownEnrollments = new Set<string>()
+    if (classIds.length > 0) {
+      const student = await getCurrentDancerStudent().catch(() => null)
+      if (student) {
+        const { data: own } = await supabase
+          .from('enrollments')
+          .select('class_id')
+          .eq('student_id', student.id)
+          .in('class_id', classIds)
+        for (const row of own || []) {
+          ownEnrollments.add(row.class_id)
+        }
+      }
+    }
+
     // Add enrolled count to each class
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
       instructor: instructorMap.get(cls.instructor_id) ?? { full_name: null },
-      enrolled_count: enrolledCounts.get(cls.id) || 0
+      enrolled_count: enrolledCounts.get(cls.id) || 0,
+      is_enrolled: ownEnrollments.has(cls.id)
     }))
 
     return NextResponse.json({ classes: classesWithCount })

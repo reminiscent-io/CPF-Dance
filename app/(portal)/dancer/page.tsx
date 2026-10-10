@@ -40,6 +40,41 @@ interface UpcomingClass {
   } | null
 }
 
+interface OpenClass {
+  id: string
+  title: string
+  location: string | null
+  start_time: string
+  class_type: string
+  series_id: string | null
+  max_capacity: number | null
+  enrolled_count: number
+  is_enrolled: boolean
+  studio: {
+    name: string
+  } | null
+}
+
+// Classes the dancer can still sign up for: not theirs, not full, and one
+// entry per multi-day workshop (its first upcoming day).
+function openForSignup(classes: OpenClass[]) {
+  const seenSeries = new Set<string>()
+  const open: (OpenClass & { days: number })[] = []
+  for (const cls of classes) {
+    if (cls.is_enrolled) continue
+    if (cls.max_capacity !== null && cls.enrolled_count >= cls.max_capacity) continue
+    if (cls.class_type === 'workshop' && cls.series_id) {
+      if (seenSeries.has(cls.series_id)) {
+        open.find(o => o.series_id === cls.series_id)!.days++
+        continue
+      }
+      seenSeries.add(cls.series_id)
+    }
+    open.push({ ...cls, days: 1 })
+  }
+  return open
+}
+
 interface RecentNote {
   id: string
   title: string | null
@@ -62,6 +97,7 @@ export default function DancerPortalPage() {
   const [stats, setStats] = useState<DancerStats | null>(null)
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([])
   const [recentNotes, setRecentNotes] = useState<RecentNote[]>([])
+  const [openClasses, setOpenClasses] = useState<ReturnType<typeof openForSignup>>([])
   const [loadingData, setLoadingData] = useState(true)
   const [viewingNote, setViewingNote] = useState<RecentNote | null>(null)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -77,9 +113,10 @@ export default function DancerPortalPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [statsRes, reviewsRes] = await Promise.all([
+      const [statsRes, reviewsRes, openRes] = await Promise.all([
         fetch('/api/dancer/stats'),
         fetch('/api/dancer/reviews'),
+        fetch('/api/dancer/public-classes'),
       ])
       if (statsRes.ok) {
         const data = await statsRes.json()
@@ -90,6 +127,10 @@ export default function DancerPortalPage() {
       if (reviewsRes.ok) {
         const data = await reviewsRes.json()
         setHasReviews((data.data || []).length > 0)
+      }
+      if (openRes.ok) {
+        const data = await openRes.json()
+        setOpenClasses(openForSignup(data.classes || []))
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -213,34 +254,36 @@ export default function DancerPortalPage() {
               )}
             </section>
 
-            {/* Right column — upcoming classes only, no KPI tiles */}
-            <section>
-              <div className="flex items-baseline justify-between mb-4">
-                <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
-                  Upcoming
-                </h2>
-                <button
-                  onClick={() => router.push('/dancer/classes')}
-                  className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
-                >
-                  All classes
-                  <ChevronRightIcon className="w-4 h-4" />
-                </button>
-              </div>
+            {/* Right column — open classes first, then the dancer's own. No KPI tiles. */}
+            <div className="flex flex-col gap-8">
+              <section>
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+                    Open classes
+                  </h2>
+                  <button
+                    onClick={() => router.push('/dancer/available-classes')}
+                    className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
+                  >
+                    All open classes
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
+                </div>
 
-              {upcomingClasses.length > 0 ? (
-                <div className="space-y-3">
-                  {/* Mobile: show only the next class */}
-                  <div className="md:hidden">
-                    {(() => {
-                      const classItem = upcomingClasses[0]
+                {openClasses.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {openClasses.slice(0, 3).map((classItem) => {
                       const { date, time } = formatDateTime(classItem.start_time)
+                      const spotsLeft = classItem.max_capacity !== null
+                        ? classItem.max_capacity - classItem.enrolled_count
+                        : null
                       return (
                         <Card
+                          key={classItem.id}
                           hover
                           padding="none"
-                          className="cursor-pointer"
-                          onClick={() => router.push('/dancer/classes')}
+                          className="cursor-pointer border-rose-200"
+                          onClick={() => router.push('/dancer/available-classes')}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between gap-2">
@@ -248,81 +291,157 @@ export default function DancerPortalPage() {
                                 <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
                                   {classItem.title}
                                 </h3>
-                                <div className="flex items-center gap-3 text-xs text-charcoal-500 mt-1">
-                                  <span className="flex items-center gap-1">
-                                    <ClockIcon className="w-3.5 h-3.5" />
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-charcoal-500 mt-1.5">
+                                  <span className="flex items-center gap-1.5">
+                                    <ClockIcon className="w-4 h-4" />
                                     {date}, {time}
+                                    {classItem.days > 1 && ` · ${classItem.days} days`}
                                   </span>
-                                  {(classItem.studios?.name || classItem.location) && (
-                                    <span className="flex items-center gap-1 truncate">
-                                      <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                                      <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                  {(classItem.studio?.name || classItem.location) && (
+                                    <span className="flex items-center gap-1.5 truncate">
+                                      <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                                      <span className="truncate">{classItem.studio?.name || classItem.location}</span>
                                     </span>
                                   )}
                                 </div>
+                                {spotsLeft !== null && spotsLeft <= 5 && (
+                                  <p className="text-xs text-charcoal-400 mt-1.5">
+                                    {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+                                  </p>
+                                )}
                               </div>
-                              <ChevronRightIcon className="w-4 h-4 text-charcoal-300 flex-shrink-0" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })()}
-                    {upcomingClasses.length > 1 && (
-                      <p className="text-xs text-charcoal-400 mt-2 text-center">
-                        +{upcomingClasses.length - 1} more upcoming
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Desktop: list */}
-                  <div className="hidden md:flex md:flex-col md:gap-3">
-                    {upcomingClasses.slice(0, 5).map((classItem) => {
-                      const { date, time } = formatDateTime(classItem.start_time)
-                      return (
-                        <Card
-                          key={classItem.id}
-                          hover
-                          padding="none"
-                          className="cursor-pointer"
-                          onClick={() => router.push('/dancer/classes')}
-                        >
-                          <CardContent className="p-4">
-                            <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
-                              {classItem.title}
-                            </h3>
-                            <div className="flex items-center gap-3 text-sm text-charcoal-500 mt-1.5">
-                              <span className="flex items-center gap-1.5">
-                                <ClockIcon className="w-4 h-4" />
-                                {date}, {time}
+                              <span className="text-sm text-rose-700 flex items-center gap-0.5 flex-shrink-0 tracking-[0.04em]">
+                                Sign up
+                                <ChevronRightIcon className="w-4 h-4" />
                               </span>
-                              {(classItem.studios?.name || classItem.location) && (
-                                <span className="flex items-center gap-1.5 truncate">
-                                  <MapPinIcon className="w-4 h-4 flex-shrink-0" />
-                                  <span className="truncate">{classItem.studios?.name || classItem.location}</span>
-                                </span>
-                              )}
                             </div>
                           </CardContent>
                         </Card>
                       )
                     })}
+                    {openClasses.length > 3 && (
+                      <p className="text-xs text-charcoal-400 text-center">
+                        +{openClasses.length - 3} more open
+                      </p>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div className="border border-champagne-200 border-dashed rounded-lg p-8 text-center bg-champagne-100/50">
-                  <CalendarIcon className="w-10 h-10 text-charcoal-400 mx-auto mb-3" />
-                  <p className="text-charcoal-700 mb-4">
-                    No classes on the calendar yet.
+                ) : (
+                  <p className="text-sm text-charcoal-500">
+                    No open classes right now. New ones will show up here.
                   </p>
-                  <Button
-                    variant="outline"
+                )}
+              </section>
+
+              <section>
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+                    Your classes
+                  </h2>
+                  <button
                     onClick={() => router.push('/dancer/classes')}
+                    className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
                   >
-                    Browse classes
-                  </Button>
+                    All classes
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
-            </section>
+
+                {upcomingClasses.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Mobile: show only the next class */}
+                    <div className="md:hidden">
+                      {(() => {
+                        const classItem = upcomingClasses[0]
+                        const { date, time } = formatDateTime(classItem.start_time)
+                        return (
+                          <Card
+                            hover
+                            padding="none"
+                            className="cursor-pointer"
+                            onClick={() => router.push('/dancer/classes')}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
+                                    {classItem.title}
+                                  </h3>
+                                  <div className="flex items-center gap-3 text-xs text-charcoal-500 mt-1">
+                                    <span className="flex items-center gap-1">
+                                      <ClockIcon className="w-3.5 h-3.5" />
+                                      {date}, {time}
+                                    </span>
+                                    {(classItem.studios?.name || classItem.location) && (
+                                      <span className="flex items-center gap-1 truncate">
+                                        <MapPinIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <ChevronRightIcon className="w-4 h-4 text-charcoal-300 flex-shrink-0" />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })()}
+                      {upcomingClasses.length > 1 && (
+                        <p className="text-xs text-charcoal-400 mt-2 text-center">
+                          +{upcomingClasses.length - 1} more upcoming
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Desktop: list */}
+                    <div className="hidden md:flex md:flex-col md:gap-3">
+                      {upcomingClasses.slice(0, 5).map((classItem) => {
+                        const { date, time } = formatDateTime(classItem.start_time)
+                        return (
+                          <Card
+                            key={classItem.id}
+                            hover
+                            padding="none"
+                            className="cursor-pointer"
+                            onClick={() => router.push('/dancer/classes')}
+                          >
+                            <CardContent className="p-4">
+                              <h3 className="text-base text-charcoal-950 truncate" style={{ fontWeight: 600 }}>
+                                {classItem.title}
+                              </h3>
+                              <div className="flex items-center gap-3 text-sm text-charcoal-500 mt-1.5">
+                                <span className="flex items-center gap-1.5">
+                                  <ClockIcon className="w-4 h-4" />
+                                  {date}, {time}
+                                </span>
+                                {(classItem.studios?.name || classItem.location) && (
+                                  <span className="flex items-center gap-1.5 truncate">
+                                    <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="truncate">{classItem.studios?.name || classItem.location}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-champagne-200 border-dashed rounded-lg p-8 text-center bg-champagne-100/50">
+                    <CalendarIcon className="w-10 h-10 text-charcoal-400 mx-auto mb-3" />
+                    <p className="text-charcoal-700 mb-4">
+                      No classes on the calendar yet.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push('/dancer/request-lesson')}
+                    >
+                      Request a lesson
+                    </Button>
+                  </div>
+                )}
+              </section>
+            </div>
           </div>
         )}
 
