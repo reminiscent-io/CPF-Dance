@@ -334,7 +334,6 @@ async function tusUpload(upload: StoredUpload, objectName: string, onBytes: (byt
       endpoint: tusEndpoint(),
       retryDelays: [0, 3000, 5000, 10000, 20000, 30000, 60000],
       headers: {
-        authorization: `Bearer ${data.session!.access_token}`,
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
         'x-upsert': 'true',
       },
@@ -342,10 +341,14 @@ async function tusUpload(upload: StoredUpload, objectName: string, onBytes: (byt
       removeFingerprintOnSuccess: true,
       chunkSize: TUS_CHUNK,
       metadata: { bucketName: BUCKET, objectName, contentType: 'image/jpeg', cacheControl: '3600' },
-      // Tokens last an hour; a long upload on a slow connection can outlive one.
+      // Authorization is set here only. XHR appends a repeated header rather than
+      // replacing it, so also listing it in `headers` sends "Bearer a, Bearer b",
+      // which storage rejects as "Invalid Compact JWS". Fetching per request also
+      // picks up a refreshed token when a slow upload outlives the hour.
       onBeforeRequest: async (request) => {
         const { data: fresh } = await supabase.auth.getSession()
-        if (fresh.session) request.setHeader('authorization', `Bearer ${fresh.session.access_token}`)
+        const token = fresh.session?.access_token ?? data.session!.access_token
+        request.setHeader('authorization', `Bearer ${token}`)
       },
       onProgress: (bytesSent) => onBytes(bytesSent),
       onError: (error) => reject(error),
