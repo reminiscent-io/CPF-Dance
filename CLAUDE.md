@@ -40,7 +40,7 @@ lib/
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–49)
+migrations/           # Numbered SQL migrations (05–50)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -151,7 +151,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–49; next is 50). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
+Numbered SQL files in `migrations/` (05–50; next is 51). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
 
 ## Deployment Gotcha
 

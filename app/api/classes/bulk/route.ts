@@ -95,7 +95,10 @@ export async function POST(request: NextRequest) {
         is_public,
         is_virtual, // Private lessons: create a Google Meet link per lesson
         student_id, // Private lessons: enroll this student in every lesson
-        asset_id
+        asset_id,
+        workshop_price,
+        workshop_signup_url,
+        workshop_full_only
       } = classData
 
       let finalInstructorId: string
@@ -156,7 +159,11 @@ export async function POST(request: NextRequest) {
         is_public: is_public || false,
         is_virtual: (class_type === 'private' && is_virtual) || false,
         asset_id: asset_id || null,
-        series_id: seriesId
+        series_id: seriesId,
+        // Full-run pricing only means something on linked workshop days
+        workshop_price: seriesId && class_type === 'workshop' ? workshop_price ?? null : null,
+        workshop_signup_url: seriesId && class_type === 'workshop' ? workshop_signup_url || null : null,
+        workshop_full_only: Boolean(seriesId && class_type === 'workshop' && workshop_full_only)
       }
 
       const { data: newClass, error } = await supabase

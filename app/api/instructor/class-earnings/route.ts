@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
+import { passShareCents } from '@/lib/class-series'
+import { centsToDollars, dollarsToCents } from '@/lib/utils/money'
 
 interface ClassEarning {
   id: string
@@ -90,6 +92,8 @@ export async function GET(request: NextRequest) {
         tiered_base_students,
         tiered_additional_cost,
         price,
+        series_id,
+        workshop_price,
         instructor_id,
         is_cancelled,
         studio:studios!classes_studio_id_fkey(id, name)
@@ -122,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     const { data: enrollments, error: enrollmentError } = await supabase
       .from('enrollments')
-      .select('class_id, id')
+      .select('class_id, id, workshop_pass')
 
     if (enrollmentError) {
       console.error('Error fetching enrollments:', enrollmentError)
@@ -130,10 +134,37 @@ export async function GET(request: NextRequest) {
     }
 
     const enrollmentCounts = new Map<string, number>()
+    const passCounts = new Map<string, number>()
     enrollments?.forEach(e => {
       const count = enrollmentCounts.get(e.class_id) || 0
       enrollmentCounts.set(e.class_id, count + 1)
+      if (e.workshop_pass) passCounts.set(e.class_id, (passCounts.get(e.class_id) || 0) + 1)
     })
+
+    // A full-workshop pass is paid once, so each day earns an even share of it
+    // rather than the single-day price. Shares are spread over the days that
+    // actually run, including days outside the requested date range.
+    const passSeriesIds = [...new Set((classes || [])
+      .filter(cls => cls.series_id && cls.workshop_price !== null && cls.class_type === 'workshop')
+      .map(cls => cls.series_id as string))]
+    const runningDays = new Map<string, string[]>() // series_id -> class ids by start time
+    if (passSeriesIds.length > 0) {
+      const { data: seriesDays, error: seriesError } = await supabase
+        .from('classes')
+        .select('id, series_id')
+        .in('series_id', passSeriesIds)
+        .eq('is_cancelled', false)
+        .order('start_time', { ascending: true })
+      if (seriesError) {
+        console.error('Error fetching workshop days:', seriesError)
+        return NextResponse.json({ error: 'Failed to fetch class earnings' }, { status: 500 })
+      }
+      for (const day of seriesDays || []) {
+        const list = runningDays.get(day.series_id) ?? []
+        list.push(day.id)
+        runningDays.set(day.series_id, list)
+      }
+    }
 
     let paymentsQuery = supabase
       .from('payments')
@@ -165,7 +196,15 @@ export async function GET(request: NextRequest) {
 
     const classEarnings: ClassEarning[] = (classes || []).map(cls => {
       const enrollmentCount = enrollmentCounts.get(cls.id) || 0
-      const calculatedValue = calculateClassValue(cls, enrollmentCount)
+      const passes = passCounts.get(cls.id) || 0
+      const days = cls.series_id ? runningDays.get(cls.series_id) : undefined
+      let calculatedValue: number
+      if (days && passes > 0 && cls.workshop_price !== null && (cls.pricing_model || 'per_person') === 'per_person') {
+        const share = passShareCents(dollarsToCents(cls.workshop_price), days.length, days.indexOf(cls.id))
+        calculatedValue = calculateClassValue(cls, enrollmentCount - passes) + centsToDollars(share * passes)
+      } else {
+        calculatedValue = calculateClassValue(cls, enrollmentCount)
+      }
       const collectedAmount = collectedByClass.get(cls.id) || 0
 
       const studioData = cls.studio as any

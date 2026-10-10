@@ -24,6 +24,9 @@ export const SERIES_SHARED_FIELDS = [
   'external_signup_url',
   'is_public',
   'asset_id',
+  'workshop_price',
+  'workshop_signup_url',
+  'workshop_full_only',
 ] as const
 
 /** The subset of a class update that should carry over to the other days. */
@@ -67,4 +70,31 @@ export function seriesPositions(
 export function seriesLabel(classType: string, position: SeriesPosition): string {
   const prefix = classType === 'workshop' ? 'Day ' : ''
   return `${prefix}${position.series_position} of ${position.series_total}`
+}
+
+export type WorkshopOption = 'full' | 'day'
+
+/**
+ * How a dancer can sign up. A linked workshop always sells the full run; a
+ * single day is sold unless the instructor marked it full-run only. Anything
+ * else is a plain one-class sign-up.
+ */
+export function workshopOptions(cls: {
+  class_type: string
+  series_id?: string | null
+  workshop_full_only?: boolean | null
+}): { full: boolean; day: boolean } {
+  if (cls.class_type !== 'workshop' || !cls.series_id) return { full: false, day: true }
+  return { full: true, day: !cls.workshop_full_only }
+}
+
+/**
+ * A full-workshop pass's share of one day's earnings, in cents. The price is
+ * split evenly across the days that run; leftover cents go to the earliest
+ * days so the shares always add back up to the price.
+ */
+export function passShareCents(priceCents: number, dayCount: number, dayIndex: number): number {
+  if (dayCount <= 0) return 0
+  const base = Math.floor(priceCents / dayCount)
+  return base + (dayIndex < priceCents % dayCount ? 1 : 0)
 }

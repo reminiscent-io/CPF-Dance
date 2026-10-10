@@ -186,6 +186,9 @@ export async function PATCH(
       is_public,
       is_virtual,
       asset_id, // Optional promotional asset
+      workshop_price, // Full-run price for a linked workshop
+      workshop_signup_url,
+      workshop_full_only,
       apply_to_series // Carry shared fields to the other upcoming days of the series
     } = body
 
@@ -255,6 +258,10 @@ export async function PATCH(
     if (is_virtual !== undefined) updateData.is_virtual = is_virtual || false
     // Asset
     if (asset_id !== undefined) updateData.asset_id = asset_id || null
+    // Workshop pricing (0 is a real price, so only empty clears it)
+    if (workshop_price !== undefined) updateData.workshop_price = workshop_price ?? null
+    if (workshop_signup_url !== undefined) updateData.workshop_signup_url = workshop_signup_url || null
+    if (workshop_full_only !== undefined) updateData.workshop_full_only = Boolean(workshop_full_only)
 
     // Build query - admins can update any class, instructors only their own
     let query = supabase
