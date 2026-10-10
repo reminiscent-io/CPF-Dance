@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
     // The caller's own spots, so the dashboard can show only classes still
     // open to them. An admin without a student record has none.
     const ownEnrollments = new Set<string>()
+    const student = await getCurrentDancerStudent().catch(() => null)
     if (classIds.length > 0) {
-      const student = await getCurrentDancerStudent().catch(() => null)
       if (student) {
         const { data: own } = await supabase
           .from('enrollments')
@@ -100,7 +100,8 @@ export async function GET(request: NextRequest) {
       is_enrolled: ownEnrollments.has(cls.id)
     }))
 
-    return NextResponse.json({ classes: classesWithCount })
+    // student_id tags Stripe Payment Links so a paid sign-up confirms itself
+    return NextResponse.json({ classes: classesWithCount, student_id: student?.id ?? null })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

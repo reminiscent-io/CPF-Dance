@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
+import { useExternalSignup } from '@/components/dancer/useExternalSignup'
+import { signupUrlFor } from '@/lib/signup-link'
 import { useToast } from '@/components/ui/Toast'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import Image from 'next/image'
 import { CalendarIcon, DocumentIcon } from '@heroicons/react/24/outline'
-
-const PENDING_EXTERNAL_SIGNUP_KEY = 'pending_external_signup'
 
 interface PublicClass {
   id: string
@@ -57,12 +57,6 @@ interface PublicClass {
 
 type WorkshopDay = Pick<PublicClass, 'id' | 'start_time' | 'end_time' | 'enrolled_count' | 'max_capacity'>
 type SignupOption = 'full' | 'day'
-
-// What sits in sessionStorage while the dancer pays on an external page
-interface PendingSignup {
-  cls: PublicClass
-  option?: SignupOption
-}
 
 // One day of a workshop card, as a class of its own for a single-day drop-in
 const dayListing = (cls: PublicClass, day: WorkshopDay): PublicClass => ({ ...cls, ...day, days: undefined })
@@ -108,12 +102,6 @@ const isClassFull = (cls: Pick<PublicClass, 'enrolled_count' | 'max_capacity'>) 
   return cls.max_capacity ? cls.enrolled_count >= cls.max_capacity : false
 }
 
-// The full run has its own payment link; the class link is the single-day one
-const signupUrlFor = (cls: PublicClass, option?: SignupOption) =>
-  option === 'full'
-    ? cls.workshop_signup_url || cls.external_signup_url
-    : cls.external_signup_url
-
 // Query param on a shared class link: /dancer/available-classes?class=<id>
 const CLASS_PARAM = 'class'
 
@@ -132,9 +120,7 @@ function AvailableClasses() {
   const [showEnrollModal, setShowEnrollModal] = useState(false)
   const [selectedClass, setSelectedClass] = useState<PublicClass | null>(null)
   const [selectedOption, setSelectedOption] = useState<SignupOption | undefined>()
-  const [showExternalSignupModal, setShowExternalSignupModal] = useState(false)
-  const [pendingExternalClass, setPendingExternalClass] = useState<PublicClass | null>(null)
-  const [pendingOption, setPendingOption] = useState<SignupOption | undefined>()
+  const [studentId, setStudentId] = useState<string | null>(null)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -142,23 +128,6 @@ function AvailableClasses() {
       router.push(`/${profile.role === 'instructor' ? 'instructor' : 'studio'}`)
     }
   }, [loading, profile, router])
-
-  const checkForPendingExternalSignup = useCallback(() => {
-    try {
-      const pendingSignup = sessionStorage.getItem(PENDING_EXTERNAL_SIGNUP_KEY)
-      if (pendingSignup) {
-        // Older entries stored the class itself, with no option
-        const parsed = JSON.parse(pendingSignup) as PendingSignup | PublicClass
-        const { cls, option } = 'cls' in parsed ? parsed : { cls: parsed, option: undefined }
-        setPendingExternalClass(cls)
-        setPendingOption(option)
-        setShowExternalSignupModal(true)
-        // Don't remove from sessionStorage yet - only remove after user confirms/cancels
-      }
-    } catch (error) {
-      console.error('Error checking for pending signup:', error)
-    }
-  }, [])
 
   const fetchPublicClasses = useCallback(async () => {
     try {
@@ -168,6 +137,7 @@ function AvailableClasses() {
       if (response.ok) {
         const data = await response.json()
         setClasses(data.classes || [])
+        setStudentId(data.student_id ?? null)
         setClassesLoaded(true)
       } else {
         addToast('Failed to load available classes', 'error')
@@ -184,22 +154,15 @@ function AvailableClasses() {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
       fetchPublicClasses()
-      // Check for pending external signup when page loads or regains focus
-      checkForPendingExternalSignup()
-      window.addEventListener('focus', checkForPendingExternalSignup)
-      return () => window.removeEventListener('focus', checkForPendingExternalSignup)
     }
-  }, [loading, user, profile, fetchPublicClasses, checkForPendingExternalSignup])
+  }, [loading, user, profile, fetchPublicClasses])
+
+  const externalSignup = useExternalSignup({ studentId, onEnrolled: fetchPublicClasses })
 
   // option is set only for workshop cards: 'full' for the whole run, 'day' for a drop-in
   const handleEnrollClick = (cls: PublicClass, option?: SignupOption) => {
-    const signupUrl = signupUrlFor(cls, option)
-    if (signupUrl) {
-      // Store class info and open external URL
-      const pending: PendingSignup = { cls, option }
-      sessionStorage.setItem(PENDING_EXTERNAL_SIGNUP_KEY, JSON.stringify(pending))
-      window.open(signupUrl, '_blank', 'noopener,noreferrer')
-    } else {
+    // The full run has its own payment link; the class link is the single-day one
+    if (!externalSignup.start(cls, option)) {
       // Show internal enrollment modal
       setSelectedClass(cls)
       setSelectedOption(option)
@@ -237,45 +200,6 @@ function AvailableClasses() {
     } finally {
       setEnrollingClassId(null)
     }
-  }
-
-  const handleAddExternalClassToCalendar = async () => {
-    if (!pendingExternalClass) return
-
-    try {
-      setEnrollingClassId(pendingExternalClass.id)
-      const response = await fetch('/api/dancer/enroll', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: pendingExternalClass.id, option: pendingOption })
-      })
-
-      if (response.ok) {
-        const { enrolled_days } = await response.json()
-        addToast(
-          enrolled_days > 1 ? `All ${enrolled_days} workshop days added to your calendar!` : 'Class added to your calendar!',
-          'success'
-        )
-        setShowExternalSignupModal(false)
-        sessionStorage.removeItem(PENDING_EXTERNAL_SIGNUP_KEY)
-        setPendingExternalClass(null)
-        fetchPublicClasses() // Refresh the list
-      } else {
-        const data = await response.json()
-        addToast(data.error || 'Failed to add class to calendar', 'error')
-      }
-    } catch (error) {
-      console.error('Error adding to calendar:', error)
-      addToast('Error adding class to calendar', 'error')
-    } finally {
-      setEnrollingClassId(null)
-    }
-  }
-
-  const handleCancelExternalSignup = () => {
-    setShowExternalSignupModal(false)
-    sessionStorage.removeItem(PENDING_EXTERNAL_SIGNUP_KEY)
-    setPendingExternalClass(null)
   }
 
   const formatDate = (dateString: string) => {
@@ -605,60 +529,7 @@ function AvailableClasses() {
         </ModalFooter>
       </Modal>
 
-      {/* External Signup Confirmation Modal */}
-      <Modal
-        isOpen={showExternalSignupModal}
-        onClose={handleCancelExternalSignup}
-        title="Add Class to Calendar"
-        size="md"
-      >
-        {pendingExternalClass && (
-          <div className="space-y-4">
-            <div className="bg-champagne-100 border border-champagne-200 rounded-lg p-4">
-              <p className="text-charcoal-900 font-medium">
-                ✓ Great! Did you complete the signup for <strong>{pendingExternalClass.title}</strong>?
-              </p>
-            </div>
-
-            <p className="text-charcoal-700">
-              If you’ve signed up through the external portal, click “Add to Calendar” to track this class in your schedule.
-            </p>
-
-            <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Date:</span>
-                <span className="font-medium">{formatDate(pendingExternalClass.start_time)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Time:</span>
-                <span className="font-medium">
-                  {formatTime(pendingExternalClass.start_time)} - {formatTime(pendingExternalClass.end_time)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Instructor:</span>
-                <span className="font-medium">{pendingExternalClass.instructor.full_name}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <ModalFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={handleCancelExternalSignup}
-            disabled={enrollingClassId !== null}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAddExternalClassToCalendar}
-            disabled={enrollingClassId !== null}
-          >
-            {enrollingClassId ? 'Adding...' : 'Add to Calendar'}
-          </Button>
-        </ModalFooter>
-      </Modal>
+      {externalSignup.modal}
     </PortalLayout>
   )
 }
