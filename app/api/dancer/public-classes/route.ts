@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
         workshop_signup_url,
         workshop_full_only,
         instructor_id,
-        studio:studios(name, city, state)
+        studio:studios(name, city, state),
+        asset:assets(id, title, file_url, file_type)
       `)
       .eq('is_public', true)
       .eq('is_cancelled', false)
