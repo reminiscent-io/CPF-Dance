@@ -1,6 +1,8 @@
-// v2 purges v1, which cached every GET response: API data, pages and
-// private photo downloads from Supabase storage.
-const CACHE_NAME = 'dance-schedule-v2';
+// v2 purged v1, which cached every GET response: API data, pages and
+// private photo downloads from Supabase storage. v3 survives a broken
+// CacheStorage: caches.open/match can reject (UnknownError) when the
+// browser's storage is corrupt or full, and that must never fail a page load.
+const CACHE_NAME = 'dance-schedule-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Install event
@@ -26,7 +28,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).catch(() => {})
   );
   self.clients.claim();
 });
@@ -39,6 +41,27 @@ function isStaticAsset(url) {
     url.pathname.startsWith('/fonts/') ||
     url.pathname.startsWith('/images/') ||
     /^\/(icon-[\w-]+\.png|favicon\.ico|manifest\.json)$/.test(url.pathname)
+  );
+}
+
+// CacheStorage calls reject outright when the browser's storage is broken,
+// so every lookup falls back to undefined instead of throwing.
+function cacheMatch(request) {
+  return caches.match(request).catch(() => undefined);
+}
+
+function cachePut(request, response) {
+  return caches.open(CACHE_NAME)
+    .then(cache => cache.put(request, response))
+    .catch(() => {});
+}
+
+function offlineResponse() {
+  return cacheMatch(OFFLINE_URL).then(response =>
+    response || new Response('You are offline.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    })
   );
 }
 
@@ -55,11 +78,7 @@ self.addEventListener('fetch', event => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() =>
-        caches.match(OFFLINE_URL).then(response => response || Response.error())
-      )
-    );
+    event.respondWith(fetch(request).catch(offlineResponse));
     return;
   }
 
@@ -71,15 +90,12 @@ self.addEventListener('fetch', event => {
     fetch(request)
       .then(response => {
         if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
+          event.waitUntil(cachePut(request, response.clone()));
         }
         return response;
       })
       .catch(() =>
-        caches.match(request).then(response => response || Response.error())
+        cacheMatch(request).then(response => response || Response.error())
       )
   );
 });
