@@ -12,7 +12,8 @@ import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { CalendarIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image'
+import { CalendarIcon, DocumentIcon } from '@heroicons/react/24/outline'
 
 const PENDING_EXTERNAL_SIGNUP_KEY = 'pending_external_signup'
 
@@ -42,6 +43,13 @@ interface PublicClass {
   instructor: {
     full_name: string
   }
+  // The promotional image or PDF the instructor attached to the class
+  asset: {
+    id: string
+    title: string
+    file_url: string
+    file_type: string
+  } | null
   // Set on the card for a multi-day workshop: every upcoming day, in order
   days?: WorkshopDay[]
 }
@@ -320,6 +328,33 @@ export default function AvailableClassesPage() {
           {upcomingClasses.map(cls => (
             <Card key={cls.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
+                  {cls.asset && (
+                    <a
+                      href={cls.asset.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block mb-4"
+                    >
+                      {cls.asset.file_type.startsWith('image/') ? (
+                        // Flyers carry text, so show the whole image rather than crop it
+                        <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-champagne-100">
+                          <Image
+                            src={cls.asset.file_url}
+                            alt={cls.asset.title}
+                            fill
+                            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 rounded-lg border border-champagne-200 bg-champagne-100 px-3 py-2 text-sm text-charcoal-700 hover:text-charcoal-950">
+                          <DocumentIcon className="w-5 h-5 shrink-0" />
+                          <span className="truncate">{cls.asset.title}</span>
+                        </div>
+                      )}
+                    </a>
+                  )}
+
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold text-charcoal-950">{cls.title}</h3>
                     <Badge variant={cls.class_type === 'private' ? 'warning' : 'default'}>
