@@ -40,7 +40,7 @@ lib/
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–50)
+migrations/           # Numbered SQL migrations (05–51)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -118,7 +118,7 @@ Three-layer security: proxy routing → API route guards → database RLS.
 
 **Return path:** the proxy sends signed-out visitors to `/login?next=<path>`, and login/signup land them back there. Validate any `next` with `getSafeNextPath()` / `getPostAuthPath()` (`lib/auth/portal-routing.ts`); never redirect to a raw query value.
 
-**Shared class links:** `/classes/[id]` is a public preview of a class marked `is_public` (service-role read, no auth). Its buttons go through login/signup to `/dancer/available-classes?class=<id>`, which scrolls to that class and opens enrollment. Instructors copy the link from the class edit dialog.
+**Shared class links:** `/classes/[slug]` is a public preview of a class marked `is_public` (service-role read, no auth). The slug (`precision-workshop-oct-18-2026`) is minted once by `POST /api/classes/[id]/share-link` and stored in `classes.share_slug` (migration 51); it never changes, a workshop's sits on its first day, and same-title same-day classes get `-2`, `-3` (`lib/class-share-slug.ts`). Old `/classes/<uuid>` links redirect to the slug. The page's buttons go through login/signup to `/dancer/available-classes?class=<id>`, which scrolls to that class and opens enrollment. Instructors copy the link from the class edit dialog.
 
 **Admin** bypasses most RLS restrictions (except private notes) and can access all portals via sidebar switcher.
 
@@ -158,7 +158,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–50; next is 51). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
+Numbered SQL files in `migrations/` (05–51; next is 52). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
 
 ## Deployment Gotcha
 
