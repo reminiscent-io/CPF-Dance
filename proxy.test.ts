@@ -71,10 +71,24 @@ describe('proxy role routing', () => {
     expect(await follow('/admin/users')).toEqual(['/admin/users', '/dancer'])
   })
 
-  it('keeps the query string on redirect', async () => {
+  it('sends a signed-in visitor on /login straight to ?next=', async () => {
     signInAs('guardian')
     const response = await proxy(new NextRequest(`${ORIGIN}/login?next=%2Fdancer%2Fnotes`))
-    expect(response.headers.get('location')).toBe(`${ORIGIN}/dancer?next=%2Fdancer%2Fnotes`)
+    expect(response.headers.get('location')).toBe(`${ORIGIN}/dancer/notes`)
+  })
+
+  it('ignores an off-site ?next= on /login', async () => {
+    signInAs('guardian')
+    const response = await proxy(new NextRequest(`${ORIGIN}/login?next=https%3A%2F%2Fevil.example`))
+    expect(response.headers.get('location')).toBe(`${ORIGIN}/dancer`)
+  })
+
+  it('carries a signed-out deep link through /login', async () => {
+    mockUpdateSession.mockResolvedValue({ response: NextResponse.next(), user: null, profile: null })
+    const response = await proxy(new NextRequest(`${ORIGIN}/dancer/available-classes?class=abc`))
+    expect(response.headers.get('location')).toBe(
+      `${ORIGIN}/login?next=%2Fdancer%2Favailable-classes%3Fclass%3Dabc`
+    )
   })
 
   it('sends an unrecognized role to /login and leaves it there', async () => {
