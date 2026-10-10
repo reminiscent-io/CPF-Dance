@@ -1,8 +1,8 @@
 'use client'
 
 import { useUser } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { useExternalSignup } from '@/components/dancer/useExternalSignup'
+import { signupUrlFor } from '@/lib/signup-link'
 import { useToast } from '@/components/ui/Toast'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -34,6 +35,7 @@ interface PublicClass {
   workshop_signup_url: string | null
   workshop_full_only: boolean
   enrolled_count: number
+  is_enrolled: boolean
   studio: {
     name: string
     city: string | null
@@ -94,12 +96,26 @@ function collapseWorkshops(classes: PublicClass[]): PublicClass[] {
   return listings
 }
 
-export default function AvailableClassesPage() {
+const isMultiDay = (cls: PublicClass) => (cls.days?.length ?? 0) > 1
+
+const isClassFull = (cls: Pick<PublicClass, 'enrolled_count' | 'max_capacity'>) => {
+  return cls.max_capacity ? cls.enrolled_count >= cls.max_capacity : false
+}
+
+// Query param on a shared class link: /dancer/available-classes?class=<id>
+const CLASS_PARAM = 'class'
+
+function AvailableClasses() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const linkedClassId = searchParams?.get(CLASS_PARAM) ?? null
   const { addToast } = useToast()
   const [classes, setClasses] = useState<PublicClass[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
+  const [classesLoaded, setClassesLoaded] = useState(false)
+  const [highlightedClassId, setHighlightedClassId] = useState<string | null>(null)
+  const handledLink = useRef(false)
   const [enrollingClassId, setEnrollingClassId] = useState<string | null>(null)
   const [showEnrollModal, setShowEnrollModal] = useState(false)
   const [selectedClass, setSelectedClass] = useState<PublicClass | null>(null)
@@ -122,6 +138,7 @@ export default function AvailableClassesPage() {
         const data = await response.json()
         setClasses(data.classes || [])
         setStudentId(data.student_id ?? null)
+        setClassesLoaded(true)
       } else {
         addToast('Failed to load available classes', 'error')
       }
@@ -222,15 +239,48 @@ export default function AvailableClassesPage() {
   const formatWorkshopPrice = (cls: PublicClass) =>
     cls.workshop_price !== null ? `$${cls.workshop_price.toFixed(2)} per person` : null
 
-  const isClassFull = (cls: Pick<PublicClass, 'enrolled_count' | 'max_capacity'>) => {
-    return cls.max_capacity ? cls.enrolled_count >= cls.max_capacity : false
-  }
-
-  const upcomingClasses = collapseWorkshops(
-    classes.filter(cls => new Date(cls.start_time) > new Date())
+  const upcomingClasses = useMemo(
+    () => collapseWorkshops(classes.filter(cls => new Date(cls.start_time) > new Date())),
+    [classes]
   )
 
-  const isMultiDay = (cls: PublicClass) => (cls.days?.length ?? 0) > 1
+  // A shared class link lands here with ?class=<id>; any day of a workshop
+  // points at its card. Like ?class_id= on the instructor classes page, the
+  // target only exists once the list has loaded, so this waits on async data
+  // and runs once.
+  useEffect(() => {
+    if (!linkedClassId || !classesLoaded || handledLink.current) return
+    handledLink.current = true
+    // Drop the param so a refresh doesn't reopen the dialog
+    router.replace('/dancer/available-classes', { scroll: false })
+
+    const listing = upcomingClasses.find(
+      cls => cls.id === linkedClassId || cls.days?.some(day => day.id === linkedClassId)
+    )
+    if (!listing) {
+      addToast('That class is no longer open for sign-up', 'info')
+      return
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reacting to a deep link once its target has loaded; the ref and the stripped parameter keep this from re-firing.
+    setHighlightedClassId(listing.id)
+    requestAnimationFrame(() => {
+      document.getElementById(`class-${listing.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+
+    const option: SignupOption | undefined = isMultiDay(listing) ? 'full' : undefined
+    if (listing.is_enrolled) {
+      addToast(`You're already enrolled in ${listing.title}`, 'info')
+    } else if (isClassFull(listing)) {
+      addToast(`${listing.title} is full`, 'info')
+    } else if (!signupUrlFor(listing, option)) {
+      // External sign-ups need a click to open (pop-up blockers), so those
+      // stay highlighted on the card instead.
+      setSelectedClass(listing)
+      setSelectedOption(option)
+      setShowEnrollModal(true)
+    }
+  }, [linkedClassId, classesLoaded, upcomingClasses, router, addToast])
 
   if (loading || loadingClasses) {
     return (
@@ -252,7 +302,13 @@ export default function AvailableClassesPage() {
       {upcomingClasses.length > 0 ? (
         <div className="mt-header-gap grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {upcomingClasses.map(cls => (
-            <Card key={cls.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={cls.id}
+              id={`class-${cls.id}`}
+              className={`hover:shadow-lg transition-shadow ${
+                highlightedClassId === cls.id ? 'ring-2 ring-rose-400 ring-offset-2 ring-offset-champagne-100' : ''
+              }`}
+            >
               <CardContent className="p-4">
                   {cls.asset && (
                     <a
@@ -475,5 +531,14 @@ export default function AvailableClassesPage() {
 
       {externalSignup.modal}
     </PortalLayout>
+  )
+}
+
+export default function AvailableClassesPage() {
+  // useSearchParams needs a Suspense boundary for the static prerender
+  return (
+    <Suspense fallback={null}>
+      <AvailableClasses />
+    </Suspense>
   )
 }

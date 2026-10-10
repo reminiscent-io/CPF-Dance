@@ -116,6 +116,10 @@ Three-layer security: proxy routing → API route guards → database RLS.
 
 **Dancer API routes** must filter all queries by `student.id` from `getCurrentDancerStudent()`.
 
+**Return path:** the proxy sends signed-out visitors to `/login?next=<path>`, and login/signup land them back there. Validate any `next` with `getSafeNextPath()` / `getPostAuthPath()` (`lib/auth/portal-routing.ts`); never redirect to a raw query value.
+
+**Shared class links:** `/classes/[id]` is a public preview of a class marked `is_public` (service-role read, no auth). Its buttons go through login/signup to `/dancer/available-classes?class=<id>`, which scrolls to that class and opens enrollment. Instructors copy the link from the class edit dialog.
+
 **Admin** bypasses most RLS restrictions (except private notes) and can access all portals via sidebar switcher.
 
 ## Key Patterns

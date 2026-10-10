@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { NEXT_PARAM, getSafeNextPath } from '@/lib/auth/portal-routing'
 import type { UserRole } from '@/lib/auth/types'
 
 const portalConfig = {
@@ -236,7 +237,7 @@ function InstructorRequestForm() {
   )
 }
 
-function DancerSignupForm() {
+function DancerSignupForm({ next }: { next: string | null }) {
   const config = portalConfig.dancer
 
   const [formData, setFormData] = useState({
@@ -299,6 +300,7 @@ function DancerSignupForm() {
       isAtLeast13: formData.isAtLeast13,
       guardianEmail: formData.guardianEmail.trim() || undefined,
       portal: 'dancer',
+      next,
     }
 
     try {
@@ -521,7 +523,7 @@ function DancerSignupForm() {
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link
-              href="/login?portal=dancer"
+              href={`/login?portal=dancer${next ? `&${NEXT_PARAM}=${encodeURIComponent(next)}` : ''}`}
               className={`${config.textColor} hover:underline font-medium`}
             >
               Sign in
@@ -541,7 +543,7 @@ function SignupRouter() {
     return <InstructorRequestForm />
   }
 
-  return <DancerSignupForm />
+  return <DancerSignupForm next={getSafeNextPath(searchParams?.get(NEXT_PARAM))} />
 }
 
 export default function SignupPage() {

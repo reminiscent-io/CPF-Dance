@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { UserRole } from '@/lib/auth/types'
+import { getPostAuthPath, getSafeNextPath } from '@/lib/auth/portal-routing'
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password, fullName, phone, role, isAtLeast13, guardianEmail, portal } = body
+    const { email, password, fullName, phone, role, isAtLeast13, guardianEmail, portal, next } = body
 
     // SECURITY: Prevent role escalation. Users may only self-register as
     // dancer or guardian. Instructor accounts are provisioned by an admin via
@@ -89,7 +90,10 @@ export async function POST(request: Request) {
 
     // For admin role, allow access to any portal
     let redirectUrl: string
-    if (role === 'admin') {
+    if (getSafeNextPath(next)) {
+      // A deep link (e.g. a shared class) wins over the portal default
+      redirectUrl = getPostAuthPath(role, next) || roleRedirects[role as UserRole] || '/dancer'
+    } else if (role === 'admin') {
       // Admins can use any portal - dancer or instructor
       const portalRedirects: Record<string, string> = {
         dancer: '/dancer',
