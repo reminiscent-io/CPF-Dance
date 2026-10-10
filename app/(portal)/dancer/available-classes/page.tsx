@@ -24,11 +24,15 @@ interface PublicClass {
   start_time: string
   end_time: string
   class_type: string
+  series_id: string | null
   max_capacity: number | null
   pricing_model: string
   cost_per_person: number | null
   base_cost: number | null
   external_signup_url: string | null
+  workshop_price: number | null
+  workshop_signup_url: string | null
+  workshop_full_only: boolean
   enrolled_count: number
   studio: {
     name: string
@@ -38,6 +42,55 @@ interface PublicClass {
   instructor: {
     full_name: string
   }
+  // Set on the card for a multi-day workshop: every upcoming day, in order
+  days?: WorkshopDay[]
+}
+
+type WorkshopDay = Pick<PublicClass, 'id' | 'start_time' | 'end_time' | 'enrolled_count' | 'max_capacity'>
+type SignupOption = 'full' | 'day'
+
+// What sits in sessionStorage while the dancer pays on an external page
+interface PendingSignup {
+  cls: PublicClass
+  option?: SignupOption
+}
+
+// One day of a workshop card, as a class of its own for a single-day drop-in
+const dayListing = (cls: PublicClass, day: WorkshopDay): PublicClass => ({ ...cls, ...day, days: undefined })
+
+// One card per multi-day workshop. The full run enrolls in every day, so the
+// card carries the fullest day's count.
+function collapseWorkshops(classes: PublicClass[]): PublicClass[] {
+  const listings: PublicClass[] = []
+  const workshops = new Map<string, PublicClass>()
+  for (const cls of classes) {
+    if (cls.class_type !== 'workshop' || !cls.series_id) {
+      listings.push(cls)
+      continue
+    }
+    const day = {
+      id: cls.id,
+      start_time: cls.start_time,
+      end_time: cls.end_time,
+      enrolled_count: cls.enrolled_count,
+      max_capacity: cls.max_capacity
+    }
+    const existing = workshops.get(cls.series_id)
+    if (existing) {
+      existing.days!.push(day)
+      existing.enrolled_count = Math.max(existing.enrolled_count, cls.enrolled_count)
+      if (cls.max_capacity !== null) {
+        existing.max_capacity = existing.max_capacity === null
+          ? cls.max_capacity
+          : Math.min(existing.max_capacity, cls.max_capacity)
+      }
+    } else {
+      const listing = { ...cls, days: [day] }
+      workshops.set(cls.series_id, listing)
+      listings.push(listing)
+    }
+  }
+  return listings
 }
 
 export default function AvailableClassesPage() {
@@ -49,8 +102,10 @@ export default function AvailableClassesPage() {
   const [enrollingClassId, setEnrollingClassId] = useState<string | null>(null)
   const [showEnrollModal, setShowEnrollModal] = useState(false)
   const [selectedClass, setSelectedClass] = useState<PublicClass | null>(null)
+  const [selectedOption, setSelectedOption] = useState<SignupOption | undefined>()
   const [showExternalSignupModal, setShowExternalSignupModal] = useState(false)
   const [pendingExternalClass, setPendingExternalClass] = useState<PublicClass | null>(null)
+  const [pendingOption, setPendingOption] = useState<SignupOption | undefined>()
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -63,8 +118,11 @@ export default function AvailableClassesPage() {
     try {
       const pendingSignup = sessionStorage.getItem(PENDING_EXTERNAL_SIGNUP_KEY)
       if (pendingSignup) {
-        const classData = JSON.parse(pendingSignup) as PublicClass
-        setPendingExternalClass(classData)
+        // Older entries stored the class itself, with no option
+        const parsed = JSON.parse(pendingSignup) as PendingSignup | PublicClass
+        const { cls, option } = 'cls' in parsed ? parsed : { cls: parsed, option: undefined }
+        setPendingExternalClass(cls)
+        setPendingOption(option)
         setShowExternalSignupModal(true)
         // Don't remove from sessionStorage yet - only remove after user confirms/cancels
       }
@@ -103,14 +161,21 @@ export default function AvailableClassesPage() {
     }
   }, [loading, user, profile, fetchPublicClasses, checkForPendingExternalSignup])
 
-  const handleEnrollClick = (cls: PublicClass) => {
-    if (cls.external_signup_url) {
+  // option is set only for workshop cards: 'full' for the whole run, 'day' for a drop-in
+  const handleEnrollClick = (cls: PublicClass, option?: SignupOption) => {
+    // The full run has its own payment link; the class link is the single-day one
+    const signupUrl = option === 'full'
+      ? cls.workshop_signup_url || cls.external_signup_url
+      : cls.external_signup_url
+    if (signupUrl) {
       // Store class info and open external URL
-      sessionStorage.setItem(PENDING_EXTERNAL_SIGNUP_KEY, JSON.stringify(cls))
-      window.open(cls.external_signup_url, '_blank', 'noopener,noreferrer')
+      const pending: PendingSignup = { cls, option }
+      sessionStorage.setItem(PENDING_EXTERNAL_SIGNUP_KEY, JSON.stringify(pending))
+      window.open(signupUrl, '_blank', 'noopener,noreferrer')
     } else {
       // Show internal enrollment modal
       setSelectedClass(cls)
+      setSelectedOption(option)
       setShowEnrollModal(true)
     }
   }
@@ -123,11 +188,15 @@ export default function AvailableClassesPage() {
       const response = await fetch('/api/dancer/enroll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: selectedClass.id })
+        body: JSON.stringify({ class_id: selectedClass.id, option: selectedOption })
       })
 
       if (response.ok) {
-        addToast('Successfully enrolled in class!', 'success')
+        const { enrolled_days } = await response.json()
+        addToast(
+          enrolled_days > 1 ? `Enrolled in all ${enrolled_days} workshop days!` : 'Successfully enrolled in class!',
+          'success'
+        )
         setShowEnrollModal(false)
         fetchPublicClasses() // Refresh the list
         router.push('/dancer/classes') // Redirect to enrolled classes
@@ -151,11 +220,15 @@ export default function AvailableClassesPage() {
       const response = await fetch('/api/dancer/enroll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: pendingExternalClass.id })
+        body: JSON.stringify({ class_id: pendingExternalClass.id, option: pendingOption })
       })
 
       if (response.ok) {
-        addToast('Class added to your calendar!', 'success')
+        const { enrolled_days } = await response.json()
+        addToast(
+          enrolled_days > 1 ? `All ${enrolled_days} workshop days added to your calendar!` : 'Class added to your calendar!',
+          'success'
+        )
         setShowExternalSignupModal(false)
         sessionStorage.removeItem(PENDING_EXTERNAL_SIGNUP_KEY)
         setPendingExternalClass(null)
@@ -212,11 +285,18 @@ export default function AvailableClassesPage() {
     return 'Contact instructor'
   }
 
-  const isClassFull = (cls: PublicClass) => {
+  const formatWorkshopPrice = (cls: PublicClass) =>
+    cls.workshop_price !== null ? `$${cls.workshop_price.toFixed(2)} per person` : null
+
+  const isClassFull = (cls: Pick<PublicClass, 'enrolled_count' | 'max_capacity'>) => {
     return cls.max_capacity ? cls.enrolled_count >= cls.max_capacity : false
   }
 
-  const upcomingClasses = classes.filter(cls => new Date(cls.start_time) > new Date())
+  const upcomingClasses = collapseWorkshops(
+    classes.filter(cls => new Date(cls.start_time) > new Date())
+  )
+
+  const isMultiDay = (cls: PublicClass) => (cls.days?.length ?? 0) > 1
 
   if (loading || loadingClasses) {
     return (
@@ -259,15 +339,43 @@ export default function AvailableClassesPage() {
                       <span>{cls.instructor.full_name}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Date:</span>
-                      <span>{formatDate(cls.start_time)}</span>
-                    </div>
+                    {isMultiDay(cls) ? (
+                      <div>
+                        <span className="font-medium">{cls.days!.length} days:</span>
+                        <ul className="mt-1 space-y-1">
+                          {cls.days!.map(day => (
+                            <li key={day.id} className="flex items-center justify-between gap-2 tabular-nums">
+                              <span>
+                                {formatDate(day.start_time)} · {formatTime(day.start_time)} - {formatTime(day.end_time)}
+                              </span>
+                              {!cls.workshop_full_only && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="shrink-0"
+                                  onClick={() => handleEnrollClick(dayListing(cls, day), 'day')}
+                                  disabled={isClassFull(day)}
+                                >
+                                  {isClassFull(day) ? 'Full' : 'Drop in'}
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Date:</span>
+                          <span>{formatDate(cls.start_time)}</span>
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Time:</span>
-                      <span>{formatTime(cls.start_time)} - {formatTime(cls.end_time)}</span>
-                    </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Time:</span>
+                          <span>{formatTime(cls.start_time)} - {formatTime(cls.end_time)}</span>
+                        </div>
+                      </>
+                    )}
 
                     {cls.location && (
                       <div className="flex items-center gap-2">
@@ -284,9 +392,16 @@ export default function AvailableClassesPage() {
                     )}
 
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">Price:</span>
-                      <span>{formatPrice(cls)}</span>
+                      <span className="font-medium">{isMultiDay(cls) ? 'Single day:' : 'Price:'}</span>
+                      <span>{isMultiDay(cls) && cls.workshop_full_only ? 'Full workshop only' : formatPrice(cls)}</span>
                     </div>
+
+                    {isMultiDay(cls) && formatWorkshopPrice(cls) && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Full workshop:</span>
+                        <span>{formatWorkshopPrice(cls)}</span>
+                      </div>
+                    )}
 
                     {cls.max_capacity && (
                       <div className="flex items-center gap-2">
@@ -301,12 +416,14 @@ export default function AvailableClassesPage() {
 
                   <Button
                     className="w-full"
-                    onClick={() => handleEnrollClick(cls)}
+                    onClick={() => handleEnrollClick(cls, isMultiDay(cls) ? 'full' : undefined)}
                     disabled={isClassFull(cls)}
                   >
                     <span className="flex items-center justify-center gap-2">
-                      {cls.external_signup_url ? 'Sign Up' : 'Enroll Now'}
-                      {cls.external_signup_url && (
+                      {isMultiDay(cls)
+                        ? `Sign up for all ${cls.days!.length} days`
+                        : cls.external_signup_url ? 'Sign Up' : 'Enroll Now'}
+                      {(isMultiDay(cls) ? cls.workshop_signup_url || cls.external_signup_url : cls.external_signup_url) && (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                           <polyline points="15 3 21 3 21 9"></polyline>
@@ -339,22 +456,40 @@ export default function AvailableClassesPage() {
           <div className="space-y-4">
             <p className="text-charcoal-700">
               Are you sure you want to enroll in <strong>{selectedClass.title}</strong>?
+              {isMultiDay(selectedClass) && ` This enrolls you in all ${selectedClass.days!.length} days.`}
             </p>
 
             <div className="bg-champagne-100 p-4 rounded-lg space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Date:</span>
-                <span className="font-medium">{formatDate(selectedClass.start_time)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-500">Time:</span>
-                <span className="font-medium">
-                  {formatTime(selectedClass.start_time)} - {formatTime(selectedClass.end_time)}
-                </span>
-              </div>
+              {isMultiDay(selectedClass) ? (
+                selectedClass.days!.map(day => (
+                  <div key={day.id} className="flex justify-between">
+                    <span className="text-charcoal-500">{formatDate(day.start_time)}</span>
+                    <span className="font-medium">
+                      {formatTime(day.start_time)} - {formatTime(day.end_time)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-charcoal-500">Date:</span>
+                    <span className="font-medium">{formatDate(selectedClass.start_time)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-charcoal-500">Time:</span>
+                    <span className="font-medium">
+                      {formatTime(selectedClass.start_time)} - {formatTime(selectedClass.end_time)}
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between">
                 <span className="text-charcoal-500">Price:</span>
-                <span className="font-medium">{formatPrice(selectedClass)}</span>
+                <span className="font-medium">
+                  {selectedOption === 'full' && formatWorkshopPrice(selectedClass)
+                    ? `${formatWorkshopPrice(selectedClass)}, all days`
+                    : formatPrice(selectedClass)}
+                </span>
               </div>
             </div>
           </div>

@@ -85,6 +85,13 @@ export interface Class {
   actual_attendance_count: number | null // Manual override for actual attendance
   external_signup_url: string | null // External URL for signup (e.g., Eventbrite)
   is_public: boolean // Whether class is visible to dancers/guardians
+  series_id?: string | null // Shared by every day of a multi-day workshop / recurring batch
+  series_position?: number // 1-based day within the series (set by GET /api/classes)
+  series_total?: number
+  // Multi-day workshop pricing; the day's own pricing is the single-day price
+  workshop_price?: number | null // Per-person price for the whole run
+  workshop_signup_url?: string | null // Payment link for the whole run (e.g. Stripe)
+  workshop_full_only?: boolean // No single-day drop-ins
   created_at: string
   updated_at: string
   studio?: Studio
@@ -233,6 +240,11 @@ export interface CreateClassData {
 
   // Virtual lessons (Google Meet) — private lessons only
   is_virtual?: boolean
+
+  // Multi-day workshop pricing (linked workshops only); null clears it
+  workshop_price?: number | null
+  workshop_signup_url?: string
+  workshop_full_only?: boolean
 }
 
 export interface CreateStudioData {

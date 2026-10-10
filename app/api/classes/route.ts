@@ -6,6 +6,7 @@ import { hasInstructorPrivileges, isInstructorOrAdmin } from '@/lib/auth/privile
 import { spendCreditForClass, getDayOfLessonPrice } from '@/lib/lesson-credits'
 import { notifyClassScheduled } from '@/lib/notifications/private-lessons'
 import { attachMeetToPrivateLesson, getPrivateLessonDancer } from '@/lib/google/private-lesson-meet'
+import { seriesPositions } from '@/lib/class-series'
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,8 +69,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 })
     }
 
+    // Number each day against its whole series, not just the days in this
+    // view: day 2 of a running workshop still reads "Day 2 of 3" under Upcoming.
+    const seriesIds = [...new Set((classes || []).map(cls => cls.series_id).filter(Boolean))]
+    let positions = new Map<string, { series_position: number; series_total: number }>()
+    if (seriesIds.length > 0) {
+      const { data: seriesRows, error: seriesError } = await supabase
+        .from('classes')
+        .select('id, series_id, start_time')
+        .in('series_id', seriesIds)
+      if (seriesError) {
+        console.error('Error fetching class series:', seriesError)
+      } else {
+        positions = seriesPositions(seriesRows || [])
+      }
+    }
+
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
+      ...positions.get(cls.id),
       enrolled_count: 0,
       instructor_name: cls.instructor?.full_name || 'Unknown'
     }))
