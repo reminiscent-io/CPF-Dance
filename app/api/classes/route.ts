@@ -85,10 +85,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Head counts come through RLS: instructors see every enrollment in their
+    // classes, a dancer only their own.
+    const enrollmentCounts = new Map<string, number>()
+    const classIds = (classes || []).map(cls => cls.id)
+    if (classIds.length > 0) {
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select('class_id')
+        .in('class_id', classIds)
+      if (enrollmentsError) {
+        console.error('Error fetching enrollment counts:', enrollmentsError)
+      } else {
+        for (const row of enrollments || []) {
+          enrollmentCounts.set(row.class_id, (enrollmentCounts.get(row.class_id) || 0) + 1)
+        }
+      }
+    }
+
     const classesWithCount = (classes || []).map(cls => ({
       ...cls,
       ...positions.get(cls.id),
-      enrolled_count: 0,
+      enrolled_count: enrollmentCounts.get(cls.id) || 0,
       instructor_name: cls.instructor?.full_name || 'Unknown'
     }))
 

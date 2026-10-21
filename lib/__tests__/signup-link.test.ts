@@ -29,6 +29,9 @@ describe('signup links', () => {
     expect(tagged.searchParams.get('client_reference_id')).toBe(buildSignupRef(ref))
     expect(tagged.searchParams.get('prefilled_promo_code')).toBe('X')
 
+    const book = new URL(withSignupRef('https://book.stripe.com/fZu4gz9to5Ej', ref))
+    expect(book.searchParams.get('client_reference_id')).toBe(buildSignupRef(ref))
+
     expect(withSignupRef('https://forms.gle/xyz', ref)).toBe('https://forms.gle/xyz')
     expect(withSignupRef('https://buy.stripe.com/abc123', null)).toBe('https://buy.stripe.com/abc123')
   })
@@ -44,5 +47,7 @@ describe('signup links', () => {
     expect(sameLink('https://buy.stripe.com/abc', 'https://buy.stripe.com/abc/?x=1')).toBe(true)
     expect(sameLink('https://buy.stripe.com/abc', 'https://buy.stripe.com/abd')).toBe(false)
     expect(sameLink('https://buy.stripe.com/abc', null)).toBe(false)
+    expect(sameLink('https://book.stripe.com/abc', 'https://buy.stripe.com/abc')).toBe(true)
+    expect(sameLink('https://example.com/abc', 'https://buy.stripe.com/abc')).toBe(false)
   })
 })
