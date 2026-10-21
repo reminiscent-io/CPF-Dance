@@ -40,7 +40,7 @@ lib/
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–51)
+migrations/           # Numbered SQL migrations (05–52)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -136,7 +136,7 @@ Four models in `lib/utils/pricing.ts`: `per_person`, `per_class`, `per_hour`, `t
 Money columns are `DECIMAL(10,2)` — do arithmetic in integer cents via `dollarsToCents()` / `centsToDollars()` (`lib/utils/money.ts`).
 
 ### External Class Sign-Ups
-"Sign up" on a class with `external_signup_url` (or `workshop_signup_url` for a full workshop) opens that link via `useExternalSignup` (`components/dancer/`). Stripe Payment Links (`buy.stripe.com`) get a `client_reference_id` from `lib/signup-link.ts`; the Stripe webhook enrolls the dancer once the paid link matches the class. Otherwise the dancer confirms by hand when they return to the tab. Both paths go through `enrollStudent()` in `lib/class-enrollment.ts`.
+"Sign up" on a class with `external_signup_url` (or `workshop_signup_url` for a full workshop) opens that link via `useExternalSignup` (`components/dancer/`). Stripe Payment Links (`buy.stripe.com`, `book.stripe.com`) get a `client_reference_id` from `lib/signup-link.ts`; the Stripe webhook enrolls the dancer once the paid link matches the class. Otherwise the dancer confirms by hand when they return to the tab. Every paid sale on a class link lands in `class_purchases` (migration 52, `lib/class-purchases.ts`): a sale with no ref enrolls the buyer when their email names one dancer, and anything else shows the instructor as "paid, not linked" in the class edit dialog, where she links it to a student. Both paths go through `enrollStudent()` in `lib/class-enrollment.ts`.
 
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.
@@ -158,7 +158,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–51; next is 52). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
+Numbered SQL files in `migrations/` (05–52; next is 53). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
 
 ## Deployment Gotcha
 

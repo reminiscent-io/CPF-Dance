@@ -8,7 +8,8 @@
  */
 import type { WorkshopOption } from '@/lib/class-series'
 
-const STRIPE_PAYMENT_LINK_HOSTS = ['buy.stripe.com']
+// Stripe serves Payment Links from more than one host; book. is the newer one
+const STRIPE_PAYMENT_LINK_HOSTS = ['buy.stripe.com', 'book.stripe.com', 'donate.stripe.com']
 const PREFIX = 'cpfclass'
 const UUID = '[0-9a-fA-F-]{36}'
 // Stripe allows up to 200 alphanumerics, dashes and underscores
@@ -57,11 +58,15 @@ export function withSignupRef(url: string, ref: SignupRef | null): string {
   return tagged.toString()
 }
 
-/** Compare links by origin and path, so a pasted query string or trailing slash still matches. */
+/**
+ * Compare links by origin and path, so a pasted query string or trailing slash
+ * still matches. Stripe's link hosts count as one origin: the path names the link.
+ */
 export function sameLink(a: string | null | undefined, b: string | null | undefined): boolean {
   if (!a || !b) return false
   try {
-    const strip = (u: URL) => `${u.origin}${u.pathname.replace(/\/+$/, '')}`
+    const origin = (u: URL) => STRIPE_PAYMENT_LINK_HOSTS.includes(u.hostname) ? 'stripe-payment-link' : u.origin
+    const strip = (u: URL) => `${origin(u)}${u.pathname.replace(/\/+$/, '')}`
     return strip(new URL(a)) === strip(new URL(b))
   } catch {
     return false

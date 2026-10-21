@@ -97,6 +97,7 @@ export interface Class {
   studio?: Studio
   enrollments?: Enrollment[]
   enrolled_count?: number
+  unlinked_purchase_count?: number // Paid on Stripe, not yet tied to a dancer
 }
 
 export interface Enrollment {
