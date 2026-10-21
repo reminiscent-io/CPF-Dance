@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import { enrollStudent } from '@/lib/class-enrollment'
 import { parseSignupRef, sameLink, signupUrlFor, type SignupRef } from '@/lib/signup-link'
+import { findStudentByEmail, matchPaidLink, purchaseRow, type LinkedClass } from '@/lib/class-purchases'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -60,6 +61,14 @@ export async function POST(request: NextRequest) {
         }
         return confirmClassSignup(session, ref)
       }
+      // No ref: someone bought from the raw link. Lesson packs sell through
+      // our own checkout sessions, never a payment link.
+      if (session.payment_link) {
+        if (session.payment_status === 'unpaid') {
+          return NextResponse.json({ received: true })
+        }
+        return recordLinkSale(session)
+      }
     }
 
     // Handle the event
@@ -113,9 +122,9 @@ export async function POST(request: NextRequest) {
 }
 
 // Enroll the dancer named in the signup ref, once we know the money went to
-// that class's own link. Problems the dancer can fix by confirming in the
-// portal (class full, link mismatch) are logged and acknowledged; only
-// database errors return 500 so Stripe retries.
+// that class's own link, and book the sale. A ref we can't honor (unknown
+// class or dancer, wrong link) is booked like an untagged sale. Only database
+// errors return 500 so Stripe retries.
 async function confirmClassSignup(session: Stripe.Checkout.Session, ref: SignupRef) {
   const supabase = createServiceClient()
   const skip = (reason: string) => {
@@ -128,14 +137,15 @@ async function confirmClassSignup(session: Stripe.Checkout.Session, ref: SignupR
     .select('id, external_signup_url, workshop_signup_url')
     .eq('id', ref.classId)
     .single()
-  if (!cls) return skip('class not found')
+  if (!cls) return recordLinkSale(session)
 
   const { data: student } = await supabase
     .from('students')
     .select('id')
     .eq('id', ref.studentId)
     .single()
-  if (!student) return skip('student not found')
+  // A ref we can't honor still leaves a real sale: book it like an untagged one
+  if (!student) return recordLinkSale(session)
 
   // The ref rides in the URL, so check the sale was on the link this class
   // sells for that option, not a cheaper one with a doctored ref.
@@ -144,17 +154,92 @@ async function confirmClassSignup(session: Stripe.Checkout.Session, ref: SignupR
     ? await stripe.paymentLinks.retrieve(session.payment_link)
     : session.payment_link
   if (!sameLink(paymentLink.url, signupUrlFor(cls, ref.option))) {
-    return skip(`paid link ${paymentLink.url} is not this class's sign-up link`)
+    console.warn(`Class signup ${session.id}: paid link ${paymentLink.url} is not this class's sign-up link`)
+    return recordLinkSale(session, paymentLink)
   }
 
   const result = await enrollStudent(supabase, supabase, ref.studentId, ref.classId, ref.option)
-  if (result.ok) {
-    console.log(`Class signup confirmed from Stripe: student ${ref.studentId}, class ${ref.classId}`)
-    return NextResponse.json({ received: true })
-  }
-  if (result.already_enrolled) return NextResponse.json({ received: true })
-  if (result.status >= 500) {
+  if (!result.ok && result.status >= 500) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
+  // Keep the sale on the books either way. One we couldn't enroll (class
+  // full, say) shows the instructor as paid, not yet linked.
+  const enrolled = result.ok || result.already_enrolled === true
+  const recorded = await savePurchase(supabase, purchaseRow(session, ref.classId, ref.option, enrolled ? ref.studentId : null))
+  if (!recorded) return NextResponse.json({ error: 'Failed to record purchase' }, { status: 500 })
+
+  if (result.ok) {
+    console.log(`Class signup confirmed from Stripe: student ${ref.studentId}, class ${ref.classId}`)
+  }
+  if (enrolled) return NextResponse.json({ received: true })
   return skip(result.error)
+}
+
+// A sale on a class link with no ref. Record it against the class whose link
+// was paid, and enroll the buyer when their email names exactly one dancer.
+// Links that aren't any class's (a lesson pack sold outside the portal, say)
+// are acknowledged and left alone.
+async function recordLinkSale(session: Stripe.Checkout.Session, retrieved?: Stripe.PaymentLink) {
+  const supabase = createServiceClient()
+
+  if (!session.payment_link) return NextResponse.json({ received: true })
+  const paymentLink = retrieved ?? (typeof session.payment_link === 'string'
+    ? await stripe.paymentLinks.retrieve(session.payment_link)
+    : session.payment_link)
+
+  const { data: classes, error: classesError } = await supabase
+    .from('classes')
+    .select('id, start_time, class_type, series_id, workshop_full_only, external_signup_url, workshop_signup_url')
+    .or('external_signup_url.not.is.null,workshop_signup_url.not.is.null')
+    .eq('is_cancelled', false)
+    .gte('start_time', new Date(session.created * 1000).toISOString())
+  if (classesError) {
+    console.error('Error loading classes for link sale:', classesError)
+    return NextResponse.json({ error: 'Failed to load classes' }, { status: 500 })
+  }
+
+  const match = matchPaidLink((classes || []) as LinkedClass[], paymentLink.url)
+  if (!match) {
+    console.log(`Payment link sale ${session.id} matches no class link; ignoring`)
+    return NextResponse.json({ received: true })
+  }
+
+  // Record first, unlinked, so a retry after a failed enrollment can't lose the sale
+  const recorded = await savePurchase(supabase, purchaseRow(session, match.classId, match.option, null))
+  if (!recorded) return NextResponse.json({ error: 'Failed to record purchase' }, { status: 500 })
+
+  const studentId = match.ambiguous ? null : await findStudentByEmail(supabase, session.customer_details?.email)
+  if (!studentId) {
+    console.log(`Link sale ${session.id} recorded on class ${match.classId}; not yet linked to a dancer`)
+    return NextResponse.json({ received: true })
+  }
+
+  const result = await enrollStudent(supabase, supabase, studentId, match.classId, match.option)
+  if (!result.ok && !result.already_enrolled) {
+    if (result.status >= 500) return NextResponse.json({ error: result.error }, { status: 500 })
+    console.warn(`Link sale ${session.id} recorded but not enrolled: ${result.error}`)
+    return NextResponse.json({ received: true })
+  }
+
+  const { error: linkError } = await supabase
+    .from('class_purchases')
+    .update({ student_id: studentId })
+    .eq('stripe_checkout_session_id', session.id)
+  if (linkError) {
+    console.error('Error linking purchase to student:', linkError)
+    return NextResponse.json({ error: 'Failed to link purchase' }, { status: 500 })
+  }
+
+  console.log(`Link sale ${session.id} enrolled student ${studentId} in class ${match.classId}`)
+  return NextResponse.json({ received: true })
+}
+
+// Stripe retries and sends completed + async_payment_succeeded for one
+// checkout, so the session id is the key and a repeat is a no-op.
+async function savePurchase(supabase: ReturnType<typeof createServiceClient>, row: ReturnType<typeof purchaseRow>) {
+  const { error } = await supabase
+    .from('class_purchases')
+    .upsert(row, { onConflict: 'stripe_checkout_session_id', ignoreDuplicates: true })
+  if (error) console.error('Error recording class purchase:', error)
+  return !error
 }

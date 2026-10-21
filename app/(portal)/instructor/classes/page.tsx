@@ -28,11 +28,22 @@ import { convertETToUTC, convertUTCToET, etDayKey } from '@/lib/utils/et-timezon
 import { useNow } from '@/lib/hooks/use-now'
 import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { AssetSelector } from '@/components/AssetSelector'
-import { centsToDollars, parseCurrencyToCents } from '@/lib/utils/money'
+import { centsToDollars, dollarsToCents, formatCents, parseCurrencyToCents } from '@/lib/utils/money'
 import { seriesLabel } from '@/lib/class-series'
 
 // All class times are authored and displayed in Eastern Time
 const ET = 'America/New_York'
+
+interface UnlinkedPurchase {
+  id: string
+  class_id: string
+  workshop_option: 'full' | 'day' | null
+  buyer_name: string | null
+  buyer_email: string | null
+  buyer_phone: string | null
+  amount_paid: number
+  purchased_at: string
+}
 
 // Helper function to parse currency values and round to 2 decimal places.
 // Rounding runs through the shared money helper: Math.round(num * 100) drops a
@@ -186,6 +197,9 @@ function ClassAgendaRow({
           {price ?? <span className="font-normal text-charcoal-300">—</span>}
         </div>
         <div className={`mt-0.5 text-xs tabular-nums ${s.enroll}`}>{enrollment}</div>
+        {!!cls.unlinked_purchase_count && !cancelled && (
+          <div className="text-xs tabular-nums text-rose-700">{cls.unlinked_purchase_count} paid, not linked</div>
+        )}
       </div>
     </button>
   )
@@ -911,6 +925,34 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     { enabled: isShareable }
   )
   const signupLink = `${window.location.origin}/classes/${shareSlug ?? classData.id}`
+  // Stripe sales on this class's links that no dancer is tied to yet
+  const { data: unlinkedPurchases, refetch: refetchPurchases } = useAsyncData(
+    async (signal) => {
+      const response = await fetch(`/api/classes/${classData.id}/purchases`, { signal })
+      if (!response.ok) throw new Error('Could not load Stripe sales')
+      const { purchases } = await response.json()
+      return purchases as UnlinkedPurchase[]
+    },
+    [classData.id],
+    { enabled: classData.is_public }
+  )
+  const linkPurchase = async (purchase: UnlinkedPurchase, studentId: string) => {
+    try {
+      const response = await fetch(`/api/classes/${classData.id}/purchases/${purchase.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_id: studentId })
+      })
+      if (!response.ok) {
+        const { error } = await response.json().catch(() => ({ error: null }))
+        throw new Error(error || 'Failed to link sale')
+      }
+      refetchPurchases()
+      addToast(`${purchase.buyer_name || 'Buyer'} enrolled`, 'success')
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Failed to link sale', 'error')
+    }
+  }
   const seriesNoun = (n: number) =>
     isWorkshop ? (n === 1 ? 'day' : 'days') : (n === 1 ? 'class' : 'classes')
 
@@ -1637,6 +1679,53 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               </div>
               <p className="text-xs text-charcoal-500">
                 Anyone with this link can see the class. Signing in or creating an account takes them straight to enroll.
+              </p>
+            </div>
+          )}
+
+          {/* Paid on Stripe from the raw link, with no dancer to enroll yet.
+              Linking enrolls the dancer in what they bought. */}
+          {unlinkedPurchases && unlinkedPurchases.length > 0 && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg space-y-2">
+              <label className="block text-sm font-medium text-charcoal-700">
+                Paid on Stripe, not yet linked ({unlinkedPurchases.length})
+              </label>
+              <div className="space-y-2">
+                {unlinkedPurchases.map(purchase => (
+                  <div key={purchase.id} className="p-2 bg-champagne-50 rounded border border-rose-200 space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm font-medium text-charcoal-950">{purchase.buyer_name || 'Unknown buyer'}</span>
+                      <span className="text-xs tabular-nums text-charcoal-500">
+                        {formatCents(dollarsToCents(Number(purchase.amount_paid)))}
+                        {purchase.workshop_option === 'full' ? ' · full workshop' : purchase.workshop_option === 'day' ? ' · one day' : ''}
+                      </span>
+                    </div>
+                    <div className="text-xs text-charcoal-500 truncate">
+                      {[
+                        purchase.buyer_email,
+                        purchase.buyer_phone,
+                        new Date(purchase.purchased_at).toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' }),
+                      ].filter(Boolean).join(' · ')}
+                    </div>
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) linkPurchase(purchase, e.target.value)
+                      }}
+                    >
+                      <option value="">Link to a student…</option>
+                      {students.map(student => (
+                        <option key={student.id} value={student.id}>
+                          {getStudentDisplayName(student)} {getStudentEmail(student) && `(${getStudentEmail(student)})`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-charcoal-500">
+                These buyers paid from the Stripe link without a matching account. No student record yet? Add them on the Students page first.
               </p>
             </div>
           )}

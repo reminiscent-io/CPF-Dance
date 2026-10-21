@@ -87,18 +87,27 @@ export async function GET(request: NextRequest) {
 
     // Head counts come through RLS: instructors see every enrollment in their
     // classes, a dancer only their own.
+    // Stripe sales not yet tied to a dancer: instructors only, dancers read none.
     const enrollmentCounts = new Map<string, number>()
+    const unlinkedCounts = new Map<string, number>()
     const classIds = (classes || []).map(cls => cls.id)
     if (classIds.length > 0) {
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from('enrollments')
-        .select('class_id')
-        .in('class_id', classIds)
-      if (enrollmentsError) {
-        console.error('Error fetching enrollment counts:', enrollmentsError)
+      const [enrollmentsResult, purchasesResult] = await Promise.all([
+        supabase.from('enrollments').select('class_id').in('class_id', classIds),
+        supabase.from('class_purchases').select('class_id').in('class_id', classIds).is('student_id', null),
+      ])
+      if (enrollmentsResult.error) {
+        console.error('Error fetching enrollment counts:', enrollmentsResult.error)
       } else {
-        for (const row of enrollments || []) {
+        for (const row of enrollmentsResult.data || []) {
           enrollmentCounts.set(row.class_id, (enrollmentCounts.get(row.class_id) || 0) + 1)
+        }
+      }
+      if (purchasesResult.error) {
+        console.error('Error fetching unlinked purchases:', purchasesResult.error)
+      } else {
+        for (const row of purchasesResult.data || []) {
+          unlinkedCounts.set(row.class_id, (unlinkedCounts.get(row.class_id) || 0) + 1)
         }
       }
     }
@@ -107,6 +116,7 @@ export async function GET(request: NextRequest) {
       ...cls,
       ...positions.get(cls.id),
       enrolled_count: enrollmentCounts.get(cls.id) || 0,
+      unlinked_purchase_count: unlinkedCounts.get(cls.id) || 0,
       instructor_name: cls.instructor?.full_name || 'Unknown'
     }))
 
