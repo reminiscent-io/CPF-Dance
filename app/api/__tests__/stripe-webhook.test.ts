@@ -45,7 +45,7 @@ const classId = '11111111-1111-4111-8111-111111111111'
 const studentId = '22222222-2222-4222-8222-222222222222'
 
 const deliver = (session: Record<string, unknown>, type = 'checkout.session.completed') => {
-  mockConstructEvent.mockReturnValue({ type, data: { object: { id: 'cs_1', payment_status: 'paid', created: 1792442710, ...session } } })
+  mockConstructEvent.mockReturnValue({ type, data: { object: { id: 'cs_1', payment_status: 'paid', created: 1792000000, ...session } } })
   return POST(new NextRequest('http://localhost:5000/api/stripe/webhook', {
     method: 'POST',
     body: '{}',
@@ -155,7 +155,7 @@ describe('POST /api/stripe/webhook class sign-ups', () => {
       client_reference_id: null,
       payment_link: 'plink_1',
       amount_total: 30000,
-      customer_details: { name: 'Megan J', email: 'Megan@Example.com', phone: null },
+      customer_details: { name: 'Test Dancer', email: 'Dancer@Example.com', phone: null },
     })
 
     expect(response.status).toBe(200)
@@ -163,7 +163,7 @@ describe('POST /api/stripe/webhook class sign-ups', () => {
     expect(writes).toContainEqual(expect.objectContaining({
       table: 'class_purchases',
       op: 'upsert',
-      payload: expect.objectContaining({ buyer_email: 'megan@example.com', amount_paid: 300, student_id: null }),
+      payload: expect.objectContaining({ buyer_email: 'dancer@example.com', amount_paid: 300, student_id: null }),
     }))
     expect(writes).toContainEqual({ table: 'class_purchases', op: 'update', payload: { student_id: studentId } })
   })

@@ -29,7 +29,7 @@ describe('signup links', () => {
     expect(tagged.searchParams.get('client_reference_id')).toBe(buildSignupRef(ref))
     expect(tagged.searchParams.get('prefilled_promo_code')).toBe('X')
 
-    const book = new URL(withSignupRef('https://book.stripe.com/fZu4gz9to5Ej', ref))
+    const book = new URL(withSignupRef('https://book.stripe.com/test_book_link', ref))
     expect(book.searchParams.get('client_reference_id')).toBe(buildSignupRef(ref))
 
     expect(withSignupRef('https://forms.gle/xyz', ref)).toBe('https://forms.gle/xyz')
