@@ -21,8 +21,8 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'CPF Dance — Precision. Passion. Performance.',
-  description: 'Connect with a world-class instructor, receive detailed feedback after every lesson, and track your growth as a dancer.',
+  title: 'Courtney File · CPF Dance',
+  description: 'Private lessons, classes and workshops with Courtney File, former Radio City Rockette and Broadway Dance Center faculty. Written feedback after every lesson.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

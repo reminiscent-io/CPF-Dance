@@ -1,433 +1,669 @@
 /* ============================================================
-   Landing page — scoped editorial accents for hero + dancers
-   Pulled from the new-look redesign, trimmed to what we use.
+   Landing page, set as a printed program: a cover, a bio page,
+   one dark spread for the notes, a join page, and a colophon.
+   Colors are the DESIGN.md roles; nothing here is off-system.
    ============================================================ */
 
 .lp {
-  --lp-gold: #C4A055;
-  --lp-gold-light: #D4B76A;
-  --lp-gold-dark: #A8863E;
-  --lp-cream: #FAFAF8;
-  --lp-cream-warm: #F5F0E8;
-  --lp-hero-bg: #F0EFED;
-  --lp-charcoal: #1A1A1A;
-  --lp-charcoal-soft: #2D2D2D;
-  --lp-text-muted: #8A8580;
+  --lp-paper: var(--color-champagne-50);       /* Champagne Silk */
+  --lp-page: var(--color-champagne-100);       /* Champagne Page */
+  --lp-stroke: var(--color-champagne-200);     /* Champagne Stroke */
+  --lp-ink: var(--color-charcoal-900);         /* Stage Ink */
+  --lp-black: var(--color-charcoal-950);       /* Stage Black */
+  --lp-graphite: var(--color-charcoal-500);    /* Stage Graphite */
+  --lp-rose: var(--color-rose-600);            /* Stage Rose */
+  --lp-rose-deep: var(--color-rose-700);       /* Stage Rose Deep */
+  --lp-gilt: var(--color-gold-600);            /* Curtain Gilt */
+  --lp-gilt-deep: var(--color-gold-700);       /* Curtain Gilt Deep */
 
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --lp-gutter: clamp(20px, 6vw, 96px);
+  --lp-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --lp-display: 'Cormorant Garamond', Georgia, serif;
-  --lp-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+  --lp-display: var(--font-family-display);
+  --lp-sans: var(--font-family-sans);
 
-.lp * { box-sizing: border-box; }
-
-/* ---------- Eyebrow ---------- */
-.lp-eyebrow {
-  display: inline-block;
+  background: var(--lp-paper);
+  color: var(--lp-ink);
   font-family: var(--lp-sans);
-  font-weight: 500;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  color: var(--lp-gold);
-  margin-bottom: 24px;
 }
 
-/* ---------- Link underline accent ---------- */
+/* Zero specificity, so each component's own margins win. */
+:where(.lp) :where(h1, h2, h3) {
+  font-family: var(--lp-display);
+  margin: 0;
+}
+:where(.lp) :where(p) {
+  margin: 0;
+}
+
+/* ---------- Shared pieces ---------- */
+.lp-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--lp-graphite);
+  margin-bottom: 20px;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+}
+
+.lp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 28px;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--lp-paper);
+  text-decoration: none;
+  transition: background-color 0.25s var(--lp-ease);
+}
+.lp-button--rose { background: var(--lp-rose); }
+.lp-button--rose:hover { background: var(--lp-rose-deep); }
+.lp-button--gold {
+  background: var(--lp-gilt);
+  box-shadow: 0 2px 8px rgba(10, 10, 10, 0.06);
+}
+.lp-button--gold:hover { background: var(--lp-gilt-deep); }
+
 .lp-link {
   position: relative;
-  display: inline-block;
-  font-family: var(--lp-sans);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.875rem;
   font-weight: 500;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--lp-cream);
+  letter-spacing: 0.04em;
+  color: var(--lp-ink);
   text-decoration: none;
-  padding-bottom: 4px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 .lp-link::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 10px;
   height: 1px;
-  background: var(--lp-gold);
-  transform: scaleX(0);
-  transform-origin: right center;
-  transition: transform 0.4s var(--ease-out-soft);
-}
-.lp-link:hover::after {
-  transform: scaleX(1);
+  background: currentColor;
+  opacity: 0.35;
   transform-origin: left center;
+  transition: opacity 0.3s var(--lp-ease);
+}
+.lp-link:hover::after { opacity: 1; }
+
+.lp-button:focus-visible,
+.lp-link:focus-visible,
+.lp a:focus-visible {
+  outline: 2px solid var(--lp-rose);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Scroll reveal. Elements are only ever hidden after hydration, by
+   useScrollReveal, and only when they start below the fold. */
+[data-reveal] {
+  transition: opacity 0.7s var(--lp-ease), transform 0.7s var(--lp-ease);
+}
+[data-reveal='pending'] {
+  opacity: 0;
+  transform: translateY(16px);
 }
 
 /* ============================================================
-   Hero
-   Mobile: single photo background + editorial text overlay
-   Desktop: left third (copy on cream) + right two-thirds (two images)
+   Nav: a running head over the cover, not a sticky bar
    ============================================================ */
-.lp-hero {
+.lp-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(env(safe-area-inset-top), 12px) var(--lp-gutter) 0;
+  min-height: 72px;
+}
+.lp-nav__mark {
+  font-family: var(--lp-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lp-black);
+  text-decoration: none;
+}
+
+/* ============================================================
+   Cover
+   Phone: the photo stays sharp at the top; copy sits in the
+   bottom third on a short paper fade.
+   Tablet: copy beside one plate. Desktop: copy beside two.
+   ============================================================ */
+.lp-cover {
   position: relative;
-  background: var(--lp-hero-bg);
-  color: var(--lp-charcoal);
-  font-family: var(--lp-sans);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100svh;
   overflow: hidden;
 }
 
-/* Mobile-only photo background */
-.lp-hero__mobile-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+.lp-cover__photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--lp-page);
 }
-.lp-hero__mobile-bg img {
-  width: 100%;
-  height: 100%;
+.lp-cover__photo img {
   object-fit: cover;
   object-position: center top;
-  display: block;
 }
-.lp-hero__mobile-overlay {
+.lp-cover__photo--phone {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 72%;
+}
+
+.lp-cover__copy {
+  position: relative;
+  z-index: 1;
+  container-type: inline-size;
+  padding: 120px var(--lp-gutter) max(40px, env(safe-area-inset-bottom));
   background: linear-gradient(
     to bottom,
-    rgba(240, 239, 237, 0.92) 0%,
-    rgba(240, 239, 237, 0.80) 45%,
-    rgba(240, 239, 237, 0.96) 100%
+    color-mix(in oklab, var(--lp-paper) 0%, transparent) 0,
+    var(--lp-paper) 112px
   );
 }
 
-.lp-hero__grid {
-  position: relative;
-  z-index: 1;
+.lp-cover__name {
+  font-weight: 500;
+  font-size: clamp(3.25rem, 21cqi, 7rem);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: var(--lp-black);
+  margin-bottom: 24px;
+}
+.lp-cover__name span {
   display: block;
-  min-height: 100svh;
 }
 
-.lp-hero__content {
-  padding: 120px 28px 72px;
-  max-width: 640px;
-  text-align: left;
-}
-
-/* Mobile: hide desktop-only content background image */
-.lp-hero__content-bg {
-  display: none;
-  /* Positioned at every width, not just from 768px up: next/image fill needs a
-     positioned ancestor even while the element is display:none. */
-  position: relative;
-}
-.lp-hero__content .lp-eyebrow {
-  margin-bottom: 20px;
-}
-.lp-hero__title {
-  font-family: var(--lp-display);
-  font-weight: 400;
-  color: var(--lp-charcoal);
-  line-height: 1.05;
-  letter-spacing: -0.015em;
-  margin: 0 0 28px;
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-}
-.lp-hero__body {
-  font-family: var(--lp-sans);
-  font-size: 1.05rem;
+.lp-cover__body {
+  font-size: 1.0625rem;
   line-height: 1.6;
-  color: var(--lp-charcoal-soft);
-  margin: 0 0 36px;
-  max-width: 480px;
-}
-.lp-hero__ctas {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
-  flex-wrap: wrap;
+  color: var(--lp-graphite);
+  max-width: 42ch;
+  margin-bottom: 28px;
 }
 
-/* Desktop-only media split */
-.lp-hero__media-split {
+.lp-cover__plates {
   display: none;
 }
-.lp-hero__media-split > div {
-  /* Same reason as .lp-hero__content-bg above. */
-  position: relative;
+
+/* First paint: the copy settles in, it never waits on the photo. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-cover__copy > * {
+    animation: lp-settle 0.6s var(--lp-ease) both;
+  }
+  .lp-cover__copy > :nth-child(2) { animation-delay: 40ms; }
+  .lp-cover__copy > :nth-child(3) { animation-delay: 90ms; }
+  .lp-cover__copy > :nth-child(4) { animation-delay: 130ms; }
+}
+@keyframes lp-settle {
+  from {
+    opacity: 0.001;
+    transform: translateY(10px);
+  }
 }
 
 @media (min-width: 768px) {
-  .lp-hero__mobile-bg { display: none; }
-
-  .lp-hero__grid {
+  .lp-cover {
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 0;
-    align-items: stretch;
-    min-height: 75vh;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-height: min(92svh, 960px);
   }
-  .lp-hero__content {
-    position: relative;
+  .lp-cover__photo--phone {
+    display: none;
+  }
+  .lp-cover__copy {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 120px 48px 120px 8vw;
-    max-width: none;
-    margin: 0;
-    text-align: left;
-    overflow: hidden;
+    padding: 128px clamp(32px, 4vw, 64px) 80px var(--lp-gutter);
+    background: var(--lp-paper);
   }
-  .lp-hero__content > :not(.lp-hero__content-bg) {
-    position: relative;
-    z-index: 1;
+  .lp-cover__plates {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
-  .lp-hero__content-bg {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
+  /* One plate until there is room for two at a portrait ratio. */
+  .lp-cover__plates > :nth-child(2) {
+    display: none;
   }
-  .lp-hero__content-bg img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    display: block;
-  }
-  .lp-hero__content-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(250, 250, 248, 0.86) 0%,
-      rgba(250, 250, 248, 0.80) 50%,
-      rgba(250, 250, 248, 0.88) 100%
-    );
-  }
-  .lp-hero__body {
-    margin: 0 0 36px;
-    color: var(--lp-text-muted);
-  }
-  .lp-hero__ctas {
-    flex-direction: row;
-    align-items: center;
-    gap: 28px;
-  }
+}
 
-  .lp-hero__media-split {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    min-height: 75vh;
+@media (min-width: 1100px) {
+  .lp-cover {
+    grid-template-columns: minmax(400px, 1fr) minmax(0, 2fr);
   }
-  .lp-hero__media-split > div {
-    flex: 1;
-    overflow: hidden;
-    /* next/image fill positions against the nearest positioned ancestor. */
-    position: relative;
+  .lp-cover__plates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .lp-hero__media-split img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
+  .lp-cover__plates > :nth-child(2) {
     display: block;
   }
 }
 
 /* ============================================================
-   For Dancers — plate + ruled index
-
-   The photograph is a printed plate, not a scrim: it sits in its
-   own column at full fidelity instead of being flattened under an
-   80% overlay. Copy sits beside it on program ink. Hierarchy comes
-   from one lead statement plus a hairline-ruled index, not from a
-   grid of equal cards.
+   About the artist: a program bio page
    ============================================================ */
-.lp-dancers {
-  /* Charcoal family, warmed toward the gilt hue. Never #000. */
-  --lp-ink: #1b1815;
-  --lp-rule: rgba(250, 250, 248, 0.14);
-
-  position: relative;
-  isolation: isolate;
-  background: var(--lp-ink);
-  color: var(--lp-cream);
-  font-family: var(--lp-sans);
-  padding: clamp(72px, 9vw, 128px) 8vw;
-  overflow: hidden;
-}
-
-.lp-dancers__inner {
-  max-width: 1240px;
-  margin: 0 auto;
+.lp-about {
+  background: var(--lp-page);
+  padding: clamp(72px, 10vw, 144px) var(--lp-gutter);
   display: grid;
-  gap: clamp(36px, 5vw, 52px);
+  gap: clamp(40px, 6vw, 96px);
 }
 
-/* ---------- The plate ---------- */
-.lp-dancers__plate {
+.lp-about__portrait {
   position: relative;
   margin: 0;
+  aspect-ratio: 4 / 5;
+  max-width: 480px;
   overflow: hidden;
-  /* Portrait-leaning on phones so the plate carries weight in a stacked
-     column; on desktop it stretches to the copy column instead. */
-  aspect-ratio: 5 / 6;
-  background: #232019;
+  background: var(--lp-stroke);
 }
+.lp-about__portrait img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.lp-about__title {
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--lp-black);
+  max-width: 18ch;
+  text-wrap: balance;
+  margin-bottom: 28px;
+}
+
+.lp-about__bio {
+  display: grid;
+  gap: 14px;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--lp-ink);
+  max-width: 54ch;
+}
+.lp-about__bio a {
+  color: var(--lp-rose-deep);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.lp-credits {
+  margin: clamp(40px, 5vw, 56px) 0 0;
+  border-top: 1px solid var(--lp-stroke);
+  display: grid;
+  max-width: 640px;
+}
+.lp-credits dt {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--lp-graphite);
+  padding-top: 24px;
+  margin-bottom: 10px;
+}
+.lp-credits dd {
+  margin: 0;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--lp-stroke);
+}
+.lp-credits ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px 32px;
+  font-family: var(--lp-display);
+  font-size: 1.25rem;
+  line-height: 1.35;
+  color: var(--lp-black);
+}
+.lp-credits a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--lp-stroke);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.lp-credits a:hover {
+  text-decoration-color: currentColor;
+}
+
 @media (min-width: 560px) {
-  .lp-dancers__plate {
-    aspect-ratio: 3 / 2;
+  .lp-credits ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.lp-dancers__plate img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Holds the ribbon-tying hands and shoes in frame as the crop narrows. */
-  object-position: 68% 50%;
-  display: block;
+
+@media (min-width: 768px) {
+  .lp-about {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+  .lp-about__portrait {
+    position: sticky;
+    top: 48px;
+    max-width: none;
+  }
 }
 
-/* ---------- Lead ---------- */
-.lp-dancers__head::before {
-  content: '';
-  display: block;
-  width: 56px;
-  height: 1px;
-  background: var(--lp-gold);
-  margin-bottom: clamp(20px, 2.5vw, 28px);
+/* ============================================================
+   The notes: the one dark spread. A paper page on a dark stage.
+   ============================================================ */
+.lp-notes {
+  --lp-on-ink: var(--color-champagne-50);
+  --lp-on-ink-soft: color-mix(in oklab, var(--color-champagne-50) 72%, transparent);
+  --lp-rule: color-mix(in oklab, var(--color-champagne-50) 16%, transparent);
+
+  background: var(--lp-ink);
+  color: var(--lp-on-ink);
+  padding: clamp(80px, 11vw, 160px) var(--lp-gutter);
 }
-.lp-dancers__head .lp-eyebrow {
-  margin-bottom: 18px;
-}
-.lp-dancers__lead {
+
+.lp-notes__quote {
   font-family: var(--lp-display);
   font-weight: 400;
-  font-size: clamp(2.125rem, 4vw, 3.25rem);
-  line-height: 1.06;
-  letter-spacing: -0.02em;
-  color: var(--lp-cream);
-  margin: 0 0 20px;
-  /* Balance keeps the break on the comma instead of orphaning "in". */
-  text-wrap: balance;
-  max-width: 18ch;
-}
-.lp-dancers__stand {
-  font-size: clamp(1rem, 1.15vw, 1.0625rem);
-  line-height: 1.65;
-  color: rgba(250, 250, 248, 0.76);
-  margin: 0;
-  max-width: 48ch;
+  font-style: italic;
+  font-size: clamp(1.625rem, 3.4vw, 2.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  max-width: 30ch;
+  color: var(--lp-on-ink);
+  padding-bottom: clamp(56px, 8vw, 112px);
+  margin-bottom: clamp(56px, 8vw, 112px);
+  border-bottom: 1px solid var(--lp-rule);
 }
 
-/* ---------- Ruled index ---------- */
-.lp-dancers__index {
+.lp-notes__spread {
+  display: grid;
+  gap: clamp(40px, 5vw, 64px);
+}
+
+.lp-notes .lp-eyebrow {
+  color: var(--lp-on-ink-soft);
+}
+.lp-notes__title {
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--lp-on-ink);
+  max-width: 16ch;
+  text-wrap: balance;
+  margin-bottom: 20px;
+}
+.lp-notes__stand {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--lp-on-ink-soft);
+  max-width: 44ch;
+}
+
+/* The sample note, styled like the dancer's own view of a note. */
+.lp-note {
+  background: var(--lp-paper);
+  color: var(--lp-ink);
+  border-radius: 0.5rem;
+  padding: clamp(24px, 4vw, 48px);
+  max-width: 640px;
+}
+.lp-note__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--lp-graphite);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--lp-stroke);
+}
+.lp-note__title {
+  font-weight: 600;
+  font-size: 1.625rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--lp-black);
+  margin-bottom: 16px;
+}
+.lp-note__body {
+  display: grid;
+  gap: 14px;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.lp-note__body ol {
+  margin: 0;
+  padding-left: 1.25em;
+  display: grid;
+  gap: 10px;
+}
+.lp-note__body li::marker {
+  font-family: var(--lp-display);
+  font-weight: 600;
+  color: var(--lp-rose-deep);
+}
+.lp-note__body strong {
+  font-weight: 600;
+  color: var(--lp-black);
+}
+.lp-note__sign {
+  margin-top: 24px;
+  font-family: var(--lp-display);
+  font-style: italic;
+  font-size: 1.375rem;
+  color: var(--lp-black);
+}
+
+.lp-notes__index {
   list-style: none;
   margin: 0;
   padding: 0;
   border-top: 1px solid var(--lp-rule);
 }
-.lp-dancers__index li {
+.lp-notes__index li {
   display: grid;
   gap: 6px;
-  padding: clamp(18px, 2.2vw, 26px) 0;
+  padding: 22px 0;
   border-bottom: 1px solid var(--lp-rule);
 }
-.lp-dancers__index h3 {
-  font-family: var(--lp-display);
+.lp-notes__index h3 {
   font-weight: 500;
-  font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+  font-size: 1.375rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--lp-cream);
-  margin: 0;
+  color: var(--lp-on-ink);
 }
-.lp-dancers__index p {
-  font-size: 0.95rem;
+.lp-notes__index p {
+  font-size: 0.9375rem;
   line-height: 1.55;
-  color: rgba(250, 250, 248, 0.68);
-  margin: 0;
-  max-width: 46ch;
+  color: var(--lp-on-ink-soft);
+  max-width: 44ch;
 }
 
-/* ---------- CTAs ---------- */
-.lp-dancers__ctas {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px 28px;
-}
-.lp-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 28px;
-  border-radius: 8px;
-  /* Ink on gilt, not cream on gilt: cream reads 2.4:1 and fails AA. */
-  background: var(--lp-gold);
-  color: var(--lp-ink);
-  font-family: var(--lp-sans);
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background 0.3s var(--ease-out-soft);
-}
-.lp-cta:hover {
-  background: var(--lp-gold-light);
-}
-.lp-cta:focus-visible,
-.lp-dancers .lp-link:focus-visible {
-  outline: 2px solid var(--lp-gold-light);
-  outline-offset: 3px;
-}
-
-/* Two columns only once the plate column can hold a portrait that still
-   reads as a plate. Below this the copy grows taller as the plate column
-   narrows, and the stretched image degrades into a sliver. */
-@media (min-width: 1100px) {
-  .lp-dancers__inner {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-    grid-template-rows: auto auto 1fr;
-    column-gap: clamp(48px, 6vw, 88px);
-    row-gap: clamp(30px, 3.5vw, 44px);
+@media (min-width: 1000px) {
+  .lp-notes__spread {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(56px, 7vw, 120px);
     align-items: start;
   }
-  .lp-dancers__plate {
+  .lp-note {
     grid-column: 1;
-    grid-row: 1 / -1;
-    align-self: stretch;
-    aspect-ratio: auto;
-    min-height: clamp(480px, 46vw, 620px);
+    grid-row: 1 / span 2;
   }
-  .lp-dancers__head {
+  .lp-notes__head {
     grid-column: 2;
     grid-row: 1;
   }
-  .lp-dancers__index {
+  .lp-notes__index {
     grid-column: 2;
     grid-row: 2;
   }
-  .lp-dancers__ctas {
-    grid-column: 2;
-    grid-row: 3;
-    align-self: end;
+}
+
+/* ============================================================
+   Join
+   ============================================================ */
+.lp-join {
+  padding: clamp(80px, 11vw, 160px) var(--lp-gutter);
+  display: grid;
+  justify-items: start;
+}
+.lp-join__title {
+  font-weight: 500;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--lp-black);
+  margin-bottom: 20px;
+}
+.lp-join__body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--lp-graphite);
+  max-width: 46ch;
+  margin-bottom: 32px;
+}
+
+/* ============================================================
+   Colophon
+   ============================================================ */
+.lp-footer {
+  background: var(--lp-page);
+  border-top: 1px solid var(--lp-stroke);
+  padding: clamp(56px, 7vw, 96px) var(--lp-gutter) max(32px, env(safe-area-inset-bottom));
+  font-size: 0.9375rem;
+}
+.lp-footer a {
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+.lp-footer a:hover {
+  color: var(--lp-rose-deep);
+}
+
+.lp-footer__top {
+  display: grid;
+  gap: 48px;
+  padding-bottom: 48px;
+}
+.lp-footer__contact {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.lp-footer__contact .lp-nav__mark {
+  margin-bottom: 8px;
+}
+
+.lp-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--lp-stroke);
+  font-size: 0.8125rem;
+  color: var(--lp-graphite);
+}
+.lp-footer__legal div {
+  display: flex;
+  gap: 24px;
+}
+.lp-footer__legal a {
+  color: var(--lp-graphite);
+}
+
+.lp-inquiry {
+  max-width: 640px;
+}
+.lp-inquiry__lead {
+  font-family: var(--lp-display);
+  font-size: 1.375rem;
+  line-height: 1.3;
+  color: var(--lp-black);
+  margin-bottom: 4px;
+}
+.lp-inquiry__sent {
+  color: var(--lp-ink);
+  padding-top: 8px;
+}
+.lp-inquiry__error {
+  font-size: 0.875rem;
+  color: var(--lp-rose-deep);
+}
+
+/* Opens in place. Animating grid rows keeps height out of the transition. */
+.lp-inquiry__drawer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s var(--lp-ease);
+}
+.lp-inquiry__drawer[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+.lp-inquiry__form {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  gap: 16px;
+}
+.lp-inquiry__drawer[data-open='true'] .lp-inquiry__form {
+  padding-top: 20px;
+}
+
+@media (min-width: 560px) {
+  .lp-inquiry__form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp-inquiry__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 900px) {
+  .lp-footer__top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-cta {
-    transition: none;
-  }
-  .lp-dancers .lp-link::after {
+  [data-reveal],
+  .lp-button,
+  .lp-link::after,
+  .lp-inquiry__drawer {
     transition: none;
   }
 }
