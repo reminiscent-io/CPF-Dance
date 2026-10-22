@@ -56,9 +56,15 @@ class MockIntersectionObserver {
   unobserve = vi.fn()
   disconnect = vi.fn()
   root = null
-  rootMargin = ''
+  rootMargin: string
   thresholds: number[] = []
   takeRecords = vi.fn().mockReturnValue([])
+
+  // Same signature as the real constructor, so callers can pass the
+  // callback and options they would in the browser.
+  constructor(public callback?: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    this.rootMargin = options?.rootMargin ?? ''
+  }
 }
 global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver
 
