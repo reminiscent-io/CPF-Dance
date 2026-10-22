@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   AcademicCapIcon,
   DocumentTextIcon,
+  HomeIcon,
   PlusIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline'
@@ -23,7 +24,14 @@ export function DancerBottomNav() {
   const [showPlusMenu, setShowPlusMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  // Same four destinations as the sidebar; private lessons sit in the plus menu
   const navItems: NavItem[] = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: <HomeIcon className="w-5 h-5" />,
+      href: '/dancer'
+    },
     {
       id: 'notes',
       label: 'Notes',
@@ -31,22 +39,16 @@ export function DancerBottomNav() {
       href: '/dancer/notes'
     },
     {
-      id: 'privates',
-      label: 'Privates',
-      icon: <SparklesIcon className="w-5 h-5" />,
-      href: '/dancer/request-lesson'
+      id: 'classes',
+      label: 'Classes',
+      icon: <AcademicCapIcon className="w-5 h-5" />,
+      href: '/dancer/classes'
     },
     {
       id: 'calendar',
       label: 'Calendar',
       icon: <CalendarIcon className="w-5 h-5" />,
       href: '/dancer/schedule'
-    },
-    {
-      id: 'classes',
-      label: 'Classes',
-      icon: <AcademicCapIcon className="w-5 h-5" />,
-      href: '/dancer/classes'
     }
   ]
 
@@ -89,10 +91,17 @@ export function DancerBottomNav() {
 
   const handleFindClass = () => {
     setShowPlusMenu(false)
-    router.push('/dancer/available-classes')
+    router.push('/dancer/classes')
   }
 
+  const handleRequestPrivate = () => {
+    setShowPlusMenu(false)
+    router.push('/dancer/request-lesson')
+  }
+
+  // Home is the portal root, so every other dancer page sits under it
   const isActive = (href: string) => {
+    if (href === '/dancer') return pathname === href
     return pathname === href || pathname?.startsWith(href + '/')
   }
 
@@ -164,14 +173,26 @@ export function DancerBottomNav() {
                 </button>
                 <button
                   onClick={handleFindClass}
-                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-champagne-100 transition-colors"
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-champagne-100 transition-colors border-b border-champagne-200"
                 >
                   <div className="w-9 h-9 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center">
                     <AcademicCapIcon className="w-5 h-5 text-rose-700" />
                   </div>
                   <div>
                     <span className="block text-charcoal-950" style={{ fontWeight: 500 }}>Find a class</span>
-                    <span className="block text-xs text-charcoal-500">Browse available classes</span>
+                    <span className="block text-xs text-charcoal-500">Open workshops and classes</span>
+                  </div>
+                </button>
+                <button
+                  onClick={handleRequestPrivate}
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-champagne-100 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-champagne-100 border border-champagne-200 flex items-center justify-center">
+                    <SparklesIcon className="w-5 h-5 text-charcoal-700" />
+                  </div>
+                  <div>
+                    <span className="block text-charcoal-950" style={{ fontWeight: 500 }}>Request a private</span>
+                    <span className="block text-xs text-charcoal-500">Book time with Courtney</span>
                   </div>
                 </button>
               </div>

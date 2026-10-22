@@ -160,10 +160,11 @@ export default function DancerPortalPage() {
   const externalSignup = useExternalSignup({ studentId, onEnrolled: fetchDashboardData })
 
   // Straight to the class's pay link when it has one; a multi-day workshop
-  // card sells the full run. Classes enrolled in-app go through Open Classes.
+  // card sells the full run. Classes enrolled in-app open their enroll
+  // dialog on the Classes page.
   const handleSignUp = (classItem: OpenClass & { days: number }) => {
     if (!externalSignup.start(classItem, classItem.days > 1 ? 'full' : undefined)) {
-      router.push('/dancer/available-classes')
+      router.push(`/dancer/classes?class=${encodeURIComponent(classItem.id)}`)
     }
   }
 
@@ -283,7 +284,7 @@ export default function DancerPortalPage() {
                     Open classes
                   </h2>
                   <button
-                    onClick={() => router.push('/dancer/available-classes')}
+                    onClick={() => router.push('/dancer/classes')}
                     className="text-sm text-rose-700 hover:text-rose-800 flex items-center gap-1 tracking-[0.04em]"
                   >
                     All open classes

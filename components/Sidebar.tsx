@@ -15,8 +15,7 @@ import {
   BuildingOfficeIcon,
   ClipboardDocumentCheckIcon,
   CreditCardIcon,
-  MagnifyingGlassIcon,
-  SparklesIcon,
+  HomeIcon,
   DocumentTextIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
@@ -99,39 +98,17 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ]
     }
 
+    // Dancers come here for Courtney's notes and her classes. Private lessons
+    // are requested from the Classes page; payments and waivers keep their
+    // routes but leave the nav while they aren't in use.
     const dancerNav = {
       ungrouped: [
-        { href: '/dancer', label: 'Dashboard', icon: <ChartBarIcon className="w-4 h-4" /> }
+        { href: '/dancer', label: 'Home', icon: <HomeIcon className="w-4 h-4" />, exact: true },
+        { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-4 h-4" /> },
+        { href: '/dancer/classes', label: 'Classes', icon: <AcademicCapIcon className="w-4 h-4" /> },
+        { href: '/dancer/schedule', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4" /> }
       ],
-      groups: [
-        {
-          label: 'Feedback',
-          links: [
-            { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-4 h-4" /> }
-          ]
-        },
-        {
-          label: 'Schedule',
-          links: [
-            { href: '/dancer/schedule', label: 'My Calendar', icon: <CalendarIcon className="w-4 h-4" /> },
-            { href: '/dancer/classes', label: 'My Classes', icon: <AcademicCapIcon className="w-4 h-4" /> }
-          ]
-        },
-        {
-          label: 'Book',
-          links: [
-            { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-4 h-4" /> },
-            { href: '/dancer/available-classes', label: 'Open Classes', icon: <MagnifyingGlassIcon className="w-4 h-4" /> }
-          ]
-        },
-        {
-          label: 'Other',
-          links: [
-            { href: '/dancer/waivers', label: 'Waivers', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" /> },
-            { href: '/dancer/payments', label: 'Payments', icon: <CreditCardIcon className="w-4 h-4" /> }
-          ]
-        }
-      ]
+      groups: []
     }
 
     const adminNav = {
@@ -302,7 +279,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
               <div className="space-y-0.5">
                 {navLinks.ungrouped.map((link: any) => {
                   const isExactMatch = pathname === link.href
-                  const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard'
+                  const isSubpage = pathname?.startsWith(link.href + '/') && link.label !== 'Dashboard' && !link.exact
                   const isActive = isExactMatch || isSubpage
 
                   return (
