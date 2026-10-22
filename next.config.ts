@@ -43,6 +43,18 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      // Open classes moved onto the dancer's Classes page. Shared class links
+      // and login ?next= values already out there carry ?class=<id>, which
+      // Next passes through to the destination.
+      {
+        source: '/dancer/available-classes',
+        destination: '/dancer/classes',
+        permanent: false,
+      },
+    ]
+  },
   // Security headers
   async headers() {
     const isDev = process.env.NODE_ENV === 'development'

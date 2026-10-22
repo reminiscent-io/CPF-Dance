@@ -19,12 +19,12 @@ describe('resolvePortalRedirect', () => {
     it('keeps the query string of a deep link', () => {
       expect(
         resolvePortalRedirect({
-          pathname: '/dancer/available-classes',
+          pathname: '/dancer/classes',
           search: '?class=abc',
           isAuthenticated: false,
           profile: null,
         })
-      ).toBe('/login?next=%2Fdancer%2Favailable-classes%3Fclass%3Dabc')
+      ).toBe('/login?next=%2Fdancer%2Fclasses%3Fclass%3Dabc')
     })
 
     it.each([...AUTH_PATHS, ...PUBLIC_PATHS])('leaves %s alone', (pathname) => {
@@ -94,11 +94,11 @@ describe('resolvePortalRedirect', () => {
   })
 
   describe('signed in on an auth page with ?next=', () => {
-    const next = `?next=${encodeURIComponent('/dancer/available-classes?class=abc')}`
+    const next = `?next=${encodeURIComponent('/dancer/classes?class=abc')}`
 
     it('sends a dancer on to the deep link', () => {
-      expect(signedIn('/login', 'dancer', next)).toBe('/dancer/available-classes?class=abc')
-      expect(signedIn('/signup', 'guardian', next)).toBe('/dancer/available-classes?class=abc')
+      expect(signedIn('/login', 'dancer', next)).toBe('/dancer/classes?class=abc')
+      expect(signedIn('/signup', 'guardian', next)).toBe('/dancer/classes?class=abc')
     })
 
     it('sends a role that cannot open the target to its home instead', () => {
@@ -148,7 +148,7 @@ describe('resolvePortalRedirect', () => {
 })
 
 describe('getSafeNextPath', () => {
-  it.each(['/dancer', '/dancer/available-classes?class=abc', '/classes/abc#top', '/'])('keeps %s', (path) => {
+  it.each(['/dancer', '/dancer/classes?class=abc', '/classes/abc#top', '/'])('keeps %s', (path) => {
     expect(getSafeNextPath(path)).toBe(path)
   })
 
@@ -171,15 +171,15 @@ describe('getSafeNextPath', () => {
 
 describe('getPostAuthPath', () => {
   it('uses next when the role may open it', () => {
-    expect(getPostAuthPath('dancer', '/dancer/available-classes?class=abc')).toBe('/dancer/available-classes?class=abc')
-    expect(getPostAuthPath('admin', '/dancer/available-classes')).toBe('/dancer/available-classes')
+    expect(getPostAuthPath('dancer', '/dancer/classes?class=abc')).toBe('/dancer/classes?class=abc')
+    expect(getPostAuthPath('admin', '/dancer/classes')).toBe('/dancer/classes')
     expect(getPostAuthPath('instructor', '/classes/abc')).toBe('/classes/abc')
   })
 
   it('falls back to the home portal', () => {
     expect(getPostAuthPath('dancer', undefined)).toBe('/dancer')
     expect(getPostAuthPath('dancer', '/instructor/classes')).toBe('/dancer')
-    expect(getPostAuthPath('instructor', '/dancer/available-classes')).toBe('/instructor')
+    expect(getPostAuthPath('instructor', '/dancer/classes')).toBe('/instructor')
     expect(getPostAuthPath('dancer', 'https://evil.example')).toBe('/dancer')
   })
 

@@ -85,9 +85,9 @@ describe('proxy role routing', () => {
 
   it('carries a signed-out deep link through /login', async () => {
     mockUpdateSession.mockResolvedValue({ response: NextResponse.next(), user: null, profile: null })
-    const response = await proxy(new NextRequest(`${ORIGIN}/dancer/available-classes?class=abc`))
+    const response = await proxy(new NextRequest(`${ORIGIN}/dancer/classes?class=abc`))
     expect(response.headers.get('location')).toBe(
-      `${ORIGIN}/login?next=%2Fdancer%2Favailable-classes%3Fclass%3Dabc`
+      `${ORIGIN}/login?next=%2Fdancer%2Fclasses%3Fclass%3Dabc`
     )
   })
 

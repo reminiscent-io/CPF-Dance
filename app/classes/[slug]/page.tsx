@@ -182,8 +182,8 @@ export default async function PublicClassPage({ params }: { params: Promise<{ sl
 
   // Any day of a workshop opens its card, so the first upcoming one will do
   const enrollPath = isOver
-    ? '/dancer/available-classes'
-    : `/dancer/available-classes?class=${encodeURIComponent(upcomingDays[0].id)}`
+    ? '/dancer/classes'
+    : `/dancer/classes?class=${encodeURIComponent(upcomingDays[0].id)}`
   const signupPath = `/signup?portal=dancer&${NEXT_PARAM}=${encodeURIComponent(enrollPath)}`
 
   return (

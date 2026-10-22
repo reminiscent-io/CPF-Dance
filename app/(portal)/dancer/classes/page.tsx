@@ -1,13 +1,11 @@
 'use client'
 
 import { useUser } from '@/lib/auth/hooks'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { Toolbar } from '@/components/ui/Toolbar'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
@@ -19,15 +17,26 @@ import {
 } from '@/components/ui/DropdownMenu'
 import { ClassEditSheet, type PersonalClass } from '@/components/dancer/ClassEditSheet'
 import { ClassDetailSheet, type DetailClass } from '@/components/dancer/ClassDetailSheet'
+import { ClassTypeChip, EnrolledMark, StatusChip } from '@/components/dancer/ClassChips'
+import { OpenClassList } from '@/components/dancer/OpenClassList'
+import { upcomingListings, type OpenClass } from '@/lib/open-classes'
 import type { Note } from '@/lib/utils/date-helpers'
 import {
   formatClassDate,
   formatClassTime,
   formatTimeRange,
   groupClassesByDate,
+  type ClassGroup,
 } from '@/lib/utils/class-dates'
 import { useNow } from '@/lib/hooks/use-now'
-import { ClockIcon, MapPinIcon, UserIcon, EllipsisHorizontalIcon, PlusIcon } from '@heroicons/react/24/outline'
+import {
+  ClockIcon,
+  MapPinIcon,
+  UserIcon,
+  EllipsisHorizontalIcon,
+  PlusIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline'
 
 interface EnrolledClass {
   id: string
@@ -38,6 +47,7 @@ interface EnrolledClass {
   end_time: string
   class_type: string
   is_cancelled: boolean
+  is_public: boolean
   is_virtual: boolean
   google_meet_url: string | null
   enrollment_id: string
@@ -60,32 +70,27 @@ interface PersonalClassRow extends PersonalClass {
 
 type CombinedClass = EnrolledClass | PersonalClassRow
 
-type FilterType = 'upcoming' | 'past' | 'all'
+// Past classes shown before "Show earlier classes"
+const PAST_PREVIEW = 10
 
-const FILTERS: { value: FilterType; label: string }[] = [
-  { value: 'upcoming', label: 'Upcoming' },
-  { value: 'past', label: 'Past' },
-  { value: 'all', label: 'All' },
-]
+// Query param on a shared class link: /dancer/classes?class=<id>
+const CLASS_PARAM = 'class'
+const BASE_PATH = '/dancer/classes'
 
-const CLASS_TYPE_LABEL: Record<string, string> = {
-  group: 'Group',
-  private: 'Private',
-  workshop: 'Workshop',
-  master_class: 'Master class',
-  competition_choreography: 'Competition choreography',
-}
-
-export default function DancerClassesPage() {
+function DancerClasses() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const linkedClassId = searchParams?.get(CLASS_PARAM) ?? null
   const { addToast } = useToast()
 
   const [enrolled, setEnrolled] = useState<EnrolledClass[]>([])
   const [personal, setPersonal] = useState<PersonalClassRow[]>([])
+  const [openClasses, setOpenClasses] = useState<OpenClass[]>([])
+  const [studentId, setStudentId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Note[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
-  const [filter, setFilter] = useState<FilterType>('upcoming')
+  const [showAllPast, setShowAllPast] = useState(false)
   const [editing, setEditing] = useState<PersonalClassRow | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [detail, setDetail] = useState<CombinedClass | null>(null)
@@ -101,9 +106,10 @@ export default function DancerClassesPage() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const [enrolledRes, personalRes, notesRes] = await Promise.all([
+      const [enrolledRes, personalRes, openRes, notesRes] = await Promise.all([
         fetch('/api/dancer/classes'),
         fetch('/api/dancer/personal-classes'),
+        fetch('/api/dancer/public-classes'),
         fetch('/api/dancer/notes'),
       ])
       if (enrolledRes.ok) {
@@ -113,6 +119,13 @@ export default function DancerClassesPage() {
       if (personalRes.ok) {
         const data = await personalRes.json()
         setPersonal(data.classes.map((c: PersonalClass) => ({ ...c, source: 'personal' as const })))
+      }
+      if (openRes.ok) {
+        const data = await openRes.json()
+        setOpenClasses(data.classes ?? [])
+        setStudentId(data.student_id ?? null)
+      } else {
+        addToast('Could not load open classes.', 'error')
       }
       if (notesRes.ok) {
         const data = await notesRes.json()
@@ -132,33 +145,34 @@ export default function DancerClassesPage() {
     }
   }, [loading, user, profile, fetchClasses])
 
-  const all = useMemo<CombinedClass[]>(
-    () =>
-      [...enrolled, ...personal].sort(
-        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-      ),
-    [enrolled, personal]
-  )
-
   const now = useNow()
 
-  const filtered = useMemo(() => {
-    return all.filter((cls) => {
-      const date = new Date(cls.start_time)
-      if (filter === 'upcoming') return date >= now
-      if (filter === 'past') return date < now
-      return true
-    })
-  }, [all, filter, now])
+  const listings = useMemo(() => upcomingListings(openClasses, now), [openClasses, now])
 
-  const groups = useMemo(
-    () =>
-      groupClassesByDate(
-        filter === 'past' ? [...filtered].reverse() : filtered,
-        filter === 'past' ? 'past' : 'upcoming'
-      ),
-    [filtered, filter]
+  const { upcoming, past } = useMemo(() => {
+    const all = [...enrolled, ...personal].sort(
+      (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    )
+    return {
+      upcoming: all.filter((cls) => new Date(cls.start_time) >= now),
+      // The record of what she attended: no cancelled classes, no absences
+      past: all
+        .filter((cls) => new Date(cls.start_time) < now)
+        .filter((cls) => cls.source === 'personal' || (!cls.is_cancelled && cls.attendance_status !== 'absent'))
+        .reverse(),
+    }
+  }, [enrolled, personal, now])
+
+  const upcomingGroups = useMemo(() => groupClassesByDate(upcoming, 'upcoming'), [upcoming])
+  const pastGroups = useMemo(
+    () => groupClassesByDate(showAllPast ? past : past.slice(0, PAST_PREVIEW), 'past'),
+    [past, showAllPast]
   )
+
+  const openAddSheet = () => {
+    setEditing(null)
+    setSheetOpen(true)
+  }
 
   async function deletePersonal(cls: PersonalClassRow) {
     setDeleting(true)
@@ -190,80 +204,96 @@ export default function DancerClassesPage() {
 
   if (!user || !profile) return null
 
+  const rowHandlers = {
+    onOpen: (c: CombinedClass) => setDetail(c),
+    onEdit: (c: PersonalClassRow) => {
+      setEditing(c)
+      setSheetOpen(true)
+    },
+    onDelete: (c: PersonalClassRow) => setDeleteConfirm(c),
+  }
+
   return (
     <PortalLayout profile={profile}>
       <PageHeader
-        title="My Classes"
-        subtitle="Your enrolled lessons and the practice you keep on your own."
+        title="Classes"
+        subtitle="Workshops and classes Courtney has open, and your own schedule."
         action={
           <Button
-            variant="primary"
-            onClick={() => {
-              setEditing(null)
-              setSheetOpen(true)
-            }}
-            aria-label="Add a class"
+            variant="outline"
+            onClick={() => router.push('/dancer/request-lesson')}
             className="gap-2"
           >
-            <PlusIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Add class</span>
+            <SparklesIcon className="w-4 h-4" aria-hidden />
+            Request a private
           </Button>
         }
       />
 
-      <Toolbar
-        filters={
-          <SegmentedControl<FilterType>
-            aria-label="Filter classes"
-            options={FILTERS}
-            value={filter}
-            onChange={setFilter}
-          />
-        }
-      />
-
-      <div className="mt-toolbar-gap">
-        {loadingClasses ? (
+      {loadingClasses ? (
+        <div className="mt-header-gap">
           <ListSkeleton />
-        ) : groups.length === 0 ? (
-          <EmptyState
-            filter={filter}
-            onAdd={() => {
-              setEditing(null)
-              setSheetOpen(true)
-            }}
-            onShowAll={() => setFilter('all')}
-          />
-        ) : (
-          <div className="space-y-10">
-            {groups.map((group) => (
-              <section key={group.key} aria-labelledby={`group-${group.key}`}>
-                <h2
-                  id={`group-${group.key}`}
-                  className="text-sm font-medium tracking-[0.08em] uppercase text-charcoal-500 mb-3"
+        </div>
+      ) : (
+        <>
+          <section aria-labelledby="open-classes" className="mt-header-gap">
+            <SectionHeading id="open-classes" title="Open for enrollment" />
+            <OpenClassList
+              listings={listings}
+              studentId={studentId}
+              linkedClassId={linkedClassId}
+              basePath={BASE_PATH}
+              onEnrolled={fetchClasses}
+            />
+          </section>
+
+          <section aria-labelledby="upcoming-classes" className="mt-10">
+            <SectionHeading
+              id="upcoming-classes"
+              title="Upcoming"
+              action={
+                <button
+                  type="button"
+                  onClick={openAddSheet}
+                  className="inline-flex items-center gap-1 min-h-control text-sm text-rose-700 hover:text-rose-800 tracking-[0.04em]"
                 >
-                  {group.label}
-                </h2>
-                <ul className="divide-y divide-champagne-200 border-y border-champagne-200">
-                  {group.items.map((cls) => (
-                    <ClassRow
-                      key={`${cls.source}-${cls.id}`}
-                      cls={cls}
-                      isPast={new Date(cls.start_time) < now}
-                      onOpen={(c) => setDetail(c)}
-                      onEdit={(c) => {
-                        setEditing(c)
-                        setSheetOpen(true)
-                      }}
-                      onDelete={(c) => setDeleteConfirm(c)}
-                    />
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        )}
-      </div>
+                  <PlusIcon className="w-4 h-4" aria-hidden />
+                  Add a class
+                </button>
+              }
+            />
+            {upcomingGroups.length === 0 ? (
+              <EmptySection
+                title="Nothing scheduled."
+                body="Enroll in an open class above, or add a class you take elsewhere to keep it with your notes."
+              />
+            ) : (
+              <ClassGroups groups={upcomingGroups} now={now} {...rowHandlers} />
+            )}
+          </section>
+
+          <section aria-labelledby="past-classes" className="mt-10">
+            <SectionHeading id="past-classes" title="Past" />
+            {pastGroups.length === 0 ? (
+              <EmptySection
+                title="No past classes yet."
+                body="Group classes, privates and workshops you attend will collect here."
+              />
+            ) : (
+              <>
+                <ClassGroups groups={pastGroups} now={now} {...rowHandlers} />
+                {!showAllPast && past.length > PAST_PREVIEW && (
+                  <div className="mt-6 text-center">
+                    <Button variant="outline" onClick={() => setShowAllPast(true)}>
+                      Show earlier classes
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </>
+      )}
 
       <ClassEditSheet
         key={`${sheetOpen}:${editing?.id ?? 'new'}`}
@@ -312,15 +342,61 @@ export default function DancerClassesPage() {
   )
 }
 
-interface RowProps {
-  cls: CombinedClass
-  isPast: boolean
+export default function DancerClassesPage() {
+  // useSearchParams needs a Suspense boundary for the static prerender
+  return (
+    <Suspense fallback={null}>
+      <DancerClasses />
+    </Suspense>
+  )
+}
+
+function SectionHeading({ id, title, action }: { id: string; title: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4 mb-4 min-h-control">
+      <h2 id={id} className="font-serif italic text-2xl text-charcoal-950 tracking-[-0.01em]">
+        {title}
+      </h2>
+      {action}
+    </div>
+  )
+}
+
+interface RowHandlers {
   onOpen: (cls: CombinedClass) => void
   onEdit: (cls: PersonalClassRow) => void
   onDelete: (cls: PersonalClassRow) => void
 }
 
-function ClassRow({ cls, isPast, onOpen, onEdit, onDelete }: RowProps) {
+function ClassGroups({
+  groups,
+  now,
+  ...handlers
+}: { groups: ClassGroup<CombinedClass>[]; now: Date } & RowHandlers) {
+  return (
+    <div className="space-y-8">
+      {groups.map((group) => (
+        <div key={group.key}>
+          <h3 className="text-sm font-medium tracking-[0.08em] uppercase text-charcoal-500 mb-3">
+            {group.label}
+          </h3>
+          <ul className="divide-y divide-champagne-200 border-y border-champagne-200">
+            {group.items.map((cls) => (
+              <ClassRow
+                key={`${cls.source}-${cls.id}`}
+                cls={cls}
+                isPast={new Date(cls.start_time) < now}
+                {...handlers}
+              />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ClassRow({ cls, isPast, onOpen, onEdit, onDelete }: { cls: CombinedClass; isPast: boolean } & RowHandlers) {
   const isPersonal = cls.source === 'personal'
   const personalCls = isPersonal ? cls : null
   const enrolledCls = !isPersonal ? cls : null
@@ -374,14 +450,15 @@ function ClassRow({ cls, isPast, onOpen, onEdit, onDelete }: RowProps) {
         {/* Body */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-3 flex-wrap">
-            <h3
+            <h4
               className={`text-lg font-semibold leading-snug ${
                 cancelled ? 'text-charcoal-400 line-through' : 'text-charcoal-950'
               }`}
             >
               {cls.title}
-            </h3>
+            </h4>
             {enrolledCls && <ClassTypeChip type={enrolledCls.class_type} />}
+            {enrolledCls?.is_public && !isPast && !cancelled && <EnrolledMark />}
             {cancelled && <StatusChip tone="rose">Cancelled</StatusChip>}
             {isPast && enrolledCls?.attendance_status && (
               <AttendanceChip status={enrolledCls.attendance_status} />
@@ -438,44 +515,6 @@ function ClassRow({ cls, isPast, onOpen, onEdit, onDelete }: RowProps) {
   )
 }
 
-function ClassTypeChip({ type }: { type: string }) {
-  const isPremium = type === 'master_class'
-  const label = CLASS_TYPE_LABEL[type] ?? type.replace('_', ' ')
-  return (
-    <span
-      className={`
-        inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase
-        px-2 py-0.5 rounded-sm
-        ${isPremium
-          ? 'bg-gold-100 text-gold-800'
-          : 'bg-champagne-100 text-charcoal-600'
-        }
-      `}
-    >
-      {label}
-    </span>
-  )
-}
-
-function StatusChip({
-  tone,
-  children,
-}: {
-  tone: 'rose' | 'gold' | 'neutral'
-  children: React.ReactNode
-}) {
-  const styles = {
-    rose: 'bg-rose-100 text-rose-700',
-    gold: 'bg-gold-100 text-gold-800',
-    neutral: 'bg-champagne-100 text-charcoal-600',
-  }
-  return (
-    <span className={`inline-flex items-center text-[11px] font-medium tracking-[0.08em] uppercase px-2 py-0.5 rounded-sm ${styles[tone]}`}>
-      {children}
-    </span>
-  )
-}
-
 function AttendanceChip({ status }: { status: string }) {
   // present → gold (positive milestone), absent/late → rose, excused → neutral.
   const tone: 'rose' | 'gold' | 'neutral' =
@@ -483,42 +522,11 @@ function AttendanceChip({ status }: { status: string }) {
   return <StatusChip tone={tone}>{status}</StatusChip>
 }
 
-function EmptyState({
-  filter,
-  onAdd,
-  onShowAll,
-}: {
-  filter: FilterType
-  onAdd: () => void
-  onShowAll: () => void
-}) {
-  const copy = {
-    upcoming: {
-      title: 'Nothing scheduled.',
-      body: 'When Courtney sets a class, or when you add one of your own, it will appear here.',
-    },
-    past: {
-      title: 'No past classes.',
-      body: 'Once you have attended a class, it will live here as part of your record.',
-    },
-    all: {
-      title: 'Your schedule is empty.',
-      body: 'Track classes you take outside of lessons with Courtney, or wait for an enrollment to arrive.',
-    },
-  }[filter]
-
+function EmptySection({ title, body }: { title: string; body: string }) {
   return (
-    <div className="border-y border-champagne-200 py-16 text-center">
-      <h3 className="font-serif text-2xl text-charcoal-950">{copy.title}</h3>
-      <p className="mt-2 max-w-md mx-auto text-charcoal-500">{copy.body}</p>
-      <div className="mt-6 flex items-center justify-center gap-3">
-        <Button onClick={onAdd}>Add a class</Button>
-        {filter !== 'all' && (
-          <Button variant="outline" onClick={onShowAll}>
-            View everything
-          </Button>
-        )}
-      </div>
+    <div className="border-y border-champagne-200 py-10 text-center">
+      <h3 className="font-serif text-2xl text-charcoal-950">{title}</h3>
+      <p className="mt-2 max-w-md mx-auto text-charcoal-500">{body}</p>
     </div>
   )
 }
