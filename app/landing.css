@@ -486,6 +486,27 @@
   color: var(--lp-black);
 }
 
+/* Typing. The whole note is laid out from the start and unwritten text is only
+   transparent, so nothing reflows. The caret takes no width of its own. */
+.lp-note__unwritten {
+  color: transparent;
+}
+.lp-note__point--unwritten::marker {
+  color: transparent;
+}
+.lp-note__caret {
+  position: relative;
+}
+.lp-note__caret::after {
+  content: '';
+  position: absolute;
+  top: 0.05em;
+  bottom: 0.05em;
+  left: 0;
+  width: 2px;
+  background: var(--lp-ink);
+}
+
 .lp-notes__index {
   list-style: none;
   margin: 0;

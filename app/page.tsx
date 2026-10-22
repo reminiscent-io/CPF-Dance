@@ -8,6 +8,7 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/lib/auth/hooks'
 import { getHomePathForRole } from '@/lib/auth/portal-routing'
+import { SampleNote } from './sample-note'
 import './landing.css'
 
 const IMAGES = 'https://nuuuzezbglgtsuorhinw.supabase.co/storage/v1/object/public/Public_Images'
@@ -239,46 +240,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* A composite sample, written from the shape and phrasing of
-              Courtney's real lesson notes. It is not any one dancer's note. */}
-          <article className="lp-note" aria-label="Sample lesson note" data-reveal>
-            <header className="lp-note__meta">
-              <span>Private lesson</span>
-              <span>Tuesday, October 14</span>
-            </header>
-            <h3 className="lp-note__title">Attack, turnout, and kicks</h3>
-            <div className="lp-note__body">
-              <p>
-                Great work today! When you take up more space and commit to the
-                attack, it truly makes a difference for you.
-              </p>
-              <ol>
-                <li>
-                  <strong>Turnout.</strong> Keep feeling the rotation from your
-                  hips, even when you are working in parallel.
-                </li>
-                <li>
-                  <strong>Arms.</strong> Articulate the pathway from elbow to wrist
-                  to fingertips, with the speed from elbow to fingertips slightly
-                  faster.
-                </li>
-                <li>
-                  <strong>Ribs.</strong> When you reach up, keep your abs engaged so
-                  your ribs don&rsquo;t release.
-                </li>
-                <li>
-                  <strong>Kicks.</strong> Tune into the height on the very first
-                  kick. You never know which kick is being watched in an audition,
-                  so we will fine-tune every one.
-                </li>
-              </ol>
-              <p>
-                We will drill the turn into the kicks next time. Great work as
-                always!
-              </p>
-            </div>
-            <footer className="lp-note__sign">Courtney</footer>
-          </article>
+          <SampleNote />
 
           <ul className="lp-notes__index" data-reveal>
             {dancerIndex.map((item) => (
