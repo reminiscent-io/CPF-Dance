@@ -1,3 +1,6 @@
+// @vitest-environment node
+// Publishing parses a multipart upload with request.formData(). Under jsdom the
+// global File is jsdom's, and undici's parser rejects the File it builds from it.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { fakeSupabase, hasFilter, type Handler, type StorageHandler } from './fake-supabase'
