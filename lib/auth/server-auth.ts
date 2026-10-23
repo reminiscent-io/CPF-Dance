@@ -86,7 +86,10 @@ export async function requireRole(role: UserRole): Promise<ProfileWithRole> {
   return profile
 }
 
-export async function getCurrentDancerStudent() {
+// The caller's student record, or null when they pass the dancer guard but
+// have none — typically an admin previewing the dancer portal. Read routes use
+// this to answer with an empty state instead of failing.
+export async function findCurrentDancerStudent(): Promise<{ id: string; profile_id: string | null } | null> {
   const supabase = await createClient()
   const profile = await requireRole('dancer')
 
@@ -103,10 +106,7 @@ export async function getCurrentDancerStudent() {
       .limit(1)
       .maybeSingle()
 
-    if (student) {
-      return student
-    }
-    throw new Error('Student record not found for this user')
+    return student ?? null
   }
 
   // Dancers (and admins) use their own student record
@@ -116,13 +116,17 @@ export async function getCurrentDancerStudent() {
     .eq('profile_id', profile.id)
     .single()
 
-  if (!error && student) {
-    return student
-  }
-
-  // SECURITY: Admins accessing dancer routes must have their own student record.
+  // SECURITY: Admins never fall back to another student's record.
   // Previously this returned the first arbitrary student, allowing admin impersonation.
-  throw new Error('Student record not found for this user')
+  return !error && student ? student : null
+}
+
+export async function getCurrentDancerStudent() {
+  const student = await findCurrentDancerStudent()
+  if (!student) {
+    throw new Error('Student record not found for this user')
+  }
+  return student
 }
 
 export async function requireInstructor(): Promise<ProfileWithRole> {

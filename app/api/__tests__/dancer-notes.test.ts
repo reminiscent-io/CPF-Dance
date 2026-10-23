@@ -49,6 +49,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/auth/server-auth', () => ({
   getCurrentDancerStudent: () => mockGetCurrentDancerStudent(),
+  findCurrentDancerStudent: () => mockGetCurrentDancerStudent(),
   requireDancer: () => mockRequireDancer(),
 }))
 
@@ -381,6 +382,21 @@ describe('Dancer Notes API Routes', () => {
 
       expect(response.status).toBe(200)
       expect(data.notes).toBeDefined()
+    })
+
+    it('returns no notes to an admin without a student record', async () => {
+      mockGetCurrentDancerStudent.mockResolvedValue(null)
+
+      const request = new NextRequest('http://localhost:5000/api/dancer/notes', {
+        method: 'GET',
+      })
+
+      const response = await GET(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.notes).toEqual([])
+      expect(mockFrom).not.toHaveBeenCalled()
     })
   })
 })

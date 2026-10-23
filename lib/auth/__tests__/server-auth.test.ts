@@ -50,7 +50,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { requireRole, requireDancer, requireInstructor, getCurrentDancerStudent } from '../server-auth'
+import { requireRole, requireDancer, requireInstructor, getCurrentDancerStudent, findCurrentDancerStudent } from '../server-auth'
 
 function signInAs(role: string, id = 'user-1') {
   mockGetUser.mockResolvedValue({ data: { user: { id } }, error: null })
@@ -148,11 +148,50 @@ describe('server-auth role guards', () => {
       await expect(getCurrentDancerStudent()).rejects.toThrow('Student record not found')
     })
 
+    it('throws when an admin has no student record', async () => {
+      signInAs('admin', 'admin-1')
+      studentsResult = { data: null, error: { code: 'PGRST116' } }
+
+      await expect(getCurrentDancerStudent()).rejects.toThrow('Student record not found')
+      expect(studentQuery()?.filters).toEqual([['profile_id', 'admin-1']])
+    })
+
     it('rejects instructors before querying students', async () => {
       signInAs('instructor')
 
       await expect(getCurrentDancerStudent()).rejects.toThrow('Forbidden')
       expect(studentQuery()).toBeUndefined()
+    })
+  })
+
+  describe('findCurrentDancerStudent', () => {
+    it("returns a dancer's own student record", async () => {
+      signInAs('dancer', 'dancer-1')
+      studentsResult = { data: { id: 'student-1', profile_id: 'dancer-1' }, error: null }
+
+      await expect(findCurrentDancerStudent()).resolves.toEqual({ id: 'student-1', profile_id: 'dancer-1' })
+    })
+
+    it('returns null for an admin with no student record', async () => {
+      signInAs('admin', 'admin-1')
+      studentsResult = { data: null, error: { code: 'PGRST116' } }
+
+      await expect(findCurrentDancerStudent()).resolves.toBeNull()
+    })
+
+    it('returns null for a guardian with no linked student', async () => {
+      signInAs('guardian', 'guardian-1')
+      studentsResult = { data: null, error: null }
+
+      await expect(findCurrentDancerStudent()).resolves.toBeNull()
+    })
+
+    it('still rejects signed-out and non-dancer callers', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: null })
+      await expect(findCurrentDancerStudent()).rejects.toThrow('Unauthorized')
+
+      signInAs('instructor')
+      await expect(findCurrentDancerStudent()).rejects.toThrow('Forbidden')
     })
   })
 })

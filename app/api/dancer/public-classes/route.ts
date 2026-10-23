@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
+import { findCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     // The caller's own spots, so the dashboard can show only classes still
     // open to them. An admin without a student record has none.
     const ownEnrollments = new Set<string>()
-    const student = await getCurrentDancerStudent().catch(() => null)
+    const student = await findCurrentDancerStudent()
     if (classIds.length > 0) {
       if (student) {
         const { data: own } = await supabase
