@@ -113,6 +113,7 @@ export default function DancerPortalPage() {
   const [showViewModal, setShowViewModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [hasReviews, setHasReviews] = useState(false)
+  const [lessonBalance, setLessonBalance] = useState<number | null>(null)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -123,10 +124,11 @@ export default function DancerPortalPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [statsRes, reviewsRes, openRes] = await Promise.all([
+      const [statsRes, reviewsRes, openRes, packsRes] = await Promise.all([
         fetch('/api/dancer/stats'),
         fetch('/api/dancer/reviews'),
         fetch('/api/dancer/public-classes'),
+        fetch('/api/dancer/lesson-packs/history'),
       ])
       if (statsRes.ok) {
         const data = await statsRes.json()
@@ -142,6 +144,10 @@ export default function DancerPortalPage() {
         const data = await openRes.json()
         setOpenClasses(openForSignup(data.classes || []))
         setStudentId(data.student_id ?? null)
+      }
+      if (packsRes.ok) {
+        const data = await packsRes.json()
+        setLessonBalance(data.totalRemaining || 0)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -276,8 +282,56 @@ export default function DancerPortalPage() {
               )}
             </section>
 
-            {/* Right column — open classes first, then the dancer's own. No KPI tiles. */}
+            {/* Right column — lesson balance, open classes, then the dancer's own. No KPI tiles. */}
             <div className="flex flex-col gap-8">
+              {lessonBalance !== null && (
+                <section>
+                  <div className="flex items-baseline justify-between mb-4">
+                    <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+                      Private lessons
+                    </h2>
+                  </div>
+
+                  {lessonBalance > 0 ? (
+                    <Card
+                      hover
+                      padding="none"
+                      className="cursor-pointer"
+                      onClick={() => router.push('/dancer/request-lesson')}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between gap-3">
+                        <span className="flex items-baseline gap-3">
+                          <span className="font-serif text-4xl text-charcoal-950 leading-none tracking-[-0.03em] tabular-nums">
+                            {lessonBalance}
+                          </span>
+                          <span className="text-sm text-charcoal-500 tracking-[0.01em]">
+                            {lessonBalance === 1 ? 'lesson left' : 'lessons left'}
+                          </span>
+                        </span>
+                        <span className="text-sm text-rose-700 flex items-center gap-0.5 flex-shrink-0 tracking-[0.04em]">
+                          Request
+                          <ChevronRightIcon className="w-4 h-4" />
+                        </span>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="rounded-lg border border-champagne-200 bg-champagne-100/50 p-4">
+                      <p className="text-sm text-charcoal-700">
+                        One-on-one time with Courtney. Buy a pack and book when you’re ready.
+                      </p>
+                      <Button
+                        variant="gold"
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => router.push('/dancer/request-lesson')}
+                      >
+                        Add Lesson Packs
+                      </Button>
+                    </div>
+                  )}
+                </section>
+              )}
+
               <section>
                 <div className="flex items-baseline justify-between mb-4">
                   <h2 className="font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">

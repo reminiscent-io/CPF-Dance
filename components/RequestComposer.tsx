@@ -18,7 +18,7 @@ export interface RequestComposerProps {
   readonly onAddPack: () => void
 }
 
-const PLACEHOLDER_PROMPT = 'Adagio extension, my left fouetté turn, the variation from Coppélia Act II…'
+const PLACEHOLDER_PROMPT = 'Kicks, turns, strength…'
 const ERROR_EMPTY_FOCUS = "Tell Courtney what you'd like to work on."
 
 export function RequestComposer({
@@ -78,77 +78,65 @@ export function RequestComposer({
   }
 
   return (
-    <section
-      aria-labelledby="composer-heading"
-      className="bg-champagne-50 rounded-lg shadow-soft p-6 md:p-10"
+    <form
+      onSubmit={handleSubmit}
+      aria-label="Request a private lesson"
+      className="rounded-lg border border-champagne-200 bg-champagne-50 p-5"
     >
-      <h2
-        id="composer-heading"
-        className="font-serif text-2xl md:text-3xl text-charcoal-950 tracking-tight"
-      >
-        What do you want to work on?
-      </h2>
+      <Textarea
+        name="focus"
+        label="What do you want to work on?"
+        value={focus}
+        onChange={(e) => {
+          setFocus(e.target.value)
+          if (focusError) setFocusError(null)
+        }}
+        placeholder={PLACEHOLDER_PROMPT}
+        rows={3}
+        error={focusError ?? undefined}
+      />
 
-      <form onSubmit={handleSubmit} className="mt-5 md:mt-6">
-        <Textarea
-          name="focus"
-          value={focus}
-          onChange={(e) => {
-            setFocus(e.target.value)
-            if (focusError) setFocusError(null)
-          }}
-          placeholder={PLACEHOLDER_PROMPT}
-          rows={5}
-          aria-label="What do you want to work on?"
-          error={focusError ?? undefined}
-        />
-
-        <CostLine balance={balance} costMode={costMode} dayOfPrice={dayOfPrice} onAddPack={onAddPack} />
-
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={() => setShowOptional((v) => !v)}
-            className="text-sm text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
-            aria-expanded={showOptional}
-            aria-controls="composer-optional"
-          >
-            {showOptional ? 'hide preferred dates and notes' : 'add preferred dates or notes'}
-          </button>
-
-          {showOptional && (
-            <div id="composer-optional" className="mt-4 space-y-4 animate-fadeIn">
-              <Input
-                name="preferred_dates"
-                label="when works for you?"
-                placeholder="Tuesday afternoon, anytime weekend mornings"
-                value={preferredDates}
-                onChange={(e) => setPreferredDates(e.target.value)}
-                helperText="Separate multiple with commas."
-              />
-              <Textarea
-                name="additional_notes"
-                label="anything else?"
-                rows={3}
-                value={additionalNotes}
-                onChange={(e) => setAdditionalNotes(e.target.value)}
-              />
-            </div>
-          )}
+      {showOptional && (
+        <div id="composer-optional" className="mt-4 grid gap-4 md:grid-cols-2 animate-fadeIn">
+          <Input
+            name="preferred_dates"
+            label="When works for you?"
+            placeholder="Tuesday afternoon, weekend mornings"
+            value={preferredDates}
+            onChange={(e) => setPreferredDates(e.target.value)}
+            helperText="Separate multiple with commas."
+          />
+          <Input
+            name="additional_notes"
+            label="Anything else?"
+            value={additionalNotes}
+            onChange={(e) => setAdditionalNotes(e.target.value)}
+          />
         </div>
+      )}
 
-        <div className="mt-6 flex flex-col-reverse md:flex-row md:items-center md:justify-end md:gap-4">
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={submitting}
-            className="w-full md:w-auto"
-          >
-            {sendLabel}
-          </Button>
-        </div>
-      </form>
-    </section>
+      <CostLine balance={balance} costMode={costMode} dayOfPrice={dayOfPrice} onAddPack={onAddPack} />
+
+      <div className="mt-4 flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
+        <button
+          type="button"
+          onClick={() => setShowOptional((v) => !v)}
+          className="self-start text-sm text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
+          aria-expanded={showOptional}
+          aria-controls="composer-optional"
+        >
+          {showOptional ? 'hide dates and notes' : 'add preferred dates or notes'}
+        </button>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={submitting}
+          className="w-full md:w-auto min-h-control"
+        >
+          {sendLabel}
+        </Button>
+      </div>
+    </form>
   )
 }
 
@@ -164,17 +152,17 @@ function CostLine({ balance, costMode, dayOfPrice, onAddPack }: CostLineProps) {
     const priceLabel = dayOfPrice != null ? `$${dayOfPrice.toFixed(2)}` : 'the single-lesson rate'
     return (
       <p className="mt-3 text-sm text-charcoal-500 leading-relaxed">
-        You don’t have credits on a pack right now. 1 credit will be used when Courtney confirms and schedules a lesson —{' '}
+        No lessons on your packs, so this one is{' '}
+        <span className="text-charcoal-900 font-medium tabular-nums">{priceLabel}</span>
+        , paid the day of by Venmo or cash. Or{' '}
         <button
           type="button"
           onClick={onAddPack}
           className="text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
         >
-          add a pack
+          buy a pack
         </button>
-        {' '}to refill. Otherwise, this lesson will cost{' '}
-        <span className="text-charcoal-900 font-medium tabular-nums">{priceLabel}</span>
-        , paid the day of the lesson via Venmo or cash.
+        {' '}first.
       </p>
     )
   }

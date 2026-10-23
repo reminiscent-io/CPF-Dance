@@ -48,21 +48,6 @@ function formatShortDate(iso: string): string {
   })
 }
 
-function formatScheduledEyebrow(start: string, title?: string): string {
-  const d = new Date(start)
-  const date = d.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
-  })
-  const time = d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'America/New_York'
-  })
-  return `Confirmed · ${date}, ${time} ET${title ? ` · ${title}` : ''}`
-}
-
 export function InFlightSection({
   requests,
   loading,
@@ -72,7 +57,6 @@ export function InFlightSection({
   const [showPast, setShowPast] = useState(false)
 
   const awaiting = requests.filter((r) => bucketFor(r) === 'awaiting')
-  const scheduled = requests.filter((r) => bucketFor(r) === 'scheduled')
   const past = requests.filter((r) => bucketFor(r) === 'past')
 
   if (loading) {
@@ -85,26 +69,14 @@ export function InFlightSection({
     )
   }
 
-  if (requests.length === 0) {
-    return (
-      <section aria-labelledby="in-flight-empty">
-        <h2
-          id="in-flight-empty"
-          className="font-serif text-2xl text-charcoal-950 tracking-tight"
-        >
-          Nothing in flight yet.
-        </h2>
-        <p className="mt-2 text-base text-charcoal-500">
-          Send your first request above.
-        </p>
-      </section>
-    )
-  }
+  // Scheduled requests show up as lessons under "Upcoming", so this list
+  // only holds what's still waiting on Courtney and the archive.
+  if (awaiting.length === 0 && past.length === 0) return null
 
   return (
-    <section aria-labelledby="in-flight-heading" className="space-y-10">
+    <section aria-labelledby="in-flight-heading" className="space-y-6">
       <h2 id="in-flight-heading" className="sr-only">
-        In flight
+        Your requests
       </h2>
 
       {awaiting.length > 0 && (
@@ -114,20 +86,6 @@ export function InFlightSection({
           onRequestDelete={onRequestDelete}
           deletingId={deletingId}
           eyebrow={(r) => `Sent ${formatShortDate(r.created_at)} · awaiting reply`}
-        />
-      )}
-
-      {scheduled.length > 0 && (
-        <RequestGroup
-          title="Scheduled"
-          requests={scheduled}
-          onRequestDelete={onRequestDelete}
-          deletingId={deletingId}
-          eyebrow={(r) =>
-            r.scheduled_class
-              ? formatScheduledEyebrow(r.scheduled_class.start_time, r.scheduled_class.title)
-              : `Confirmed · ${formatShortDate(r.created_at)}`
-          }
         />
       )}
 

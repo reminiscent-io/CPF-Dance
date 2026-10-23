@@ -29,7 +29,8 @@ import {
   MegaphoneIcon,
   Squares2X2Icon,
   SwatchIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 export interface SidebarProps {
@@ -98,14 +99,15 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
       ]
     }
 
-    // Dancers come here for Courtney's notes and her classes. Private lessons
-    // are requested from the Classes page; payments and waivers keep their
-    // routes but leave the nav while they aren't in use.
+    // Dancers come here for Courtney's notes, her classes, and private lessons
+    // (packs and requests). Payments and waivers keep their routes but leave
+    // the nav while they aren't in use.
     const dancerNav = {
       ungrouped: [
         { href: '/dancer', label: 'Home', icon: <HomeIcon className="w-4 h-4" />, exact: true },
         { href: '/dancer/notes', label: 'Notes', icon: <DocumentTextIcon className="w-4 h-4" /> },
         { href: '/dancer/classes', label: 'Classes', icon: <AcademicCapIcon className="w-4 h-4" /> },
+        { href: '/dancer/request-lesson', label: 'Private Lessons', icon: <SparklesIcon className="w-4 h-4" /> },
         { href: '/dancer/schedule', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4" /> }
       ],
       groups: []
