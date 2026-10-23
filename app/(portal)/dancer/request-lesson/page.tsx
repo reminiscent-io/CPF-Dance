@@ -4,15 +4,18 @@ import { useUser } from '@/lib/auth/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { PortalLayout } from '@/components/PortalLayout'
-import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { LessonBalanceLedger } from '@/components/LessonBalanceLedger'
+import { PageSkeleton, Skeleton } from '@/components/ui/Skeleton'
 import { RequestComposer } from '@/components/RequestComposer'
 import { InFlightSection, type LessonRequest } from '@/components/InFlightSection'
 import { DeleteRequestDialog } from '@/components/DeleteRequestDialog'
 import { RequestBanner, type BannerTone } from '@/components/RequestBanner'
 import { LessonPackHistory } from '@/components/LessonPackHistory'
 import { LessonPackSelector } from '@/components/LessonPackSelector'
+import {
+  UpcomingPrivateLessons,
+  type UpcomingPrivateLesson
+} from '@/components/dancer/UpcomingPrivateLessons'
 
 interface PurchaseRow {
   id: string
@@ -25,7 +28,13 @@ interface BannerState {
   message: string
 }
 
+interface EnrolledClass extends UpcomingPrivateLesson {
+  class_type: string
+  is_cancelled: boolean | null
+}
+
 const PACK_VALIDITY_MONTHS = 12
+const SOON_EXPIRY_DAYS = 30
 
 function addMonths(iso: string, months: number): string {
   const d = new Date(iso)
@@ -42,6 +51,10 @@ function deriveEarliestExpiry(purchases: PurchaseRow[]): { date: string | null; 
   return { date: active[0].expiry, count: active[0].remaining_lessons }
 }
 
+function daysUntil(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+}
+
 function PrivateLessonsContent() {
   const { user, profile, loading } = useUser()
   const router = useRouter()
@@ -50,7 +63,11 @@ function PrivateLessonsContent() {
   const [requests, setRequests] = useState<LessonRequest[]>([])
   const [loadingRequests, setLoadingRequests] = useState(true)
 
+  const [upcoming, setUpcoming] = useState<UpcomingPrivateLesson[]>([])
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true)
+
   const [balance, setBalance] = useState(0)
+  const [hasPurchases, setHasPurchases] = useState(false)
   const [earliestExpiry, setEarliestExpiry] = useState<{ date: string | null; count: number }>({
     date: null,
     count: 0
@@ -63,7 +80,6 @@ function PrivateLessonsContent() {
 
   const [banner, setBanner] = useState<BannerState | null>(null)
   const [showHistory, setShowHistory] = useState(false)
-  const [showPurchase, setShowPurchase] = useState(false)
 
   const [instructorId, setInstructorId] = useState<string | null>(null)
 
@@ -95,12 +111,33 @@ function PrivateLessonsContent() {
     }
   }, [])
 
+  const fetchUpcoming = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dancer/classes')
+      if (response.ok) {
+        const data = await response.json()
+        const now = Date.now()
+        setUpcoming(
+          ((data.classes || []) as EnrolledClass[])
+            .filter((c) => c.class_type === 'private' && !c.is_cancelled)
+            .filter((c) => new Date(c.end_time).getTime() >= now)
+            .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+        )
+      }
+    } catch (err) {
+      console.error('Error fetching upcoming lessons:', err)
+    } finally {
+      setLoadingUpcoming(false)
+    }
+  }, [])
+
   const fetchBalance = useCallback(async () => {
     try {
       const response = await fetch('/api/dancer/lesson-packs/history')
       if (response.ok) {
         const data = await response.json()
         setBalance(data.totalRemaining || 0)
+        setHasPurchases((data.purchases || []).length > 0)
         setEarliestExpiry(deriveEarliestExpiry(data.purchases || []))
       }
     } catch (err) {
@@ -128,10 +165,11 @@ function PrivateLessonsContent() {
     if (!loading && user && profile && !hasFetched.current) {
       hasFetched.current = true
       fetchRequests()
+      fetchUpcoming()
       fetchBalance()
       fetchInstructor()
     }
-  }, [loading, user, profile, fetchRequests, fetchBalance, fetchInstructor])
+  }, [loading, user, profile, fetchRequests, fetchUpcoming, fetchBalance, fetchInstructor])
 
   // Reacting to the Stripe redirect. This is a navigation event rather than
   // render state, so the banner genuinely has to be set from an effect.
@@ -215,51 +253,35 @@ function PrivateLessonsContent() {
     }
   }
 
-  const handleAddPack = () => {
-    setShowPurchase(true)
-  }
-
-  const handlePackPurchased = async () => {
-    setShowPurchase(false)
-    setBanner({ tone: 'gilt', message: 'Pack added.' })
-    await fetchBalance()
+  const scrollToPacks = () => {
+    document.getElementById('packs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" color="rose" />
-      </div>
+      <PortalLayout profile={profile}>
+        <PageSkeleton variant="cards" />
+      </PortalLayout>
     )
   }
 
   if (!user || !profile) return null
 
+  const expiringSoon =
+    earliestExpiry.date !== null &&
+    earliestExpiry.count > 0 &&
+    daysUntil(earliestExpiry.date) >= 0 &&
+    daysUntil(earliestExpiry.date) <= SOON_EXPIRY_DAYS
+
   return (
     <PortalLayout profile={profile}>
-      <header className="mb-8 lg:mb-12">
-        <div className="lg:flex lg:items-end lg:justify-between lg:gap-10">
-          <div className="lg:flex-1 lg:max-w-xl">
-            <PageHeader
-              title="Private Lessons"
-              subtitle="Tell Courtney what you want to work on. She'll get back to you."
-            />
-          </div>
-          <div className="mt-6 lg:mt-0 lg:shrink-0">
-            <LessonBalanceLedger
-              totalRemaining={balance}
-              earliestExpiryDate={earliestExpiry.date}
-              earliestExpiryCount={earliestExpiry.count}
-              loading={loadingBalance}
-              onShowHistory={() => setShowHistory(true)}
-              onAddPack={handleAddPack}
-            />
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Private Lessons"
+        subtitle="One-on-one time with Courtney. Pick a pack, then tell her what you want to work on."
+      />
 
       {banner && (
-        <div className="mb-6">
+        <div className="mt-header-gap">
           <RequestBanner
             tone={banner.tone}
             message={banner.message}
@@ -268,38 +290,98 @@ function PrivateLessonsContent() {
         </div>
       )}
 
-      {showPurchase ? (
-        <section aria-label="Buy a lesson pack" className="space-y-6">
-          <button
-            type="button"
-            onClick={() => setShowPurchase(false)}
-            className="text-sm text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
-          >
-            ← back to requests
-          </button>
-          <LessonPackSelector
-            onSelectPack={handlePackPurchased}
-            instructorId={instructorId}
-          />
-        </section>
-      ) : (
-        <>
-          <div className="mb-12 md:mb-16">
-            <RequestComposer
-              balance={balance}
-              submitting={submitting}
-              onSubmit={handleSubmit}
-              onAddPack={handleAddPack}
-            />
+      {/* Hero: the pack shelf, with the dancer's balance beside it */}
+      <section
+        id="packs"
+        aria-labelledby="packs-heading"
+        className="mt-header-gap scroll-mt-6 rounded-lg bg-champagne-100 p-5 md:p-6"
+      >
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-10">
+          <div className="max-w-md">
+            <h2 id="packs-heading" className="font-serif text-2xl text-charcoal-950 tracking-[-0.02em]">
+              Lesson packs
+            </h2>
+            <p className="mt-2 text-sm text-charcoal-500 leading-relaxed">
+              Each lesson covers one private with Courtney. Packs stay good for 12 months and are used oldest first.
+            </p>
           </div>
+
+          <div className="md:text-right">
+            <p className="text-xs uppercase tracking-[0.18em] text-charcoal-500">Your balance</p>
+            {loadingBalance ? (
+              <div className="mt-2 space-y-2 md:flex md:flex-col md:items-end" aria-hidden>
+                <Skeleton variant="text" width={120} height={36} />
+              </div>
+            ) : balance > 0 ? (
+              <p className="mt-1 flex items-baseline gap-2 md:justify-end">
+                <span className="font-serif text-5xl text-charcoal-950 leading-none tracking-[-0.03em] tabular-nums">
+                  {balance}
+                </span>
+                <span className="text-sm text-charcoal-500">
+                  {balance === 1 ? 'lesson left' : 'lessons left'}
+                  {balance === 1 && <span className="ml-1.5 text-gold-700">· last one</span>}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-1 font-serif text-2xl text-charcoal-950 tracking-[-0.02em]">
+                No lessons yet
+              </p>
+            )}
+            {!loadingBalance && expiringSoon && (
+              <p className="mt-1 text-sm text-rose-700">
+                {earliestExpiry.count} expire{earliestExpiry.count === 1 ? 's' : ''}{' '}
+                {new Date(earliestExpiry.date!).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            )}
+            {hasPurchases && (
+              <button
+                type="button"
+                onClick={() => setShowHistory(true)}
+                className="mt-2 text-sm text-rose-700 hover:text-rose-800 underline-offset-4 hover:underline transition-colors"
+              >
+                see pack history
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <LessonPackSelector instructorId={instructorId} />
+        </div>
+      </section>
+
+      <section aria-labelledby="request-heading" className="mt-10">
+        <h2 id="request-heading" className="font-serif text-2xl text-charcoal-950 tracking-[-0.02em]">
+          Request a lesson
+        </h2>
+        <p className="mt-1 text-sm text-charcoal-500">
+          Tell Courtney what you want to work on. She’ll reply with a time.
+        </p>
+        <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <RequestComposer
+            balance={balance}
+            submitting={submitting}
+            onSubmit={handleSubmit}
+            onAddPack={scrollToPacks}
+          />
           <InFlightSection
             requests={requests}
             loading={loadingRequests}
             onRequestDelete={(id) => setPendingDelete(id)}
             deletingId={deletingId}
           />
-        </>
-      )}
+        </div>
+      </section>
+
+      <section aria-labelledby="upcoming-heading" className="mt-10">
+        <h2 id="upcoming-heading" className="font-serif text-2xl text-charcoal-950 tracking-[-0.02em] mb-4">
+          Upcoming lessons
+        </h2>
+        <UpcomingPrivateLessons lessons={upcoming} loading={loadingUpcoming} />
+      </section>
 
       <DeleteRequestDialog
         isOpen={!!pendingDelete}
@@ -320,9 +402,9 @@ function PrivateLessonsContent() {
 export default function PrivateLessonsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <Spinner size="lg" />
-      </div>
+      <PortalLayout profile={null}>
+        <PageSkeleton variant="cards" />
+      </PortalLayout>
     }>
       <PrivateLessonsContent />
     </Suspense>

@@ -191,8 +191,8 @@ export function DancerBottomNav() {
                     <SparklesIcon className="w-5 h-5 text-charcoal-700" />
                   </div>
                   <div>
-                    <span className="block text-charcoal-950" style={{ fontWeight: 500 }}>Request a private</span>
-                    <span className="block text-xs text-charcoal-500">Book time with Courtney</span>
+                    <span className="block text-charcoal-950" style={{ fontWeight: 500 }}>Private lessons</span>
+                    <span className="block text-xs text-charcoal-500">Buy a pack or request time</span>
                   </div>
                 </button>
               </div>
