@@ -131,7 +131,7 @@ export function LessonPackSelector({ instructorId }: LessonPackSelectorProps) {
                 </p>
                 <div className="mt-auto pt-5">
                   <Button
-                    variant={isBestRate ? 'primary' : 'outline'}
+                    variant={isBestRate ? 'gold' : 'outline'}
                     size="sm"
                     onClick={() => handlePurchase(pack)}
                     className="w-full min-h-control"
