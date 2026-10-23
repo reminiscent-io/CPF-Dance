@@ -107,7 +107,10 @@ export default function HomePage() {
             alt=""
             fill
             priority
-            sizes="(min-width: 768px) 0px, 100vw"
+            quality={90}
+            // object-fit: cover fills 72svh at 2:3, so on a tall phone the
+            // photo draws wider than the viewport.
+            sizes="(min-width: 768px) 0px, max(100vw, 48vh)"
           />
         </div>
 
@@ -148,7 +151,11 @@ export default function HomePage() {
                 alt=""
                 fill
                 priority
-                sizes="(max-width: 767px) 0px, (max-width: 1099px) 50vw, 33vw"
+                quality={90}
+                // A plate is min(92svh, 960px) tall and cover-crops a 4:5
+                // photo, so it draws at whichever is wider: its column or
+                // 0.8 × its height.
+                sizes="(max-width: 767px) 0px, (max-width: 1099px) max(50vw, min(74vh, 768px)), max(33vw, min(74vh, 768px))"
               />
             </div>
           ))}

@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
+    // 75 is the default. The cover photos ask for 90: their sources are
+    // already-compressed JPEGs, and a second pass at 75 softens them visibly.
+    qualities: [75, 90],
   },
 
   experimental: {
