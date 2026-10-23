@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+import { findCurrentDancerStudent } from '@/lib/auth/server-auth'
 
 // Currently consumed by ReviewModal so dancers can pick which instructor
 // they're reviewing. The dancer request-lesson and lesson-pack flows no
@@ -8,21 +8,25 @@ import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
 // getDefaultInstructorId().
 export async function GET(request: NextRequest) {
   try {
-    const student = await getCurrentDancerStudent()
+    const student = await findCurrentDancerStudent()
     const supabase = await createClient()
 
-    // Get instructors this dancer has a relationship with
-    const { data: relationships, error: relError } = await supabase
-      .from('instructor_student_relationships')
-      .select('instructor_id')
-      .eq('student_id', student.id)
+    // Get instructors this dancer has a relationship with (none without a
+    // student record, e.g. an admin previewing the portal)
+    let instructorIds: string[] = []
+    if (student) {
+      const { data: relationships, error: relError } = await supabase
+        .from('instructor_student_relationships')
+        .select('instructor_id')
+        .eq('student_id', student.id)
 
-    if (relError) {
-      console.error('Error fetching relationships:', relError)
-      return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
+      if (relError) {
+        console.error('Error fetching relationships:', relError)
+        return NextResponse.json({ error: 'Failed to fetch instructors' }, { status: 500 })
+      }
+
+      instructorIds = (relationships || []).map(r => r.instructor_id)
     }
-
-    const instructorIds = (relationships || []).map(r => r.instructor_id)
 
     if (instructorIds.length === 0) {
       // Fallback: return all instructors if no relationships exist

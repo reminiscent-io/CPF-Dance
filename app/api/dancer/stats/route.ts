@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
+import { findCurrentDancerStudent, requireDancer } from '@/lib/auth/server-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('[Dancer Stats] Starting request...')
-    const student = await getCurrentDancerStudent()
-    console.log('[Dancer Stats] Student:', student)
+    const student = await findCurrentDancerStudent()
+    if (!student) {
+      return NextResponse.json({
+        stats: { upcoming_classes: 0, total_classes_attended: 0, recent_notes: 0 },
+        upcoming_classes: [],
+        recent_notes: []
+      })
+    }
     const profile = await requireDancer()
-    console.log('[Dancer Stats] Profile:', profile)
     const supabase = await createClient()
 
     const now = new Date().toISOString()

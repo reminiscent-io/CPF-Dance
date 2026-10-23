@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentDancerStudent } from '@/lib/auth/server-auth'
+import { findCurrentDancerStudent, getCurrentDancerStudent } from '@/lib/auth/server-auth'
 
 export async function GET() {
   try {
-    const student = await getCurrentDancerStudent()
+    const student = await findCurrentDancerStudent()
+    // No student record (e.g. an admin previewing the portal): nothing to show
+    if (!student) {
+      return NextResponse.json({ data: [] })
+    }
     const supabase = await createClient()
 
     const { data: reviews, error } = await supabase
