@@ -30,6 +30,11 @@ import { useAsyncData } from '@/lib/hooks/useAsyncData'
 import { AssetSelector } from '@/components/AssetSelector'
 import { centsToDollars, dollarsToCents, formatCents, parseCurrencyToCents } from '@/lib/utils/money'
 import { seriesLabel } from '@/lib/class-series'
+import { AddNoteModal } from '@/components/AddNoteModal'
+import { NoteDetailModal } from '@/components/NoteDetailModal'
+import { ClassNotesSection, type ClassNote } from '@/components/instructor/ClassNotesSection'
+import { noteButtonLabel, resolveNoteTarget, type NoteStudent } from '@/lib/utils/lesson-notes'
+import type { CreateNoteData } from '@/lib/types'
 
 // All class times are authored and displayed in Eastern Time
 const ET = 'America/New_York'
@@ -956,6 +961,53 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   const seriesNoun = (n: number) =>
     isWorkshop ? (n === 1 ? 'day' : 'days') : (n === 1 ? 'class' : 'classes')
 
+  // Notes tied to this class. Adding or reading one swaps the edit modal out
+  // for the note modal (form state lives here, so nothing is lost) rather
+  // than stacking two dialogs that would both close on Escape.
+  const {
+    data: classNotes,
+    loading: loadingNotes,
+    error: notesError,
+    refetch: refetchNotes
+  } = useAsyncData(
+    async (signal) => {
+      const response = await fetch(`/api/notes?class_id=${classData.id}`, { signal })
+      if (!response.ok) throw new Error('Could not load notes')
+      const { notes } = await response.json()
+      return (notes || []) as ClassNote[]
+    },
+    [classData.id]
+  )
+  const [noteDraft, setNoteDraft] = useState<{ students: NoteStudent[]; initialStudentId?: string } | null>(null)
+  const [openNote, setOpenNote] = useState<ClassNote | null>(null)
+  const noteOverlayOpen = noteDraft !== null || openNote !== null
+
+  const startNote = () => {
+    const everyone: NoteStudent[] = students.map(s => ({ id: s.id, full_name: getStudentDisplayName(s) }))
+    // A private lesson's note is about its dancer; any other class can be
+    // about anyone, since group rosters are rarely complete.
+    setNoteDraft(formData.class_type === 'private' ? resolveNoteTarget(enrolledStudents, everyone) : { students: everyone })
+  }
+
+  const submitNote = async (data: CreateNoteData) => {
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, class_id: classData.id })
+      })
+      if (!response.ok) {
+        const { error } = await response.json().catch(() => ({ error: null }))
+        throw new Error(error || 'Failed to create note')
+      }
+      addToast('Note saved to this class', 'success')
+      setNoteDraft(null)
+      refetchNotes()
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Failed to create note', 'error')
+    }
+  }
+
   // Recurring copy state
   const [showRecurringSection, setShowRecurringSection] = useState(false)
   const [recurringSelectedDays, setRecurringSelectedDays] = useState<number[]>([])
@@ -1272,7 +1324,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
   }
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Edit Class" size="lg">
+    <>
+    <Modal isOpen={!noteOverlayOpen} onClose={onClose} title="Edit Class" size="lg">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <Input
@@ -1527,6 +1580,15 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
               </div>
             </div>
           )}
+
+          <ClassNotesSection
+            notes={classNotes}
+            loading={loadingNotes}
+            error={notesError}
+            addLabel={formData.class_type === 'private' ? noteButtonLabel(enrolledStudents) : 'Add note'}
+            onAdd={startNote}
+            onOpen={setOpenNote}
+          />
 
           {formData.class_type === 'private' && (
             <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
@@ -1968,6 +2030,31 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
         </ModalFooter>
       </form>
     </Modal>
+
+    {noteDraft && (
+      <AddNoteModal
+        students={noteDraft.students}
+        initialStudentId={noteDraft.initialStudentId}
+        initialClassId={classData.id}
+        onClose={() => setNoteDraft(null)}
+        onSubmit={submitNote}
+      />
+    )}
+
+    {openNote && (
+      <NoteDetailModal
+        key={openNote.id}
+        note={openNote}
+        isOwn={openNote.author_id === profile?.id}
+        onClose={() => setOpenNote(null)}
+        onBack={() => setOpenNote(null)}
+        onSaved={() => {
+          setOpenNote(null)
+          refetchNotes()
+        }}
+      />
+    )}
+    </>
   )
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getVisibleDateRange } from '../calendar-range'
+import { getScheduleFetchRange, getVisibleDateRange } from '../calendar-range'
 
 describe('getVisibleDateRange', () => {
   describe('week mode', () => {
@@ -103,5 +103,44 @@ describe('getVisibleDateRange', () => {
       expect(start.getDate()).toBe(1)
       expect(end.getDate()).toBe(29)
     })
+  })
+})
+
+describe('getScheduleFetchRange', () => {
+  it('covers the whole month, not just the current week', () => {
+    // Tuesday, Nov 3, 2026: a lesson logged for Tue Oct 27 sits in the
+    // October grid, and the November grid's leading row reaches back to it.
+    const { start, end } = getScheduleFetchRange(new Date(2026, 10, 3))
+
+    expect(start.getMonth()).toBe(10)
+    expect(start.getDate()).toBe(1) // Nov 1, 2026 is a Sunday
+    expect(start.getHours()).toBe(0)
+    expect(end.getMonth()).toBe(11)
+    expect(end.getDate()).toBe(12) // 42 cells: Nov 1 + 41 days
+    expect(end.getHours()).toBe(23)
+
+    const oct = getScheduleFetchRange(new Date(2026, 9, 3))
+    const lesson = new Date(2026, 9, 27, 10, 30)
+    expect(lesson >= oct.start && lesson <= oct.end).toBe(true)
+  })
+
+  it('starts on the Sunday before the 1st when the month starts midweek', () => {
+    // Oct 1, 2026 is a Thursday
+    const { start, end } = getScheduleFetchRange(new Date(2026, 9, 20))
+
+    expect(start.getMonth()).toBe(8)
+    expect(start.getDate()).toBe(27)
+    expect(end.getMonth()).toBe(10)
+    expect(end.getDate()).toBe(7)
+  })
+
+  it('contains every week that touches the month', () => {
+    // 31-day month starting on a Saturday spills into a sixth row
+    const date = new Date(2026, 7, 15) // Aug 2026, Aug 1 is a Saturday
+    const { start, end } = getScheduleFetchRange(date)
+    const lastWeek = getVisibleDateRange(new Date(2026, 7, 31), 'week')
+
+    expect(start <= getVisibleDateRange(new Date(2026, 7, 1), 'week').start).toBe(true)
+    expect(end >= lastWeek.end).toBe(true)
   })
 })
