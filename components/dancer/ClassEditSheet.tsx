@@ -317,7 +317,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
           <Button variant="outline" onClick={() => setConfirmingBatch(null)} disabled={saving}>
             Back
           </Button>
-          <Button onClick={() => saveBatch(confirmingBatch)} disabled={saving}>
+          <Button onClick={() => saveBatch(confirmingBatch)} loading={saving}>
             {saving ? 'Adding…' : `Add ${confirmingBatch.length} classes`}
           </Button>
         </SheetFooter>
@@ -472,7 +472,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
         <Button variant="outline" onClick={onClose} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={saving}>
+        <Button onClick={handleSubmit} loading={saving}>
           {saving ? 'Saving…' : editing ? 'Save changes' : 'Add class'}
         </Button>
       </SheetFooter>

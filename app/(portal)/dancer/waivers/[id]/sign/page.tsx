@@ -6,6 +6,7 @@ import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Spinner } from '@/components/ui/Spinner'
 import { SignaturePad } from '@/components/SignaturePad'
 
 interface Waiver {
@@ -115,8 +116,11 @@ export default function SignWaiverPage() {
 
   if (loading || loadingWaiver) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-champagne-50">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="text-charcoal-500 mt-4">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -165,6 +169,7 @@ export default function SignWaiverPage() {
           <Button
             onClick={handleSignWaiver}
             disabled={signing || !signature || !agreeToTerms}
+            loading={signing}
             size="lg"
             className="flex-1"
           >

@@ -218,7 +218,7 @@ export function OpenClassList({ listings, studentId, linkedClassId, basePath, on
           <Button variant="outline" onClick={() => setSelectedClass(null)} disabled={enrolling}>
             Cancel
           </Button>
-          <Button onClick={handleEnroll} disabled={enrolling}>
+          <Button onClick={handleEnroll} loading={enrolling}>
             {enrolling ? 'Enrolling…' : 'Confirm enrollment'}
           </Button>
         </ModalFooter>

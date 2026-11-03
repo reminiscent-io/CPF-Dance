@@ -33,7 +33,7 @@ export function DeleteRequestDialog({
         <Button
           variant="primary"
           onClick={onConfirm}
-          disabled={isDeleting}
+          loading={isDeleting}
           className="w-full sm:w-auto"
         >
           {isDeleting ? 'Deleting…' : 'Delete'}

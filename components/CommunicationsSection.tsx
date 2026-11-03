@@ -361,6 +361,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
             <Button
               onClick={handleMarkResponded}
               disabled={responding || !contactMethod}
+              loading={responding}
             >
               {responding ? 'Saving...' : 'Save Response'}
             </Button>
@@ -402,7 +403,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
             </Button>
             <Button
               onClick={handleLinkStudio}
-              disabled={linking}
+              loading={linking}
             >
               {linking ? 'Linking...' : 'Link Studio'}
             </Button>

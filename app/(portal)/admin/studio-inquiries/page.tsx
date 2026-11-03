@@ -220,8 +220,8 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
           <Button variant="outline" onClick={onClose} disabled={sending}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSend} disabled={sending}>
-            {sending ? <><Spinner size="sm" /> Sending...</> : 'Send Email'}
+          <Button variant="primary" onClick={handleSend} loading={sending}>
+            {sending ? 'Sending...' : 'Send Email'}
           </Button>
         </div>
       </div>
@@ -457,13 +457,10 @@ export default function AdminStudioInquiriesPage() {
             variant="outline"
             size="sm"
             onClick={handleRefreshInbox}
-            disabled={refreshingInbox}
+            loading={refreshingInbox}
           >
             {refreshingInbox ? (
-              <>
-                <Spinner size="sm" />
-                <span className="ml-2">Refreshing...</span>
-              </>
+              'Refreshing...'
             ) : (
               <>
                 <ArrowPathIcon className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -602,9 +599,9 @@ export default function AdminStudioInquiriesPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleUpdateStatus(inquiry.id, 'responded')}
-                          disabled={updatingInquiry === inquiry.id}
+                          loading={updatingInquiry === inquiry.id}
                         >
-                          {updatingInquiry === inquiry.id ? <Spinner size="sm" /> : 'Mark Responded'}
+                          Mark Responded
                         </Button>
                       )}
                       {inquiry.status === 'responded' && (
@@ -612,9 +609,9 @@ export default function AdminStudioInquiriesPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleUpdateStatus(inquiry.id, 'new')}
-                          disabled={updatingInquiry === inquiry.id}
+                          loading={updatingInquiry === inquiry.id}
                         >
-                          {updatingInquiry === inquiry.id ? <Spinner size="sm" /> : 'Mark as New'}
+                          Mark as New
                         </Button>
                       )}
                     </div>

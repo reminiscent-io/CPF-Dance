@@ -340,6 +340,74 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Loading bar (components/LoadingIndicator.tsx): a Stage Rose ribbon that
+   sweeps under the status bar while a page or /api request is in flight. It
+   waits 150ms before fading in, so quick taps never flash it, and fades out
+   as soon as the work lands. The animation pauses rather than resets, so the
+   ribbon holds its place while it fades. */
+.loading-bar {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  z-index: 110;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.loading-bar[data-active] {
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+
+.loading-bar__ribbon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background-color: var(--color-rose-600);
+  animation: loadingRibbon 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite paused;
+}
+
+.loading-bar[data-active] .loading-bar__ribbon {
+  animation-play-state: running;
+}
+
+/* -100% parks the 30%-wide ribbon off the left edge; 334% (100 / 30 of its
+   own width) carries it just past the right. */
+@keyframes loadingRibbon {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(334%);
+  }
+}
+
+/* Reduced motion: no sweep. The bar spans the width and breathes in place. */
+@keyframes loadingBreathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar__ribbon {
+    width: 100%;
+    animation-name: loadingBreathe;
+    animation-duration: 2s;
+    animation-timing-function: ease-in-out;
+  }
+}
+
 @keyframes typewriter {
   0% {
     width: 0;

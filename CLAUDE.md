@@ -138,6 +138,9 @@ Money columns are `DECIMAL(10,2)` — do arithmetic in integer cents via `dollar
 ### External Class Sign-Ups
 "Sign up" on a class with `external_signup_url` (or `workshop_signup_url` for a full workshop) opens that link via `useExternalSignup` (`components/dancer/`). Stripe Payment Links (`buy.stripe.com`, `book.stripe.com`) get a `client_reference_id` from `lib/signup-link.ts`; the Stripe webhook enrolls the dancer once the paid link matches the class. Otherwise the dancer confirms by hand when they return to the tab. Every paid sale on a class link lands in `class_purchases` (migration 52, `lib/class-purchases.ts`): a sale with no ref enrolls the buyer when their email names one dancer, and anything else shows the instructor as "paid, not linked" in the class edit dialog, where she links it to a student. Both paths go through `enrollStudent()` in `lib/class-enrollment.ts`.
 
+### Loading Feedback
+On a bad connection every tap has to visibly do something. `instrumentation-client.ts` feeds `lib/loading-activity.ts` from Next's `onRouterTransitionStart` (every `<Link>`, `router.push`, back/forward) and a `window.fetch` wrapper (same-origin `/api/*` only). `components/LoadingIndicator.tsx` in the root layout turns that into the top bar, "Still loading…" after 8s, and an offline notice; the sidebar and bottom navs highlight the tapped item at once. New pages and routes need no wiring. A button that starts a request takes `loading={flag}` (spinner, disabled, stays full strength). Spinners are SVG on purpose: the unlayered `* { border-color }` in `globals.css` beats Tailwind's border utilities, so a border-ring spinner renders as a static beige circle.
+
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.
 

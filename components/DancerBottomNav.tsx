@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { usePendingPathname } from '@/lib/loading-activity'
 import {
   CalendarIcon,
   AcademicCapIcon,
@@ -20,7 +21,10 @@ interface NavItem {
 
 export function DancerBottomNav() {
   const router = useRouter()
-  const pathname = usePathname()
+  const currentPathname = usePathname()
+  // Light up the tapped item at once: on a slow connection the page itself
+  // can take seconds to arrive.
+  const pathname = usePendingPathname() ?? currentPathname
   const [showPlusMenu, setShowPlusMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 

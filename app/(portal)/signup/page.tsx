@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { NEXT_PARAM, getSafeNextPath } from '@/lib/auth/portal-routing'
+import { InlineSpinner, Spinner } from '@/components/ui/Spinner'
 import type { UserRole } from '@/lib/auth/types'
 
 const portalConfig = {
@@ -215,8 +216,9 @@ function InstructorRequestForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
+            {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Submitting...' : 'Request Access'}
           </button>
         </form>
@@ -513,8 +515,9 @@ function DancerSignupForm({ next }: { next: string | null }) {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
+            {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
@@ -548,7 +551,7 @@ function SignupRouter() {
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-champagne-50"><Spinner size="lg" /></div>}>
       <SignupRouter />
     </Suspense>
   )

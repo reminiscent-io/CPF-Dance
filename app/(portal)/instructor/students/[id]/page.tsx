@@ -732,6 +732,7 @@ export default function StudentDetailPage() {
             <Button
               onClick={handleLinkAccount}
               disabled={linking || !linkEmail.trim()}
+              loading={linking}
             >
               {linking ? 'Linking...' : 'Link Account'}
             </Button>
@@ -803,6 +804,7 @@ export default function StudentDetailPage() {
             <Button
               onClick={handleMerge}
               disabled={merging || !selectedTargetId || loadingLinkedStudents}
+              loading={merging}
             >
               {merging ? 'Merging...' : 'Merge Students'}
             </Button>
@@ -876,7 +878,7 @@ export default function StudentDetailPage() {
             </Button>
             <Button
               onClick={handleSaveNote}
-              disabled={savingNote}
+              loading={savingNote}
             >
               {savingNote ? 'Saving...' : editingNote ? 'Update Note' : 'Save Note'}
             </Button>

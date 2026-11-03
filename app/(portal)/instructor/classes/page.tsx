@@ -16,7 +16,6 @@ import {
   SegmentedControl,
   Select,
   SkeletonList,
-  Spinner,
   StatusDot,
   Textarea,
   Toolbar,
@@ -1966,13 +1965,11 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
                   type="button"
                   onClick={handleCreateRecurringCopies}
                   disabled={isCreatingRecurring || recurringCopyDates.length === 0}
+                  loading={isCreatingRecurring}
                   className="w-full"
                 >
                   {isCreatingRecurring ? (
-                    <>
-                      <Spinner size="sm" className="mr-2" />
-                      Creating...
-                    </>
+                    'Creating...'
                   ) : (
                     isWorkshop
                       ? `Add ${recurringCopyDates.length} Workshop ${recurringCopyDates.length === 1 ? 'Day' : 'Days'}`

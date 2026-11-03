@@ -130,7 +130,7 @@ export function RequestComposer({
         <Button
           type="submit"
           variant="primary"
-          disabled={submitting}
+          loading={submitting}
           className="w-full md:w-auto min-h-control"
         >
           {sendLabel}

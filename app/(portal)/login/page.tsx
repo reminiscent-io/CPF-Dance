@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { NEXT_PARAM, getSafeNextPath } from '@/lib/auth/portal-routing'
+import { InlineSpinner, Spinner } from '@/components/ui/Spinner'
 
 const portalConfig = {
   dancer: {
@@ -152,8 +153,9 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
+            {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
@@ -176,7 +178,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-champagne-50"><Spinner size="lg" /></div>}>
       <LoginForm />
     </Suspense>
   )

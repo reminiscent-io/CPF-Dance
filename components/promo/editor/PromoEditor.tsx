@@ -480,7 +480,7 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
             This promo uses version {data.template.version} of its template. Version {data.template.latest.version} is out;
             updating keeps your words, photos and moves wherever they still fit.
           </p>
-          <Button size="sm" variant="outline" onClick={upgrade} disabled={upgrading}>
+          <Button size="sm" variant="outline" onClick={upgrade} loading={upgrading}>
             {upgrading ? 'Updating…' : 'Update'}
           </Button>
         </div>
@@ -516,7 +516,7 @@ export function EditorSession({ data, onReload }: { data: EditorData; onReload: 
                 <Button
                   size="sm"
                   variant="ghost"
-                  disabled={revise.busy}
+                  loading={revise.busy}
                   onClick={() =>
                     void revise.submit(
                       `Shorten the ${tooLong.join(' and the ')} so ${tooLong.length === 1 ? 'it fits' : 'they fit'} the space.`

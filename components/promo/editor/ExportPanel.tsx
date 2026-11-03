@@ -153,6 +153,7 @@ export function ExportPanel() {
               variant={index === 0 && !ready ? 'primary' : 'outline'}
               onClick={() => runExport(kind)}
               disabled={busy !== null || !scene}
+              loading={busy === kind}
             >
               <ArrowDownTrayIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
               {busy === kind ? 'Rendering…' : EXPORT_LABELS[kind]}
@@ -198,7 +199,7 @@ export function ExportPanel() {
               </a>
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={publish} disabled={busy !== null || !scene}>
+              <Button variant="outline" onClick={publish} disabled={busy !== null || !scene} loading={busy === 'publish'}>
                 {busy === 'publish' ? 'Publishing…' : 'Update with this version'}
               </Button>
               <Button variant="ghost" onClick={() => setConfirmUnpublish(true)} disabled={busy !== null}>
@@ -220,7 +221,7 @@ export function ExportPanel() {
                 ]}
               />
             )}
-            <Button variant="outline" onClick={publish} disabled={busy !== null || !scene}>
+            <Button variant="outline" onClick={publish} disabled={busy !== null || !scene} loading={busy === 'publish'}>
               {busy === 'publish' ? 'Publishing…' : 'Publish'}
             </Button>
           </div>

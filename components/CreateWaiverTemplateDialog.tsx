@@ -152,7 +152,7 @@ export function CreateWaiverTemplateDialog({
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button onClick={handleSubmit} loading={loading}>
             {loading ? 'Creating...' : 'Create Template'}
           </Button>
         </div>

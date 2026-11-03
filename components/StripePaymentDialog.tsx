@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { Spinner } from '@/components/ui/Spinner'
 
 interface LessonPack {
   id: string
@@ -132,13 +131,10 @@ export function StripePaymentDialog({
             type="button"
             variant="primary"
             onClick={handleCheckout}
-            disabled={processing}
+            loading={processing}
           >
             {processing ? (
-              <span className="flex items-center gap-2">
-                <Spinner size="sm" />
-                Processing
-              </span>
+              'Processing'
             ) : (
               'Continue to checkout'
             )}
