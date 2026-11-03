@@ -6,6 +6,7 @@ import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusDot, type StatusTone } from '@/components/ui/StatusDot'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -71,7 +72,10 @@ export default function DancerWaiversPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-champagne-50">
-        <p className="text-charcoal-500">Loading...</p>
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="text-charcoal-500 mt-4">Loading...</p>
+        </div>
       </div>
     )
   }

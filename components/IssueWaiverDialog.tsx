@@ -383,7 +383,7 @@ export function IssueWaiverDialog({
           </Button>
           <Button
             onClick={showCreateNew ? handleCreateAndIssue : handleIssueToExisting}
-            disabled={loading}
+            loading={loading}
           >
             {loading ? 'Processing...' : 'Issue Waiver'}
           </Button>

@@ -183,7 +183,7 @@ export function HeadshotUpload({
         {/* Loading overlay */}
         {uploading && (
           <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-            <Spinner className="text-white" />
+            <Spinner color="champagne" />
           </div>
         )}
       </div>

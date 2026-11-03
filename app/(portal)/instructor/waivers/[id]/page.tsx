@@ -225,7 +225,7 @@ export default function WaiverDetailPage() {
                 <Button
                   variant="secondary"
                   onClick={handleDelete}
-                  disabled={deleting}
+                  loading={deleting}
                 >
                   {deleting ? 'Deleting...' : 'Delete Waiver'}
                 </Button>

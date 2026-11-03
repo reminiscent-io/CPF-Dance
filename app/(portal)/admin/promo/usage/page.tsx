@@ -167,7 +167,7 @@ export default function PromoUsagePage() {
                           onChange={(event) => setCaps((current) => ({ ...current, [owner.id]: event.target.value }))}
                         />
                       </div>
-                      <Button type="submit" variant="outline" disabled={saving === owner.id}>
+                      <Button type="submit" variant="outline" loading={saving === owner.id}>
                         {saving === owner.id ? 'Saving…' : 'Save cap'}
                       </Button>
                     </form>

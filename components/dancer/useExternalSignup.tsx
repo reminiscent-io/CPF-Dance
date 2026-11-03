@@ -210,7 +210,7 @@ export function useExternalSignup({
         <Button variant="outline" onClick={cancel} disabled={confirming}>
           Cancel
         </Button>
-        <Button onClick={confirm} disabled={confirming}>
+        <Button onClick={confirm} loading={confirming}>
           {confirming ? 'Adding...' : 'Add to Calendar'}
         </Button>
       </ModalFooter>

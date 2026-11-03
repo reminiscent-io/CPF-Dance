@@ -194,7 +194,7 @@ function AssetDetail({ asset, onClose, onUpdate, onDelete }: AssetDetailSheetPro
           <TrashIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
           Delete
         </Button>
-        <Button onClick={saveTags} disabled={!dirty || saving}>
+        <Button onClick={saveTags} disabled={!dirty || saving} loading={saving}>
           {saving ? 'Saving…' : 'Save tags'}
         </Button>
       </SheetFooter>

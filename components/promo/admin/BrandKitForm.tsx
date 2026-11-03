@@ -115,7 +115,7 @@ function BrandEditor({ initial, definition }: { initial: BrandTokens; definition
         title="Brand kit"
         subtitle="Colors, type and name lines every new promo starts from."
         action={
-          <Button onClick={save} disabled={saving}>
+          <Button onClick={save} loading={saving}>
             {saving ? 'Saving…' : 'Save'}
           </Button>
         }

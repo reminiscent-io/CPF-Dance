@@ -5,6 +5,7 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui'
 import { RegisterServiceWorker } from './register-sw'
 import CookieConsentBanner from '@/components/CookieConsentBanner'
+import { LoadingIndicator } from '@/components/LoadingIndicator'
 
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
@@ -68,6 +69,7 @@ export default function RootLayout({
           {children}
         </ToastProvider>
         <CookieConsentBanner />
+        <LoadingIndicator />
         <RegisterServiceWorker />
       </body>
     </html>

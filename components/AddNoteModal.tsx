@@ -261,7 +261,7 @@ export function AddNoteModal({
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" loading={submitting}>
             {submitting ? 'Adding...' : 'Add Note'}
           </Button>
         </ModalFooter>

@@ -22,7 +22,7 @@ export type { SheetProps, SheetBodyProps, SheetFooterProps } from './Sheet'
 export { ConfirmDialog } from './ConfirmDialog'
 export type { ConfirmDialogProps } from './ConfirmDialog'
 
-export { Spinner, LoadingOverlay } from './Spinner'
+export { Spinner, InlineSpinner, LoadingOverlay } from './Spinner'
 export type { SpinnerProps, LoadingOverlayProps } from './Spinner'
 
 export { Table, EmptyCell } from './Table'

@@ -413,7 +413,7 @@ function StudioInquiry() {
                 </p>
               )}
               <div className="lp-inquiry__wide">
-                <Button type="submit" disabled={status === 'submitting'}>
+                <Button type="submit" loading={status === 'submitting'}>
                   {status === 'submitting' ? 'Sending…' : 'Send inquiry'}
                 </Button>
               </div>

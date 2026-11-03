@@ -752,6 +752,7 @@ function InstructorPaymentsContent() {
                             variant="ghost"
                             onClick={() => handleRemindClick(cls.id, cls.title)}
                             disabled={remindingClassId !== null}
+                            loading={remindingClassId === cls.id}
                           >
                             {remindingClassId === cls.id ? 'Sending...' : 'Remind'}
                           </Button>
@@ -1079,7 +1080,7 @@ function InstructorPaymentsContent() {
             <Button
               variant="primary"
               onClick={handleSubmitPaymentRequest}
-              disabled={submittingRequest}
+              loading={submittingRequest}
               className="flex-1"
             >
               {submittingRequest ? 'Submitting...' : 'Create Request'}
@@ -1224,7 +1225,7 @@ function InstructorPaymentsContent() {
             <Button
               variant="primary"
               onClick={handleRecordPayment}
-              disabled={recordingPayment}
+              loading={recordingPayment}
               className="flex-1"
             >
               {recordingPayment ? 'Recording...' : 'Record Payment'}

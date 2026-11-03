@@ -83,7 +83,7 @@ export function ConfirmDialog({
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={busy}
+            loading={busy}
             className={tone === 'destructive' ? 'bg-rose-700 hover:bg-rose-800 active:bg-rose-900' : ''}
           >
             {confirmLabel}

@@ -222,7 +222,7 @@ export function NoteFocusMode({
                 <Button
                   variant="primary"
                   onClick={handleSave}
-                  disabled={saving}
+                  loading={saving}
                   className="text-sm px-3 py-1.5"
                 >
                   {saving ? 'Saving...' : 'Save'}

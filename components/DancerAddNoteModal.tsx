@@ -249,7 +249,7 @@ export function DancerAddNoteModal({
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={submitting || !content.trim()}>
+          <Button type="submit" disabled={submitting || !content.trim()} loading={submitting}>
             {submitting ? 'Saving...' : 'Save Note'}
           </Button>
         </ModalFooter>

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { usePendingPathname } from '@/lib/loading-activity'
 import { signOut } from '@/lib/auth/actions'
 import { useSidebarOpen } from '@/lib/hooks/useSidebarOpen'
 import type { Profile } from '@/lib/auth/types'
@@ -41,7 +42,10 @@ export interface SidebarProps {
 
 export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controlledSetIsOpen }: SidebarProps) {
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['Schedule']))
-  const pathname = usePathname()
+  const currentPathname = usePathname()
+  // Light up the tapped item at once: on a slow connection the page itself
+  // can take seconds to arrive.
+  const pathname = usePendingPathname() ?? currentPathname
   const router = useRouter()
 
   // Uncontrolled mode reads and writes the shared, persisted sidebar store;

@@ -147,7 +147,7 @@ export function PrivateLessonActions({
           <Button
             type="button"
             onClick={handleCancelConfirm}
-            disabled={submitting}
+            loading={submitting}
             className="bg-rose-600 hover:bg-rose-700"
           >
             {submitting ? 'Cancelling…' : insideWindow ? 'Cancel and forfeit credit' : 'Cancel lesson'}
@@ -178,7 +178,7 @@ export function PrivateLessonActions({
           <Button type="button" variant="outline" onClick={() => setShowReschedule(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleRescheduleSubmit} disabled={submitting}>
+          <Button type="button" onClick={handleRescheduleSubmit} loading={submitting}>
             {submitting ? 'Sending…' : 'Send request'}
           </Button>
         </ModalFooter>

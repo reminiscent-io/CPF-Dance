@@ -120,7 +120,7 @@ export function InstructorPrivateLessonCancel({
           <Button
             type="button"
             onClick={handleConfirm}
-            disabled={submitting}
+            loading={submitting}
             className="bg-rose-600 hover:bg-rose-700"
           >
             {submitting ? 'Cancelling…' : 'Cancel lesson'}

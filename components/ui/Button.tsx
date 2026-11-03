@@ -1,8 +1,15 @@
 import React from 'react'
+import { InlineSpinner } from './Spinner'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gold'
   size?: 'sm' | 'md' | 'lg'
+  /**
+   * The button's action is in flight. Shows a spinner beside the label and
+   * blocks repeat clicks. Unlike `disabled`, it keeps full strength: a faded
+   * button on a slow connection reads as broken, not busy.
+   */
+  loading?: boolean
   children: React.ReactNode
 }
 
@@ -12,13 +19,14 @@ export function Button({
   className = '',
   children,
   disabled,
+  loading = false,
   ...props
 }: ButtonProps) {
   const baseStyles =
     'inline-flex items-center justify-center font-medium rounded-lg ' +
     'transition-[background-color,border-color,box-shadow,color] duration-200 ' +
     'focus:outline-none focus:ring-2 focus:ring-offset-2 ' +
-    'disabled:opacity-50 disabled:cursor-not-allowed'
+    (loading ? 'cursor-progress' : 'disabled:opacity-50 disabled:cursor-not-allowed')
 
   // Filled rose is reserved for the one primary action per page and for
   // selected states. Everything else gets neutral borders/text.
@@ -42,9 +50,11 @@ export function Button({
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
+      {loading && <InlineSpinner className="mr-2" />}
       {children}
     </button>
   )

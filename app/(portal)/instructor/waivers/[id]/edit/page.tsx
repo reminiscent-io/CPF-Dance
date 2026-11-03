@@ -203,7 +203,7 @@ export default function EditWaiverPage() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} loading={saving}>
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>

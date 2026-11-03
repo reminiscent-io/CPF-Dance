@@ -444,7 +444,7 @@ export default function NewPromo() {
           </section>
 
           <div className="flex flex-wrap items-center gap-3 border-t border-champagne-200 pt-6">
-            <Button onClick={generate} disabled={photos.length === 0 || running || creating || !template}>
+            <Button onClick={generate} disabled={photos.length === 0 || running || creating || !template} loading={running}>
               <SparklesIcon className="mr-1.5 h-5 w-5" aria-hidden="true" />
               {running ? 'Writing…' : state.phase === 'done' ? 'Write three more' : 'Write three versions'}
             </Button>

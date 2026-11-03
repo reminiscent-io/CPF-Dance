@@ -263,7 +263,7 @@ export function NoteDetailModal({
             <Button type="button" variant="outline" onClick={cancelEdit} disabled={submitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting || !content.trim()}>
+            <Button type="submit" disabled={submitting || !content.trim()} loading={submitting}>
               {submitting ? 'Saving...' : 'Save changes'}
             </Button>
           </ModalFooter>
