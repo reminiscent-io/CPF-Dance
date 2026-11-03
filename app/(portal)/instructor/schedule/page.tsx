@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/auth/hooks'
 import { PortalLayout } from '@/components/PortalLayout'
 import { Calendar, type ViewMode } from '@/components/Calendar'
-import { getVisibleDateRange } from '@/lib/utils/calendar-range'
+import { getScheduleFetchRange } from '@/lib/utils/calendar-range'
 import { MobileCalendar } from '@/components/MobileCalendar'
 import {
   Badge,
@@ -106,10 +106,10 @@ export default function InstructorSchedulePage() {
     }
   }, [authLoading, profile, router])
 
-  // Calendar grid uses the configured week/month mode; the list view
-  // navigates day-by-day so we fetch the month containing currentDate.
-  const fetchMode: ViewMode = viewType === 'month' ? calendarMode : 'month'
-  const { start, end } = getVisibleDateRange(currentDate, fetchMode)
+  // One fetch covers the six-week grid around currentDate's month, whatever
+  // the view. Fetching only the desktop week here left the mobile month grid
+  // blank outside this week, so lessons logged after the fact seemed missing.
+  const { start, end } = getScheduleFetchRange(currentDate)
   const startIso = start.toISOString()
   const endIso = end.toISOString()
   const canFetchSchedule =
