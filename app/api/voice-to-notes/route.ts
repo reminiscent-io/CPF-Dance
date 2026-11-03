@@ -19,6 +19,16 @@ Format rules:
 
 Return ONLY the cleaned HTML content, no markdown, no explanations.`
 
+// Lets the recorder disable itself before anyone records a note that can't be
+// transcribed.
+export async function GET() {
+  const profile = await getCurrentUserWithRole()
+  if (!profile) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return NextResponse.json({ configured: Boolean(process.env.OPENAI_API_KEY) })
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verify the user is authenticated (dancer or instructor can use voice notes)

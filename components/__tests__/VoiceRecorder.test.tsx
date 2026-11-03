@@ -132,6 +132,10 @@ describe('VoiceRecorder', () => {
   let fetchMock: ReturnType<typeof vi.fn>
   let stream: MediaStream
 
+  // The recorder also GETs the route on mount to learn whether it's configured.
+  const uploads = () =>
+    (fetchMock.mock.calls as [string, RequestInit | undefined][]).filter(([, init]) => init?.method === 'POST')
+
   beforeEach(() => {
     vi.useFakeTimers()
     FakeMediaRecorder.instances = []
@@ -174,7 +178,7 @@ describe('VoiceRecorder', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await deliverQueuedRecorderEvents()
 
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(uploads()).toHaveLength(0)
     expect(onTranscriptReady).not.toHaveBeenCalled()
     expect(container.textContent).toBe(idleText)
     expect(trackStates(stream)).toEqual(['ended'])
@@ -192,10 +196,9 @@ describe('VoiceRecorder', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
     await deliverQueuedRecorderEvents()
 
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(uploads()).toHaveLength(1)
+    const [url, init] = uploads()[0] as [string, RequestInit]
     expect(url).toBe('/api/voice-to-notes')
-    expect(init.method).toBe('POST')
     // Two 1 s timeslices (4000 bytes each) plus the 500 ms tail stop() flushes.
     expect(((init.body as FormData).get('audio') as File).size).toBe(10_000)
     expect(onTranscriptReady).toHaveBeenCalledWith('<p>Spot the corner on every fouetté.</p>')
@@ -211,7 +214,7 @@ describe('VoiceRecorder', () => {
     unmount()
     await deliverQueuedRecorderEvents()
 
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(uploads()).toHaveLength(0)
     expect(trackStates(stream)).toEqual(['ended'])
     expect(vi.getTimerCount()).toBe(0)
   })
@@ -253,5 +256,44 @@ describe('VoiceRecorder', () => {
 
     expect([...trackStates(firstStream), ...trackStates(secondStream)]).toEqual(['ended', 'ended'])
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('disables Voice to Text before recording when the server has no OpenAI key', async () => {
+    fetchMock.mockImplementation(async () => createMockResponse({ configured: false }))
+    render(<VoiceRecorder onTranscriptReady={vi.fn()} />)
+    await act(async () => {})
+
+    const button = screen.getByRole('button', { name: 'Voice to Text' })
+    expect(button).toBeDisabled()
+    fireEvent.click(button)
+    await act(async () => {})
+
+    expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled()
+    expect(screen.getByText(/isn’t set up on the server yet/)).toBeInTheDocument()
+  })
+
+  it('keeps a recording the server failed on and resends it on Try again', async () => {
+    const onTranscriptReady = vi.fn()
+    render(<VoiceRecorder onTranscriptReady={onTranscriptReady} />)
+
+    await clickVoiceToText()
+    await recordFor(2500)
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+    await deliverQueuedRecorderEvents()
+
+    expect(uploads()).toHaveLength(1)
+    expect(screen.getByText(/Your recording is saved/)).toBeInTheDocument()
+
+    fetchMock.mockImplementation(async () =>
+      createMockResponse({ html: '<p>Hold the arabesque through eight.</p>', success: true })
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await act(async () => {})
+
+    expect(uploads()).toHaveLength(2)
+    const sent = uploads().map(([, init]) => ((init!.body as FormData).get('audio') as File).size)
+    expect(sent).toEqual([10_000, 10_000])
+    expect(onTranscriptReady).toHaveBeenCalledWith('<p>Hold the arabesque through eight.</p>')
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })
 })
