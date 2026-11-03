@@ -37,6 +37,10 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   const [state, setState] = useState<RecordingState>('idle')
   const [error, setError] = useState<string | null>(null)
   const [recordingDuration, setRecordingDuration] = useState(0)
+  // false once the server says OPENAI_API_KEY is missing; null until it answers.
+  const [configured, setConfigured] = useState<boolean | null>(null)
+  // A recording the server failed on, kept so Try again can resend it.
+  const [failedAudio, setFailedAudio] = useState<Blob | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -46,6 +50,19 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   // cancelled, so a permission grant or 'stop' event that arrives afterwards
   // releases the mic instead of recording or uploading.
   const attemptRef = useRef<{ cancelled: boolean } | null>(null)
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/voice-to-notes', { method: 'GET' })
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (active && data?.configured === false) setConfigured(false)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -69,17 +86,23 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   }, [])
 
   const processAudio = useCallback(async (audioBlob: Blob) => {
+    // Validate that we have audio data
+    if (!audioBlob || audioBlob.size === 0) {
+      setError('No audio recorded. Please try again.')
+      setState('idle')
+      setRecordingDuration(0)
+      return
+    }
+
+    // Check minimum audio size (at least 1KB)
+    if (audioBlob.size < 1000) {
+      setError('Recording too short. Please speak for at least 1 second.')
+      setState('idle')
+      setRecordingDuration(0)
+      return
+    }
+
     try {
-      // Validate that we have audio data
-      if (!audioBlob || audioBlob.size === 0) {
-        throw new Error('No audio recorded. Please try again.')
-      }
-
-      // Check minimum audio size (at least 1KB)
-      if (audioBlob.size < 1000) {
-        throw new Error('Recording too short. Please speak for at least 1 second.')
-      }
-
       const formData = new FormData()
       formData.append('audio', audioBlob, 'recording.webm')
 
@@ -97,19 +120,19 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
 
       if (result.html) {
         onTranscriptReady(result.html)
-        setError(null) // Clear any previous errors on success
       } else if (result.cleaned_notes) {
         // Convert markdown to basic HTML if needed
-        const html = markdownToHtml(result.cleaned_notes)
-        onTranscriptReady(html)
-        setError(null) // Clear any previous errors on success
+        onTranscriptReady(markdownToHtml(result.cleaned_notes))
       } else {
         throw new Error('No transcription received. Please try again.')
       }
+      setError(null)
+      setFailedAudio(null)
 
     } catch (err) {
       console.error('Error processing audio:', err)
       setError(err instanceof Error ? err.message : 'Failed to process voice note')
+      setFailedAudio(audioBlob)
     } finally {
       setState('idle')
       setRecordingDuration(0)
@@ -123,6 +146,7 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
     const attempt = { cancelled: false }
     attemptRef.current = attempt
     setError(null)
+    setFailedAudio(null)
     audioChunksRef.current = []
 
     try {
@@ -241,6 +265,13 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   }, [])
 
 
+  const retryUpload = useCallback(() => {
+    if (!failedAudio) return
+    setError(null)
+    setState('processing')
+    void processAudio(failedAudio)
+  }, [failedAudio, processAudio])
+
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -252,6 +283,7 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
       {error && (
         <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
           {error}
+          {failedAudio && state === 'idle' && ' Your recording is saved.'}
         </div>
       )}
 
@@ -262,11 +294,23 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
             variant="outline"
             size="sm"
             onClick={startRecording}
-            disabled={disabled}
+            disabled={disabled || configured === false}
             className="flex items-center gap-2"
           >
             <MicrophoneIcon className="w-4 h-4" />
-            Voice to Text
+            {failedAudio ? 'Record again' : 'Voice to Text'}
+          </Button>
+        )}
+
+        {state === 'idle' && failedAudio && (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={retryUpload}
+            disabled={disabled}
+          >
+            Try again
           </Button>
         )}
 
@@ -309,9 +353,11 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
         )}
       </div>
 
-      {state === 'idle' && (
+      {state === 'idle' && !failedAudio && (
         <p className="text-xs text-gray-500">
-          Click to record, then speak your notes. Your voice will be transcribed and cleaned up automatically.
+          {configured === false
+            ? 'Voice to Text isn’t set up on the server yet. Type your note instead.'
+            : 'Click to record, then speak your notes. Your voice will be transcribed and cleaned up automatically.'}
         </p>
       )}
     </div>
