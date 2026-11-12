@@ -161,7 +161,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–52; next is 53). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` lags recent migrations (no `shared_with_instructor`, `public_profiles`), so treat `migrations/` as the source of truth.
+Numbered SQL files in `migrations/` (05–52; next is 53). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 52, verified object by object against the live database; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`.
 
 ## Deployment Gotcha
 

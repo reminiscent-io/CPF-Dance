@@ -91,8 +91,8 @@ Studio inquiries now support direct email replies via Gmail integration:
 
 ### Database Setup Dependencies
 
-The `supabase-schema.sql` file must be executed initially to set up all tables, RLS policies, and triggers. Subsequent migrations (e.g., `migrations/07-add-waivers-table.sql`, `LESSON_PACKS_SETUP.sql`) introduce new features like waivers and lesson packs.
+`supabase-schema.sql` holds the full production schema as of migration 52, so a new database needs only that file. Later changes go in numbered files in `migrations/`.
 
 ### NPM Dependencies
 
-Key dependencies include `next` (v16), `react` (v19), `typescript` (v5), `@supabase/supabase-js`, `@supabase/ssr`, `tailwindcss` (v4), `@tailwindcss/postcss`, and `autoprefixer`.
+Key dependencies include `next` (v16), `react` (v19), `typescript` (v5), `@supabase/supabase-js`, `@supabase/ssr`, `tailwindcss` (v4), and `@tailwindcss/postcss`.

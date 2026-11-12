@@ -1,43 +1,16 @@
-# Database Setup Instructions
+# Database Setup
 
-## Step 1: Run the Schema in Supabase
+## New database
 
-1. Go to your Supabase project dashboard
-2. Click on the **SQL Editor** in the left sidebar
-3. Click **New Query**
-4. Copy the entire contents of `supabase-schema.sql` and paste it into the query editor
-5. Click **Run** (or press Ctrl/Cmd + Enter)
-6. You should see "Success. No rows returned" message
+1. Create a Supabase project.
+2. In the **SQL Editor**, paste all of [`supabase-schema.sql`](../supabase-schema.sql) and run it. It creates every table, function, trigger and policy, the storage buckets and their policies, and the realtime publication entries.
+3. Run any migration numbered above 52, in order. The schema file already contains 52 and everything before it.
+4. In **Authentication → Providers**, keep **Email** on. The app signs people in with email and password.
 
-## Step 2: Enable Phone Authentication
+## Existing database
 
-1. In your Supabase dashboard, go to **Authentication** → **Providers**
-2. Enable **Phone** provider
-3. Configure your phone provider (Twilio recommended):
-   - Add your Twilio credentials
-   - Or use Supabase's built-in phone auth (limited free tier)
+Run each new migration in the SQL editor, in order. [migrations/README.md](../migrations/README.md) covers how to write one.
 
-## Step 3: Verify the Schema
+## Checking the schema file
 
-You can verify the tables were created by going to:
-- **Table Editor** in the left sidebar
-- You should see all tables: profiles, students, studios, classes, enrollments, notes, payments, etc.
-
-## Database Structure Overview
-
-### Core Tables
-- **profiles**: User information (extends Supabase auth)
-- **students**: Dancer-specific information
-- **studios**: Dance studio locations
-- **classes**: Individual class sessions
-- **enrollments**: Links students to classes
-- **notes**: Instructor feedback and student notes
-- **payments**: Payment tracking with dual confirmation
-- **private_lesson_requests**: Student requests for private lessons
-- **studio_inquiries**: Public form submissions from studios
-
-### Security
-- Row Level Security (RLS) is enabled on all tables
-- Instructors have full access to manage data
-- Students/guardians can only see their own data
-- Studio admins can see studio-specific data
+`scripts/schema-check/run.sh` builds `supabase-schema.sql` in a throwaway local Postgres and prints one hash per kind of object. Run `scripts/schema-check/fingerprint.sql` in the Supabase SQL editor. When every row matches, the file matches production. Run the check after each migration so the file can't drift again.
