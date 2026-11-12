@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { emptyDocument, getSlot, placementFor, valueAsText, type AssetForPlacement } from '../document'
+import { emptyDocument, placementFor, type AssetForPlacement } from '../document'
 import { formatSession, levelPhrase, sortSessions } from '../facts'
 import { SHOT_TYPE_LABELS, slotFitScore } from '../tags'
 import type {
@@ -288,14 +288,4 @@ export function fallbackDocument(
       .map((photo) => placementFor(photo))
   }
   return document
-}
-
-/** One line for the picker card: the title and tagline the variation chose. */
-export function variationSummary(definition: TemplateDefinition, document: DesignDocument): string {
-  const title = ['title_primary', 'title_accent']
-    .map((id) => (getSlot(definition, id) ? valueAsText(document.values[id]) : ''))
-    .filter(Boolean)
-    .join(' ')
-  const tagline = valueAsText(document.values.tagline)
-  return [title, tagline].filter(Boolean).join(' · ')
 }

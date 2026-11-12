@@ -37,7 +37,7 @@ export async function createMeetEvent(args: CreateMeetEventArgs): Promise<{ hang
     }
   );
 
-  const data = await response.json() as any;
+  const data = await response.json();
 
   if (!response.ok) {
     throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
@@ -72,7 +72,7 @@ export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<vo
   );
 
   if (!response.ok) {
-    const data = await response.json() as any;
+    const data = await response.json();
     throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
   }
 }
@@ -87,7 +87,7 @@ export async function deleteMeetEvent(eventId: string): Promise<void> {
   );
 
   if (!response.ok && response.status !== 404) {
-    const data = await response.json() as any;
+    const data = await response.json();
     throw new Error(`Google Calendar API error: ${data?.error?.message || response.status}`);
   }
 }

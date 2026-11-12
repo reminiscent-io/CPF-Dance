@@ -55,13 +55,13 @@ export function NoteFeedItem({
 
   const isInstructor = !note.is_personal
   const authorName =
-    (note as any).author_name ||
+    note.author_name ||
     (isInstructor ? 'Courtney' : currentUserName) ||
     'You'
-  const authorAvatarUrl = (note as any).author_avatar_url || null
+  const authorAvatarUrl = note.author_avatar_url || null
 
   const linkedClass =
-    (note as any).classes || (note as any).personal_classes
+    note.classes || note.personal_classes
   const classTitle = linkedClass?.title
 
   const personalVisibilityLabel = getPersonalVisibilityLabel(note)

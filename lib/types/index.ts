@@ -84,6 +84,7 @@ export interface Class {
   cancellation_reason: string | null
   actual_attendance_count: number | null // Manual override for actual attendance
   external_signup_url: string | null // External URL for signup (e.g., Eventbrite)
+  asset_id?: string | null // Flyer or image attached from Assets
   is_public: boolean // Whether class is visible to dancers/guardians
   series_id?: string | null // Shared by every day of a multi-day workshop / recurring batch
   series_position?: number // 1-based day within the series (set by GET /api/classes)

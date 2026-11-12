@@ -581,8 +581,8 @@ interface EditNoteModalProps {
 
 function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteModalProps) {
   const [formData, setFormData] = useState<CreateNoteData>({
-    student_id: (note as any).student_id || '',
-    class_id: (note as any).class_id || '',
+    student_id: note.student_id || '',
+    class_id: note.class_id || '',
     title: note.title || '',
     content: note.content || '',
     tags: note.tags || [],

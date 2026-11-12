@@ -462,7 +462,7 @@ function ClassesContent() {
     }
   }
 
-  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string; recurringClasses?: any[] }) => {
+  const handleCreateClass = async (formData: CreateClassData & { newStudioName?: string; recurringClasses?: CreateClassData[] }) => {
     try {
       let studioId = formData.studio_id
 
@@ -539,8 +539,8 @@ function ClassesContent() {
 
       // Create a single class
       const classData = { ...formData, studio_id: studioId }
-      delete (classData as any).newStudioName // Remove the temporary field
-      delete (classData as any).recurringClasses // Remove the recurring field
+      delete classData.newStudioName // Remove the temporary field
+      delete classData.recurringClasses // Remove the recurring field
 
       const response = await fetch('/api/classes', {
         method: 'POST',
@@ -613,7 +613,7 @@ function ClassesContent() {
 
       // Update the class with the studio_id (either selected or newly created)
       const classData = { ...formData, studio_id: studioId }
-      delete (classData as any).newStudioName // Remove the temporary field
+      delete classData.newStudioName // Remove the temporary field
 
       const response = await fetch(`/api/classes/${classId}`, {
         method: 'PATCH',
@@ -1036,8 +1036,8 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
     is_public: classData.is_public || false,
     is_virtual: classData.is_virtual || false,
     newStudioName: '',
-    instructor_id: (classData as any).instructor_id || undefined,
-    asset_id: (classData as any).asset_id || null,
+    instructor_id: classData.instructor_id || undefined,
+    asset_id: classData.asset_id || null,
     workshop_price: classData.workshop_price ?? null,
     workshop_signup_url: classData.workshop_signup_url || '',
     workshop_full_only: classData.workshop_full_only || false
@@ -2058,7 +2058,7 @@ function EditClassModal({ classData, studios, onClose, onSubmit, onDelete }: Edi
 interface CreateClassModalProps {
   studios: Studio[]
   onClose: () => void
-  onSubmit: (data: CreateClassData & { newStudioName?: string }) => void
+  onSubmit: (data: CreateClassData & { newStudioName?: string; recurringClasses?: CreateClassData[] }) => void
 }
 
 function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps) {
@@ -2317,7 +2317,7 @@ function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModalProps)
       start_time: firstStartUTC,
       end_time: firstEndDate.toISOString(),
       recurringClasses: classesToCreate
-    } as any)
+    })
   }
 
   const handleConfirmRecurring = () => {

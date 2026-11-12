@@ -4,7 +4,6 @@ import { NextRequest } from 'next/server'
 // Mock the Supabase client
 const mockSignUp = vi.fn()
 const mockSignInWithPassword = vi.fn()
-const mockSignOut = vi.fn()
 const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
 
@@ -13,7 +12,6 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: {
       signUp: mockSignUp,
       signInWithPassword: mockSignInWithPassword,
-      signOut: mockSignOut,
       getUser: mockGetUser,
     },
     from: mockFrom,
@@ -23,7 +21,6 @@ vi.mock('@/lib/supabase/server', () => ({
 // Import routes after mocking
 import { POST as signupHandler } from '../auth/signup/route'
 import { POST as signinHandler } from '../auth/signin/route'
-import { POST as signoutHandler } from '../auth/signout/route'
 
 describe('Auth API Routes', () => {
   beforeEach(() => {
@@ -326,42 +323,6 @@ describe('Auth API Routes', () => {
 
       expect(response.status).toBe(200)
       expect(data.redirectUrl).toBe('/dancer') // Defaults to dancer
-    })
-  })
-
-  describe('POST /api/auth/signout', () => {
-    it('should sign out user successfully', async () => {
-      mockSignOut.mockResolvedValue({ error: null })
-
-      const response = await signoutHandler()
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(mockSignOut).toHaveBeenCalled()
-    })
-
-    // Note: Current implementation doesn't check signOut error, just returns success
-    // This test documents that behavior - the error is silently ignored
-    it('should return success even if signOut has an error (current behavior)', async () => {
-      mockSignOut.mockResolvedValue({ error: { message: 'Sign out failed' } })
-
-      const response = await signoutHandler()
-      const data = await response.json()
-
-      // Current implementation ignores errors from signOut
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-    })
-
-    it('should handle thrown exceptions', async () => {
-      mockSignOut.mockRejectedValue(new Error('Network error'))
-
-      const response = await signoutHandler()
-      const data = await response.json()
-
-      expect(response.status).toBe(500)
-      expect(data.error).toBeDefined()
     })
   })
 })

@@ -131,17 +131,6 @@ export function setSlotValue(
   return { ...document, values: { ...document.values, [slotId]: value }, edited }
 }
 
-export function setSlotPhotos(
-  document: DesignDocument,
-  slotId: string,
-  placements: PhotoPlacement[],
-  options: { byHand: boolean }
-): DesignDocument {
-  const edited =
-    options.byHand && !document.edited.includes(slotId) ? [...document.edited, slotId] : document.edited
-  return { ...document, photos: { ...document.photos, [slotId]: placements }, edited }
-}
-
 /** Every asset id the document shows, for prefetching. */
 export function documentAssetIds(document: DesignDocument): string[] {
   const ids = new Set<string>()

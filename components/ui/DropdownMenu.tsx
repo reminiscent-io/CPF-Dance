@@ -209,7 +209,7 @@ export function DropdownMenuItem({
 }: DropdownMenuItemProps) {
   const { close } = useDropdownContext()
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.SyntheticEvent) => {
     e.stopPropagation()
     if (disabled) return
     onClick?.()
@@ -219,7 +219,7 @@ export function DropdownMenuItem({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      handleClick(e as any)
+      handleClick(e)
     }
   }
 

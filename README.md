@@ -61,10 +61,9 @@ Gmail and Google Calendar need no keys locally. They go through Replit connector
 
 There is no migration runner. Changes are applied by hand in the Supabase SQL editor.
 
-1. Run `supabase-schema.sql` for the base schema.
-2. Run every file in `migrations/` in numerical order. This folder is the source of truth; `supabase-schema.sql` lags the recent migrations.
+To build a new database, run `supabase-schema.sql` once in a fresh Supabase project. It is the production schema after migration 52, checked object by object against the live database. Don't run `migrations/` on top of it. The file already includes them, and the folder can't rebuild the database on its own.
 
-Before adding a migration, run `ls migrations`. Numbers have collided before. More detail in [docs/database-setup.md](./docs/database-setup.md) and [migrations/README.md](./migrations/README.md).
+Before adding a migration, run `ls migrations`. Numbers have collided before. Put the same change in `supabase-schema.sql`. More detail in [docs/database-setup.md](./docs/database-setup.md) and [migrations/README.md](./migrations/README.md).
 
 ## Commands
 

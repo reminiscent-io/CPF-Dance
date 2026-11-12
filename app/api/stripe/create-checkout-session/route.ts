@@ -45,8 +45,6 @@ export async function POST(request: NextRequest) {
 
     // Determine the base URL for redirects
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin
-    console.log('Base URL being used:', baseUrl)
-    console.log('Success URL will be:', `${baseUrl}/dancer/request-lesson?session_id={CHECKOUT_SESSION_ID}&success=true`)
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({

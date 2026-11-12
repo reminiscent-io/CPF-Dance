@@ -75,21 +75,3 @@ export function Spinner({
 export function InlineSpinner({ className = '' }: { className?: string }) {
   return <SpinnerArc className={`inline-block h-[1em] w-[1em] shrink-0 ${className}`} />
 }
-
-export interface LoadingOverlayProps {
-  message?: string
-}
-
-export function LoadingOverlay({ message = 'Loading...' }: LoadingOverlayProps) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-      style={{ backgroundColor: 'rgba(10, 10, 10, 0.5)' }}
-    >
-      <div className="bg-champagne-50 rounded-lg p-8 flex flex-col items-center gap-4 shadow-soft-lg">
-        <Spinner size="lg" />
-        <p className="text-charcoal-700 font-medium">{message}</p>
-      </div>
-    </div>
-  )
-}

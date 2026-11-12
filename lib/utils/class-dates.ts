@@ -18,14 +18,6 @@ export function formatClassDate(input: string | Date): string {
   return `${weekday} ${day} ${month}`
 }
 
-/** "07 May" — for past sections grouped by month, no weekday repetition. */
-export function formatClassDateShort(input: string | Date): string {
-  const date = input instanceof Date ? input : new Date(input)
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: tz })
-  return `${day} ${month}`
-}
-
 /** "9:00 AM" / "9:30 PM" — no padded hour, lowercase meridiem suppressed by Intl. */
 export function formatClassTime(input: string | Date): string {
   const date = input instanceof Date ? input : new Date(input)

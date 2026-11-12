@@ -149,7 +149,7 @@ function DancerNotesContent() {
       filtered = filtered.filter((note) =>
         note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
         note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (note as any).author_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        note.author_name?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -161,7 +161,7 @@ function DancerNotesContent() {
     return filtered
   }, [notes, activeTab, searchTerm, selectedTag])
 
-  const instructorNotesCount = notes.filter((n) => !n.is_personal && (n as any).is_shared).length
+  const instructorNotesCount = notes.filter((n) => !n.is_personal && n.is_shared).length
   const personalNotesCount = notes.filter((n) => n.is_personal).length
 
   const handleOpenFocusMode = (note?: Note) => {
@@ -174,11 +174,11 @@ function DancerNotesContent() {
       }
       // For personal notes, open in edit mode
       setEditingNote(note)
-      const noteClassId = (note as any).class_id || (note as any).personal_class_id || ''
-      const noteClassType = (note as any).class_id ? 'enrolled' : (note as any).personal_class_id ? 'personal' : ''
+      const noteClassId = note.class_id || note.personal_class_id || ''
+      const noteClassType = note.class_id ? 'enrolled' : note.personal_class_id ? 'personal' : ''
       setClassId(noteClassId)
       setClassType(noteClassType as 'enrolled' | 'personal' | '')
-      setIsPrivate((note as any).visibility === 'private')
+      setIsPrivate(note.visibility === 'private')
     } else {
       setEditingNote(null)
       setClassId('')
