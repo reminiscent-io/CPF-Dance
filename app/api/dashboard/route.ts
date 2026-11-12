@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
     const detailedNotesWithAuthors = detailedRecentNotes?.map(note => {
       const author = authorMap.get(note.author_id)
-      const student = note.student as any
+      const student = note.student
       return {
         id: note.id,
         title: note.title,
@@ -210,8 +210,8 @@ export async function GET(request: NextRequest) {
 
     const recentActivity = [
       ...(recentEnrollments || []).map(e => {
-        const studentName = (e.student as any)?.profile?.full_name || 'Unknown Student'
-        const className = (e.class as any)?.title || 'Unknown Class'
+        const studentName = e.student?.profile?.full_name || 'Unknown Student'
+        const className = e.class?.title || 'Unknown Class'
         return {
           id: e.id,
           type: 'enrollment' as const,
@@ -221,7 +221,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       ...(recentNotes || []).map(n => {
-        const studentName = (n.student as any)?.profile?.full_name || 'Unknown Student'
+        const studentName = n.student?.profile?.full_name || 'Unknown Student'
         return {
           id: n.id,
           type: 'note' as const,
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       ...(recentPayments || []).map(p => {
-        const studentName = (p.student as any)?.profile?.full_name || 'Unknown Student'
+        const studentName = p.student?.profile?.full_name || 'Unknown Student'
         return {
           id: p.id,
           type: 'payment' as const,
@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       ...(recentLessonRequests || []).map(r => {
-        const studentName = (r.student as any)?.profile?.full_name || 'Unknown Student'
+        const studentName = r.student?.profile?.full_name || 'Unknown Student'
         return {
           id: `request-${r.id}`,
           type: 'request' as const,
@@ -252,7 +252,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       ...(recentRescheduleRequests || []).map(r => {
-        const studentName = (r.student as any)?.profile?.full_name || 'Unknown Student'
+        const studentName = r.student?.profile?.full_name || 'Unknown Student'
         return {
           id: `reschedule-${r.id}`,
           type: 'reschedule_request' as const,
@@ -263,7 +263,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       ...(recentCancellations || []).map(c => {
-        const enrollment = (c.enrollments as any[])?.[0]
+        const enrollment = c.enrollments[0]
         const studentName = enrollment?.student?.profile?.full_name || 'Dancer'
         return {
           id: `cancel-${c.id}`,
@@ -275,7 +275,7 @@ export async function GET(request: NextRequest) {
         }
       })
     ]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime())
       .slice(0, 12)
 
     const stats = {
@@ -290,7 +290,7 @@ export async function GET(request: NextRequest) {
       id: nextClass[0].id,
       title: nextClass[0].title,
       start_time: nextClass[0].start_time,
-      studio_name: (nextClass[0].studio as any)?.name || 'Studio TBA'
+      studio_name: nextClass[0].studio?.name || 'Studio TBA'
     } : null
 
     const todaysClassesData = (todaysClasses || []).map(c => ({
@@ -299,7 +299,7 @@ export async function GET(request: NextRequest) {
       start_time: c.start_time,
       end_time: c.end_time,
       class_type: c.class_type,
-      studio_name: (c.studio as any)?.name || 'Studio TBA'
+      studio_name: c.studio?.name || 'Studio TBA'
     }))
 
     return NextResponse.json({

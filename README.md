@@ -113,7 +113,6 @@ Every request passes three layers: `proxy.ts` routes by role, each API route cal
 - [docs/class-pricing.md](./docs/class-pricing.md): the four pricing models
 - [docs/google-integrations.md](./docs/google-integrations.md): Gmail and Calendar through Replit connectors
 - [docs/promo-studio-setup.md](./docs/promo-studio-setup.md): Promo Studio migrations and first run
-- [docs/supabase-storage-setup.md](./docs/supabase-storage-setup.md): storage buckets
 - [docs/profile-linking.md](./docs/profile-linking.md): signing in with two emails through linked profiles
 - [docs/performance-optimization-notes.md](./docs/performance-optimization-notes.md): RLS performance
 

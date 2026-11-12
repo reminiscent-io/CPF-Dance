@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     )
 
     const classes = enrollments?.map(enrollment => {
-      const classData = enrollment.classes as any
+      const classData = enrollment.classes
       return {
         ...classData,
         enrollment_id: enrollment.id,

@@ -37,7 +37,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const update: Record<string, unknown> = {}
     if (parsed.data.favorite !== undefined) update.favorite = parsed.data.favorite
     if (parsed.data.tags) {
-      update.tags = { ...(current.tags ?? {}), ...parsed.data.tags }
+      const currentTags =
+        current.tags && typeof current.tags === 'object' && !Array.isArray(current.tags) ? current.tags : {}
+      update.tags = { ...currentTags, ...parsed.data.tags }
       update.tags_edited = true
     }
     const { data: asset, error } = await supabase

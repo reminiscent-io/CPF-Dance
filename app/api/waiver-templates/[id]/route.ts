@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Ownership check: non-admin users can only view their own or shared templates
-    if (profile.role !== 'admin' && template.created_by !== profile.id && !template.is_shared) {
+    if (profile.role !== 'admin' && template.created_by_id !== profile.id && !template.is_shared) {
       return NextResponse.json({ error: 'Not authorized to view this template' }, { status: 403 })
     }
 
@@ -61,11 +61,11 @@ export async function PATCH(
     if (profile.role !== 'admin') {
       const { data: existing } = await supabase
         .from('waiver_templates')
-        .select('created_by')
+        .select('created_by_id')
         .eq('id', id)
         .single()
 
-      if (!existing || existing.created_by !== profile.id) {
+      if (!existing || existing.created_by_id !== profile.id) {
         return NextResponse.json({ error: 'Not authorized to update this template' }, { status: 403 })
       }
     }
@@ -137,11 +137,11 @@ export async function DELETE(
     if (profile.role !== 'admin') {
       const { data: existing } = await supabase
         .from('waiver_templates')
-        .select('created_by')
+        .select('created_by_id')
         .eq('id', id)
         .single()
 
-      if (!existing || existing.created_by !== profile.id) {
+      if (!existing || existing.created_by_id !== profile.id) {
         return NextResponse.json({ error: 'Not authorized to delete this template' }, { status: 403 })
       }
     }

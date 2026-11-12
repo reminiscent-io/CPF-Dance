@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges } from '@/lib/auth/privileges'
+import { Constants } from '@/lib/supabase/database.types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,8 +44,9 @@ export async function GET(request: NextRequest) {
       query = query.eq('class_id', classId)
     }
 
-    if (visibility) {
-      query = query.eq('visibility', visibility)
+    const visibilityFilter = Constants.public.Enums.note_visibility.find(v => v === visibility)
+    if (visibilityFilter) {
+      query = query.eq('visibility', visibilityFilter)
     }
 
     // SECURITY: Dancers should only see notes shared with them, or notes they authored themselves.

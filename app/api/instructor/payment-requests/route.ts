@@ -109,6 +109,14 @@ export async function POST(request: Request) {
       }
     }
 
+    // payments.student_id is NOT NULL, so a request with no student can't be stored
+    if (!student_id) {
+      return NextResponse.json(
+        { error: 'Payment requests need a student. Studio requests aren’t supported yet.' },
+        { status: 400 }
+      )
+    }
+
     // Create payment record
     const paymentNotes =
       recipient_type === 'student'

@@ -12,29 +12,28 @@ export const metadata = {
 
 interface AttendanceRow {
   id: string
-  name: string
+  title: string
   class_type: string | null
-  date: string
+  start_time: string
   actual_attendance_count: number | null
-  enrollments?: Array<{ id: string; student: { id: string; full_name: string } | null }>
-  [key: string]: any
+  enrollments?: Array<{ id: string; student: { id: string; full_name: string | null } | null }>
 }
 
 const columns: Column<AttendanceRow>[] = [
   {
-    key: 'name',
+    key: 'title',
     header: 'Class Name',
     render: (cls) => (
       <div>
-        <div className="font-medium text-charcoal-900">{cls.name}</div>
+        <div className="font-medium text-charcoal-900">{cls.title}</div>
         <div className="text-xs text-charcoal-500">{cls.class_type || <EmptyCell />}</div>
       </div>
     ),
   },
   {
-    key: 'date',
+    key: 'start_time',
     header: 'Date',
-    render: (cls) => new Date(cls.date).toLocaleDateString(),
+    render: (cls) => new Date(cls.start_time).toLocaleDateString(),
   },
   {
     key: 'enrolled',
@@ -82,9 +81,9 @@ export default async function AttendancePage() {
       )
     `)
     .eq('instructor_id', user.id)
-    .order('date', { ascending: false })
+    .order('start_time', { ascending: false })
 
-  const rows = (classes ?? []) as AttendanceRow[]
+  const rows: AttendanceRow[] = classes ?? []
 
   return (
     <div className="min-h-screen bg-champagne-50">

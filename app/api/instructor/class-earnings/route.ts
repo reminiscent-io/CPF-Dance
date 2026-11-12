@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
 import { passShareCents } from '@/lib/class-series'
 import { centsToDollars, dollarsToCents } from '@/lib/utils/money'
+import { Constants, type Tables } from '@/lib/supabase/database.types'
 
 interface ClassEarning {
   id: string
@@ -10,7 +11,7 @@ interface ClassEarning {
   class_type: string
   start_time: string
   end_time: string
-  pricing_model: string
+  pricing_model: string | null
   base_cost: number | null
   cost_per_person: number | null
   cost_per_hour: number | null
@@ -26,7 +27,13 @@ interface ClassEarning {
   } | null
 }
 
-function calculateClassValue(classData: any, enrollmentCount: number): number {
+type PricedClass = Pick<
+  Tables<'classes'>,
+  | 'pricing_model' | 'base_cost' | 'cost_per_person' | 'cost_per_hour'
+  | 'tiered_base_students' | 'tiered_additional_cost' | 'price' | 'start_time' | 'end_time'
+>
+
+function calculateClassValue(classData: PricedClass, enrollmentCount: number): number {
   const { 
     pricing_model, 
     base_cost, 
@@ -113,8 +120,9 @@ export async function GET(request: NextRequest) {
       classQuery = classQuery.lte('start_time', endDate)
     }
 
-    if (classType && classType !== 'all') {
-      classQuery = classQuery.eq('class_type', classType)
+    const classTypeFilter = Constants.public.Enums.class_type.find(t => t === classType)
+    if (classTypeFilter) {
+      classQuery = classQuery.eq('class_type', classTypeFilter)
     }
 
     const { data: classes, error: classError } = await classQuery
@@ -160,6 +168,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to fetch class earnings' }, { status: 500 })
       }
       for (const day of seriesDays || []) {
+        if (!day.series_id) continue
         const list = runningDays.get(day.series_id) ?? []
         list.push(day.id)
         runningDays.set(day.series_id, list)
@@ -186,8 +195,7 @@ export async function GET(request: NextRequest) {
     const collectedByClass = new Map<string, number>()
     payments?.forEach(p => {
       if (p.class_id) {
-        const classData = p.class as any
-        if (profile.role === 'admin' || classData?.instructor_id === profile.id) {
+        if (profile.role === 'admin' || p.class?.instructor_id === profile.id) {
           const current = collectedByClass.get(p.class_id) || 0
           collectedByClass.set(p.class_id, current + (p.amount || 0))
         }
@@ -207,8 +215,7 @@ export async function GET(request: NextRequest) {
       }
       const collectedAmount = collectedByClass.get(cls.id) || 0
 
-      const studioData = cls.studio as any
-      const studio = Array.isArray(studioData) ? studioData[0] : studioData
+      const studio = cls.studio
 
       return {
         id: cls.id,

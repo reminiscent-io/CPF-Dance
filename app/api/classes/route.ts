@@ -7,6 +7,7 @@ import { spendCreditForClass, getDayOfLessonPrice } from '@/lib/lesson-credits'
 import { notifyClassScheduled } from '@/lib/notifications/private-lessons'
 import { attachMeetToPrivateLesson, getPrivateLessonDancer } from '@/lib/google/private-lesson-meet'
 import { seriesPositions } from '@/lib/class-series'
+import { Constants } from '@/lib/supabase/database.types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const studioId = searchParams.get('studio_id')
     const classType = searchParams.get('class_type')
+    const classTypeFilter = Constants.public.Enums.class_type.find(t => t === classType)
     const upcoming = searchParams.get('upcoming')
 
     // The "Upcoming" view isn't strictly future: instructors check it the day
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest) {
     const scoped = () => {
       let q = supabase.from('classes').select(SELECT)
       if (studioId) q = q.eq('studio_id', studioId)
-      if (classType) q = q.eq('class_type', classType)
+      if (classTypeFilter) q = q.eq('class_type', classTypeFilter)
       return q
     }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { signedSignatureUrl } from '@/lib/waiver-signature'
 
 export async function GET(
   request: NextRequest,
@@ -30,7 +31,10 @@ export async function GET(
       return NextResponse.json({ error: 'Waiver not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ waiver })
+    // RLS let this caller read the waiver, so they may see its signature.
+    const signature_url = await signedSignatureUrl(waiver.signature_image_url)
+
+    return NextResponse.json({ waiver: { ...waiver, signature_url } })
   } catch (error: any) {
     console.error('Error fetching waiver:', error)
     return NextResponse.json(

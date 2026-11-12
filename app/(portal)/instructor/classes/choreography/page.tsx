@@ -19,9 +19,9 @@ export default async function ChoreographyPage() {
   // Fetch classes for choreography management
   const { data: classes, error } = await supabase
     .from('classes')
-    .select('id, name, class_type, date, description')
+    .select('id, title, class_type, start_time, description')
     .eq('instructor_id', user.id)
-    .order('date', { ascending: false })
+    .order('start_time', { ascending: false })
 
   return (
     <div className="min-h-screen bg-champagne-50">
@@ -40,11 +40,11 @@ export default async function ChoreographyPage() {
                 <div key={cls.id} className="rounded-lg border border-champagne-200 bg-champagne-50 p-6">
                   <div className="flex items-start justify-between mb-4 gap-3">
                     <div className="min-w-0">
-                      <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">{cls.name}</h3>
+                      <h3 className="font-serif text-lg font-semibold text-charcoal-950 truncate">{cls.title}</h3>
                       <p className="text-sm text-charcoal-500">{cls.class_type}</p>
                     </div>
                     <span className="shrink-0 text-xs text-charcoal-500 tabular-nums">
-                      {new Date(cls.date).toLocaleDateString()}
+                      {new Date(cls.start_time).toLocaleDateString()}
                     </span>
                   </div>
 

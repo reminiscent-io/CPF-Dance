@@ -11,6 +11,7 @@ import {
   requirePromoInstructor,
 } from '@/lib/promo/server/context'
 import type { AssetPose, AssetTags } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       // Only if she hasn't corrected the tags while the call ran.
       const { data: asset, error: updateError } = await supabase
         .from('promo_assets')
-        .update({ tags: next.tags, pose: next.pose, tagged_at: new Date().toISOString() })
+        .update({ tags: toJson(next.tags), pose: next.pose && toJson(next.pose), tagged_at: new Date().toISOString() })
         .eq('id', row.id)
         .eq('tags_edited', false)
         .select(ASSET_COLUMNS)

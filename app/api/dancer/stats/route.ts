@@ -137,7 +137,9 @@ export async function GET(request: NextRequest) {
         title,
         content,
         tags,
+        visibility,
         created_at,
+        updated_at,
         author_id,
         class_id,
         classes (
@@ -150,18 +152,25 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(3)
 
-    // Get dancer's personal notes
+    // The dancer's own notes live in the same table, authored by their profile
     const { data: personalNotes } = await supabase
-      .from('dancer_notes')
+      .from('notes')
       .select(`
         id,
         title,
         content,
         tags,
+        visibility,
         created_at,
-        is_private
+        updated_at,
+        author_id,
+        class_id,
+        classes (
+          title
+        )
       `)
-      .eq('dancer_id', profile.id)
+      .eq('student_id', student.id)
+      .eq('author_id', profile.id)
       .order('created_at', { ascending: false })
       .limit(3)
 
@@ -195,12 +204,9 @@ export async function GET(request: NextRequest) {
     personalNotes?.forEach(note => {
       allNotes.push({
         ...note,
-        author_id: profile.id,
         author_name: profile.full_name,
         author_avatar_url: profile.avatar_url || null,
-        is_personal: true,
-        class_id: null,
-        classes: null
+        is_personal: true
       })
     })
 

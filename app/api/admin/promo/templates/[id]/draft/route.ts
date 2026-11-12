@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { TemplateDefinitionSchema } from '@/lib/promo/schema'
 import { isUuid, PromoError, promoErrorResponse, requirePromoAdmin } from '@/lib/promo/server/context'
 import { DEFINITION_FORMAT } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (draft) {
       const { data, error } = await supabase
         .from('promo_template_versions')
-        .update({ definition, notes: notes ?? null })
+        .update({ definition: toJson(definition), notes: notes ?? null })
         .eq('id', draft.id)
         .is('published_at', null)
         .select('id, version, updated_at')
@@ -65,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       .insert({
         template_id: id,
         version: (latest?.version ?? 0) + 1,
-        definition,
+        definition: toJson(definition),
         definition_format: DEFINITION_FORMAT,
         notes: notes ?? null,
         created_by: profile.id,

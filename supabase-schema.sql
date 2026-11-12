@@ -1,8 +1,8 @@
 -- CPF Dance database schema
 --
--- The production schema after migration 52, generated on 2026-11-12 from the
+-- The production schema after migration 53, generated on 2026-11-12 from the
 -- live database's catalog. To build a new database, run this file once in the
--- SQL editor of a fresh Supabase project, then any migration numbered above 52.
+-- SQL editor of a fresh Supabase project, then any migration numbered above 53.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -667,7 +667,6 @@ CREATE INDEX idx_classes_series_id ON public.classes USING btree (series_id) WHE
 CREATE INDEX idx_classes_start_time ON public.classes USING btree (start_time);
 CREATE INDEX idx_classes_studio ON public.classes USING btree (studio_id);
 CREATE INDEX idx_enrollments_class ON public.enrollments USING btree (class_id);
-CREATE INDEX idx_enrollments_class_id ON public.enrollments USING btree (class_id);
 CREATE INDEX idx_enrollments_student ON public.enrollments USING btree (student_id);
 CREATE UNIQUE INDEX instructor_access_requests_email_idx ON public.instructor_access_requests USING btree (email);
 CREATE INDEX idx_instructor_student_relationships_instructor ON public.instructor_student_relationships USING btree (instructor_id);
@@ -1616,15 +1615,6 @@ REVOKE INSERT, UPDATE, DELETE ON public.promo_ai_calls, public.promo_publication
 
 REVOKE EXECUTE ON FUNCTION public.promo_owner_id(), public.promo_is_admin(), public.promo_is_instructor() FROM PUBLIC, anon;
 
--- Realtime
-
-ALTER PUBLICATION supabase_realtime ADD TABLE
-  public.assets, public.classes, public.enrollments, public.instructor_access_requests,
-  public.instructor_student_relationships, public.lesson_pack_purchases, public.lesson_pack_usage,
-  public.lesson_packs, public.notes, public.payment_events, public.payments, public.personal_classes,
-  public.private_lesson_requests, public.profiles, public.students, public.studio_inquiries,
-  public.studios, public.waiver_signatures, public.waiver_templates, public.waivers;
-
 -- Storage buckets
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('assets', 'assets', true, 10485760, NULL) ON CONFLICT (id) DO NOTHING;
@@ -1632,7 +1622,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('promo-private', 'promo-private', false, 52428800, '{image/jpeg,image/png}'::text[]) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('Public_Images', 'Public_Images', true, NULL, NULL) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('studio logos', 'studio logos', true, NULL, NULL) ON CONFLICT (id) DO NOTHING;
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('waiver-signatures', 'waiver-signatures', true, NULL, NULL) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('waiver-signatures', 'waiver-signatures', false, NULL, NULL) ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies (Supabase enables RLS on storage.objects)
 
@@ -1658,12 +1648,6 @@ CREATE POLICY "Allow users to update their own headshot" ON storage.objects FOR 
   USING (((bucket_id = 'headshots'::text) AND ((auth.uid())::text = (storage.foldername(name))[1])));
 CREATE POLICY "Allow users to upload their own headshot" ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (((bucket_id = 'headshots'::text) AND ((auth.uid())::text = (storage.foldername(name))[1])));
-CREATE POLICY "Anyone can view waiver signatures" ON storage.objects FOR SELECT TO public
-  USING ((bucket_id = 'waiver-signatures'::text));
-CREATE POLICY "Instructors can upload assets 1bqp9qb_0" ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK ((((auth.uid())::text = (storage.foldername(name))[1]) AND (( SELECT profiles.role
-   FROM profiles
-  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['instructor'::user_role, 'admin'::user_role]))));
 CREATE POLICY "Public read access" ON storage.objects FOR SELECT TO public
   USING ((bucket_id = 'studio logos'::text));
 CREATE POLICY "Users can upload waiver signatures" ON storage.objects FOR INSERT TO authenticated
