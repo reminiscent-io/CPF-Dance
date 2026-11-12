@@ -6,6 +6,7 @@ import { activeTemplateBySlug, loadStudioBrand, loadTemplateVersion } from '@/li
 import { PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import { DESIGN_COLUMNS, DESIGN_LIST_COLUMNS, defaultTitle } from '@/lib/promo/server/designs'
 import type { DesignDocument } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,9 +93,9 @@ export async function POST(request: NextRequest) {
         template_version_id: version.id,
         format: input.format,
         class_ids: input.classIds ?? input.brief?.classIds ?? [],
-        brief: input.brief ?? {},
-        document,
-        brand_snapshot: brand,
+        brief: toJson(input.brief ?? {}),
+        document: toJson(document),
+        brand_snapshot: toJson(brand),
       })
       .select(DESIGN_COLUMNS)
       .single()
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       design_id: design.id,
       owner_id: ownerId,
       revision: 1,
-      document,
+      document: toJson(document),
       source: input.source === 'generate' ? 'generate' : 'checkpoint',
       ai_call_id: input.aiCallId ?? null,
     })

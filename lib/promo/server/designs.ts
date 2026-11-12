@@ -19,7 +19,7 @@ export async function loadDesign(supabase: PromoContext['supabase'], id: string)
   const { data, error } = await supabase.from('promo_designs').select(DESIGN_COLUMNS).eq('id', id).maybeSingle()
   if (error) throw error
   if (!data) throw new PromoError('Promo not found.', 404, 'not_found')
-  return data as PromoDesignRow
+  return data as unknown as PromoDesignRow
 }
 
 /** "Precision Workshop" from the two title lines, else the brief's idea, else a placeholder. */

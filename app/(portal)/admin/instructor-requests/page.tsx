@@ -25,8 +25,6 @@ interface Instructor {
   full_name: string
   phone: string | null
   created_at: string
-  bio: string | null
-  specialties: string[] | null
   student_count: number
   class_count: number
 }
@@ -139,27 +137,6 @@ export default function AdminInstructorRequestsPage() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Bio */}
-                  {instructor.bio && (
-                    <p className="mt-4 text-sm text-charcoal-700 line-clamp-3">{instructor.bio}</p>
-                  )}
-
-                  {/* Specialties */}
-                  {instructor.specialties && instructor.specialties.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {instructor.specialties.slice(0, 3).map((specialty, idx) => (
-                        <Badge key={idx} variant="default" size="sm">
-                          {specialty}
-                        </Badge>
-                      ))}
-                      {instructor.specialties.length > 3 && (
-                        <Badge variant="default" size="sm">
-                          +{instructor.specialties.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
 
                   {/* Stats Footer */}
                   <div className="mt-auto pt-4">

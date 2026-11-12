@@ -5,6 +5,7 @@ import { BrandTokensSchema, checkBrandFonts } from '@/lib/promo/schema'
 import { ensurePromoCatalog, loadStudioBrand } from '@/lib/promo/server/catalog'
 import { PromoError, promoErrorResponse, requirePromoAdmin, requirePromoInstructor } from '@/lib/promo/server/context'
 import type { BrandTokens } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,7 @@ export async function PUT(request: NextRequest) {
     await ensurePromoCatalog()
     const { data, error } = await supabase
       .from('promo_brand_kits')
-      .update({ tokens, updated_by: profile.id })
+      .update({ tokens: toJson(tokens), updated_by: profile.id })
       .is('owner_id', null)
       .select('tokens, updated_at')
     if (error) throw error

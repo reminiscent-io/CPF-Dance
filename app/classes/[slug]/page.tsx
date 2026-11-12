@@ -70,14 +70,15 @@ const getPublicClass = cache(async (key: string): Promise<PublicClassPreview | n
   if (anchorError || !anchor) return null
 
   // A workshop link covers the whole run; anything else, just that class
-  const isWorkshop = anchor.class_type === 'workshop' && anchor.series_id
+  const workshopSeriesId = anchor.class_type === 'workshop' ? anchor.series_id : null
+  const isWorkshop = !!workshopSeriesId
   let daysQuery = supabase
     .from('classes')
     .select('id, start_time, end_time, max_capacity')
     .eq('is_public', true)
     .eq('is_cancelled', false)
     .order('start_time', { ascending: true })
-  daysQuery = isWorkshop ? daysQuery.eq('series_id', anchor.series_id) : daysQuery.eq('id', anchor.id)
+  daysQuery = workshopSeriesId ? daysQuery.eq('series_id', workshopSeriesId) : daysQuery.eq('id', anchor.id)
   const { data: dayRows } = await daysQuery
   const days = (dayRows || []) as ClassDay[]
   if (days.length === 0) return null
@@ -100,7 +101,7 @@ const getPublicClass = cache(async (key: string): Promise<PublicClassPreview | n
   if (byId) {
     // Before migration 51 runs this column doesn't exist; the id link still works
     let slugQuery = supabase.from('classes').select('share_slug').not('share_slug', 'is', null).limit(1)
-    slugQuery = isWorkshop ? slugQuery.eq('series_id', anchor.series_id) : slugQuery.eq('id', anchor.id)
+    slugQuery = workshopSeriesId ? slugQuery.eq('series_id', workshopSeriesId) : slugQuery.eq('id', anchor.id)
     const { data: slugged } = await slugQuery
     slug = (slugged?.[0]?.share_slug as string | undefined) ?? null
   }

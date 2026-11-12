@@ -10,6 +10,7 @@ import { loadTemplateVersion } from '@/lib/promo/server/catalog'
 import { ASSET_COLUMNS, isUuid, PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import { loadDesign } from '@/lib/promo/server/designs'
 import type { AssetPose, AssetTags, DesignDocument } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       design_id: design.id,
       owner_id: ownerId,
       revision: design.revision,
-      document: outcome.document,
+      document: toJson(outcome.document),
       source: 'ai_revise',
       instruction: parsed.data.instruction,
       summary: reply.summary.slice(0, 500),

@@ -4,6 +4,7 @@ import { upgradeDocument } from '@/lib/promo/document'
 import { loadTemplateVersion } from '@/lib/promo/server/catalog'
 import { isUuid, PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import { DESIGN_COLUMNS, loadDesign } from '@/lib/promo/server/designs'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,13 +47,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       design_id: design.id,
       owner_id: ownerId,
       revision: design.revision,
-      document: design.document,
+      document: toJson(design.document),
       source: 'checkpoint',
       summary: `Before updating to template version ${to.version}`,
     })
     const { data: updated, error: updateError } = await supabase
       .from('promo_designs')
-      .update({ template_version_id: to.id, document, revision: design.revision + 1 })
+      .update({ template_version_id: to.id, document: toJson(document), revision: design.revision + 1 })
       .eq('id', design.id)
       .eq('revision', design.revision)
       .select(DESIGN_COLUMNS)

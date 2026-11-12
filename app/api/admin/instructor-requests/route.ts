@@ -17,9 +17,7 @@ export async function GET(request: NextRequest) {
         email,
         full_name,
         phone,
-        created_at,
-        bio,
-        specialties
+        created_at
       `)
       .eq('role', 'instructor')
       .order('created_at', { ascending: false })
@@ -31,10 +29,11 @@ export async function GET(request: NextRequest) {
 
     // Get student count for each instructor
     const instructorIds = instructors?.map(i => i.id) || []
-    const { data: students, error: studentsError } = await supabase
-      .from('students')
+    const { data: students } = await supabase
+      .from('instructor_student_relationships')
       .select('instructor_id')
       .in('instructor_id', instructorIds)
+      .eq('relationship_status', 'active')
 
     const studentCounts = students?.reduce((acc, student) => {
       if (student.instructor_id) {
@@ -44,7 +43,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>) || {}
 
     // Get class count for each instructor
-    const { data: classes, error: classesError } = await supabase
+    const { data: classes } = await supabase
       .from('classes')
       .select('instructor_id')
       .in('instructor_id', instructorIds)

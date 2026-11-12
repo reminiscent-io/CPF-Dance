@@ -43,7 +43,7 @@ export async function GET(
     }
 
     // Every day of a multi-day workshop, for the edit modal's day list
-    let series: { id: string; start_time: string; end_time: string; is_cancelled: boolean }[] = []
+    let series: { id: string; start_time: string; end_time: string; is_cancelled: boolean | null }[] = []
     if (classData.series_id) {
       const { data: seriesRows, error: seriesError } = await supabase
         .from('classes')

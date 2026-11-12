@@ -5,6 +5,7 @@ import { loadTemplateVersion } from '@/lib/promo/server/catalog'
 import { isUuid, PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import { DESIGN_COLUMNS, loadDesign } from '@/lib/promo/server/designs'
 import type { PromoFormat } from '@/lib/promo/types'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,9 +51,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           format,
           group_id: source.group_id,
           class_ids: source.class_ids,
-          brief: { ...source.brief, format },
-          document: documentForSibling(source.document),
-          brand_snapshot: source.brand_snapshot,
+          brief: toJson({ ...source.brief, format }),
+          document: toJson(documentForSibling(source.document)),
+          brand_snapshot: toJson(source.brand_snapshot),
         })
         .select(DESIGN_COLUMNS)
         .single()

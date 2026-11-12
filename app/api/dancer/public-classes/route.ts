@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch public classes' }, { status: 500 })
     }
 
-    const instructorIds = [...new Set((classes || []).map(c => c.instructor_id).filter(Boolean))]
+    const instructorIds = [...new Set((classes || []).map(c => c.instructor_id))]
     const instructorMap = new Map<string, { full_name: string | null }>()
     if (instructorIds.length > 0) {
       const { data: instructors } = await supabase
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         .select('id, full_name')
         .in('id', instructorIds)
       for (const p of instructors || []) {
-        instructorMap.set(p.id, { full_name: p.full_name })
+        if (p.id) instructorMap.set(p.id, { full_name: p.full_name })
       }
     }
 

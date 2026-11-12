@@ -89,7 +89,9 @@ interface RecentNote {
   title: string | null
   content: string
   tags: string[] | null
+  visibility: string
   created_at: string
+  updated_at: string
   author_id: string
   author_name: string
   author_avatar_url: string | null
@@ -258,7 +260,7 @@ export default function DancerPortalPage() {
                   {recentNotes.map((note) => (
                     <NoteFeedItem
                       key={note.id}
-                      note={note as any}
+                      note={note}
                       onEdit={() => handleNoteClick(note)}
                       currentUserName={profile?.full_name || undefined}
                       showActions={false}
@@ -564,7 +566,7 @@ export default function DancerPortalPage() {
       >
         {viewingNote && (
           <NoteViewContent
-            note={viewingNote as any}
+            note={viewingNote}
             currentUserName={profile?.full_name || undefined}
             footerSlot={
               <>

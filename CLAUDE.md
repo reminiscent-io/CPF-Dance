@@ -33,14 +33,14 @@ app/
 components/           # Shared UI; ui/ = design-system kit (barrel `@/components/ui`); admin/ dancer/ instructor/ notes/ promo/ = portal-specific
 lib/
   auth/               # server-auth.ts — role guards
-  supabase/           # client.ts, server.ts, middleware.ts, admin.ts (service role)
+  supabase/           # client.ts, server.ts, middleware.ts, admin.ts (service role), database.types.ts (generated)
   utils/              # pricing, money (integer cents), sanitize, date helpers, calendar export
   gmail/              # Gmail via Replit connectors
   google/             # Calendar/Meet via Replit connectors
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–52)
+migrations/           # Numbered SQL migrations (05–53)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -161,7 +161,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–52; next is 53). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 52, verified object by object against the live database; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`.
+Numbered SQL files in `migrations/` (05–53; next is 54). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
 
 ## Deployment Gotcha
 

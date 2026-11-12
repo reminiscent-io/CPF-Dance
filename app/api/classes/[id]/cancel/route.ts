@@ -80,8 +80,7 @@ export async function POST(
     }
 
     const isInstructor = hasInstructorPrivileges(profile)
-    const enrollment = (classRow.enrollments as any[])?.[0]
-    const enrolledStudent = Array.isArray(enrollment?.students) ? enrollment?.students[0] : enrollment?.students
+    const enrolledStudent = classRow.enrollments[0]?.students
     const isEnrolledDancer = profile.role === 'dancer' && enrolledStudent?.profile_id === profile.id
 
     if (!isInstructor && !isEnrolledDancer) {

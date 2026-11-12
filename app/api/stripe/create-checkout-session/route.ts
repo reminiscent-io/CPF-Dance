@@ -37,11 +37,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get student profile for customer info
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, email')
-      .eq('id', student.profile_id)
-      .single()
+    const { data: profile } = student.profile_id
+      ? await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', student.profile_id)
+          .single()
+      : { data: null }
 
     // Determine the base URL for redirects
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin

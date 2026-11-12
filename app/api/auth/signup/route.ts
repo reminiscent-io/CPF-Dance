@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     let guardianId = null
 
-    // If guardian email is provided, create or get guardian profile
+    // If guardian email is provided, link the guardian's existing profile
     if (guardianEmail && !isAtLeast13 && role === 'dancer') {
       // Check if guardian profile already exists
       const { data: existingGuardian } = await supabase
@@ -32,26 +32,10 @@ export async function POST(request: Request) {
         .eq('email', guardianEmail)
         .single()
 
+      // A guardian is only linked when they already have an account: a
+      // profile row needs an auth user behind it, so one can't be made here.
       if (existingGuardian) {
         guardianId = existingGuardian.id
-      } else {
-        // Create guardian profile (no auth account, just a profile entry)
-        const { data: newGuardian, error: guardianError } = await supabase
-          .from('profiles')
-          .insert({
-            email: guardianEmail,
-            full_name: null, // Guardian can fill this in later
-            role: 'guardian',
-            consent_given: false, // They need to provide consent
-          })
-          .select('id')
-          .single()
-
-        if (guardianError) {
-          console.error('Error creating guardian profile:', guardianError)
-        } else if (newGuardian) {
-          guardianId = newGuardian.id
-        }
       }
     }
 

@@ -10,6 +10,7 @@ import {
   promoErrorResponse,
   requirePromoInstructor,
 } from '@/lib/promo/server/context'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
         sha256: input.sha256,
         original_filename: input.originalFilename ?? null,
         pose,
-        tags: mergePoseTags({ orientation }, pose),
+        tags: toJson(mergePoseTags({ orientation }, pose)),
       })
       .select(ASSET_COLUMNS)
       .single()

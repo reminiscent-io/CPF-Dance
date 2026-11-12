@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import { hasInstructorPrivileges } from '@/lib/auth/privileges'
+import { Constants } from '@/lib/supabase/database.types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +31,9 @@ export async function GET(request: NextRequest) {
       if (roleFilter === 'instructor') {
         query = query.in('role', ['instructor', 'admin'])
       } else {
-        query = query.eq('role', roleFilter)
+        const role = Constants.public.Enums.user_role.find(r => r === roleFilter)
+        // An unknown role matches nobody
+        query = role ? query.eq('role', role) : query.in('role', [])
       }
     }
 

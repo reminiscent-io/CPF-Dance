@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { WAIVER_SIGNATURE_BUCKET } from '@/lib/waiver-signature'
 
 export async function POST(
   request: NextRequest,
@@ -57,14 +58,16 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized to sign this waiver' }, { status: 403 })
     }
 
-    // Save signature to Supabase storage
-    const fileName = `waiver-${id}-${Date.now()}.png`
+    // The storage policy only lets a user write under waiver-<their id>/.
+    // The bucket is private: store the object path, and readers get a
+    // short-lived signed URL from GET /api/waivers/[id].
+    const signaturePath = `waiver-${user.id}/${id}-${Date.now()}.png`
     const base64Data = signature_image.replace(/^data:image\/png;base64,/, '')
     const buffer = Buffer.from(base64Data, 'base64')
 
     const { error: uploadError } = await supabase.storage
-      .from('waiver-signatures')
-      .upload(fileName, buffer, {
+      .from(WAIVER_SIGNATURE_BUCKET)
+      .upload(signaturePath, buffer, {
         contentType: 'image/png',
         upsert: false
       })
@@ -72,11 +75,6 @@ export async function POST(
     if (uploadError) {
       throw uploadError
     }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('waiver-signatures')
-      .getPublicUrl(fileName)
 
     // Replace signature_date template variable
     const signatureDate = new Date().toLocaleString('en-US', {
@@ -98,7 +96,7 @@ export async function POST(
       .from('waivers')
       .update({
         content: updatedContent,
-        signature_image_url: publicUrl,
+        signature_image_url: signaturePath,
         signed_at: new Date().toISOString(),
         signed_by_id: user.id,
         status: 'signed'
@@ -119,7 +117,7 @@ export async function POST(
         signed_by_id: user.id,
         signer_name,
         signer_email,
-        signature_image_url: publicUrl,
+        signature_image_url: signaturePath,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent') || 'unknown'
       })

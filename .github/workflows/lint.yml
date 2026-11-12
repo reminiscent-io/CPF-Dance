@@ -17,6 +17,11 @@ jobs:
           node-version: '24'
           cache: npm
 
+      # Installing on Replit writes resolved URLs on its internal mirror into
+      # the lockfile, and this runner can't reach that host. The integrity
+      # hashes still pin the exact tarballs.
+      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
+
       - run: npm ci
 
       # Errors fail the build. The tree is warning-free as of this commit, so
@@ -34,6 +39,11 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+
+      # Installing on Replit writes resolved URLs on its internal mirror into
+      # the lockfile, and this runner can't reach that host. The integrity
+      # hashes still pin the exact tarballs.
+      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
 
       - run: npm ci
 
@@ -57,6 +67,11 @@ jobs:
           node-version: '24'
           cache: npm
 
+      # Installing on Replit writes resolved URLs on its internal mirror into
+      # the lockfile, and this runner can't reach that host. The integrity
+      # hashes still pin the exact tarballs.
+      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
+
       - run: npm ci
 
       - run: npm run test:run
@@ -72,6 +87,11 @@ jobs:
           node-version: '24'
           cache: npm
 
+      # Installing on Replit writes resolved URLs on its internal mirror into
+      # the lockfile, and this runner can't reach that host. The integrity
+      # hashes still pin the exact tarballs.
+      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
+
       - run: npm ci
 
       # Catches what the others cannot: prerender failures such as a
@@ -86,3 +106,31 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
           STRIPE_SECRET_KEY: sk_test_placeholder
           STRIPE_WEBHOOK_SECRET: whsec_placeholder
+
+  schema:
+    name: Schema file applies
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds supabase-schema.sql in an empty database. It catches a schema
+      # file that no longer applies; drift from production still needs
+      # fingerprint.sql run in the Supabase SQL editor.
+      - run: scripts/schema-check/run.sh
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres

@@ -53,7 +53,7 @@ export async function GET(
 
     // Get unique author IDs and class IDs
     const authorIds = [...new Set(notesRaw?.map(n => n.author_id).filter(Boolean) || [])]
-    const classIds = [...new Set(notesRaw?.map(n => n.class_id).filter(Boolean) || [])]
+    const classIds = [...new Set(notesRaw?.map(n => n.class_id).filter((id): id is string => !!id) || [])]
 
     // Fetch authors separately
     const { data: authors } = await supabase

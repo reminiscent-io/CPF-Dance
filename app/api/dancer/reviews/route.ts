@@ -32,7 +32,7 @@ export async function GET() {
         .in('id', instructorIds)
 
       for (const p of profiles || []) {
-        instructorMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }
+        if (p.id) instructorMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }
       }
     }
 

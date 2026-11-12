@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isUuid, PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import { DESIGN_COLUMNS, loadDesign } from '@/lib/promo/server/designs'
+import { toJson } from '@/lib/promo/server/json'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,9 +21,9 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
         template_version_id: source.template_version_id,
         format: source.format,
         class_ids: source.class_ids,
-        brief: source.brief,
-        document: source.document,
-        brand_snapshot: source.brand_snapshot,
+        brief: toJson(source.brief),
+        document: toJson(source.document),
+        brand_snapshot: toJson(source.brand_snapshot),
       })
       .select(DESIGN_COLUMNS)
       .single()

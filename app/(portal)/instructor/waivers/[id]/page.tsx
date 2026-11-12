@@ -28,7 +28,7 @@ interface Waiver {
   created_at: string
   expires_at: string | null
   declined_reason: string | null
-  signature_image_url: string | null
+  signature_url: string | null
   waiver_signatures?: Array<{
     signer_name: string
     signer_email: string
@@ -326,16 +326,18 @@ export default function WaiverDetailPage() {
                     })}
                   </p>
                 </div>
-                {waiver.signature_image_url && (
+                {waiver.signature_url && (
                   <div>
                     <label className="text-sm font-medium text-charcoal-700">Signature</label>
                     <div className="mt-2 border border-champagne-200 rounded-lg p-4 bg-champagne-50 inline-block">
+                      {/* Signed URL from a private bucket: expires in minutes, so it skips the image optimiser. */}
                       <Image
-                        src={waiver.signature_image_url}
+                        src={waiver.signature_url}
                         alt="Signature"
                         className="max-w-xs h-auto rounded-lg"
                         width={600}
                         height={200}
+                        unoptimized
                       />
                     </div>
                   </div>

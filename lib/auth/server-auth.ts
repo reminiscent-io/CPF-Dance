@@ -157,7 +157,7 @@ export async function getDefaultInstructorId(): Promise<string> {
   if (error) {
     throw new Error(`Failed to look up default instructor: ${error.message}`)
   }
-  if (!data) {
+  if (!data?.id) {
     throw new Error('No instructor profile found')
   }
   return data.id

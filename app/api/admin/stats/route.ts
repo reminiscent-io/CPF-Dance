@@ -38,7 +38,7 @@ export async function GET(_request: NextRequest) {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', firstOfMonth),
       supabase.from('enrollments').select('*', { count: 'exact', head: true }),
-      supabase.from('payments').select('amount, status'),
+      supabase.from('payments').select('amount, payment_status'),
       supabase.from('studio_inquiries').select('*', { count: 'exact', head: true }),
       supabase
         .from('studio_inquiries')
@@ -49,12 +49,12 @@ export async function GET(_request: NextRequest) {
         .from('waivers')
         .select('*', { count: 'exact', head: true })
         .not('signed_at', 'is', null),
-      supabase.from('lesson_pack_purchases').select('lessons_purchased, lessons_used'),
+      supabase.from('lesson_pack_purchases').select('remaining_lessons, lesson_packs(lesson_count)'),
       supabase.from('notes').select('created_at').gte('created_at', thirtyDaysAgoIso),
       supabase
         .from('payments')
         .select('transaction_date, amount')
-        .eq('payment_status', 'paid')
+        .eq('payment_status', 'confirmed')
         .gte('transaction_date', thirtyDaysAgoIso),
       supabase
         .from('studio_inquiries')
@@ -89,21 +89,21 @@ export async function GET(_request: NextRequest) {
     }, {} as Record<string, number>)
     const firstOfMonthDate = new Date(firstOfMonth)
     const newUsersThisMonth = profiles.filter(
-      (p) => new Date(p.created_at) >= firstOfMonthDate
+      (p) => p.created_at !== null && new Date(p.created_at) >= firstOfMonthDate
     ).length
 
     const payments = paymentsRes.data ?? []
     const totalRevenue = payments
-      .filter((p) => p.status === 'paid')
+      .filter((p) => p.payment_status === 'confirmed')
       .reduce((sum, p) => sum + (p.amount || 0), 0)
 
     const lessonPacks = lessonPacksRes.data ?? []
     const totalLessonsPurchased = lessonPacks.reduce(
-      (sum, pack) => sum + pack.lessons_purchased,
+      (sum, pack) => sum + (pack.lesson_packs?.lesson_count || 0),
       0
     )
-    const totalLessonsUsed = lessonPacks.reduce(
-      (sum, pack) => sum + pack.lessons_used,
+    const totalLessonsUsed = totalLessonsPurchased - lessonPacks.reduce(
+      (sum, pack) => sum + pack.remaining_lessons,
       0
     )
 
@@ -119,12 +119,12 @@ export async function GET(_request: NextRequest) {
       revenueAmounts.set(key, 0)
     }
     for (const row of notesTrendRes.data ?? []) {
-      const key = row.created_at.slice(0, 10)
-      if (noteCounts.has(key)) noteCounts.set(key, (noteCounts.get(key) || 0) + 1)
+      const key = row.created_at?.slice(0, 10)
+      if (key && noteCounts.has(key)) noteCounts.set(key, (noteCounts.get(key) || 0) + 1)
     }
     for (const row of revenueTrendRes.data ?? []) {
-      const key = row.transaction_date.slice(0, 10)
-      if (revenueAmounts.has(key)) {
+      const key = row.transaction_date?.slice(0, 10)
+      if (key && revenueAmounts.has(key)) {
         revenueAmounts.set(key, (revenueAmounts.get(key) || 0) + (row.amount || 0))
       }
     }

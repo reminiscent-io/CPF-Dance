@@ -9,9 +9,9 @@ export interface Profile {
   avatar_url: string | null
   date_of_birth: string | null
   guardian_id: string | null
-  consent_given: boolean
-  created_at: string
-  updated_at: string
+  consent_given: boolean | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface AuthError {

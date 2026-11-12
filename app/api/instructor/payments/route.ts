@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireInstructor } from '@/lib/auth/server-auth'
 import { sumPrices } from '@/lib/utils/pricing'
+import { Constants, type TablesInsert } from '@/lib/supabase/database.types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,8 +47,9 @@ export async function GET(request: NextRequest) {
       .order('transaction_date', { ascending: false })
 
     // Filter by payment status if provided
-    if (status && status !== 'all') {
-      query = query.eq('payment_status', status)
+    const paymentStatus = Constants.public.Enums.payment_status.find(s => s === status)
+    if (paymentStatus) {
+      query = query.eq('payment_status', paymentStatus)
     }
 
     // Filter by class if provided
@@ -67,21 +69,15 @@ export async function GET(request: NextRequest) {
     const instructorPayments = profile.role === 'admin'
       ? (payments || [])
       : (payments?.filter(payment => {
-          const classData = payment.class as any
-          return classData && classData.instructor_id === profile.id
+          return payment.class?.instructor_id === profile.id
         }) || [])
 
     // Format the payments data
     const formattedPayments = instructorPayments.map(payment => {
-      const student = payment.student as any
-      const studentProfile = Array.isArray(student?.profile)
-        ? student.profile[0]
-        : student?.profile
-
-      const classData = payment.class as any
-
-      const studio = payment.studio as any
-      const studioData = Array.isArray(studio) ? studio[0] : studio
+      const student = payment.student
+      const studentProfile = student?.profile
+      const classData = payment.class
+      const studioData = payment.studio
 
       return {
         id: payment.id,
@@ -167,20 +163,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the student exists and belongs to this instructor (or admin)
+    // RLS only returns students this instructor may see
     if (profile.role !== 'admin') {
       const { data: student, error: studentError } = await supabase
         .from('students')
-        .select('id, instructor_id')
+        .select('id')
         .eq('id', student_id)
-        .single()
+        .maybeSingle()
 
       if (studentError || !student) {
         return NextResponse.json({ error: 'Student not found' }, { status: 404 })
-      }
-
-      if (student.instructor_id !== profile.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
     }
 
@@ -202,22 +194,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the payment record
-    const paymentData: any = {
+    const paymentData: TablesInsert<'payments'> = {
       student_id,
       amount: parsedAmount,
       payment_method,
       payment_status: 'confirmed', // Manual payments are immediately confirmed
       transaction_date: transaction_date || new Date().toISOString(),
       confirmed_by_instructor_at: new Date().toISOString(),
-      notes
-    }
-
-    if (class_id) {
-      paymentData.class_id = class_id
-    }
-
-    if (studio_id) {
-      paymentData.studio_id = studio_id
+      notes,
+      ...(class_id ? { class_id } : {}),
+      ...(studio_id ? { studio_id } : {})
     }
 
     const { data: payment, error: paymentError } = await supabase

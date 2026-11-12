@@ -4,6 +4,7 @@ import { BrandTokensSchema, TemplateDefinitionSchema } from '../schema'
 import { buildPrecisionWorkshopDefinition, PRECISION_WORKSHOP_SLUG } from '../templates/precision-workshop'
 import { DEFINITION_FORMAT, type BrandTokens, type TemplateDefinition } from '../types'
 import { PromoError, type PromoContext } from './context'
+import { toJson } from './json'
 
 /**
  * Templates and the brand kit. Built-in templates and the studio kit come from
@@ -53,7 +54,7 @@ async function seedBuiltIns(): Promise<void> {
       .insert({
         template_id: row.id,
         version: 1,
-        definition,
+        definition: toJson(definition),
         definition_format: DEFINITION_FORMAT,
         notes: 'Built-in template',
         published_at: new Date().toISOString(),
@@ -77,7 +78,7 @@ async function seedBuiltIns(): Promise<void> {
   if (!kit) {
     const { error: insertError } = await admin
       .from('promo_brand_kits')
-      .insert({ owner_id: null, name: 'Studio brand', tokens: DEFAULT_BRAND_TOKENS })
+      .insert({ owner_id: null, name: 'Studio brand', tokens: toJson(DEFAULT_BRAND_TOKENS) })
     if (insertError && insertError.code !== '23505') throw insertError
   }
 }

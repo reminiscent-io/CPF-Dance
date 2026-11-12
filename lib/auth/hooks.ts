@@ -27,7 +27,8 @@ export function useUser() {
             .single()
 
           if (!error) {
-            setProfile(profileData)
+            // The enum still carries studio and studio_admin; no profile uses them.
+            setProfile(profileData as Profile)
           }
           setLoading(false)
         }
@@ -48,7 +49,7 @@ export function useUser() {
           .eq('id', session.user.id)
           .single()
           .then(({ data: profileData }) => {
-            setProfile(profileData)
+            setProfile(profileData as Profile | null)
           })
       } else {
         setProfile(null)

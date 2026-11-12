@@ -186,8 +186,6 @@ function InstructorPaymentsContent() {
   const [earningsDateRange, setEarningsDateRange] = useState<EarningsDateRange>('all')
   const [showEarningsBreakdown, setShowEarningsBreakdown] = useState(false)
   const [showUnpaidClasses, setShowUnpaidClasses] = useState(false)
-  const [remindingClassId, setRemindingClassId] = useState<string | null>(null)
-  const [remindMessage, setRemindMessage] = useState('')
   const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false)
   const [recordingPayment, setRecordingPayment] = useState(false)
   const [recordPaymentData, setRecordPaymentData] = useState({
@@ -425,26 +423,6 @@ function InstructorPaymentsContent() {
     })
   }
 
-  const handleRemindClick = async (classId: string, className: string) => {
-    setRemindingClassId(classId)
-    try {
-      const response = await fetch('/api/instructor/send-payment-reminder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: classId })
-      })
-
-      if (response.ok) {
-        setRemindMessage(`Reminder sent for "${className}"`)
-        setTimeout(() => setRemindMessage(''), 3000)
-      }
-    } catch (error) {
-      console.error('Error sending reminder:', error)
-    } finally {
-      setRemindingClassId(null)
-    }
-  }
-
   const unpaidClasses = classEarnings
     .filter(cls => cls.collected_amount < cls.calculated_value)
     .map(cls => ({
@@ -677,12 +655,6 @@ function InstructorPaymentsContent() {
           </div>
         ) : earningsSummary && (
           <>
-            {remindMessage && (
-              <div className="mt-5 rounded-lg border border-gold-200 bg-gold-100 px-4 py-3 text-sm text-gold-800">
-                {remindMessage}
-              </div>
-            )}
-
             {/* Inline summary row */}
             <div className="mt-5 flex flex-wrap gap-y-4">
               <div className="pr-5">
@@ -713,7 +685,7 @@ function InstructorPaymentsContent() {
               </div>
             </div>
 
-            {/* Outstanding classes with reminders */}
+            {/* Outstanding classes */}
             {unpaidClasses.length > 0 && (
               <div className="mt-5">
                 <button
@@ -743,20 +715,9 @@ function InstructorPaymentsContent() {
                             })}
                           </div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-3">
-                          <span className="text-sm font-medium tabular-nums text-rose-700">
-                            {formatCurrency(cls.outstanding)}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemindClick(cls.id, cls.title)}
-                            disabled={remindingClassId !== null}
-                            loading={remindingClassId === cls.id}
-                          >
-                            {remindingClassId === cls.id ? 'Sending...' : 'Remind'}
-                          </Button>
-                        </div>
+                        <span className="shrink-0 text-sm font-medium tabular-nums text-rose-700">
+                          {formatCurrency(cls.outstanding)}
+                        </span>
                       </div>
                     ))}
                   </div>
