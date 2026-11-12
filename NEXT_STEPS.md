@@ -83,6 +83,18 @@ Without generated types, postgrest types a joined relation such as `class:classe
 
 `EditClassModal` (lines 891-2057) and `CreateClassModal` (2064-2825) make up most of it and repeat the same studio, pricing, asset and instructor fields. Move them to `components/instructor/` with one shared class form, and take `ClassAgendaRow` and `WorkshopPricingFields` along.
 
+### 3.4 Stop Replit from breaking `npm ci`
+
+- [ ] Guard the lockfile in CI
+
+Installing packages on Replit writes `resolved` URLs on Replit's internal mirror (`http://package-firewall.replit.internal/npm/...`) into `package-lock.json`, and GitHub's runners can't reach that host. A `zod` entry like that kept `main` red from the Nov 3 push until this branch. It had been fixed by hand once before (`de5f9bb`, Oct 23), and `139f9aa` brought it back a day later. Add this before `npm ci` in each job of `.github/workflows/lint.yml`:
+
+```yaml
+- run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
+```
+
+The `integrity` hashes still pin the exact tarballs, so the rewrite can't change what gets installed.
+
 ## 4. Database tidy (production)
 
 These three fit in one migration.
