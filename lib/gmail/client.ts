@@ -45,7 +45,7 @@ export async function sendEmail(message: EmailMessage): Promise<{ threadId: stri
     headers: { 'Content-Type': 'application/json' },
   });
 
-  const data = await response.json() as any;
+  const data = await response.json();
 
   if (!response.ok) {
     throw new Error(`Gmail API error: ${data?.error?.message || response.status}`);
@@ -77,7 +77,7 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
     { method: 'GET' }
   );
 
-  const thread = await response.json() as any;
+  const thread = await response.json();
 
   if (!response.ok) {
     throw new Error(`Gmail API error: ${thread?.error?.message || response.status}`);
@@ -134,7 +134,7 @@ export async function searchEmails(
     { method: 'GET' }
   );
 
-  const listData = await listResponse.json() as any;
+  const listData = await listResponse.json();
 
   if (!listResponse.ok) {
     throw new Error(`Gmail API error: ${listData?.error?.message || listResponse.status}`);
@@ -151,7 +151,7 @@ export async function searchEmails(
       { method: 'GET' }
     );
 
-    const msgData = await msgResponse.json() as any;
+    const msgData = await msgResponse.json();
     if (!msgResponse.ok) continue;
 
     const msgHeaders: Array<{ name: string; value: string }> = msgData.payload?.headers || [];

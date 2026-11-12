@@ -51,10 +51,6 @@ export function costMicros(model: string, usage: Usage): number {
   return Math.round(dollars * 1_000_000)
 }
 
-export function microsToDollars(micros: number): number {
-  return micros / 1_000_000
-}
-
 export function formatMicros(micros: number): string {
   const dollars = micros / 1_000_000
   if (dollars === 0) return '$0.00'

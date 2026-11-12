@@ -86,31 +86,3 @@ export function Avatar({
     </div>
   )
 }
-
-export function AvatarImage({ src, alt }: { src: string; alt?: string }) {
-  return (
-    <span className="relative block w-full h-full">
-      <Image
-        src={src}
-        alt={alt || 'Avatar'}
-        fill
-        sizes="48px"
-        className="rounded-full object-cover"
-      />
-    </span>
-  )
-}
-
-export function AvatarFallback({
-  children,
-  className = ''
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <span className={`font-medium text-charcoal-700 ${className}`}>
-      {children}
-    </span>
-  )
-}

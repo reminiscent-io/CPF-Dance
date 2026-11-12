@@ -46,8 +46,6 @@ export async function GET(request: NextRequest) {
       studentMap.set(student.profile_id, student)
     })
 
-    console.log('[Admin Users] Fetched profiles count:', profiles?.length || 0)
-
     const usersWithLessonData = profiles?.map(profile => {
       const student = studentMap.get(profile.id)
       const lessonPacks = student?.lesson_pack_purchases || []

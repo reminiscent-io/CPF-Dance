@@ -7,8 +7,8 @@ export type { InputProps, TextareaProps } from './Input'
 export { Select } from './Select'
 export type { SelectProps, SelectOption } from './Select'
 
-export { Card, CardHeader, CardTitle, CardContent } from './Card'
-export type { CardProps, CardHeaderProps, CardTitleProps, CardContentProps } from './Card'
+export { Card, CardTitle, CardContent } from './Card'
+export type { CardProps, CardTitleProps, CardContentProps } from './Card'
 
 export { Badge } from './Badge'
 export type { BadgeProps } from './Badge'
@@ -22,8 +22,8 @@ export type { SheetProps, SheetBodyProps, SheetFooterProps } from './Sheet'
 export { ConfirmDialog } from './ConfirmDialog'
 export type { ConfirmDialogProps } from './ConfirmDialog'
 
-export { Spinner, InlineSpinner, LoadingOverlay } from './Spinner'
-export type { SpinnerProps, LoadingOverlayProps } from './Spinner'
+export { Spinner, InlineSpinner } from './Spinner'
+export type { SpinnerProps } from './Spinner'
 
 export { Table, EmptyCell } from './Table'
 export type { TableProps, Column } from './Table'
@@ -68,5 +68,5 @@ export type { PlaceDetails } from './GooglePlacesInput'
 export { ToastProvider, useToast } from './Toast'
 export type { ToastType, Toast } from './Toast'
 
-export { Avatar, AvatarImage, AvatarFallback } from './Avatar'
+export { Avatar } from './Avatar'
 export type { AvatarProps } from './Avatar'

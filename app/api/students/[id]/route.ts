@@ -78,8 +78,6 @@ export async function GET(
       class_name: note.class_id ? classMap.get(note.class_id) : undefined
     })) || []
 
-    console.log('Successfully fetched', notes.length, 'notes for student', id)
-
     const { data: payments } = await supabase
       .from('payments')
       .select(`

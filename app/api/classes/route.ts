@@ -238,8 +238,6 @@ export async function POST(request: NextRequest) {
       asset_id: asset_id || null
     }
 
-    console.log('Attempting to insert class:', insertData)
-
     const { data: classData, error } = await supabase
       .from('classes')
       .insert(insertData)

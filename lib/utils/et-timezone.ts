@@ -71,10 +71,6 @@ export function convertUTCToET(utcDateString: string): string {
   return `${etObj.year}-${etObj.month}-${etObj.day}T${etObj.hour}:${etObj.minute}`
 }
 
-export function displayETLabel(): string {
-  return 'Eastern Time (ET)'
-}
-
 // ============================================
 // Display Formatting Functions (ET-aware)
 // ============================================
@@ -104,13 +100,6 @@ export function formatTimeET(dateString: string | Date): string {
 }
 
 /**
- * Format time with ET label (e.g., "2:30 PM ET")
- */
-export function formatTimeWithLabelET(dateString: string | Date): string {
-  return `${formatTimeET(dateString)} ET`
-}
-
-/**
  * Format date in ET (e.g., "January 15, 2024")
  */
 export function formatDateET(
@@ -129,46 +118,6 @@ export function formatDateET(
 }
 
 /**
- * Format short date in ET (e.g., "Jan 15")
- */
-export function formatShortDateET(dateString: string | Date): string {
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString
-  return date.toLocaleDateString('en-US', {
-    timeZone: ET_TIMEZONE,
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-/**
- * Format full datetime in ET (e.g., "Monday, January 15, 2024, 2:30 PM ET")
- */
-export function formatDateTimeET(
-  dateString: string | Date,
-  options?: { includeWeekday?: boolean; includeYear?: boolean; includeETLabel?: boolean }
-): string {
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString
-  const formatOptions: Intl.DateTimeFormatOptions = {
-    timeZone: ET_TIMEZONE,
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }
-
-  if (options?.includeWeekday !== false) {
-    formatOptions.weekday = 'long'
-  }
-  if (options?.includeYear !== false) {
-    formatOptions.year = 'numeric'
-  }
-
-  const formatted = date.toLocaleString('en-US', formatOptions)
-  return options?.includeETLabel !== false ? `${formatted} ET` : formatted
-}
-
-/**
  * Get hour in ET for calendar grid positioning (0-23)
  */
 export function getHourInET(dateString: string | Date): number {
@@ -181,20 +130,6 @@ export function getHourInET(dateString: string | Date): number {
   const parts = formatter.formatToParts(date)
   const hourPart = parts.find(p => p.type === 'hour')
   return hourPart ? parseInt(hourPart.value, 10) : 0
-}
-
-/**
- * Get minutes in ET for calendar positioning (0-59)
- */
-export function getMinutesInET(dateString: string | Date): number {
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: ET_TIMEZONE,
-    minute: '2-digit'
-  })
-  const parts = formatter.formatToParts(date)
-  const minutePart = parts.find(p => p.type === 'minute')
-  return minutePart ? parseInt(minutePart.value, 10) : 0
 }
 
 /**
@@ -234,20 +169,6 @@ export function isSameDateET(date1: Date, date2: Date): boolean {
  */
 export function isTodayET(date: Date): boolean {
   return isSameDateET(date, new Date())
-}
-
-/**
- * Get the current ET offset label ("EST" or "EDT")
- */
-export function getETOffsetLabel(): 'EST' | 'EDT' {
-  const now = new Date()
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: ET_TIMEZONE,
-    timeZoneName: 'short'
-  })
-  const parts = formatter.formatToParts(now)
-  const tzPart = parts.find(p => p.type === 'timeZoneName')
-  return tzPart?.value === 'EDT' ? 'EDT' : 'EST'
 }
 
 /**

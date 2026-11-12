@@ -140,5 +140,3 @@ export function DemographicsPieChart({
     </ResponsiveContainer>
   )
 }
-
-export const PIE_COLORS = PIE_PALETTE

@@ -42,19 +42,6 @@ export function Card({
   )
 }
 
-export interface CardHeaderProps {
-  children: React.ReactNode
-  className?: string
-}
-
-export function CardHeader({ children, className = '' }: CardHeaderProps) {
-  return (
-    <div className={`border-b border-champagne-200 pb-4 mb-4 ${className}`}>
-      {children}
-    </div>
-  )
-}
-
 export interface CardTitleProps {
   children: React.ReactNode
   className?: string

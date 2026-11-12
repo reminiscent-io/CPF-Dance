@@ -5,7 +5,7 @@
  * Works in both browser and server environments.
  */
 
-import DOMPurify from 'dompurify'
+import DOMPurify, { type Config } from 'dompurify'
 
 /**
  * Allowed HTML tags for rich text content (notes, waivers, etc.)
@@ -28,7 +28,7 @@ const DEFAULT_ALLOWED_ATTR = [
 /**
  * Sanitization configuration for rich text content
  */
-const DEFAULT_CONFIG: DOMPurify.Config = {
+const DEFAULT_CONFIG: Config = {
   ALLOWED_TAGS: DEFAULT_ALLOWED_TAGS,
   ALLOWED_ATTR: DEFAULT_ALLOWED_ATTR,
   ALLOW_DATA_ATTR: false,
@@ -57,7 +57,7 @@ const DEFAULT_CONFIG: DOMPurify.Config = {
  */
 export function sanitizeHtml(
   dirty: string | null | undefined,
-  config?: DOMPurify.Config
+  config?: Config
 ): string {
   // Handle null/undefined
   if (!dirty) return ''
@@ -70,12 +70,12 @@ export function sanitizeHtml(
     // Use jsdom for server-side sanitization
     const { JSDOM } = require('jsdom')
     const domWindow = new JSDOM('').window
-    const DOMPurifyServer = DOMPurify(domWindow as any)
-    return DOMPurifyServer.sanitize(dirty, finalConfig as any) as unknown as string
+    const DOMPurifyServer = DOMPurify(domWindow)
+    return DOMPurifyServer.sanitize(dirty, finalConfig)
   }
 
   // Client-side sanitization
-  return DOMPurify.sanitize(dirty, finalConfig as any) as unknown as string
+  return DOMPurify.sanitize(dirty, finalConfig)
 }
 
 /**
@@ -112,7 +112,7 @@ export function sanitizePlainText(dirty: string | null | undefined): string {
  */
 export function createSanitizedHtml(
   dirty: string | null | undefined,
-  config?: DOMPurify.Config
+  config?: Config
 ): { __html: string } {
   return {
     __html: sanitizeHtml(dirty, config)
