@@ -19,6 +19,7 @@ import { DancerAddNoteModal } from '@/components/DancerAddNoteModal'
 import { NoteDetailModal, type DetailNote } from '@/components/NoteDetailModal'
 import { PrivateLessonActions } from '@/components/dancer/PrivateLessonActions'
 import { useAsyncData } from '@/lib/hooks/useAsyncData'
+import { useNow } from '@/lib/hooks/use-now'
 import { downloadICS, generateGoogleCalendarLink, generateOutlookLink } from '@/lib/utils/calendar-export'
 import { createSanitizedHtml } from '@/lib/utils/sanitize'
 
@@ -110,6 +111,7 @@ export default function DancerSchedulePage() {
   const [selectedNote, setSelectedNote] = useState<DetailNote | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [calendarMode, setCalendarMode] = useState<ViewMode>('week')
+  const now = useNow()
 
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'dancer' && profile.role !== 'admin' && profile.role !== 'guardian') {
@@ -622,6 +624,18 @@ export default function DancerSchedulePage() {
                   ))}
                 </ul>
               </div>
+            )}
+
+            {/* Feedback opens once the class starts; a workshop's covers every day */}
+            {!selectedEvent.isPersonal && !selectedEvent.is_cancelled &&
+              new Date(selectedEvent.start_time).getTime() <= now.getTime() && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push(`/dancer/feedback/${encodeURIComponent(selectedEvent.id.replace(/^enrolled-/, ''))}`)}
+              >
+                Leave feedback
+              </Button>
             )}
 
             {selectedEvent.class_type === 'private' && !selectedEvent.isPersonal && !selectedEvent.is_cancelled && (

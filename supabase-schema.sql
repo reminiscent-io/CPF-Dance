@@ -1,8 +1,9 @@
 -- CPF Dance database schema
 --
 -- The production schema after migration 53, generated on 2026-11-12 from the
--- live database's catalog. To build a new database, run this file once in the
--- SQL editor of a fresh Supabase project, then any migration numbered above 53.
+-- live database's catalog, plus migration 54 (class feedback) written in by
+-- hand. To build a new database, run this file once in the SQL editor of a
+-- fresh Supabase project, then any migration numbered above 54.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -39,6 +40,21 @@ CREATE TABLE public.assets (
     instructor_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.class_feedback (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    class_id uuid NOT NULL,
+    student_id uuid,
+    name text,
+    rating smallint,
+    do_again text,
+    more_of text,
+    less_of text,
+    outcomes text,
+    comments text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 CREATE TABLE public.class_purchases (
@@ -89,7 +105,8 @@ CREATE TABLE public.classes (
     workshop_price numeric(10,2),
     workshop_signup_url text,
     workshop_full_only boolean DEFAULT false NOT NULL,
-    share_slug text
+    share_slug text,
+    feedback_token text
 );
 
 CREATE TABLE public.enrollments (
@@ -514,6 +531,9 @@ CREATE TABLE public.waivers (
 -- Keys and checks
 
 ALTER TABLE ONLY public.assets ADD CONSTRAINT assets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.class_feedback ADD CONSTRAINT class_feedback_class_id_student_id_key UNIQUE (class_id, student_id);
+ALTER TABLE ONLY public.class_feedback ADD CONSTRAINT class_feedback_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.class_feedback ADD CONSTRAINT class_feedback_rating_check CHECK (((rating >= 1) AND (rating <= 5)));
 ALTER TABLE ONLY public.class_purchases ADD CONSTRAINT class_purchases_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.class_purchases ADD CONSTRAINT class_purchases_stripe_checkout_session_id_key UNIQUE (stripe_checkout_session_id);
 ALTER TABLE ONLY public.class_purchases ADD CONSTRAINT class_purchases_workshop_option_check CHECK ((workshop_option = ANY (ARRAY['full'::text, 'day'::text])));
@@ -577,6 +597,8 @@ ALTER TABLE ONLY public.waivers ADD CONSTRAINT waivers_recipient_check CHECK (((
 -- Foreign keys
 
 ALTER TABLE ONLY public.assets ADD CONSTRAINT assets_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES profiles(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.class_feedback ADD CONSTRAINT class_feedback_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.class_feedback ADD CONSTRAINT class_feedback_student_id_fkey FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.class_purchases ADD CONSTRAINT class_purchases_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.class_purchases ADD CONSTRAINT class_purchases_student_id_fkey FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.classes ADD CONSTRAINT classes_asset_id_fkey FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE SET NULL;
@@ -657,8 +679,10 @@ ALTER TABLE ONLY public.waivers ADD CONSTRAINT waivers_template_id_fkey FOREIGN 
 
 CREATE INDEX idx_assets_created_at ON public.assets USING btree (created_at DESC);
 CREATE INDEX idx_assets_instructor_id ON public.assets USING btree (instructor_id);
+CREATE INDEX class_feedback_class_id_idx ON public.class_feedback USING btree (class_id);
 CREATE INDEX class_purchases_class_id_idx ON public.class_purchases USING btree (class_id);
 CREATE INDEX class_purchases_unlinked_idx ON public.class_purchases USING btree (class_id) WHERE (student_id IS NULL);
+CREATE UNIQUE INDEX classes_feedback_token_key ON public.classes USING btree (feedback_token) WHERE (feedback_token IS NOT NULL);
 CREATE UNIQUE INDEX classes_share_slug_key ON public.classes USING btree (share_slug) WHERE (share_slug IS NOT NULL);
 CREATE INDEX idx_classes_asset_id ON public.classes USING btree (asset_id);
 CREATE INDEX idx_classes_instructor ON public.classes USING btree (instructor_id);
@@ -1060,6 +1084,7 @@ CREATE VIEW public.public_profiles WITH (security_invoker=false, security_barrie
 -- Triggers
 
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON class_feedback FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_assets_updated_at BEFORE UPDATE ON assets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER auto_create_instructor_relationship AFTER INSERT ON enrollments FOR EACH ROW EXECUTE FUNCTION create_instructor_relationship_on_enrollment();
@@ -1089,6 +1114,7 @@ CREATE TRIGGER trigger_update_waiver_templates_updated_at BEFORE UPDATE ON waive
 -- Row level security (enabled on every table)
 
 ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.class_feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_purchases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
@@ -1137,6 +1163,12 @@ CREATE POLICY "Instructors can update their own assets" ON public.assets FOR UPD
   USING (((( SELECT auth.uid() AS uid) = instructor_id) OR (( SELECT auth.uid() AS uid) IN ( SELECT profiles.id
    FROM profiles
   WHERE (profiles.role = 'admin'::user_role)))));
+CREATE POLICY class_feedback_dancer_select ON public.class_feedback FOR SELECT TO public
+  USING ((student_id IN ( SELECT s.id
+   FROM students s
+  WHERE ((s.profile_id = ( SELECT auth.uid() AS uid)) OR (s.guardian_id = ( SELECT auth.uid() AS uid))))));
+CREATE POLICY class_feedback_instructor_select ON public.class_feedback FOR SELECT TO public
+  USING (promo_is_instructor());
 CREATE POLICY class_purchases_select_policy ON public.class_purchases FOR SELECT TO public
   USING (promo_is_instructor());
 CREATE POLICY class_purchases_update_policy ON public.class_purchases FOR UPDATE TO public
@@ -1664,6 +1696,7 @@ CREATE POLICY promo_private_update ON storage.objects FOR UPDATE TO authenticate
 
 -- Comments
 
+COMMENT ON TABLE public.class_feedback IS 'Dancer feedback on a class; workshops are keyed by their first day. student_id NULL = sent from the no-login link';
 COMMENT ON TABLE public.class_purchases IS 'Paid Stripe checkouts on class sign-up links; student_id NULL = paid, not yet linked to a dancer';
 COMMENT ON COLUMN public.classes.pricing_model IS 'Pricing model: per_person, per_class (flat rate), per_hour, or tiered';
 COMMENT ON COLUMN public.classes.base_cost IS 'Base/flat cost for per_class model or base cost for tiered model';
@@ -1680,6 +1713,7 @@ COMMENT ON COLUMN public.classes.workshop_price IS 'Per-person price for the who
 COMMENT ON COLUMN public.classes.workshop_signup_url IS 'External payment/sign-up link for the whole workshop';
 COMMENT ON COLUMN public.classes.workshop_full_only IS 'True when the workshop is sold as a full run only (no single-day drop-ins)';
 COMMENT ON COLUMN public.classes.share_slug IS 'Readable slug for the public /classes/<slug> link; set once, never changed';
+COMMENT ON COLUMN public.classes.feedback_token IS 'Random key for the no-login /feedback/<token> link; set once, never changed';
 COMMENT ON COLUMN public.enrollments.workshop_pass IS 'True when the dancer enrolled in the whole workshop rather than a single day';
 COMMENT ON TABLE public.instructor_access_requests IS 'Stores instructor signup requests pending manual approval';
 COMMENT ON COLUMN public.lesson_pack_usage.class_id IS 'The class this credit was spent on; NULL if the class was deleted.';

@@ -62,6 +62,66 @@ export type Database = {
           },
         ]
       }
+      class_feedback: {
+        Row: {
+          class_id: string
+          comments: string | null
+          created_at: string
+          do_again: string | null
+          id: string
+          less_of: string | null
+          more_of: string | null
+          name: string | null
+          outcomes: string | null
+          rating: number | null
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          comments?: string | null
+          created_at?: string
+          do_again?: string | null
+          id?: string
+          less_of?: string | null
+          more_of?: string | null
+          name?: string | null
+          outcomes?: string | null
+          rating?: number | null
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          comments?: string | null
+          created_at?: string
+          do_again?: string | null
+          id?: string
+          less_of?: string | null
+          more_of?: string | null
+          name?: string | null
+          outcomes?: string | null
+          rating?: number | null
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_feedback_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_feedback_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_purchases: {
         Row: {
           amount_paid: number
@@ -135,6 +195,7 @@ export type Database = {
           description: string | null
           end_time: string
           external_signup_url: string | null
+          feedback_token: string | null
           google_calendar_event_id: string | null
           google_meet_url: string | null
           id: string
@@ -170,6 +231,7 @@ export type Database = {
           description?: string | null
           end_time: string
           external_signup_url?: string | null
+          feedback_token?: string | null
           google_calendar_event_id?: string | null
           google_meet_url?: string | null
           id?: string
@@ -205,6 +267,7 @@ export type Database = {
           description?: string | null
           end_time?: string
           external_signup_url?: string | null
+          feedback_token?: string | null
           google_calendar_event_id?: string | null
           google_meet_url?: string | null
           id?: string
