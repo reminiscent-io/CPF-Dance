@@ -74,6 +74,7 @@ export type Database = {
           name: string | null
           outcomes: string | null
           rating: number | null
+          show_name: boolean
           student_id: string | null
           updated_at: string
         }
@@ -88,6 +89,7 @@ export type Database = {
           name?: string | null
           outcomes?: string | null
           rating?: number | null
+          show_name?: boolean
           student_id?: string | null
           updated_at?: string
         }
@@ -102,6 +104,7 @@ export type Database = {
           name?: string | null
           outcomes?: string | null
           rating?: number | null
+          show_name?: boolean
           student_id?: string | null
           updated_at?: string
         }

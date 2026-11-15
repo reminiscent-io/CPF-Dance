@@ -8,11 +8,14 @@ import {
   MAX_FEEDBACK_NAME,
   MAX_FEEDBACK_TEXT,
   feedbackPrompts,
+  nameConsentCopy,
   type FeedbackHeading,
   type FeedbackTextField,
 } from '@/lib/class-feedback'
 
-export type FeedbackDraft = { rating: number | null } & Partial<Record<FeedbackTextField, string | null>>
+export type FeedbackDraft = { rating: number | null; show_name?: boolean } & Partial<
+  Record<FeedbackTextField, string | null>
+>
 
 export interface FeedbackFormProps {
   heading: FeedbackHeading
@@ -40,6 +43,8 @@ export function FeedbackForm({ heading, submitUrl, askName, initial }: FeedbackF
     return filled
   })
   const [rating, setRating] = useState<number | null>(initial?.rating ?? null)
+  // Opt-out: ticked for a new response; an edit keeps what she chose before
+  const [showName, setShowName] = useState(initial ? initial.show_name === true : true)
   // Bots fill every field; people never see this one
   const [website, setWebsite] = useState('')
   const [sending, setSending] = useState(false)
@@ -47,6 +52,7 @@ export function FeedbackForm({ heading, submitUrl, askName, initial }: FeedbackF
   const [sent, setSent] = useState(false)
 
   const prompts = feedbackPrompts(heading.classType, heading.instructorName)
+  const consent = nameConsentCopy(heading.instructorName, showName)
   const firstName = heading.instructorName?.trim().split(/\s+/)[0] || null
   const isEdit = !!initial
   const hasSomething = rating !== null || FEEDBACK_TEXT_FIELDS.some(field => answers[field].trim())
@@ -63,7 +69,7 @@ export function FeedbackForm({ heading, submitUrl, askName, initial }: FeedbackF
       const response = await fetch(submitUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, rating, website, ...answers }),
+        body: JSON.stringify({ name, rating, show_name: showName, website, ...answers }),
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Could not send your feedback. Please try again.')
@@ -136,6 +142,22 @@ export function FeedbackForm({ heading, submitUrl, askName, initial }: FeedbackF
         ))}
 
         <StarRating value={rating} onChange={setRating} />
+
+        <label className="-mx-2 flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-champagne-100">
+          <input
+            type="checkbox"
+            name="show_name"
+            checked={showName}
+            onChange={e => setShowName(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-rose-600"
+          />
+          <span>
+            <span className="block text-sm font-medium text-charcoal-900">{consent.label}</span>
+            <span className="mt-1 block text-sm text-charcoal-500">
+              {consent.explain} {consent.state}
+            </span>
+          </span>
+        </label>
 
         {/* Off-screen, not display:none, so naive bots still fill it in */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">

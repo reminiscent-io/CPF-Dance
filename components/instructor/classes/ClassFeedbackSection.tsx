@@ -10,6 +10,7 @@ type FeedbackRow = {
   id: string
   name: string | null
   rating: number | null
+  show_name: boolean
   created_at: string
   student_id: string | null
 } & Record<FeedbackTextField, string | null>
@@ -120,6 +121,12 @@ export function ClassFeedbackSection({ classId, title }: ClassFeedbackSectionPro
                   <summary className="flex cursor-pointer list-none items-baseline justify-between gap-2 [&::-webkit-details-marker]:hidden">
                     <span className="truncate text-sm font-medium text-charcoal-950">
                       {row.name || 'Anonymous'}
+                      {/* Whether her name may go on the website with this */}
+                      {row.name && (
+                        <span className="ml-2 text-xs font-normal text-charcoal-500">
+                          {row.show_name ? 'name OK to use' : 'keep anonymous'}
+                        </span>
+                      )}
                     </span>
                     <span className="flex shrink-0 items-center gap-2 text-xs text-charcoal-500">
                       {row.rating !== null && <Stars rating={row.rating} />}

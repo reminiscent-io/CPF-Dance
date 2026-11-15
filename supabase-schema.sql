@@ -1,9 +1,9 @@
 -- CPF Dance database schema
 --
 -- The production schema after migration 53, generated on 2026-11-12 from the
--- live database's catalog, plus migration 54 (class feedback) written in by
--- hand. To build a new database, run this file once in the SQL editor of a
--- fresh Supabase project, then any migration numbered above 54.
+-- live database's catalog, plus migrations 54-55 (class feedback) written in
+-- by hand. To build a new database, run this file once in the SQL editor of a
+-- fresh Supabase project, then any migration numbered above 55.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -54,7 +54,8 @@ CREATE TABLE public.class_feedback (
     outcomes text,
     comments text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    show_name boolean DEFAULT false NOT NULL
 );
 
 CREATE TABLE public.class_purchases (
@@ -1697,6 +1698,7 @@ CREATE POLICY promo_private_update ON storage.objects FOR UPDATE TO authenticate
 -- Comments
 
 COMMENT ON TABLE public.class_feedback IS 'Dancer feedback on a class; workshops are keyed by their first day. student_id NULL = sent from the no-login link';
+COMMENT ON COLUMN public.class_feedback.show_name IS 'Dancer agreed her name may be used with this feedback (e.g. website testimonials); false = anonymous';
 COMMENT ON TABLE public.class_purchases IS 'Paid Stripe checkouts on class sign-up links; student_id NULL = paid, not yet linked to a dancer';
 COMMENT ON COLUMN public.classes.pricing_model IS 'Pricing model: per_person, per_class (flat rate), per_hour, or tiered';
 COMMENT ON COLUMN public.classes.base_cost IS 'Base/flat cost for per_class model or base cost for tiered model';
