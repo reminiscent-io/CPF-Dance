@@ -15,13 +15,18 @@ export type EnrollResult =
  * `db` reads the class and writes the enrollment: the dancer's own client in
  * the enroll route (RLS applies), the service role in the Stripe webhook.
  * `admin` is always the service role, for head counts across dancers.
+ *
+ * `allowPast`: the instructor linking a sale she was paid for. The class may
+ * have started by the time she gets to it, so past days still count and a
+ * full run enrolls in every day, not only the ones left.
  */
 export async function enrollStudent(
   db: SupabaseClient,
   admin: SupabaseClient,
   studentId: string,
   classId: string,
-  option?: WorkshopOption
+  option?: WorkshopOption,
+  { allowPast = false }: { allowPast?: boolean } = {}
 ): Promise<EnrollResult> {
   const fail = (status: number, error: string) => ({ ok: false as const, status, error })
 
@@ -35,7 +40,7 @@ export async function enrollStudent(
   if (classError || !classData) return fail(404, 'Class not found')
   if (!classData.is_public) return fail(403, 'This class is not available for public enrollment')
   if (classData.is_cancelled) return fail(400, 'This class has been cancelled')
-  if (new Date(classData.start_time) < new Date()) return fail(400, 'Cannot enroll in a past class')
+  if (!allowPast && new Date(classData.start_time) < new Date()) return fail(400, 'Cannot enroll in a past class')
 
   const options = workshopOptions(classData)
   const chosen: WorkshopOption = option ?? (options.full ? 'full' : 'day')
@@ -49,13 +54,14 @@ export async function enrollStudent(
   // A full-workshop sign-up enrolls in every upcoming day.
   let days = [classData]
   if (workshopPass) {
-    const { data: seriesDays, error: seriesError } = await db
+    let seriesQuery = db
       .from('classes')
       .select(CLASS_FIELDS)
       .eq('series_id', classData.series_id!)
       .eq('is_public', true)
       .eq('is_cancelled', false)
-      .gte('start_time', new Date().toISOString())
+    if (!allowPast) seriesQuery = seriesQuery.gte('start_time', new Date().toISOString())
+    const { data: seriesDays, error: seriesError } = await seriesQuery
       .order('start_time', { ascending: true })
 
     if (seriesError) {

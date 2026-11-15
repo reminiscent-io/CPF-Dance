@@ -122,7 +122,8 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
     [classData.id],
     { enabled: classData.is_public }
   )
-  const linkPurchase = async (purchase: UnlinkedPurchase, studentId: string) => {
+  // Resolves true once the sale is linked, so a failed pick can be cleared
+  const linkPurchase = async (purchase: UnlinkedPurchase, studentId: string): Promise<boolean> => {
     try {
       const response = await fetch(`/api/classes/${classData.id}/purchases/${purchase.id}`, {
         method: 'PATCH',
@@ -135,8 +136,10 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
       }
       refetchPurchases()
       addToast(`${purchase.buyer_name || 'Buyer'} enrolled`, 'success')
+      return true
     } catch (error) {
       addToast(error instanceof Error ? error.message : 'Failed to link sale', 'error')
+      return false
     }
   }
   const seriesNoun = (n: number) =>
@@ -632,8 +635,14 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                     <select
                       className="w-full px-3 py-2 text-sm border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                       defaultValue=""
-                      onChange={(e) => {
-                        if (e.target.value) linkPurchase(purchase, e.target.value)
+                      onChange={async (e) => {
+                        const select = e.currentTarget
+                        if (!select.value) return
+                        select.disabled = true
+                        const linked = await linkPurchase(purchase, select.value)
+                        // On failure, don't leave a name showing that was never saved
+                        if (!linked) select.value = ''
+                        select.disabled = false
                       }}
                     >
                       <option value="">Link to a student…</option>
