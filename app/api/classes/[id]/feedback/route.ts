@@ -31,7 +31,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from('class_feedback')
-      .select('id, name, rating, do_again, more_of, less_of, outcomes, comments, created_at, updated_at, student_id, student:students(full_name)')
+      .select('id, name, rating, show_name, do_again, more_of, less_of, outcomes, comments, created_at, updated_at, student_id, student:students(full_name)')
       .in('class_id', subject.classIds)
       .order('created_at', { ascending: false })
     if (error) {

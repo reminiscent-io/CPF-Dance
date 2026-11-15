@@ -6,6 +6,7 @@ import {
   generateFeedbackToken,
   isFeedbackToken,
   MAX_FEEDBACK_TEXT,
+  nameConsentCopy,
   parseFeedback,
 } from '../class-feedback'
 
@@ -14,8 +15,24 @@ describe('parseFeedback', () => {
     const result = parseFeedback({ rating: 5 })
     expect(result).toEqual({
       ok: true,
-      values: { name: null, rating: 5, do_again: null, more_of: null, less_of: null, outcomes: null, comments: null },
+      values: {
+        name: null,
+        rating: 5,
+        show_name: false,
+        do_again: null,
+        more_of: null,
+        less_of: null,
+        outcomes: null,
+        comments: null,
+      },
     })
+  })
+
+  it('records name consent only for a literal true', () => {
+    expect(parseFeedback({ rating: 4, show_name: true })).toMatchObject({ ok: true, values: { show_name: true } })
+    for (const show_name of [false, 'true', 1, undefined]) {
+      expect(parseFeedback({ rating: 4, show_name })).toMatchObject({ ok: true, values: { show_name: false } })
+    }
   })
 
   it('accepts words alone, trimmed, with blanks as null', () => {
@@ -92,6 +109,19 @@ describe('feedbackPrompts', () => {
 
   it('falls back when the instructor has no name', () => {
     expect(feedbackPrompts('group', null)[4].prompt).toContain('your instructor')
+  })
+})
+
+describe('nameConsentCopy', () => {
+  it('names the instructor and says what the box means either way', () => {
+    const on = nameConsentCopy('Courtney Fisher', true)
+    expect(on.explain).toMatch(/^Courtney may share feedback on the CPF Dance website/)
+    expect(on.state).toBe('Uncheck to stay anonymous.')
+    expect(nameConsentCopy('Courtney Fisher', false).state).toMatch(/stay anonymous if your feedback is shared/)
+  })
+
+  it('falls back when the instructor has no name', () => {
+    expect(nameConsentCopy(null, true).explain).toMatch(/^Your instructor may share/)
   })
 })
 

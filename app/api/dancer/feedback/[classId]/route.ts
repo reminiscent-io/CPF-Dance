@@ -44,7 +44,7 @@ async function authorize(classId: string): Promise<Authorized> {
   return { ok: true, studentId: student.id, subject, supabase }
 }
 
-const FEEDBACK_COLUMNS = 'id, rating, do_again, more_of, less_of, outcomes, comments, updated_at'
+const FEEDBACK_COLUMNS = 'id, rating, show_name, do_again, more_of, less_of, outcomes, comments, updated_at'
 
 export async function GET(
   _request: NextRequest,

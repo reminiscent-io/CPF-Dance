@@ -19,7 +19,12 @@ export type FeedbackTextField = (typeof FEEDBACK_TEXT_FIELDS)[number]
 export const MAX_FEEDBACK_TEXT = 4000
 export const MAX_FEEDBACK_NAME = 100
 
-export type FeedbackValues = { name: string | null; rating: number | null } & Record<FeedbackTextField, string | null>
+export type FeedbackValues = {
+  name: string | null
+  rating: number | null
+  /** OK to use her name with this feedback, e.g. as a website testimonial */
+  show_name: boolean
+} & Record<FeedbackTextField, string | null>
 
 /** The class as the form names it: title, dates and who taught it */
 export interface FeedbackHeading {
@@ -56,6 +61,21 @@ export function feedbackPrompts(classType: string, instructorName: string | null
     },
     { field: 'comments', prompt: `Anything else for ${firstName} to make the next session even better?` },
   ]
+}
+
+/**
+ * The name-consent checkbox. It starts ticked (an opt-out); the last line
+ * says what the current state means.
+ */
+export function nameConsentCopy(instructorName: string | null, checked: boolean) {
+  const firstName = instructorName?.trim().split(/\s+/)[0]
+  return {
+    label: 'It’s okay to use my name with my feedback from this session',
+    explain: firstName
+      ? `${firstName} may share feedback on the CPF Dance website to highlight her teaching style and abilities.`
+      : 'Your instructor may share feedback on the CPF Dance website to highlight their teaching style and abilities.',
+    state: checked ? 'Uncheck to stay anonymous.' : 'You’ll stay anonymous if your feedback is shared.',
+  }
 }
 
 /** Short names for the answers, for the instructor's list */
@@ -99,7 +119,12 @@ export function parseFeedback(body: unknown): ParsedFeedback {
     rating = n
   }
 
-  const values = { name: cleanText(input.name, MAX_FEEDBACK_NAME), rating } as FeedbackValues
+  const values = {
+    name: cleanText(input.name, MAX_FEEDBACK_NAME),
+    rating,
+    // Consent counts only when the box was actually ticked
+    show_name: input.show_name === true,
+  } as FeedbackValues
   for (const field of FEEDBACK_TEXT_FIELDS) {
     values[field] = cleanText(input[field], MAX_FEEDBACK_TEXT)
   }
