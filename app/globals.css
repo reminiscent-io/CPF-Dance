@@ -682,3 +682,69 @@ h1, h2, h3, h4, h5, h6 {
     right: auto !important;
   }
 }
+
+/* Feedback stars (components/feedback/StarRating.tsx). Each picked star pops
+   in; five stars throws sparks off every star and pops a "Yay!" below. */
+@keyframes feedbackStarPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.32) rotate(-8deg); }
+  70% { transform: scale(0.94) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes feedbackSpark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0) scale(0.3);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
+  }
+}
+
+@keyframes feedbackYay {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.6);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.feedback-star-pop {
+  display: inline-block;
+  animation: feedbackStarPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.feedback-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  animation: feedbackSpark 0.75s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.feedback-yay {
+  transform-origin: left center;
+  animation: feedbackYay 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-star-pop,
+  .feedback-yay {
+    animation: none;
+  }
+  .feedback-spark {
+    display: none;
+  }
+}

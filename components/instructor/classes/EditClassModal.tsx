@@ -38,6 +38,7 @@ import {
 } from './ClassFormFields'
 import { useClassForm, type ClassFormData } from './useClassForm'
 import { WorkshopPricingFields } from './WorkshopPricingFields'
+import { ClassFeedbackSection } from './ClassFeedbackSection'
 
 interface EditClassModalProps {
   classData: Class
@@ -596,6 +597,12 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                 Anyone with this link can see the class. Signing in or creating an account takes them straight to enroll.
               </p>
             </div>
+          )}
+
+          {/* No-login feedback link and the responses so far. Any class,
+              public or not: private lessons get reviewed too. */}
+          {!classData.is_cancelled && (
+            <ClassFeedbackSection classId={classData.id} title={classData.title} />
           )}
 
           {/* Paid on Stripe from the raw link, with no dancer to enroll yet.

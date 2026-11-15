@@ -84,6 +84,13 @@ function openForSignup(classes: OpenClass[]) {
   return open
 }
 
+/** A recent class the dancer hasn't given feedback on (GET /api/dancer/feedback) */
+interface FeedbackDue {
+  class_id: string
+  title: string
+  dates: string
+}
+
 interface RecentNote {
   id: string
   title: string | null
@@ -116,6 +123,7 @@ export default function DancerPortalPage() {
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [hasReviews, setHasReviews] = useState(false)
   const [lessonBalance, setLessonBalance] = useState<number | null>(null)
+  const [feedbackDue, setFeedbackDue] = useState<FeedbackDue[]>([])
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -126,12 +134,17 @@ export default function DancerPortalPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [statsRes, reviewsRes, openRes, packsRes] = await Promise.all([
+      const [statsRes, reviewsRes, openRes, packsRes, feedbackRes] = await Promise.all([
         fetch('/api/dancer/stats'),
         fetch('/api/dancer/reviews'),
         fetch('/api/dancer/public-classes'),
         fetch('/api/dancer/lesson-packs/history'),
+        fetch('/api/dancer/feedback'),
       ])
+      if (feedbackRes.ok) {
+        const data = await feedbackRes.json()
+        setFeedbackDue(data.pending || [])
+      }
       if (statsRes.ok) {
         const data = await statsRes.json()
         setStats(data.stats)
@@ -233,6 +246,37 @@ export default function DancerPortalPage() {
     <PortalLayout profile={profile}>
       <div className="space-y-8">
         <PageHeader title={firstName} subtitle={today} />
+
+        {/* Just-finished classes, first thing on the page so it gets done */}
+        {!loadingData && feedbackDue.length > 0 && (
+          <section>
+            <h2 className="mb-4 font-serif italic text-xl text-charcoal-950 tracking-[-0.01em]">
+              How was it?
+            </h2>
+            <div className="flex flex-col gap-3">
+              {feedbackDue.map(item => (
+                <Card
+                  key={item.class_id}
+                  hover
+                  padding="none"
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/dancer/feedback/${encodeURIComponent(item.class_id)}`)}
+                >
+                  <CardContent className="p-4 flex items-center justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-charcoal-950">{item.title}</span>
+                      <span className="block text-sm text-charcoal-500">{item.dates}</span>
+                    </span>
+                    <span className="text-sm text-rose-700 flex items-center gap-0.5 flex-shrink-0 tracking-[0.04em]">
+                      Leave feedback
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </span>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {loadingData ? (
           <div className="flex justify-center py-12">

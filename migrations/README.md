@@ -4,7 +4,7 @@ Numbered SQL files, run by hand in the Supabase SQL editor. Nothing records whic
 
 This folder records history and can't rebuild the database. Migrations 01–04 were deleted after they ran, and production holds objects no file here creates, including the `personal_classes` table and its policies, the waiver-signature and studio-logo storage policies, and a few indexes. Migration 16's enum rewrite never took effect either, so `user_role` still includes `studio` and `studio_admin`.
 
-To build a new database, run [`supabase-schema.sql`](../supabase-schema.sql). It is the production schema after migration 53.
+To build a new database, run [`supabase-schema.sql`](../supabase-schema.sql). It is the production schema after migration 53, plus migration 54 written in by hand.
 
 ## Adding a migration
 

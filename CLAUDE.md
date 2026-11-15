@@ -40,7 +40,7 @@ lib/
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–53)
+migrations/           # Numbered SQL migrations (05–54)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -138,6 +138,9 @@ Money columns are `DECIMAL(10,2)` — do arithmetic in integer cents via `dollar
 ### External Class Sign-Ups
 "Sign up" on a class with `external_signup_url` (or `workshop_signup_url` for a full workshop) opens that link via `useExternalSignup` (`components/dancer/`). Stripe Payment Links (`buy.stripe.com`, `book.stripe.com`) get a `client_reference_id` from `lib/signup-link.ts`; the Stripe webhook enrolls the dancer once the paid link matches the class. Otherwise the dancer confirms by hand when they return to the tab. Every paid sale on a class link lands in `class_purchases` (migration 52, `lib/class-purchases.ts`): a sale with no ref enrolls the buyer when their email names one dancer, and anything else shows the instructor as "paid, not linked" in the class edit dialog, where she links it to a student. Both paths go through `enrollStudent()` in `lib/class-enrollment.ts`.
 
+### Class Feedback
+Dancers rate a class (1–5 stars) and answer five optional prompts (`lib/class-feedback.ts`, table `class_feedback`, migration 54). Two ways in, one form (`components/feedback/FeedbackForm.tsx`): `/feedback/<token>` needs no sign-in and adds a response per send under a typed name; `/dancer/feedback/<classId>` (schedule modal button, dashboard "How was it?") keeps one response per dancer and edits it on resend. The token is random, minted once by `POST /api/classes/[id]/feedback-link` into `classes.feedback_token`; the instructor copies or shares it, and reads responses, in the class edit dialog. A workshop is reviewed as one run, keyed by its first day like `share_slug`. Writes go through the API with the service role; RLS only grants reads (instructors all, a dancer her own).
+
 ### Loading Feedback
 On a bad connection every tap has to visibly do something. `instrumentation-client.ts` feeds `lib/loading-activity.ts` from Next's `onRouterTransitionStart` (every `<Link>`, `router.push`, back/forward) and a `window.fetch` wrapper (same-origin `/api/*` only). `components/LoadingIndicator.tsx` in the root layout turns that into the top bar, "Still loading…" after 8s, and an offline notice; the sidebar and bottom navs highlight the tapped item at once. New pages and routes need no wiring. A button that starts a request takes `loading={flag}` (spinner, disabled, stays full strength). Spinners are SVG on purpose: the unlayered `* { border-color }` in `globals.css` beats Tailwind's border utilities, so a border-ring spinner renders as a static beige circle.
 
@@ -161,7 +164,7 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–53; next is 54). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
+Numbered SQL files in `migrations/` (05–54; next is 55). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database, plus migration 54 written in by hand; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
 
 ## Deployment Gotcha
 
