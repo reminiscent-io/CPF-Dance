@@ -14,6 +14,8 @@ import { releaseRendition } from '@/lib/promo/client/images'
 import { loadPlannedImages, planSceneImages } from '@/lib/promo/client/scene-images'
 import { EXPORT_LABELS, FORMAT_SPECS, type ExportKind } from '@/lib/promo/formats'
 import type { PromoPublication } from '@/lib/promo/types'
+import type { UploadTarget } from '@/lib/storage/direct-upload'
+import { uploadFile } from '@/lib/storage/upload-file'
 import { promoFetch } from '../hooks'
 import { useEditor } from './EditorContext'
 
@@ -101,12 +103,15 @@ export function ExportPanel() {
     try {
       await flushSave()
       const blob = await render(design.format === 'poster' ? 'jpeg_web' : 'jpeg', 0.88)
-      const form = new FormData()
-      form.append('file', blob, 'promo.jpg')
-      if (classId) form.append('classId', classId)
+      // The render goes straight to Storage; publish only gets its path.
+      const { target } = await promoFetch<{ target: UploadTarget }>(
+        `/api/promo/designs/${design.id}/publish/upload-url`,
+        { method: 'POST' }
+      )
+      await uploadFile(target, blob, 'image/jpeg')
       const { publication: live } = await promoFetch<{ publication: PromoPublication }>(
         `/api/promo/designs/${design.id}/publish`,
-        { method: 'POST', body: form }
+        { method: 'POST', json: { path: target.path, classId } }
       )
       setPublication(live)
       addToast(classId ? 'Published and set as the class image' : 'Published to your assets', 'success')

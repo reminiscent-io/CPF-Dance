@@ -1,7 +1,7 @@
-// Google Calendar/Meet via Replit Connectors (@replit/connectors-sdk).
-// IMPORTANT: the proxy base is generic Google — every path MUST keep the
-// `/calendar/v3` version prefix or the call silently 404s. See docs/google-integrations.md.
-import { ReplitConnectors } from '@replit/connectors-sdk';
+// Google Calendar/Meet on Courtney's calendar, through googleFetch() (lib/google/api.ts).
+// IMPORTANT: every path MUST keep the `/calendar/v3` version prefix or the
+// call 404s. See docs/google-integrations.md.
+import { googleFetch, googleId } from '@/lib/google/api';
 
 export interface CreateMeetEventArgs {
   classId: string;
@@ -13,10 +13,7 @@ export interface CreateMeetEventArgs {
 }
 
 export async function createMeetEvent(args: CreateMeetEventArgs): Promise<{ hangoutLink: string; eventId: string }> {
-  const connectors = new ReplitConnectors();
-
-  const response = await connectors.proxy(
-    'google-calendar',
+  const response = await googleFetch(
     '/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
     {
       method: 'POST',
@@ -56,11 +53,8 @@ export interface UpdateMeetEventArgs {
 }
 
 export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<void> {
-  const connectors = new ReplitConnectors();
-
-  const response = await connectors.proxy(
-    'google-calendar',
-    `/calendar/v3/calendars/primary/events/${args.eventId}?sendUpdates=all`,
+  const response = await googleFetch(
+    `/calendar/v3/calendars/primary/events/${googleId(args.eventId, 'event ID')}?sendUpdates=all`,
     {
       method: 'PATCH',
       body: JSON.stringify({
@@ -78,11 +72,8 @@ export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<vo
 }
 
 export async function deleteMeetEvent(eventId: string): Promise<void> {
-  const connectors = new ReplitConnectors();
-
-  const response = await connectors.proxy(
-    'google-calendar',
-    `/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=all`,
+  const response = await googleFetch(
+    `/calendar/v3/calendars/primary/events/${googleId(eventId, 'event ID')}?sendUpdates=all`,
     { method: 'DELETE' }
   );
 

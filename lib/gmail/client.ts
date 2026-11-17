@@ -1,4 +1,4 @@
-import { ReplitConnectors } from '@replit/connectors-sdk';
+import { googleFetch, googleId } from '@/lib/google/api';
 
 export interface EmailMessage {
   to: string;
@@ -14,8 +14,6 @@ function sanitizeHeaderValue(value: string): string {
 }
 
 export async function sendEmail(message: EmailMessage): Promise<{ threadId: string; messageId: string }> {
-  const connectors = new ReplitConnectors();
-
   const headers = [
     `To: ${sanitizeHeaderValue(message.to)}`,
     `Subject: ${sanitizeHeaderValue(message.subject)}`,
@@ -36,7 +34,7 @@ export async function sendEmail(message: EmailMessage): Promise<{ threadId: stri
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 
-  const response = await connectors.proxy('google-mail', '/gmail/v1/users/me/messages/send', {
+  const response = await googleFetch('/gmail/v1/users/me/messages/send', {
     method: 'POST',
     body: JSON.stringify({
       raw: encodedMessage,
@@ -69,11 +67,8 @@ export interface ThreadMessage {
 }
 
 export async function getThreadMessages(threadId: string): Promise<ThreadMessage[]> {
-  const connectors = new ReplitConnectors();
-
-  const response = await connectors.proxy(
-    'google-mail',
-    `/gmail/v1/users/me/threads/${threadId}?format=full`,
+  const response = await googleFetch(
+    `/gmail/v1/users/me/threads/${googleId(threadId, 'thread ID')}?format=full`,
     { method: 'GET' }
   );
 
@@ -126,10 +121,7 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
 export async function searchEmails(
   query: string
 ): Promise<Array<{ threadId: string; messageId: string; snippet: string; subject: string; from: string; date: string }>> {
-  const connectors = new ReplitConnectors();
-
-  const listResponse = await connectors.proxy(
-    'google-mail',
+  const listResponse = await googleFetch(
     `/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`,
     { method: 'GET' }
   );
@@ -145,9 +137,8 @@ export async function searchEmails(
   for (const msg of listData.messages || []) {
     if (!msg.id) continue;
 
-    const msgResponse = await connectors.proxy(
-      'google-mail',
-      `/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+    const msgResponse = await googleFetch(
+      `/gmail/v1/users/me/messages/${googleId(msg.id, 'message ID')}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
       { method: 'GET' }
     );
 

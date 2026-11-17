@@ -26,7 +26,7 @@ Product context lives in [PRODUCT.md](./PRODUCT.md), the design system in [DESIG
 | Payments | Stripe Checkout, Payment Links and webhooks |
 | Rich text | TipTap, sanitized with DOMPurify |
 | AI | OpenAI for voice-to-notes transcription, note formatting and Promo Studio copy |
-| Google | Places (studio search); Gmail and Calendar/Meet through Replit connectors |
+| Google | Places (studio search); Gmail and Calendar/Meet through direct OAuth as Courtney |
 | Tests | Vitest with jsdom |
 
 ## Getting started
@@ -41,7 +41,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The dev server runs on **http://localhost:3434**. Port 5000 is reserved for `npm start` in production on Replit, and macOS AirPlay holds it locally.
+The dev server runs on **http://localhost:3434**. `npm start` serves a local production build on port 5000.
 
 ### Environment variables
 
@@ -53,9 +53,10 @@ The dev server runs on **http://localhost:3434**. Port 5000 is reserved for `npm
 | `NEXT_PUBLIC_BASE_URL` | Stripe redirect base (falls back to the request origin) |
 | `OPENAI_API_KEY` | Voice-to-notes and AI note formatting |
 | `GOOGLE_PLACES_API_KEY` | Studio address search |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Gmail and Calendar/Meet |
 | `PROMO_*`, `NEXT_PUBLIC_PROMO_*` | Promo Studio tuning; see [docs/promo-studio-setup.md](./docs/promo-studio-setup.md) |
 
-Gmail and Google Calendar need no keys locally. They go through Replit connectors (see [docs/google-integrations.md](./docs/google-integrations.md)).
+Gmail and Google Calendar send and read as courtney@cpfdance.com. Leave the three `GOOGLE_*` OAuth vars unset locally unless you mean to send real email and invites; [docs/google-integrations.md](./docs/google-integrations.md) covers minting them.
 
 ### Database
 
@@ -95,7 +96,7 @@ lib/
   supabase/           Browser, server, middleware and service-role clients
   utils/              Pricing, money in integer cents, sanitizing, dates, calendar export
   promo/              Promo Studio document model, layout engine, templates, AI
-  gmail/ google/      Replit connector integrations
+  gmail/ google/      Gmail, Calendar/Meet (googleFetch in google/api.ts)
 migrations/           Numbered SQL migrations
 proxy.ts              Next.js 16 middleware: routing and session refresh
 tests/                Vitest setup and Supabase mocks
@@ -111,14 +112,14 @@ Every request passes three layers: `proxy.ts` routes by role, each API route cal
 - [PRODUCT.md](./PRODUCT.md) and [DESIGN.md](./DESIGN.md): product strategy and the *Ballet Noir Program* design system
 - [docs/database-setup.md](./docs/database-setup.md): Supabase setup
 - [docs/class-pricing.md](./docs/class-pricing.md): the four pricing models
-- [docs/google-integrations.md](./docs/google-integrations.md): Gmail and Calendar through Replit connectors
+- [docs/google-integrations.md](./docs/google-integrations.md): Gmail and Calendar/Meet: OAuth setup, endpoints, limits
 - [docs/promo-studio-setup.md](./docs/promo-studio-setup.md): Promo Studio migrations and first run
 - [docs/profile-linking.md](./docs/profile-linking.md): signing in with two emails through linked profiles
 - [docs/performance-optimization-notes.md](./docs/performance-optimization-notes.md): RLS performance
 
 ## Deployment
 
-Production runs on Replit. Its deployment cache can keep serving old code. If a change doesn't show up, delete the deployment and create a fresh one; republishing isn't enough.
+Production runs on Vercel. Merging to `main` deploys cpfdance.com; every other branch gets a preview URL. Env vars are set in the Vercel project, and `NEXT_PUBLIC_*` ones only take effect on the next deploy.
 
 ## License
 

@@ -1,6 +1,6 @@
 // @vitest-environment node
-// Publishing parses a multipart upload with request.formData(). Under jsdom the
-// global File is jsdom's, and undici's parser rejects the File it builds from it.
+// Publishing reads the uploaded render back as a Blob and checks its bytes;
+// under jsdom the global Blob is jsdom's, which Node's Blob APIs don't accept.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { fakeSupabase, hasFilter, type Handler, type StorageHandler } from './fake-supabase'
@@ -31,6 +31,7 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: vi.fn(() => state.ad
 
 import { PATCH } from '../designs/[id]/route'
 import { DELETE as UNPUBLISH, POST as PUBLISH } from '../designs/[id]/publish/route'
+import { POST as PUBLISH_UPLOAD_URL } from '../designs/[id]/publish/upload-url/route'
 
 const document = { v: 1, variant: 'ivory', values: {}, photos: {}, edited: [], nudges: {}, layout: {} }
 const design = {
@@ -72,12 +73,24 @@ function jpeg() {
   return new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70])], { type: 'image/jpeg' })
 }
 
-function publishRequest(file: Blob, classId?: string) {
-  const form = new FormData()
-  form.append('file', file, 'promo.jpg')
-  if (classId) form.append('classId', classId)
-  return new NextRequest(`http://localhost/api/promo/designs/${DESIGN}/publish`, { method: 'POST', body: form })
+// Where ./upload-url told the browser to put the render.
+const UPLOADED = `${OWNER}/promo-${DESIGN}-3-lx2k9.jpg`
+
+function publishRequest(classId?: string, path: string = UPLOADED) {
+  return new NextRequest(`http://localhost/api/promo/designs/${DESIGN}/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, classId: classId ?? null }),
+  })
 }
+
+/** Storage holds `file` at the uploaded path. */
+function stored(file: Blob): StorageHandler {
+  return (call) => (call.method === 'download' ? { data: file, error: null } : undefined)
+}
+
+const removedPaths = () =>
+  state.admin.storageCalls.filter((call) => call.method === 'remove').flatMap((call) => call.args[0] as string[])
 
 beforeEach(() => {
   state.isAdmin = false
@@ -122,28 +135,83 @@ describe('PATCH /api/promo/designs/[id] (autosave)', () => {
   })
 })
 
+describe('POST /api/promo/designs/[id]/publish/upload-url', () => {
+  const request = () =>
+    PUBLISH_UPLOAD_URL(new NextRequest(`http://localhost/api/promo/designs/${DESIGN}/publish/upload-url`, { method: 'POST' }), params)
+
+  it('gives the owner a signed upload for a fresh path under this promo’s prefix', async () => {
+    setup((query) => (query.table === 'promo_designs' ? { data: design, error: null } : undefined))
+    const response = await request()
+    expect(response.status).toBe(200)
+    const { target } = await response.json()
+    expect(target).toMatchObject({ bucket: 'assets', token: 'upload-token', cacheControl: '300' })
+    expect(target.path).toMatch(new RegExp(`^${OWNER}/promo-${DESIGN}-3-[0-9a-z]+\\.jpg$`))
+    const mint = state.admin.storageCalls.find((call) => call.method === 'createSignedUploadUrl')!
+    expect(mint.bucket).toBe('assets')
+    expect(mint.args[0]).toBe(target.path)
+  })
+
+  it('refuses anyone but the promo’s owner', async () => {
+    setup((query) =>
+      query.table === 'promo_designs' ? { data: { ...design, owner_id: 'someone-else' }, error: null } : undefined
+    )
+    const response = await request()
+    expect(response.status).toBe(403)
+    expect(state.admin.storageCalls).toHaveLength(0)
+  })
+})
+
 describe('POST /api/promo/designs/[id]/publish', () => {
   const designRead: Handler = (query) => {
     if (query.table === 'promo_designs' && query.action === 'select') return { data: design, error: null }
     if (query.table === 'promo_publications' && query.action === 'select') return { data: null, error: null }
   }
 
-  it('refuses anything but a JPEG', async () => {
-    setup(designRead)
-    const png = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' })
-    const response = await PUBLISH(publishRequest(png), params)
-    expect(response.status).toBe(400)
+  it('refuses a path outside this promo’s own copies, and leaves that file alone', async () => {
+    setup(designRead, () => undefined, stored(jpeg()))
+    for (const path of [`someone-else/promo-${DESIGN}-3-x.jpg`, `${OWNER}/promo-${DESIGN}-../../x.jpg`, `${OWNER}/avatar.jpg`]) {
+      const response = await PUBLISH(publishRequest(undefined, path), params)
+      expect(response.status).toBe(400)
+    }
     expect(state.admin.storageCalls).toHaveLength(0)
+    expect(state.admin.queries).toHaveLength(0)
+  })
+
+  it('refuses a path that is already a publication, without deleting it', async () => {
+    setup(designRead, (query) =>
+      query.table === 'promo_publications' && query.action === 'select' ? { data: [{ id: 'pub-1' }], error: null } : undefined
+    , stored(jpeg()))
+    const response = await PUBLISH(publishRequest(undefined, publication.public_path), params)
+    expect(response.status).toBe(409)
+    expect(removedPaths()).toEqual([])
+  })
+
+  it('refuses anything but a JPEG and removes it', async () => {
+    const png = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' })
+    setup(designRead, () => undefined, stored(png))
+    const response = await PUBLISH(publishRequest(), params)
+    expect(response.status).toBe(400)
+    expect(removedPaths()).toEqual([UPLOADED])
+    expect(state.admin.queries.some((query) => query.table === 'assets')).toBe(false)
+  })
+
+  it('refuses a render over the size limit', async () => {
+    const huge = new Blob([new Uint8Array([0xff, 0xd8, 0xff]), new Uint8Array(6 * 1024 * 1024)], { type: 'image/jpeg' })
+    setup(designRead, () => undefined, stored(huge))
+    const response = await PUBLISH(publishRequest(), params)
+    expect(response.status).toBe(413)
+    expect(removedPaths()).toEqual([UPLOADED])
   })
 
   it('won’t change another instructor’s class image', async () => {
     setup((query) => {
       if (query.table === 'classes') return { data: { id: CLASS, instructor_id: 'someone-else' }, error: null }
       return designRead(query)
-    })
-    const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
+    }, () => undefined, stored(jpeg()))
+    const response = await PUBLISH(publishRequest(CLASS), params)
     expect(response.status).toBe(403)
-    expect(state.admin.storageCalls).toHaveLength(0)
+    expect(state.admin.storageCalls.some((call) => call.method === 'download')).toBe(false)
+    expect(removedPaths()).toEqual([UPLOADED])
   })
 
   const adminWrites: Handler = (query) => {
@@ -157,48 +225,56 @@ describe('POST /api/promo/designs/[id]/publish', () => {
   }
 
   it('publishes, sets the class image and remembers the old one', async () => {
-    setup(ownClass, adminWrites)
-    const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
+    setup(ownClass, adminWrites, stored(jpeg()))
+    const response = await PUBLISH(publishRequest(CLASS), params)
     expect(response.status).toBe(201)
-    const upload = state.admin.storageCalls.find((call) => call.method === 'upload')!
-    expect(upload.bucket).toBe('assets')
-    expect(upload.args[0]).toMatch(new RegExp(`^${OWNER}/promo-${DESIGN}-3-`))
-    expect((upload.args[2] as { cacheControl: string }).cacheControl).toBe('300')
+    const download = state.admin.storageCalls.find((call) => call.method === 'download')!
+    expect(download).toMatchObject({ bucket: 'assets', args: [UPLOADED] })
+    // The browser uploaded the file; the route never writes one itself.
+    expect(state.admin.storageCalls.some((call) => call.method === 'upload')).toBe(false)
+    const asset = state.admin.queries.find((query) => query.table === 'assets' && query.action === 'insert')!
+    expect(asset.payload).toMatchObject({ file_url: `https://cdn.test/assets/${UPLOADED}`, file_type: 'image/jpeg', file_size: 10 })
     const classUpdate = state.admin.queries.find((query) => query.table === 'classes' && query.action === 'update')!
     expect(classUpdate.payload).toEqual({ asset_id: 'asset-2' })
     const insert = state.admin.queries.find((query) => query.table === 'promo_publications' && query.action === 'insert')!
-    expect(insert.payload).toMatchObject({ asset_id: 'asset-2', class_id: CLASS, previous_class_asset_id: 'old-asset', revision: 3 })
+    expect(insert.payload).toMatchObject({
+      asset_id: 'asset-2',
+      public_path: UPLOADED,
+      class_id: CLASS,
+      previous_class_asset_id: 'old-asset',
+      revision: 3,
+    })
     expect(state.session.queries.some((query) => query.table === 'promo_publications' && query.action !== 'select')).toBe(false)
+    expect(removedPaths()).toEqual([])
   })
 
-  it('keeps the current copy live when the upload fails', async () => {
+  it('keeps the current copy live when the upload never arrived', async () => {
     setup(
       (query) => {
         if (query.table === 'promo_publications' && query.action === 'select') return { data: publication, error: null }
         return ownClass(query)
       },
       adminWrites,
-      (call) => (call.method === 'upload' ? { data: null, error: { message: 'storage down' } } : undefined)
+      (call) => (call.method === 'download' ? { data: null, error: { message: 'Object not found' } } : undefined)
     )
-    const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
-    expect(response.status).toBe(500)
-    expect(state.admin.queries.some((query) => query.table === 'promo_publications')).toBe(false)
-    expect(state.admin.storageCalls.some((call) => call.method === 'remove')).toBe(false)
+    const response = await PUBLISH(publishRequest(CLASS), params)
+    expect(response.status).toBe(400)
+    expect(state.admin.queries.some((query) => query.table === 'promo_publications' && query.action !== 'select')).toBe(false)
+    expect(removedPaths()).not.toContain(publication.public_path)
   })
 
   it('leaves nothing half-published when the last step fails', async () => {
     setup(ownClass, (query) => {
       if (query.table === 'promo_publications' && query.action === 'insert') return { data: null, error: { message: 'boom' } }
       return adminWrites(query)
-    })
-    const response = await PUBLISH(publishRequest(jpeg(), CLASS), params)
+    }, stored(jpeg()))
+    const response = await PUBLISH(publishRequest(CLASS), params)
     expect(response.status).toBe(500)
     const restore = state.admin.queries.filter((query) => query.table === 'classes' && query.action === 'update').at(-1)!
     expect(restore.payload).toEqual({ asset_id: 'old-asset' })
     expect(hasFilter(restore, 'eq', 'asset_id', 'asset-2')).toBe(true)
     expect(state.admin.queries.some((query) => query.table === 'assets' && query.action === 'delete' && hasFilter(query, 'eq', 'id', 'asset-2'))).toBe(true)
-    const uploaded = state.admin.storageCalls.find((call) => call.method === 'upload')!.args[0]
-    expect(state.admin.storageCalls.some((call) => call.method === 'remove' && (call.args[0] as string[]).includes(uploaded as string))).toBe(true)
+    expect(removedPaths()).toEqual([UPLOADED])
   })
 })
 

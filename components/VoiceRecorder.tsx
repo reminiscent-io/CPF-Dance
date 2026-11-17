@@ -3,6 +3,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { postJson, uploadFile } from '@/lib/storage/upload-file'
+import type { UploadTarget } from '@/lib/storage/direct-upload'
 
 interface VoiceRecorderProps {
   onTranscriptReady: (html: string) => void
@@ -103,20 +105,14 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
     }
 
     try {
-      const formData = new FormData()
-      formData.append('audio', audioBlob, 'recording.webm')
-
-      const response = await fetch('/api/voice-to-notes', {
-        method: 'POST',
-        body: formData,
+      // The recording goes straight to Storage; the API only sees its path.
+      const { target } = await postJson<{ target: UploadTarget }>('/api/voice-to-notes/upload-url', {
+        size: audioBlob.size,
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to process audio')
-      }
-
-      const result = await response.json()
+      await uploadFile(target, audioBlob, 'audio/webm')
+      const result = await postJson<{ html?: string; cleaned_notes?: string }>('/api/voice-to-notes', {
+        path: target.path,
+      })
 
       if (result.html) {
         onTranscriptReady(result.html)

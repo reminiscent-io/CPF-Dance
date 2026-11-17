@@ -58,17 +58,23 @@ export function fakeSupabase(handler: Handler, storageHandler: StorageHandler = 
 
   const storage = {
     from: vi.fn((bucket: string) => {
+      // `value` is the default answer, or a function of the call's arguments.
       const call = (method: string, value: unknown) =>
         vi.fn(async (...args: unknown[]) => {
           const entry = { bucket, method, args }
           storageCalls.push(entry)
-          return storageHandler(entry) ?? value
+          return storageHandler(entry) ?? (typeof value === 'function' ? value(...args) : value)
         })
       return {
         upload: call('upload', { data: { path: 'x' }, error: null }),
         remove: call('remove', { data: [], error: null }),
         list: call('list', { data: [], error: null }),
         download: call('download', { data: null, error: null }),
+        info: call('info', { data: null, error: { message: 'Object not found' } }),
+        createSignedUploadUrl: call('createSignedUploadUrl', (path: string) => ({
+          data: { signedUrl: `https://storage.test/${bucket}/${path}?token=upload-token`, token: 'upload-token', path },
+          error: null,
+        })),
         getPublicUrl: vi.fn((path: string) => ({ data: { publicUrl: `https://cdn.test/${bucket}/${path}` } })),
       }
     }),

@@ -1,9 +1,10 @@
 -- CPF Dance database schema
 --
 -- The production schema after migration 53, generated on 2026-11-12 from the
--- live database's catalog, plus migrations 54-55 (class feedback) written in
--- by hand. To build a new database, run this file once in the SQL editor of a
--- fresh Supabase project, then any migration numbered above 55.
+-- live database's catalog, plus migrations 54-55 (class feedback) and 56
+-- (voice-notes bucket) written in by hand. To build a new database, run this
+-- file once in the SQL editor of a fresh Supabase project, then any migration
+-- numbered above 56.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -1655,6 +1656,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('promo-private', 'promo-private', false, 52428800, '{image/jpeg,image/png}'::text[]) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('Public_Images', 'Public_Images', true, NULL, NULL) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('studio logos', 'studio logos', true, NULL, NULL) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('voice-notes', 'voice-notes', false, 26214400, '{audio/webm}'::text[]) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('waiver-signatures', 'waiver-signatures', false, NULL, NULL) ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies (Supabase enables RLS on storage.objects)

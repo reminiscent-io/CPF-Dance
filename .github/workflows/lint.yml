@@ -17,11 +17,6 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # Installing on Replit writes resolved URLs on its internal mirror into
-      # the lockfile, and this runner can't reach that host. The integrity
-      # hashes still pin the exact tarballs.
-      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
-
       - run: npm ci
 
       # Errors fail the build. The tree is warning-free as of this commit, so
@@ -39,11 +34,6 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-
-      # Installing on Replit writes resolved URLs on its internal mirror into
-      # the lockfile, and this runner can't reach that host. The integrity
-      # hashes still pin the exact tarballs.
-      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
 
       - run: npm ci
 
@@ -67,11 +57,6 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # Installing on Replit writes resolved URLs on its internal mirror into
-      # the lockfile, and this runner can't reach that host. The integrity
-      # hashes still pin the exact tarballs.
-      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
-
       - run: npm ci
 
       - run: npm run test:run
@@ -86,11 +71,6 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-
-      # Installing on Replit writes resolved URLs on its internal mirror into
-      # the lockfile, and this runner can't reach that host. The integrity
-      # hashes still pin the exact tarballs.
-      - run: sed -i 's#http://package-firewall.replit.internal/npm/#https://registry.npmjs.org/#g' package-lock.json
 
       - run: npm ci
 

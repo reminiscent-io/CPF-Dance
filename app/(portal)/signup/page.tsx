@@ -323,7 +323,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
       }
 
       if (result.success && result.redirectUrl) {
-        // Longer delay to ensure cookies are fully set in Replit environment
+        // Longer delay to ensure cookies are fully set before navigating
         await new Promise(resolve => setTimeout(resolve, 1000))
         window.location.replace(result.redirectUrl)
       }

@@ -6,7 +6,7 @@ Dance teaching schedule management platform. Roles: Instructor, Dancer, Admin �
 
 **Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, Supabase (PostgreSQL + Auth), Tailwind CSS v4
 
-**Key Integrations:** Stripe (payments/webhooks), TipTap (rich text editor), OpenAI (voice-to-notes, note formatting), Google Places API, Gmail (via Replit connectors), Recharts (dashboard charts)
+**Key Integrations:** Stripe (payments/webhooks), TipTap (rich text editor), OpenAI (voice-to-notes, note formatting), Google Places API, Gmail + Calendar/Meet (direct Google OAuth), Recharts (dashboard charts)
 
 ## Design Context
 
@@ -35,12 +35,12 @@ lib/
   auth/               # server-auth.ts — role guards
   supabase/           # client.ts, server.ts, middleware.ts, admin.ts (service role), database.types.ts (generated)
   utils/              # pricing, money (integer cents), sanitize, date helpers, calendar export
-  gmail/              # Gmail via Replit connectors
-  google/             # Calendar/Meet via Replit connectors
+  gmail/              # Gmail send/read/search
+  google/             # api.ts (googleFetch: OAuth token + googleapis.com), Calendar/Meet
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–55)
+migrations/           # Numbered SQL migrations (05–56)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -49,7 +49,7 @@ tests/                # Vitest setup, test utils, Supabase mocks
 ```bash
 npm run dev          # Dev server on port 3434 (not 3000)
 npm run build        # Production build
-npm start            # Production server on port 5000
+npm start            # Local production server on port 5000 (Vercel doesn't use it)
 npm run lint         # Linting
 npx tsc --noEmit     # Typecheck — `next build` does NOT (ignoreBuildErrors). Fresh checkout: run `node scripts/generate-version.mjs` first (lib/version.ts is generated)
 npm run test:run     # Run tests once
@@ -59,7 +59,7 @@ npm run test:ui       # Vitest UI
 npm run test:watch    # Watch mode (alias for npm test)
 ```
 
-Production port 5000 maps to external port 80 on Replit. Dev server runs on port 3434 and binds to `0.0.0.0`. Keep `dev` on 3434: `.replit` waits on it, and 5000 is taken by macOS AirPlay locally.
+Dev server runs on port 3434 and binds to `0.0.0.0`. Keep `dev` on 3434: 5000 is taken by macOS AirPlay locally.
 
 CI (`.github/workflows/lint.yml`) runs `eslint . --max-warnings=0`, `tsc --noEmit`, `test:run`, and `build` — any lint warning fails the PR.
 
@@ -75,6 +75,7 @@ CI (`.github/workflows/lint.yml`) runs `eslint . --max-warnings=0`, `tsc --noEmi
 | `NEXT_PUBLIC_BASE_URL` | Optional | Base URL for Stripe redirects (falls back to request origin) |
 | `OPENAI_API_KEY` | Voice/AI notes | Voice-to-notes transcription and note formatting |
 | `GOOGLE_PLACES_API_KEY` | Studio search | Google Places autocomplete and details |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Gmail, Calendar/Meet | OAuth client + Courtney's refresh token (`lib/google/api.ts`) |
 
 ## Critical Rules
 
@@ -102,7 +103,7 @@ Always include `SET search_path = public, pg_temp` and schema-qualify types. GoT
 All user HTML MUST be sanitized before rendering. Use `createSanitizedHtml()` from `@/lib/utils/sanitize` — never raw `dangerouslySetInnerHTML`.
 
 ### Google Integrations (Gmail + Calendar/Meet)
-Both go through **Replit Connectors** via `@replit/connectors-sdk` (`connectors.proxy()`) — connector names `google-mail` and `google-calendar`, single account `courtney@cpfdance.com`. The proxy base is generic Google, so paths MUST include the full version segment: **`/calendar/v3/...`** and **`/gmail/v1/...`**. Omitting it = silent 404. Never hand-fetch OAuth tokens; the SDK handles refresh. Full reference + scaling limits: [docs/google-integrations.md](docs/google-integrations.md).
+Both go through `googleFetch()` in `lib/google/api.ts`, which trades `GOOGLE_REFRESH_TOKEN` for an access token and calls `https://www.googleapis.com` + path, single account `courtney@cpfdance.com`. Paths MUST include the full version segment: **`/calendar/v3/...`** and **`/gmail/v1/...`**. Omitting it = 404. Don't fetch tokens anywhere else; `googleFetch()` caches and refreshes them. A user refresh token is required: a service account can't create Meet links. Full reference + scaling limits: [docs/google-integrations.md](docs/google-integrations.md).
 
 ## Auth & Security
 
@@ -144,6 +145,9 @@ Dancers rate a class (1–5 stars) and answer five optional prompts (`lib/class-
 ### Loading Feedback
 On a bad connection every tap has to visibly do something. `instrumentation-client.ts` feeds `lib/loading-activity.ts` from Next's `onRouterTransitionStart` (every `<Link>`, `router.push`, back/forward) and a `window.fetch` wrapper (same-origin `/api/*` only). `components/LoadingIndicator.tsx` in the root layout turns that into the top bar, "Still loading…" after 8s, and an offline notice; the sidebar and bottom navs highlight the tapped item at once. New pages and routes need no wiring. A button that starts a request takes `loading={flag}` (spinner, disabled, stays full strength). Spinners are SVG on purpose: the unlayered `* { border-color }` in `globals.css` beats Tailwind's border utilities, so a border-ring spinner renders as a static beige circle.
 
+### File Uploads
+Files never go through an API route body: Vercel rejects anything over 4.5MB before the route runs. The browser sends the file straight to Supabase Storage with a signed upload token, and the route only sees its path (`lib/storage/direct-upload.ts` explains the flow). Three steps: an `upload-url` route authorizes the caller, picks the path and returns `createUploadTarget()`; the client calls `uploadFile()` (`lib/storage/upload-file.ts`); the finishing route takes `{ path }`, refuses it unless `isPathUnder()` the prefix it would have issued, and reads size and type back from Storage (`info()` or `download()`) instead of trusting the browser. A signed token bypasses storage RLS, so the mint route is the authorization check. Used by assets (`/api/assets/upload-url`), voice notes (`/api/voice-to-notes/upload-url`, private `voice-notes` bucket from migration 56, recording deleted after transcription) and promo publishing (`/api/promo/designs/[id]/publish/upload-url`). Promo Studio's photo library uploads under RLS instead (`lib/promo/client/upload/queue.ts`).
+
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.
 
@@ -155,6 +159,7 @@ On a bad connection every tap has to visibly do something. `instrumentation-clie
 4. Update `proxy.ts` if new portal routes
 5. Sanitize any user HTML with `createSanitizedHtml()`
 6. Consider admin access — admins should generally see the data
+7. Files go browser → Storage via a signed upload, never in a request body (see File Uploads)
 
 ## Testing
 
@@ -164,11 +169,11 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–55; next is 56). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database, plus migrations 54–55 written in by hand; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
+Numbered SQL files in `migrations/` (05–56; next is 57). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database, plus migrations 54–56 written in by hand; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
 
-## Deployment Gotcha
+## Deployment
 
-Replit deployment cache: code changes may not reflect in production. Delete the deployment and create a fresh one (don't just republish).
+Vercel, built from GitHub: `main` deploys to production, every other branch gets a preview URL. Env vars live in the Vercel project settings; `NEXT_PUBLIC_*` values are baked in at build, so redeploy after changing one. The build skips type checks (`ignoreBuildErrors`), so CI is the only `tsc` gate. Vercel rejects request bodies over 4.5MB before route code runs, whatever cap the route sets, so files upload straight to Storage (see File Uploads). Routes that need longer than the default set `export const maxDuration`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

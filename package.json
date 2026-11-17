@@ -20,7 +20,6 @@
     "@cantoo/pdf-lib": "^2.11.1",
     "@heroicons/react": "^2.2.0",
     "@mediapipe/tasks-vision": "^1.1.0",
-    "@replit/connectors-sdk": "^0.4.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.84.0",
     "@tailwindcss/postcss": "^4.1.17",
