@@ -55,15 +55,43 @@ async function getAccessToken(): Promise<string> {
   return inFlight;
 }
 
-export async function googleFetch(path: string, init: RequestInit = {}): Promise<Response> {
+// The token can only reach these APIs, whatever a path holds.
+const ALLOWED_API_PREFIXES = ['/gmail/v1/', '/calendar/v3/'];
+
+/**
+ * Builds the request URL. The host is a literal ending in "/", so no path can
+ * move the request off googleapis.com, and the check runs on the normalized
+ * pathname, so a `..` hidden in an ID can't walk out of Gmail or Calendar.
+ */
+function googleUrl(path: string): URL {
   if (!path.startsWith('/')) {
     throw new Error(`googleFetch path must start with "/" (got "${path}")`);
   }
+  const url = new URL(`https://www.googleapis.com/${path.slice(1)}`);
+  if (url.origin !== API_BASE || !ALLOWED_API_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+    throw new Error(`googleFetch only calls the Gmail and Calendar APIs (got "${url.pathname}")`);
+  }
+  return url;
+}
+
+/**
+ * Returns `value` when it looks like a Gmail message/thread ID or a Calendar
+ * event ID, and throws otherwise. Wrap every ID that goes into a path with it.
+ */
+export function googleId(value: string, what = 'ID'): string {
+  if (!/^[A-Za-z0-9_-]{1,1024}$/.test(value)) {
+    throw new Error(`Not a valid Google ${what}`);
+  }
+  return value;
+}
+
+export async function googleFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const url = googleUrl(path);
 
   const send = async () => {
     const headers = new Headers(init.headers);
     headers.set('Authorization', `Bearer ${await getAccessToken()}`);
-    return fetch(`${API_BASE}${path}`, { ...init, headers });
+    return fetch(url.href, { ...init, headers });
   };
 
   const response = await send();

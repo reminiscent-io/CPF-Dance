@@ -1,7 +1,7 @@
 // Google Calendar/Meet on Courtney's calendar, through googleFetch() (lib/google/api.ts).
 // IMPORTANT: every path MUST keep the `/calendar/v3` version prefix or the
 // call 404s. See docs/google-integrations.md.
-import { googleFetch } from '@/lib/google/api';
+import { googleFetch, googleId } from '@/lib/google/api';
 
 export interface CreateMeetEventArgs {
   classId: string;
@@ -54,7 +54,7 @@ export interface UpdateMeetEventArgs {
 
 export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<void> {
   const response = await googleFetch(
-    `/calendar/v3/calendars/primary/events/${args.eventId}?sendUpdates=all`,
+    `/calendar/v3/calendars/primary/events/${googleId(args.eventId, 'event ID')}?sendUpdates=all`,
     {
       method: 'PATCH',
       body: JSON.stringify({
@@ -73,7 +73,7 @@ export async function updateMeetEventTime(args: UpdateMeetEventArgs): Promise<vo
 
 export async function deleteMeetEvent(eventId: string): Promise<void> {
   const response = await googleFetch(
-    `/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=all`,
+    `/calendar/v3/calendars/primary/events/${googleId(eventId, 'event ID')}?sendUpdates=all`,
     { method: 'DELETE' }
   );
 

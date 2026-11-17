@@ -1,4 +1,4 @@
-import { googleFetch } from '@/lib/google/api';
+import { googleFetch, googleId } from '@/lib/google/api';
 
 export interface EmailMessage {
   to: string;
@@ -68,7 +68,7 @@ export interface ThreadMessage {
 
 export async function getThreadMessages(threadId: string): Promise<ThreadMessage[]> {
   const response = await googleFetch(
-    `/gmail/v1/users/me/threads/${threadId}?format=full`,
+    `/gmail/v1/users/me/threads/${googleId(threadId, 'thread ID')}?format=full`,
     { method: 'GET' }
   );
 
@@ -138,7 +138,7 @@ export async function searchEmails(
     if (!msg.id) continue;
 
     const msgResponse = await googleFetch(
-      `/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+      `/gmail/v1/users/me/messages/${googleId(msg.id, 'message ID')}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
       { method: 'GET' }
     );
 
