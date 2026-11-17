@@ -42,7 +42,10 @@ export async function PATCH(
       admin,
       student_id,
       purchase.class_id,
-      (purchase.workshop_option as WorkshopOption | null) ?? undefined
+      (purchase.workshop_option as WorkshopOption | null) ?? undefined,
+      // She's recording a sale she was already paid for, often after the
+      // class has started.
+      { allowPast: true }
     )
     if (!result.ok && !result.already_enrolled) {
       return NextResponse.json({ error: result.error }, { status: result.status })
