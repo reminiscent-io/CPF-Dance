@@ -65,7 +65,7 @@ The code changes have already been made to support profile linking:
 
 **Instructions:**
 1. Commit and push the changes (if using git)
-2. Deploy to your environment (Replit, Vercel, etc.)
+2. Deploy (merging to `main` deploys to Vercel)
 3. Wait for deployment to complete
 
 **What these changes do:**

@@ -1,15 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow dev requests from all Replit domains and localhost
+  // Hosts allowed to load dev-only assets (HMR, dev overlay) from `next dev`
   allowedDevOrigins: [
     "localhost",
     "127.0.0.1",
-    "*.replit.dev",
-    "*.riker.replit.dev",
     "cpfdance.com",
-    "www.cpfdance.com",
-    "cpfdance.replit.app"
+    "www.cpfdance.com"
   ],
 
   images: {
@@ -38,8 +35,7 @@ const nextConfig: NextConfig = {
       // SECURITY: Removed wildcard "*" - only allow trusted origins
       allowedOrigins: [
         "https://cpfdance.com",
-        "https://www.cpfdance.com",
-        "https://cpfdance.replit.app"
+        "https://www.cpfdance.com"
       ],
     },
   },
@@ -65,7 +61,7 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          // In prod, block all framing; in dev, no restriction for Replit preview
+          // In prod, block all framing; in dev, no restriction so editor previews can embed the page
           ...(isDev
             ? []
             : [{

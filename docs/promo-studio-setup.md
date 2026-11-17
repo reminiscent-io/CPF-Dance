@@ -37,8 +37,6 @@ Optional, with defaults:
 
 Pose detection is optional. If either URL is blocked, uploads carry on and the vision call does the tagging.
 
-Replit deploys can serve stale code (see CLAUDE.md): after merging, delete the deployment and create a fresh one.
-
 ## 3. Where things are
 
 - Instructor: Promo Studio in the sidebar's Schedule group (`/instructor/promo`), "New Promo" in the phone plus menu, "New promo" on the dashboard. Photo library at `/instructor/promo/library`.
