@@ -9,6 +9,15 @@ import {
 } from '@/tests/utils'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 
+// The recording goes straight to Supabase Storage; stand in for that hop.
+const uploadFile = vi.hoisted(() => vi.fn(async () => {}))
+vi.mock('@/lib/storage/upload-file', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/storage/upload-file')>()),
+  uploadFile,
+}))
+
+const UPLOAD_TARGET = { bucket: 'voice-notes', path: 'me/recording.webm', token: 'upload-token' }
+
 // jsdom has neither getUserMedia nor MediaRecorder. The fakes below model what
 // VoiceRecorder relies on, including the MediaRecorder spec's ordering for
 // stop(): state flips to 'inactive' right away, then a queued task fires
@@ -130,11 +139,17 @@ async function deliverQueuedRecorderEvents() {
 
 describe('VoiceRecorder', () => {
   let fetchMock: ReturnType<typeof vi.fn>
+  // How /api/voice-to-notes answers, both the GET on mount and the POST that transcribes.
+  let voiceRoute: () => Response
   let stream: MediaStream
 
-  // The recorder also GETs the route on mount to learn whether it's configured.
+  // Requests to transcribe. The recorder also GETs the route on mount to learn
+  // whether it's configured, and POSTs upload-url before each upload.
   const uploads = () =>
-    (fetchMock.mock.calls as [string, RequestInit | undefined][]).filter(([, init]) => init?.method === 'POST')
+    (fetchMock.mock.calls as [string, RequestInit | undefined][]).filter(
+      ([url, init]) => url === '/api/voice-to-notes' && init?.method === 'POST'
+    )
+  const uploadedSizes = () => (uploadFile.mock.calls as unknown as [unknown, Blob][]).map(([, blob]) => blob.size)
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -142,9 +157,11 @@ describe('VoiceRecorder', () => {
     vi.stubGlobal('MediaRecorder', FakeMediaRecorder)
     stream = fakeMicStream()
     stubGetUserMedia(async () => stream)
+    uploadFile.mockClear()
     // What the dev server answers without OPENAI_API_KEY.
-    fetchMock = vi.fn(async () =>
-      createErrorResponse('Voice notes feature is not configured. Please contact support.', 503)
+    voiceRoute = () => createErrorResponse('Voice notes feature is not configured. Please contact support.', 503)
+    fetchMock = vi.fn(async (url: string) =>
+      url === '/api/voice-to-notes/upload-url' ? createMockResponse({ target: UPLOAD_TARGET }) : voiceRoute()
     )
     vi.stubGlobal('fetch', fetchMock)
   })
@@ -168,7 +185,7 @@ describe('VoiceRecorder', () => {
       respond: () => createErrorResponse('Failed to process voice note. Please try again.', 500),
     },
   ])('Cancel after $heldForMs ms uploads nothing and leaves no trace', async ({ heldForMs, respond }) => {
-    fetchMock.mockImplementation(async () => respond())
+    voiceRoute = respond
     const onTranscriptReady = vi.fn()
     const { container } = render(<VoiceRecorder onTranscriptReady={onTranscriptReady} />)
     const idleText = container.textContent
@@ -179,15 +196,14 @@ describe('VoiceRecorder', () => {
     await deliverQueuedRecorderEvents()
 
     expect(uploads()).toHaveLength(0)
+    expect(uploadFile).not.toHaveBeenCalled()
     expect(onTranscriptReady).not.toHaveBeenCalled()
     expect(container.textContent).toBe(idleText)
     expect(trackStates(stream)).toEqual(['ended'])
   })
 
   it('Stop uploads the whole recording and releases the mic', async () => {
-    fetchMock.mockImplementation(async () =>
-      createMockResponse({ html: '<p>Spot the corner on every fouetté.</p>', success: true })
-    )
+    voiceRoute = () => createMockResponse({ html: '<p>Spot the corner on every fouetté.</p>', success: true })
     const onTranscriptReady = vi.fn()
     render(<VoiceRecorder onTranscriptReady={onTranscriptReady} />)
 
@@ -197,10 +213,11 @@ describe('VoiceRecorder', () => {
     await deliverQueuedRecorderEvents()
 
     expect(uploads()).toHaveLength(1)
-    const [url, init] = uploads()[0] as [string, RequestInit]
-    expect(url).toBe('/api/voice-to-notes')
+    const [, init] = uploads()[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({ path: UPLOAD_TARGET.path })
     // Two 1 s timeslices (4000 bytes each) plus the 500 ms tail stop() flushes.
-    expect(((init.body as FormData).get('audio') as File).size).toBe(10_000)
+    expect(uploadFile).toHaveBeenCalledWith(UPLOAD_TARGET, expect.any(Blob), 'audio/webm')
+    expect(uploadedSizes()).toEqual([10_000])
     expect(onTranscriptReady).toHaveBeenCalledWith('<p>Spot the corner on every fouetté.</p>')
     expect(trackStates(stream)).toEqual(['ended'])
   })
@@ -259,7 +276,7 @@ describe('VoiceRecorder', () => {
   })
 
   it('disables Voice to Text before recording when the server has no OpenAI key', async () => {
-    fetchMock.mockImplementation(async () => createMockResponse({ configured: false }))
+    voiceRoute = () => createMockResponse({ configured: false })
     render(<VoiceRecorder onTranscriptReady={vi.fn()} />)
     await act(async () => {})
 
@@ -284,15 +301,12 @@ describe('VoiceRecorder', () => {
     expect(uploads()).toHaveLength(1)
     expect(screen.getByText(/Your recording is saved/)).toBeInTheDocument()
 
-    fetchMock.mockImplementation(async () =>
-      createMockResponse({ html: '<p>Hold the arabesque through eight.</p>', success: true })
-    )
+    voiceRoute = () => createMockResponse({ html: '<p>Hold the arabesque through eight.</p>', success: true })
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
     await act(async () => {})
 
     expect(uploads()).toHaveLength(2)
-    const sent = uploads().map(([, init]) => ((init!.body as FormData).get('audio') as File).size)
-    expect(sent).toEqual([10_000, 10_000])
+    expect(uploadedSizes()).toEqual([10_000, 10_000])
     expect(onTranscriptReady).toHaveBeenCalledWith('<p>Hold the arabesque through eight.</p>')
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })

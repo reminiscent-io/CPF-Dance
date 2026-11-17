@@ -40,7 +40,7 @@ lib/
   lesson-credits.ts   # Lesson-pack credit spend/refund
   promo/              # Promo Studio: document model, layout engine, templates, AI, upload/export (docs/promo-studio-setup.md)
 proxy.ts              # Middleware — routing, auth session refresh
-migrations/           # Numbered SQL migrations (05–55)
+migrations/           # Numbered SQL migrations (05–56)
 tests/                # Vitest setup, test utils, Supabase mocks
 ```
 
@@ -145,6 +145,9 @@ Dancers rate a class (1–5 stars) and answer five optional prompts (`lib/class-
 ### Loading Feedback
 On a bad connection every tap has to visibly do something. `instrumentation-client.ts` feeds `lib/loading-activity.ts` from Next's `onRouterTransitionStart` (every `<Link>`, `router.push`, back/forward) and a `window.fetch` wrapper (same-origin `/api/*` only). `components/LoadingIndicator.tsx` in the root layout turns that into the top bar, "Still loading…" after 8s, and an offline notice; the sidebar and bottom navs highlight the tapped item at once. New pages and routes need no wiring. A button that starts a request takes `loading={flag}` (spinner, disabled, stays full strength). Spinners are SVG on purpose: the unlayered `* { border-color }` in `globals.css` beats Tailwind's border utilities, so a border-ring spinner renders as a static beige circle.
 
+### File Uploads
+Files never go through an API route body: Vercel rejects anything over 4.5MB before the route runs. The browser sends the file straight to Supabase Storage with a signed upload token, and the route only sees its path (`lib/storage/direct-upload.ts` explains the flow). Three steps: an `upload-url` route authorizes the caller, picks the path and returns `createUploadTarget()`; the client calls `uploadFile()` (`lib/storage/upload-file.ts`); the finishing route takes `{ path }`, refuses it unless `isPathUnder()` the prefix it would have issued, and reads size and type back from Storage (`info()` or `download()`) instead of trusting the browser. A signed token bypasses storage RLS, so the mint route is the authorization check. Used by assets (`/api/assets/upload-url`), voice notes (`/api/voice-to-notes/upload-url`, private `voice-notes` bucket from migration 56, recording deleted after transcription) and promo publishing (`/api/promo/designs/[id]/publish/upload-url`). Promo Studio's photo library uploads under RLS instead (`lib/promo/client/upload/queue.ts`).
+
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.
 
@@ -156,6 +159,7 @@ On a bad connection every tap has to visibly do something. `instrumentation-clie
 4. Update `proxy.ts` if new portal routes
 5. Sanitize any user HTML with `createSanitizedHtml()`
 6. Consider admin access — admins should generally see the data
+7. Files go browser → Storage via a signed upload, never in a request body (see File Uploads)
 
 ## Testing
 
@@ -165,11 +169,11 @@ Mocks: `tests/__mocks__/supabase.ts` (`createMockSupabaseClient`, role profile f
 
 ## Database Migrations
 
-Numbered SQL files in `migrations/` (05–55; next is 56). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database, plus migrations 54–55 written in by hand; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
+Numbered SQL files in `migrations/` (05–56; next is 57). Numbers have collided before (08, 13, 14, 15, 38) — `ls migrations` first. Applied manually via Supabase SQL editor — no automated migration runner. `supabase-schema.sql` is the production schema after migration 53, verified object by object against the live database, plus migrations 54–56 written in by hand; read it for a table's current shape. `migrations/` can't rebuild the database (01–04 were deleted, and `personal_classes` plus several storage policies were made in the dashboard). Put each new migration's change in `supabase-schema.sql` too, and check the file with `scripts/schema-check/run.sh`. Then regenerate `lib/supabase/database.types.ts` (`migrations/README.md`): the Supabase clients are typed from it, so a query on a missing column fails `tsc`.
 
 ## Deployment
 
-Vercel, built from GitHub: `main` deploys to production, every other branch gets a preview URL. Env vars live in the Vercel project settings; `NEXT_PUBLIC_*` values are baked in at build, so redeploy after changing one. The build skips type checks (`ignoreBuildErrors`), so CI is the only `tsc` gate. Vercel rejects request bodies over 4.5MB before route code runs, whatever cap the route sets. Routes that need longer than the default set `export const maxDuration`.
+Vercel, built from GitHub: `main` deploys to production, every other branch gets a preview URL. Env vars live in the Vercel project settings; `NEXT_PUBLIC_*` values are baked in at build, so redeploy after changing one. The build skips type checks (`ignoreBuildErrors`), so CI is the only `tsc` gate. Vercel rejects request bodies over 4.5MB before route code runs, whatever cap the route sets, so files upload straight to Storage (see File Uploads). Routes that need longer than the default set `export const maxDuration`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

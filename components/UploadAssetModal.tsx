@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Modal, ModalFooter, Button, Input, useToast } from '@/components/ui'
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline'
+import { postJson, uploadFile } from '@/lib/storage/upload-file'
+import type { UploadTarget } from '@/lib/storage/direct-upload'
 
 interface UploadAssetModalProps {
   onClose: () => void
@@ -78,23 +80,15 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
     setUploading(true)
 
     try {
-      // Create FormData for file upload
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('title', title)
-
-      const response = await fetch('/api/assets', {
-        method: 'POST',
-        body: formData
+      // The file goes straight to Storage; the API only sees its path.
+      const { target } = await postJson<{ target: UploadTarget }>('/api/assets/upload-url', {
+        fileName: file.name,
+        contentType: file.type,
+        size: file.size,
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to upload asset')
-      }
-
-      const data = await response.json()
-      onSuccess(data.asset)
+      await uploadFile(target, file, file.type)
+      const { asset } = await postJson<{ asset: unknown }>('/api/assets', { path: target.path, title })
+      onSuccess(asset)
     } catch (error) {
       console.error('Error uploading asset:', error)
       addToast(error instanceof Error ? error.message : 'Failed to upload asset', 'error')

@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isPathUnder } from '@/lib/storage/direct-upload'
 import { isUuid, PromoError, promoErrorResponse, requirePromoInstructor } from '@/lib/promo/server/context'
 import {
   livePublication,
   loadDesign,
   PUBLIC_ASSETS_BUCKET,
   PUBLICATION_COLUMNS,
+  PUBLISH_MAX_BYTES,
   publicCopyPrefix,
   unpublish,
 } from '@/lib/promo/server/designs'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-const MAX_BYTES = 6 * 1024 * 1024
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -30,11 +30,13 @@ function isJpeg(bytes: Uint8Array) {
 /**
  * Puts a web-size render of the promo on the site: a copy in the public
  * `assets` bucket with an `assets` row, so the class form's picker and
- * /instructor/assets see it, and optionally the class's image. Her session
- * proves she owns the promo and the class; the service role then writes the
- * public copy and the publication row. Republishing replaces the previous
- * copy, and the new one is in place before the old one comes down, so a
- * failed upload leaves the current copy live.
+ * /instructor/assets see it, and optionally the class's image. Body:
+ * { path, classId? }, with `path` from POST ./upload-url: the browser has
+ * already put the JPEG there (Vercel caps request bodies at 4.5 MB). Her
+ * session proves she owns the promo and the class; the service role then
+ * checks the file and writes the publication. Republishing replaces the
+ * previous copy, and the new one is in place before the old one comes down,
+ * so a failed publish leaves the current copy live and removes the new file.
  */
 export async function POST(request: NextRequest, { params }: Params) {
   let admin: ReturnType<typeof createAdminClient> | null = null
@@ -46,16 +48,26 @@ export async function POST(request: NextRequest, { params }: Params) {
     const design = await loadDesign(supabase, await designIdFrom(params))
     if (design.owner_id !== ownerId) throw new PromoError('Only the promo’s owner can publish it.', 403, 'not_owner')
 
-    const form = await request.formData()
-    const file = form.get('file')
-    const classIdRaw = form.get('classId')
-    const classId = typeof classIdRaw === 'string' && classIdRaw ? classIdRaw : null
-    // A form entry is a File or a string; instanceof Blob depends on which runtime made the File.
-    if (!file || typeof file === 'string') throw new PromoError('The image didn’t arrive. Try again.', 400)
-    if (file.size > MAX_BYTES) throw new PromoError('That image is too large to publish.', 413)
+    const body = await request.json().catch(() => null)
+    const classId = typeof body?.classId === 'string' && body.classId ? body.classId : null
+    const path = body?.path
+    if (!isPathUnder(path, publicCopyPrefix(ownerId, design.id))) {
+      throw new PromoError('The image didn’t arrive. Try again.', 400)
+    }
     if (classId && !isUuid(classId)) throw new PromoError('That class wasn’t found.', 404)
-    const bytes = new Uint8Array(await file.arrayBuffer())
-    if (!isJpeg(bytes)) throw new PromoError('Publishing needs a JPEG render.', 400)
+
+    // A path that's already a publication isn't a new upload: adopting it would
+    // let unpublishing the old copy delete the new one's file.
+    admin = createAdminClient()
+    const { data: reused, error: reusedError } = await admin
+      .from('promo_publications')
+      .select('id')
+      .eq('public_path', path)
+      .limit(1)
+    if (reusedError) throw reusedError
+    if (reused && reused.length > 0) throw new PromoError('Publishing failed. Try again.', 409)
+    // From here on the file is this publish's own, and any failure removes it.
+    uploadedPath = path
 
     if (classId) {
       const { data: cls, error: classError } = await supabase
@@ -70,16 +82,12 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
     }
 
-    admin = createAdminClient()
-    const path = `${publicCopyPrefix(ownerId, design.id)}${design.revision}-${Date.now().toString(36)}.jpg`
-    const { error: uploadError } = await admin.storage.from(PUBLIC_ASSETS_BUCKET).upload(path, bytes, {
-      contentType: 'image/jpeg',
-      // Short CDN lifetime, so an unpublish clears cached copies within minutes.
-      cacheControl: '300',
-      upsert: false,
-    })
-    if (uploadError) throw uploadError
-    uploadedPath = path
+    const { data: file, error: downloadError } = await admin.storage.from(PUBLIC_ASSETS_BUCKET).download(path)
+    if (downloadError || !file) throw new PromoError('The image didn’t arrive. Try again.', 400)
+    if (file.size > PUBLISH_MAX_BYTES) throw new PromoError('That image is too large to publish.', 413)
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    if (!isJpeg(bytes)) throw new PromoError('Publishing needs a JPEG render.', 400)
+
     const publicUrl = admin.storage.from(PUBLIC_ASSETS_BUCKET).getPublicUrl(path).data.publicUrl
 
     const { data: asset, error: assetError } = await admin

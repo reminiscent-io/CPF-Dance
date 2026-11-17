@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import OpenAI from 'openai'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { isPathUnder } from '@/lib/storage/direct-upload'
+import {
+  authorizeVoiceNote,
+  VOICE_NOTE_BUCKET,
+  VOICE_NOTE_CONTENT_TYPE,
+  VOICE_NOTE_MAX_BYTES,
+  voiceNoteFolder,
+} from '@/lib/voice-notes'
 
 // Dance-specific prompt for cleaning transcriptions
 const DANCE_CLEANING_PROMPT = `You are a dance note-taker. Clean up this spoken note lightly: fix grammar, punctuation, and capitalization, but keep the original wording and meaning as much as possible.
@@ -29,62 +38,48 @@ export async function GET() {
   return NextResponse.json({ configured: Boolean(process.env.OPENAI_API_KEY) })
 }
 
+// Body: { path }, from POST /api/voice-to-notes/upload-url. The recording went
+// straight to Storage (Vercel caps request bodies at 4.5 MB); it's read back
+// here and deleted once this request ends, whatever the outcome.
 export async function POST(request: NextRequest) {
+  let admin: ReturnType<typeof createAdminClient> | null = null
+  let recordingPath: string | null = null
   try {
-    // Verify the user is authenticated (dancer or instructor can use voice notes)
-    const profile = await getCurrentUserWithRole()
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const auth = await authorizeVoiceNote()
+    if ('response' in auth) return auth.response
 
-    // Only dancers, instructors, and admins can use voice notes
-    if (!['dancer', 'instructor', 'admin'].includes(profile.role)) {
-      return NextResponse.json(
-        { error: 'Voice notes are only available for dancers and instructors' },
-        { status: 403 }
-      )
-    }
-
-    // Check for OpenAI API key
-    const apiKey = process.env.OPENAI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Voice notes feature is not configured. Please contact support.' },
-        { status: 503 }
-      )
-    }
-
-    const openai = new OpenAI({ apiKey })
-
-    // Get the audio file from form data
-    const formData = await request.formData()
-    const audioFile = formData.get('audio') as File | null
-
-    if (!audioFile) {
+    const body = await request.json().catch(() => null)
+    if (!isPathUnder(body?.path, voiceNoteFolder(auth.profile.id))) {
       return NextResponse.json(
         { error: 'No audio file provided' },
         { status: 400 }
       )
     }
+    recordingPath = body.path as string
+    admin = createAdminClient()
+
+    const { data: audioBlob, error: downloadError } = await admin.storage
+      .from(VOICE_NOTE_BUCKET)
+      .download(recordingPath)
+    if (downloadError || !audioBlob) {
+      return NextResponse.json(
+        { error: 'The recording didn’t arrive. Please try again.' },
+        { status: 400 }
+      )
+    }
 
     // Validate file size (max 25MB - OpenAI Whisper limit)
-    const maxSize = 25 * 1024 * 1024
-    if (audioFile.size > maxSize) {
+    if (audioBlob.size > VOICE_NOTE_MAX_BYTES) {
       return NextResponse.json(
         { error: 'Audio file too large. Maximum size is 25MB.' },
         { status: 400 }
       )
     }
 
-    // Convert File to proper format for OpenAI
-    const audioBuffer = await audioFile.arrayBuffer()
-    const audioBlob = new Blob([audioBuffer], { type: audioFile.type })
+    const openai = new OpenAI({ apiKey: auth.apiKey })
 
-    // Create a File object that OpenAI can accept
-    const file = new File([audioBlob], 'audio.webm', { type: 'audio/webm' })
+    // Whisper picks the decoder from the file name.
+    const file = new File([await audioBlob.arrayBuffer()], 'audio.webm', { type: VOICE_NOTE_CONTENT_TYPE })
 
     // Step 1: Transcribe audio using Whisper
     const transcription = await openai.audio.transcriptions.create({
@@ -156,8 +151,13 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to process voice note. Please try again.' },
       { status: 500 }
     )
+  } finally {
+    if (admin && recordingPath) {
+      const { error } = await admin.storage.from(VOICE_NOTE_BUCKET).remove([recordingPath])
+      if (error) console.error('Could not delete voice note recording:', error)
+    }
   }
 }
 
-// Route segment config for larger file uploads (25MB max for audio)
-export const maxDuration = 60 // Allow up to 60 seconds for processing
+// Download, Whisper and the cleanup pass together can take a while.
+export const maxDuration = 60

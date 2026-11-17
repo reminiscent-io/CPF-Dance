@@ -53,6 +53,16 @@ export function publicCopyPrefix(ownerId: string, designId: string): string {
   return `${ownerId}/promo-${designId}-`
 }
 
+/** Largest render a publish accepts. */
+export const PUBLISH_MAX_BYTES = 6 * 1024 * 1024
+/** Short CDN lifetime, so an unpublish clears cached copies within minutes. */
+export const PUBLISH_CACHE_CONTROL = '300'
+
+/** A fresh path for the next public copy of this design. */
+export function publishPath(ownerId: string, design: Pick<PromoDesignRow, 'id' | 'revision'>): string {
+  return `${publicCopyPrefix(ownerId, design.id)}${design.revision}-${Date.now().toString(36)}.jpg`
+}
+
 /**
  * Takes a published copy down: the class gets back the image it had before
  * (if it still shows this one), then the public file and its `assets` row go,

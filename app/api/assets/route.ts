@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { isPathUnder } from '@/lib/storage/direct-upload'
+import { ASSET_BUCKET, assetFileProblem, assetFolder } from '@/lib/asset-upload'
 
 // GET /api/assets - Fetch all assets
 export async function GET(request: NextRequest) {
@@ -33,7 +36,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/assets - Upload new asset
+// POST /api/assets - Save an asset the browser already sent to Storage.
+// Body: { path, title }, with `path` from POST /api/assets/upload-url. The file
+// never passes through here: Vercel caps request bodies at 4.5 MB.
 export async function POST(request: NextRequest) {
   try {
     // Require instructor or admin role
@@ -42,49 +47,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const title = formData.get('title') as string
+    const body = await request.json().catch(() => null)
+    const title = typeof body?.title === 'string' ? body.title : ''
+    const filePath = body?.path
 
-    if (!file || !title) {
+    if (!title || !isPathUnder(filePath, assetFolder(profile.id))) {
       return NextResponse.json({ error: 'File and title are required' }, { status: 400 })
     }
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
-    if (!validTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type. Only images and PDFs are allowed.' }, { status: 400 })
-    }
+    // The path is in her own folder, so the service role may read and clean it up.
+    const admin = createAdminClient()
 
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 })
+    // Trust what Storage holds, not what the browser said it would send.
+    const { data: stored, error: infoError } = await admin.storage.from(ASSET_BUCKET).info(filePath)
+    if (infoError || !stored) {
+      return NextResponse.json({ error: 'The file didn’t arrive. Try uploading it again.' }, { status: 400 })
+    }
+    const fileType = stored.contentType ?? ''
+    const fileSize = stored.size ?? 0
+    const problem = assetFileProblem(fileType, fileSize)
+    if (problem) {
+      await admin.storage.from(ASSET_BUCKET).remove([filePath])
+      return NextResponse.json({ error: problem }, { status: 400 })
     }
 
     const supabase = await createClient()
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `${profile.id}/${fileName}`
-
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('assets')
-      .upload(filePath, file, {
-        contentType: file.type,
-        upsert: false
-      })
-
-    if (uploadError) {
-      console.error('Error uploading file:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
-    }
-
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('assets')
+      .from(ASSET_BUCKET)
       .getPublicUrl(filePath)
 
     // Save metadata to database
@@ -93,8 +84,8 @@ export async function POST(request: NextRequest) {
       .insert({
         title,
         file_url: publicUrl,
-        file_type: file.type,
-        file_size: file.size,
+        file_type: fileType,
+        file_size: fileSize,
         instructor_id: profile.id
       })
       .select(`
@@ -107,7 +98,7 @@ export async function POST(request: NextRequest) {
       console.error('Error saving asset metadata:', dbError)
 
       // Clean up uploaded file if database insert fails
-      await supabase.storage.from('assets').remove([filePath])
+      await admin.storage.from(ASSET_BUCKET).remove([filePath])
 
       return NextResponse.json({ error: 'Failed to save asset metadata' }, { status: 500 })
     }
