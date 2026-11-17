@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import OpenAI from 'openai'
+import { createOpenAIClient, flushAiObservability, openAIPostHogProperties } from '@/lib/posthog-ai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!apiKey) {
       return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 })
     }
-    const openai = new OpenAI({ apiKey })
+    const openai = createOpenAIClient(apiKey)
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
+      ...openAIPostHogProperties(user.id, `notes-format-${process.pid}`, crypto.randomUUID()),
       messages: [
         {
           role: 'system',
@@ -96,5 +97,7 @@ Return ONLY the formatted HTML content, nothing else.`
       { error: 'Failed to format note' },
       { status: 500 }
     )
+  } finally {
+    await flushAiObservability()
   }
 }

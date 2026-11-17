@@ -28,6 +28,7 @@ import { PhotoPickerSheet } from '../library/PhotoPickerSheet'
 import { ClassPicker, type PickableClass } from './ClassPicker'
 import { useGenerate } from './useGenerate'
 import { VariationCard } from './VariationCard'
+import posthog from 'posthog-js'
 
 interface TemplatesResponse {
   templates: { id: string; slug: string; name: string; versionId: string; definition: TemplateDefinition }[]
@@ -198,6 +199,12 @@ export default function NewPromo() {
           source,
           aiCallId: aiCallId ?? null,
         },
+      })
+      posthog.capture('promo_created', {
+        class_count: brief.classIds.length,
+        format: brief.format,
+        photo_count: photos.length,
+        source,
       })
       try {
         window.sessionStorage.removeItem(DRAFT_KEY)

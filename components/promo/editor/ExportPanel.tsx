@@ -18,6 +18,7 @@ import type { UploadTarget } from '@/lib/storage/direct-upload'
 import { uploadFile } from '@/lib/storage/upload-file'
 import { promoFetch } from '../hooks'
 import { useEditor } from './EditorContext'
+import posthog from 'posthog-js'
 
 /** The poster's web copy: a quarter of the print pixels, plenty for a phone screen or the site. */
 const WEB_POSTER_WIDTH = 1275
@@ -114,6 +115,9 @@ export function ExportPanel() {
         { method: 'POST', json: { path: target.path, classId } }
       )
       setPublication(live)
+      posthog.capture('promo_published', {
+        has_linked_class: Boolean(classId),
+      })
       addToast(classId ? 'Published and set as the class image' : 'Published to your assets', 'success')
     } catch (error) {
       setMessage(error instanceof Error && error.message ? error.message : 'Publishing failed. Try again.')

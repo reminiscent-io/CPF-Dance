@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
   const context = { bannedWords: brand.voice.bannedWords, sessionCount: brief.sessions.length }
   const schema = buildVariationSchema(definition, brief.photoIds)
   const input = inputFor(definition, brief, photos)
+  const posthogSessionId = `promo-generate-${process.pid}`
+  const posthogTraceId = crypto.randomUUID()
   const started = Date.now()
 
   const encoder = new TextEncoder()
@@ -74,6 +76,8 @@ export async function POST(request: NextRequest) {
             schemaName: 'promo_variation',
             instructions: instructionsFor(brand, angle, context.sessionCount),
             input: input + retryNote,
+            posthogSessionId,
+            posthogTraceId,
             maxOutputTokens: 3000,
             timeoutMs: attempt === 0 ? FIRST_TIMEOUT_MS : remaining,
           })

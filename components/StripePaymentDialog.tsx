@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import posthog from 'posthog-js'
 
 interface LessonPack {
   id: string
@@ -64,6 +65,10 @@ export function StripePaymentDialog({
       const { url } = await response.json()
 
       if (url) {
+        posthog.capture('lesson_pack_checkout_started', {
+          lesson_count: lessonPack.lesson_count,
+          pack_price: lessonPack.price,
+        })
         window.location.href = url
       } else {
         throw new Error('No checkout URL received')

@@ -16,6 +16,7 @@ import {
   UpcomingPrivateLessons,
   type UpcomingPrivateLesson
 } from '@/components/dancer/UpcomingPrivateLessons'
+import posthog from 'posthog-js'
 
 interface PurchaseRow {
   id: string
@@ -213,6 +214,10 @@ function PrivateLessonsContent() {
         })
         return
       }
+      posthog.capture('lesson_request_submitted', {
+        has_additional_notes: Boolean(data.additionalNotes),
+        preferred_date_count: data.preferredDates.length,
+      })
       setBanner({ tone: 'success', message: 'Sent. Courtney will get back to you.' })
       await fetchRequests()
     } catch (err) {
