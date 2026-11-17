@@ -1,6 +1,6 @@
 # CPF Dance
 
-A closed, invite-only platform that holds the coaching relationship between Courtney and her dancers. It isn't a studio-management SaaS or a marketplace. Courtney teaches a lesson, leaves a note (rich text or voice-transcribed), and the dancer reads it on her phone before the next one. Schedules, payments, waivers and lesson packs are there so that loop runs without friction.
+A closed, invite-only platform for Courtney and the dancers she coaches. Courtney teaches a lesson, leaves a note (rich text or voice-transcribed), and the dancer reads it on her phone before the next one. Schedules, payments, waivers and lesson packs keep that loop running.
 
 Product context lives in [PRODUCT.md](./PRODUCT.md), the design system in [DESIGN.md](./DESIGN.md), and the engineering guide in [CLAUDE.md](./CLAUDE.md).
 
@@ -41,7 +41,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The dev server runs on **http://localhost:3434**. `npm start` serves a local production build on port 5000.
+The dev server runs on http://localhost:3434. `npm start` serves a local production build on port 5000.
 
 ### Environment variables
 
@@ -60,9 +60,9 @@ Gmail and Google Calendar send and read as courtney@cpfdance.com. Leave the thre
 
 ### Database
 
-There is no migration runner. Changes are applied by hand in the Supabase SQL editor.
+There is no migration runner. You apply changes by hand in the Supabase SQL editor.
 
-To build a new database, run `supabase-schema.sql` once in a fresh Supabase project. It is the production schema after migration 52, checked object by object against the live database. Don't run `migrations/` on top of it. The file already includes them, and the folder can't rebuild the database on its own.
+To build a new database, run `supabase-schema.sql` once in a fresh Supabase project. It is the production schema after migration 53, checked object by object against the live database, plus migrations 54–56 written in by hand. After that, run only migrations numbered above 56. The folder can't rebuild the database on its own.
 
 Before adding a migration, run `ls migrations`. Numbers have collided before. Put the same change in `supabase-schema.sql`. More detail in [docs/database-setup.md](./docs/database-setup.md) and [migrations/README.md](./migrations/README.md).
 
@@ -104,7 +104,7 @@ tests/                Vitest setup and Supabase mocks
 
 ## Security model
 
-Every request passes three layers: `proxy.ts` routes by role, each API route calls a guard from `lib/auth/server-auth.ts`, and Postgres RLS policies enforce access on every table. Dancer routes scope every query to the caller's own student record. User HTML is always rendered through `createSanitizedHtml()`. See [docs/security-audit-2026-03-13.md](./docs/security-audit-2026-03-13.md).
+Every request passes three layers: `proxy.ts` routes by role, each API route calls a guard from `lib/auth/server-auth.ts`, and Postgres RLS policies enforce access on every table. Dancer routes scope each query to the caller's own student record. User HTML renders only through `createSanitizedHtml()`. See [docs/security-audit-2026-03-13.md](./docs/security-audit-2026-03-13.md).
 
 ## Documentation
 
@@ -112,7 +112,7 @@ Every request passes three layers: `proxy.ts` routes by role, each API route cal
 - [PRODUCT.md](./PRODUCT.md) and [DESIGN.md](./DESIGN.md): product strategy and the *Ballet Noir Program* design system
 - [docs/database-setup.md](./docs/database-setup.md): Supabase setup
 - [docs/class-pricing.md](./docs/class-pricing.md): the four pricing models
-- [docs/google-integrations.md](./docs/google-integrations.md): Gmail and Calendar/Meet: OAuth setup, endpoints, limits
+- [docs/google-integrations.md](./docs/google-integrations.md): Gmail and Calendar/Meet OAuth setup, endpoints and limits
 - [docs/promo-studio-setup.md](./docs/promo-studio-setup.md): Promo Studio migrations and first run
 - [docs/profile-linking.md](./docs/profile-linking.md): signing in with two emails through linked profiles
 - [docs/performance-optimization-notes.md](./docs/performance-optimization-notes.md): RLS performance
