@@ -8,6 +8,8 @@ import { notifyClassScheduled } from '@/lib/notifications/private-lessons'
 import { attachMeetToPrivateLesson, getPrivateLessonDancer } from '@/lib/google/private-lesson-meet'
 import { seriesPositions } from '@/lib/class-series'
 import { Constants } from '@/lib/supabase/database.types'
+import { posthogLog } from '@/instrumentation'
+import { SeverityNumber } from '@opentelemetry/api-logs'
 
 export async function GET(request: NextRequest) {
   try {
@@ -345,6 +347,19 @@ export async function POST(request: NextRequest) {
         console.error('[classes POST] Google Meet creation failed:', meetError)
       }
     }
+
+    posthogLog.emit({
+      body: 'class_created',
+      severityNumber: SeverityNumber.INFO,
+      attributes: {
+        workflow: 'class_created',
+        class_type,
+        is_public: Boolean(is_public),
+        is_virtual: Boolean(classData.is_virtual),
+        has_student: Boolean(student_id),
+        virtual_meet_created: Boolean(meet?.url),
+      },
+    })
 
     return NextResponse.json({ class: classData, meet }, { status: 201 })
   } catch (error) {

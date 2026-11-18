@@ -67,6 +67,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       schemaName: 'promo_revision',
       instructions: `${REVISE_INSTRUCTIONS}\n\nVoice: ${brand.voice.notes}\nNever use these words: ${banned}.`,
       input: reviseInput(context),
+      posthogSessionId: `promo-design-${design.id}`,
+      posthogTraceId: crypto.randomUUID(),
       maxOutputTokens: 2500,
       timeoutMs: 25_000,
     })

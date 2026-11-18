@@ -3,6 +3,7 @@ import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
 import OpenAI from 'openai'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isPathUnder } from '@/lib/storage/direct-upload'
+import { createOpenAIClient, flushAiObservability, openAIPostHogProperties } from '@/lib/posthog-ai'
 import {
   authorizeVoiceNote,
   VOICE_NOTE_BUCKET,
@@ -76,7 +77,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const openai = new OpenAI({ apiKey: auth.apiKey })
+    const openai = createOpenAIClient(auth.apiKey)
+    const posthogProperties = openAIPostHogProperties(
+      auth.profile.id,
+      `voice-to-notes-${process.pid}`,
+      crypto.randomUUID()
+    )
 
     // Whisper picks the decoder from the file name.
     const file = new File([await audioBlob.arrayBuffer()], 'audio.webm', { type: VOICE_NOTE_CONTENT_TYPE })
@@ -86,7 +92,8 @@ export async function POST(request: NextRequest) {
       file,
       model: 'whisper-1',
       language: 'en',
-      response_format: 'text'
+      response_format: 'text',
+      ...posthogProperties
     })
 
     const rawTranscript = transcription as unknown as string
@@ -112,7 +119,8 @@ export async function POST(request: NextRequest) {
         }
       ],
       temperature: 0.3, // Low temperature for more literal output
-      max_tokens: 1000
+      max_tokens: 1000,
+      ...posthogProperties
     })
 
     const cleanedContent = completion.choices[0]?.message?.content || rawTranscript
@@ -156,6 +164,7 @@ export async function POST(request: NextRequest) {
       const { error } = await admin.storage.from(VOICE_NOTE_BUCKET).remove([recordingPath])
       if (error) console.error('Could not delete voice note recording:', error)
     }
+    await flushAiObservability()
   }
 }
 

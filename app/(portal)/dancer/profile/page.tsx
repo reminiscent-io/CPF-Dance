@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { CheckIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { HeadshotUpload } from '@/components/HeadshotUpload'
 import { signOut } from '@/lib/auth/actions'
+import posthog from 'posthog-js'
 
 interface ProfileData {
   id: string
@@ -447,6 +448,7 @@ export default function DancerProfilePage() {
                   <Button
                     variant="secondary"
                     onClick={async () => {
+                      posthog.reset()
                       await signOut()
                     }}
                   >

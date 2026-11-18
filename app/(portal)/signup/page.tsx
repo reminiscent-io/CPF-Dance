@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { NEXT_PARAM, getSafeNextPath } from '@/lib/auth/portal-routing'
 import { InlineSpinner, Spinner } from '@/components/ui/Spinner'
 import type { UserRole } from '@/lib/auth/types'
+import posthog from 'posthog-js'
 
 const portalConfig = {
   dancer: {
@@ -71,6 +72,7 @@ function InstructorRequestForm() {
         return
       }
 
+      posthog.capture('instructor_access_requested')
       setSubmitted(true)
     } catch (err) {
       setError('An unexpected error occurred')

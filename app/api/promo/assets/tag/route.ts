@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
       schemaName: 'photo_tags',
       instructions: TAG_INSTRUCTIONS,
       input: parts,
+      posthogSessionId: `promo-tag-${ownerId}`,
+      posthogTraceId: crypto.randomUUID(),
       maxOutputTokens: 300 * rows.length + 200,
       timeoutMs: 45_000,
     })

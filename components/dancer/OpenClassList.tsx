@@ -11,6 +11,7 @@ import { ClassTypeChip, EnrolledMark } from '@/components/dancer/ClassChips'
 import { signupUrlFor } from '@/lib/signup-link'
 import { dayListing, isClassFull, isMultiDay, type OpenClass } from '@/lib/open-classes'
 import type { WorkshopOption } from '@/lib/class-series'
+import posthog from 'posthog-js'
 import {
   ArrowTopRightOnSquareIcon,
   ClockIcon,
@@ -92,6 +93,11 @@ export function OpenClassList({ listings, studentId, linkedClassId, basePath, on
           enrolled_days > 1 ? `Enrolled in all ${enrolled_days} workshop days.` : `Enrolled in ${selectedClass.title}.`,
           'success'
         )
+        posthog.capture('class_enrolled', {
+          class_type: selectedClass.class_type,
+          enrolled_days,
+          enrollment_option: selectedOption ?? 'single',
+        })
         setSelectedClass(null)
         onEnrolled()
       } else {

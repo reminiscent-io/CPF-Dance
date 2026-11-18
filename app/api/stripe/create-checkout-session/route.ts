@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentDancerStudent, getDefaultInstructorId } from '@/lib/auth/server-auth'
+import { posthogLog } from '@/instrumentation'
+import { SeverityNumber } from '@opentelemetry/api-logs'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -73,6 +75,17 @@ export async function POST(request: NextRequest) {
         lesson_pack_id: lesson_pack_id,
         instructor_id: instructor_id,
         lesson_count: pack.lesson_count.toString(),
+      },
+    })
+
+    posthogLog.emit({
+      body: 'lesson_pack_checkout_session_created',
+      severityNumber: SeverityNumber.INFO,
+      attributes: {
+        workflow: 'lesson_pack_checkout_session_created',
+        lesson_count: pack.lesson_count,
+        amount_cents: Math.round(pack.price * 100),
+        currency: 'usd',
       },
     })
 

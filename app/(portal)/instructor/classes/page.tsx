@@ -23,6 +23,7 @@ import { ClassAgendaRow, type RowWeight } from '@/components/instructor/classes/
 import { CreateClassModal } from '@/components/instructor/classes/CreateClassModal'
 import { EditClassModal } from '@/components/instructor/classes/EditClassModal'
 import { ET } from '@/components/instructor/classes/class-helpers'
+import posthog from 'posthog-js'
 
 /**
  * Loaders that return data instead of setting state, so mount effects and the
@@ -262,6 +263,11 @@ function ClassesContent() {
           ...prev
         ])
         setShowCreateModal(false)
+        posthog.capture('class_created', {
+          class_type: formData.class_type,
+          created_count: total,
+          is_recurring: true,
+        })
         const noun = formData.class_type === 'private' ? 'lessons' : formData.class_type === 'workshop' ? 'workshop days' : 'classes'
         addToast(`${newClasses.length} ${noun} created successfully`, 'success')
         if (meet?.failed > 0) {
@@ -299,6 +305,11 @@ function ClassesContent() {
       const { class: newClass, meet } = await response.json()
       setClasses(prev => [newClass, ...prev])
       setShowCreateModal(false)
+      posthog.capture('class_created', {
+        class_type: formData.class_type,
+        created_count: 1,
+        is_recurring: false,
+      })
       addToast('Class created successfully', 'success')
       if (meet?.url && !meet.dancerHasEmail) {
         addToast(
@@ -380,6 +391,10 @@ function ClassesContent() {
       }
       setShowEditModal(false)
       setSelectedClass(null)
+      posthog.capture('class_updated', {
+        class_type: formData.class_type,
+        series_updated_count: series_updated ?? 0,
+      })
       addToast(
         series_updated > 0
           ? `Class updated, along with ${series_updated} other ${series_updated === 1 ? 'day' : 'days'}`
@@ -421,6 +436,10 @@ function ClassesContent() {
       } else {
         setClasses(prev => prev.filter(cls => !deleted.has(cls.id)))
       }
+      posthog.capture('class_deleted', {
+        deleted_count: deleted.size,
+        scope,
+      })
       addToast(deleted.size > 1 ? `${deleted.size} classes deleted` : 'Class deleted successfully', 'success')
     } catch (error) {
       console.error('Error deleting class:', error)

@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import type { z } from 'zod'
 import { PromoError } from '../server/context'
+import { createOpenAIClient, flushAiObservability, openAIPostHogProperties } from '@/lib/posthog-ai'
 import { logAiCall, type AiCallKind } from './log'
 import { costMicros } from './pricing'
 
@@ -26,12 +27,12 @@ export function textModels(): { primary: string; fallback: string } {
   }
 }
 
-function openai(): OpenAI {
+function openai() {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new PromoError('AI isn’t set up yet (OPENAI_API_KEY is missing).', 503, 'no_api_key')
   // No hidden SDK retries: callStructured retries itself, so every attempt
   // lands in the cost log.
-  return new OpenAI({ apiKey, maxRetries: 0 })
+  return createOpenAIClient(apiKey, { maxRetries: 0 })
 }
 
 /** Worth one more try: rate limits, server errors and dropped connections, but not timeouts. */
@@ -79,6 +80,8 @@ export interface StructuredCall<S extends z.ZodType> {
   schemaName: string
   instructions: string
   input: string | InputPart[]
+  posthogSessionId?: string
+  posthogTraceId?: string
   designId?: string | null
   assetId?: string | null
   maxOutputTokens?: number
@@ -133,6 +136,9 @@ export async function callStructured<S extends z.ZodType>(
           reasoning: reasoningFor(model),
           max_output_tokens: call.maxOutputTokens ?? 2000,
           store: false,
+          ...(call.posthogSessionId && call.posthogTraceId
+            ? openAIPostHogProperties(call.ownerId, call.posthogSessionId, call.posthogTraceId)
+            : {}),
         },
         { timeout: call.timeoutMs ?? 25_000 }
       )
@@ -153,6 +159,8 @@ export async function callStructured<S extends z.ZodType>(
               : 'exception',
       })
       throw error
+    } finally {
+      await flushAiObservability()
     }
 
     const usage = {
