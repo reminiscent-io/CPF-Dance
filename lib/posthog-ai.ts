@@ -20,7 +20,9 @@ if (!host && process.env.NODE_ENV !== 'production') {
 export const posthogAiClient = projectToken && host
   ? new PostHog(projectToken, {
       host,
-      privacyMode: false,
+      // Prompts and replies hold dancers' notes and voice transcripts. Privacy
+      // mode sends only model, tokens, cost, latency and errors.
+      privacyMode: true,
       flushAt: 1,
       flushInterval: 0,
       requestTimeout: 2000,

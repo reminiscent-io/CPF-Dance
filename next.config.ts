@@ -42,6 +42,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // PostHog's API paths end in a slash; Next's redirect would drop it.
+  skipTrailingSlashRedirect: true,
+  // PostHog through our own domain, so ad blockers don't drop dancers' events.
+  // The browser SDK posts to /ingest (lib/analytics/posthog-client.ts).
+  async rewrites() {
+    return [
+      { source: '/ingest/static/:path*', destination: 'https://us-assets.i.posthog.com/static/:path*' },
+      { source: '/ingest/array/:path*', destination: 'https://us-assets.i.posthog.com/array/:path*' },
+      { source: '/ingest/:path*', destination: 'https://us.i.posthog.com/:path*' },
+    ]
+  },
   async redirects() {
     return [
       // Open classes moved onto the dancer's Classes page. Shared class links

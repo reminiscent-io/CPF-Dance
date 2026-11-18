@@ -195,7 +195,7 @@ export function NoteDetailModal({
           )}
 
           <div
-            className="prose prose-sm max-w-none text-charcoal-900 [&_blockquote]:border-l-2 [&_blockquote]:border-ballet-pink-600 [&_blockquote]:pl-3 [&_blockquote]:italic [&_h1]:mt-4 [&_h2]:mt-3 [&_p]:my-2"
+            className="prose prose-sm max-w-none text-charcoal-900 ph-no-capture [&_blockquote]:border-l-2 [&_blockquote]:border-ballet-pink-600 [&_blockquote]:pl-3 [&_blockquote]:italic [&_h1]:mt-4 [&_h2]:mt-3 [&_p]:my-2"
             dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
           />
 

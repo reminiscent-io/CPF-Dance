@@ -520,7 +520,7 @@ export default function StudentDetailPage() {
                             </span>
                           </div>
                           <div
-                            className="prose prose-sm max-w-none text-charcoal-700 mt-3"
+                            className="prose prose-sm max-w-none text-charcoal-700 mt-3 ph-no-capture"
                             dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
                           />
                           {note.tags && note.tags.length > 0 && (
@@ -570,7 +570,7 @@ export default function StudentDetailPage() {
                           )}
                         </div>
                         <div
-                          className="prose prose-sm max-w-none text-charcoal-700 mt-3"
+                          className="prose prose-sm max-w-none text-charcoal-700 mt-3 ph-no-capture"
                           dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
                         />
                         {note.tags && note.tags.length > 0 && (

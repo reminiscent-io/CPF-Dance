@@ -165,7 +165,7 @@ export function NoteFeedItem({
       )}
 
       <div
-        className={`text-charcoal-700 rich-text-preview ${
+        className={`text-charcoal-700 rich-text-preview ph-no-capture ${
           isCompact ? 'text-sm line-clamp-2 leading-relaxed' : 'line-clamp-3 max-w-[68ch]'
         } ${classTitle || !note.title ? '' : isCompact ? 'mt-1.5' : 'mt-2'}`}
         dangerouslySetInnerHTML={createSanitizedHtml(getContentPreview(note.content, previewLength))}

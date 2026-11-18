@@ -369,7 +369,7 @@ export default function WaiverDetailPage() {
           <CardTitle>Waiver Content</CardTitle>
           <CardContent className="mt-4">
             <div
-              className="prose prose-sm max-w-none bg-champagne-100 p-6 rounded-lg border border-champagne-200"
+              className="prose prose-sm max-w-none bg-champagne-100 p-6 rounded-lg border border-champagne-200 ph-no-capture"
               dangerouslySetInnerHTML={createSanitizedHtml(waiver.content)}
             />
           </CardContent>

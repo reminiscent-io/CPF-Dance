@@ -27,12 +27,13 @@ export const config = {
     /*
      * Match all request paths except:
      * - api (API routes)
+     * - ingest (PostHog, rewritten in next.config.ts)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - _next/webpack-hmr (webpack HMR)
      * - favicon and icons
      * - public images
      */
-    '/((?!api/|_next/|favicon\\.ico|icon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/|ingest/|_next/|favicon\\.ico|icon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

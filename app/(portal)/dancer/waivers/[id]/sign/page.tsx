@@ -141,7 +141,7 @@ export default function SignWaiverPage() {
           <CardTitle>Waiver Terms</CardTitle>
           <CardContent className="mt-4">
             <div className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 max-h-64 overflow-y-auto">
-              <div className="text-gray-700 whitespace-pre-wrap">{waiver.content}</div>
+              <div className="text-gray-700 whitespace-pre-wrap ph-no-capture">{waiver.content}</div>
             </div>
 
             <label className="flex items-start gap-3 mb-6">
