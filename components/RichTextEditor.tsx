@@ -150,7 +150,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       </div>
 
       {/* Editor Content */}
-      <div className="bg-white">
+      <div className="bg-white ph-no-capture">
         <EditorContent editor={editor} />
       </div>
 

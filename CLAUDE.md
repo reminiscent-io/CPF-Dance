@@ -76,6 +76,8 @@ CI (`.github/workflows/lint.yml`) runs `eslint . --max-warnings=0`, `tsc --noEmi
 | `OPENAI_API_KEY` | Voice/AI notes | Voice-to-notes transcription and note formatting |
 | `GOOGLE_PLACES_API_KEY` | Studio search | Google Places autocomplete and details |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Gmail, Calendar/Meet | OAuth client + Courtney's refresh token (`lib/google/api.ts`) |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | Analytics | PostHog project token (public). Unset = PostHog off |
+| `NEXT_PUBLIC_POSTHOG_HOST` | Analytics | `https://us.i.posthog.com`, for server-side AI tracking and logs. The browser uses `/ingest` |
 
 ## Critical Rules
 
@@ -147,6 +149,9 @@ On a bad connection every tap has to visibly do something. `instrumentation-clie
 
 ### File Uploads
 Files never go through an API route body: Vercel rejects anything over 4.5MB before the route runs. The browser sends the file straight to Supabase Storage with a signed upload token, and the route only sees its path (`lib/storage/direct-upload.ts` explains the flow). Three steps: an `upload-url` route authorizes the caller, picks the path and returns `createUploadTarget()`; the client calls `uploadFile()` (`lib/storage/upload-file.ts`); the finishing route takes `{ path }`, refuses it unless `isPathUnder()` the prefix it would have issued, and reads size and type back from Storage (`info()` or `download()`) instead of trusting the browser. A signed token bypasses storage RLS, so the mint route is the authorization check. Used by assets (`/api/assets/upload-url`), voice notes (`/api/voice-to-notes/upload-url`, private `voice-notes` bucket from migration 56, recording deleted after transcription) and promo publishing (`/api/promo/designs/[id]/publish/upload-url`). Promo Studio's photo library uploads under RLS instead (`lib/promo/client/upload/queue.ts`).
+
+### Analytics (PostHog)
+`lib/analytics/posthog-client.ts` owns the browser SDK; import from it, not `posthog-js`, for anything beyond `posthog.capture()`. PostHog stays off until `CookieConsentBanner` grants consent, and `/ingest` is rewritten to PostHog in `next.config.ts` (excluded from `proxy.ts`). People are identified by Supabase user ID and role only: no names or emails, since many dancers are minors. Session replay never records instructor or admin sessions. Any element that renders notes, waivers or emails takes the `ph-no-capture` class, which blanks it in replay and keeps it out of click events; TipTap editors are blocked by `.ProseMirror`. Server-side OpenAI calls go through `createOpenAIClient()` (`lib/posthog-ai.ts`) with privacy mode on, so prompts and replies never leave the server. Don't call `posthog.reset()` directly: it wipes consent. Use `syncAnalyticsUser(null)`.
 
 ### Waiver Template Variables
 `{{issue_date}}`, `{{issuer_name}}`, `{{recipient_name}}`, `{{signature_date}}` — replaced at issuance time.

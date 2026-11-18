@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { CheckIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { HeadshotUpload } from '@/components/HeadshotUpload'
 import { signOut } from '@/lib/auth/actions'
-import posthog from 'posthog-js'
+import { syncAnalyticsUser } from '@/lib/analytics/posthog-client'
 
 interface ProfileData {
   id: string
@@ -275,7 +275,7 @@ export default function InstructorProfilePage() {
                   <Button
                     variant="secondary"
                     onClick={async () => {
-                      posthog.reset()
+                      syncAnalyticsUser(null)
                       await signOut()
                     }}
                   >

@@ -603,7 +603,7 @@ export default function DancerSchedulePage() {
                           </span>
                         </div>
                         <div
-                          className="mt-1.5 text-sm text-charcoal-700 line-clamp-3 [&_p]:m-0 [&_p+p]:mt-1"
+                          className="mt-1.5 text-sm text-charcoal-700 line-clamp-3 [&_p]:m-0 [&_p+p]:mt-1 ph-no-capture"
                           dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
                         />
                         <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-charcoal-500">

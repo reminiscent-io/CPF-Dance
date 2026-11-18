@@ -67,7 +67,7 @@ export function NoteViewContent({
       )}
 
       <div
-        className={`prose prose-sm max-w-[68ch] text-charcoal-800 rich-text-preview ${
+        className={`prose prose-sm max-w-[68ch] text-charcoal-800 rich-text-preview ph-no-capture ${
           note.title || classTitle ? '' : 'mt-2'
         }`}
         dangerouslySetInnerHTML={createSanitizedHtml(note.content)}

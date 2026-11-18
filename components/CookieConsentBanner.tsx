@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { grantAnalyticsConsent, revokeAnalyticsConsent } from '@/lib/analytics/posthog-client'
 
 const CONSENT_STORAGE_KEY = 'gdpr_consent'
 const GEO_CHECK_KEY = 'gdpr_geo_checked'
 
 interface ConsentState {
   necessary: boolean // Always true - auth cookies
-  analytics: boolean // Google Analytics - requires opt-in
+  analytics: boolean // Google Analytics and PostHog - requires opt-in
   timestamp: number
 }
 
@@ -25,7 +26,7 @@ const GDPR_COUNTRIES = new Set([
   'CH'
 ])
 
-// Touches only the global gtag bridge, never component state, so it lives
+// Touches only the gtag bridge and PostHog, never component state, so it lives
 // outside the component and stays callable from the consent effect above it.
 function enableAnalytics() {
   if (typeof window !== 'undefined' && window.gtag) {
@@ -33,6 +34,7 @@ function enableAnalytics() {
       analytics_storage: 'granted'
     })
   }
+  grantAnalyticsConsent()
 }
 
 export default function CookieConsentBanner() {
@@ -121,6 +123,8 @@ export default function CookieConsentBanner() {
 
     if (analytics) {
       enableAnalytics()
+    } else {
+      revokeAnalyticsConsent()
     }
 
     setShowBanner(false)

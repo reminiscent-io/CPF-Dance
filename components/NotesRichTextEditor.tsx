@@ -151,7 +151,7 @@ export function NotesRichTextEditor({
         </button>
       </div>
 
-      <div className="bg-white">
+      <div className="bg-white ph-no-capture">
         <EditorContent editor={editor} />
       </div>
     </div>
@@ -169,7 +169,7 @@ export function RichTextDisplay({ content, className = '' }: RichTextDisplayProp
 
   return (
     <div
-      className={`prose prose-sm max-w-none ${className}`}
+      className={`prose prose-sm max-w-none ph-no-capture ${className}`}
       dangerouslySetInnerHTML={sanitizedContent}
     />
   )

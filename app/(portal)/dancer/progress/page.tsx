@@ -223,7 +223,7 @@ export default function DancerProgressPage() {
 
                     <div className="prose prose-sm max-w-none mb-4">
                       <div
-                        className="text-charcoal-700"
+                        className="text-charcoal-700 ph-no-capture"
                         dangerouslySetInnerHTML={createSanitizedHtml(note.content)}
                       />
                     </div>
@@ -307,7 +307,7 @@ export default function DancerProgressPage() {
             <div className="border-t border-champagne-200 pt-4">
               <div className="prose prose-sm max-w-none">
                 <div
-                  className="text-charcoal-700"
+                  className="text-charcoal-700 ph-no-capture"
                   dangerouslySetInnerHTML={createSanitizedHtml(selectedNote.content)}
                 />
               </div>

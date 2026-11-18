@@ -201,7 +201,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
               </div>
               {/* Editor */}
               {editor ? (
-                <EditorContent editor={editor} className="bg-champagne-50" />
+                <EditorContent editor={editor} className="bg-champagne-50 ph-no-capture" />
               ) : (
                 <div className="min-h-[200px] px-3 py-2 flex items-center justify-center">
                   <Spinner size="sm" />
@@ -305,7 +305,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
                   )}
                 </div>
                 <div
-                  className="text-sm text-charcoal-700 prose prose-sm max-w-none"
+                  className="text-sm text-charcoal-700 prose prose-sm max-w-none ph-no-capture"
                   dangerouslySetInnerHTML={createSanitizedHtml(msg.body)}
                 />
               </div>
