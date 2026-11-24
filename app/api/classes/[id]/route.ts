@@ -349,54 +349,55 @@ export async function DELETE(
     // Days already held stay, so their attendance and spent credits aren't undone.
     const deleteSeries = request.nextUrl.searchParams.get('scope') === 'series'
 
-    let ids = [id]
-    if (deleteSeries) {
-      let ownQuery = supabase.from('classes').select('id, series_id').eq('id', id)
-      if (profile.role !== 'admin') {
-        ownQuery = ownQuery.eq('instructor_id', profile.id)
-      }
-      const { data: target } = await ownQuery.single()
-      if (!target) {
-        return NextResponse.json({ error: 'Class not found or unauthorized' }, { status: 404 })
-      }
-
-      if (target.series_id) {
-        let siblingQuery = supabase
-          .from('classes')
-          .select('id')
-          .eq('series_id', target.series_id)
-          .neq('id', id)
-          .gte('start_time', new Date().toISOString())
-        if (profile.role !== 'admin') {
-          siblingQuery = siblingQuery.eq('instructor_id', profile.id)
-        }
-        const { data: siblings, error: siblingError } = await siblingQuery
-        if (siblingError) {
-          console.error('Error fetching class series:', siblingError)
-          return NextResponse.json({ error: 'Failed to delete classes' }, { status: 500 })
-        }
-        ids = [id, ...(siblings || []).map(row => row.id)]
-      }
+    // Authorize every target before any side effect. Refunds and Calendar
+    // deletes run on the service-role client, which ignores ownership, so a
+    // class this instructor doesn't own must never reach them.
+    let ownQuery = supabase
+      .from('classes')
+      .select('id, series_id, google_calendar_event_id')
+      .eq('id', id)
+    if (profile.role !== 'admin') {
+      ownQuery = ownQuery.eq('instructor_id', profile.id)
+    }
+    const { data: target } = await ownQuery.single()
+    if (!target) {
+      return NextResponse.json({ error: 'Class not found or unauthorized' }, { status: 404 })
     }
 
+    let targets: { id: string; google_calendar_event_id: string | null }[] = [target]
+    if (deleteSeries && target.series_id) {
+      let siblingQuery = supabase
+        .from('classes')
+        .select('id, google_calendar_event_id')
+        .eq('series_id', target.series_id)
+        .neq('id', id)
+        .gte('start_time', new Date().toISOString())
+      if (profile.role !== 'admin') {
+        siblingQuery = siblingQuery.eq('instructor_id', profile.id)
+      }
+      const { data: siblings, error: siblingError } = await siblingQuery
+      if (siblingError) {
+        console.error('Error fetching class series:', siblingError)
+        return NextResponse.json({ error: 'Failed to delete classes' }, { status: 500 })
+      }
+      targets = [target, ...(siblings || [])]
+    }
+    const ids = targets.map(row => row.id)
+
     const admin = createAdminClient()
-    for (const classId of ids) {
-      // Refund any active credit attached to this class before deletion.
+    for (const row of targets) {
+      // Refund any active credit attached to this class before deletion: the
+      // delete nulls lesson_pack_usage.class_id, so the usage can't be found after.
       // Uses the admin client because nobody has UPDATE on lesson_pack_usage under RLS.
-      await refundCreditForClass({ supabase: admin, classId, reason: 'class_deleted' })
+      await refundCreditForClass({ supabase: admin, classId: row.id, reason: 'class_deleted' })
 
       // Remove the backing Google Calendar event / Meet for virtual lessons (best-effort).
-      try {
-        const { data: classRow } = await admin
-          .from('classes')
-          .select('google_calendar_event_id')
-          .eq('id', classId)
-          .single()
-        if (classRow?.google_calendar_event_id) {
-          await deleteMeetEvent(classRow.google_calendar_event_id)
+      if (row.google_calendar_event_id) {
+        try {
+          await deleteMeetEvent(row.google_calendar_event_id)
+        } catch (meetError) {
+          console.error('[classes DELETE] deleteMeetEvent failed:', meetError)
         }
-      } catch (meetError) {
-        console.error('[classes DELETE] deleteMeetEvent failed:', meetError)
       }
     }
 
@@ -411,14 +412,28 @@ export async function DELETE(
       query = query.eq('instructor_id', profile.id)
     }
 
-    const { error } = await query
+    const { data: deleted, error } = await query.select('id')
 
     if (error) {
       console.error('Error deleting class:', error)
       return NextResponse.json({ error: 'Failed to delete class' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, deleted_ids: ids })
+    const deletedIds = (deleted || []).map(row => row.id)
+    if (deletedIds.length !== ids.length) {
+      // Credits for these classes were already refunded; surface the gap
+      // instead of reporting success.
+      console.error('[classes DELETE] Deleted fewer classes than authorized:', {
+        authorized: ids,
+        deleted: deletedIds,
+      })
+      return NextResponse.json(
+        { error: 'Some classes could not be deleted', deleted_ids: deletedIds },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true, deleted_ids: deletedIds })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
