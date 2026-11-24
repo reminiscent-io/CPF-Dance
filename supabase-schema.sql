@@ -1,10 +1,10 @@
 -- CPF Dance database schema
 --
 -- The production schema after migration 53, generated on 2026-11-12 from the
--- live database's catalog, plus migrations 54-55 (class feedback) and 56
--- (voice-notes bucket) written in by hand. To build a new database, run this
--- file once in the SQL editor of a fresh Supabase project, then any migration
--- numbered above 56.
+-- live database's catalog, plus migrations 54-55 (class feedback), 56
+-- (voice-notes bucket) and 57 (dancers can't write lesson credits) written in
+-- by hand. To build a new database, run this file once in the SQL editor of a
+-- fresh Supabase project, then any migration numbered above 57.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -1270,14 +1270,6 @@ CREATE POLICY relationships_update_policy ON public.instructor_student_relations
   USING (((instructor_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
    FROM profiles
   WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = 'admin'::user_role))))));
-CREATE POLICY "Students can create purchases" ON public.lesson_pack_purchases FOR INSERT TO public
-  WITH CHECK ((EXISTS ( SELECT 1
-   FROM students
-  WHERE ((students.id = lesson_pack_purchases.student_id) AND ((students.profile_id = ( SELECT auth.uid() AS uid)) OR (students.guardian_id = ( SELECT auth.uid() AS uid)))))));
-CREATE POLICY "Students can update their purchases" ON public.lesson_pack_purchases FOR UPDATE TO public
-  USING ((EXISTS ( SELECT 1
-   FROM students
-  WHERE ((students.id = lesson_pack_purchases.student_id) AND ((students.profile_id = ( SELECT auth.uid() AS uid)) OR (students.guardian_id = ( SELECT auth.uid() AS uid)))))));
 CREATE POLICY lesson_pack_purchases_select_policy ON public.lesson_pack_purchases FOR SELECT TO public
   USING (((EXISTS ( SELECT 1
    FROM students
@@ -1287,14 +1279,9 @@ CREATE POLICY lesson_pack_purchases_select_policy ON public.lesson_pack_purchase
    FROM profiles
   WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = 'admin'::user_role))))));
 CREATE POLICY lesson_pack_usage_insert_policy ON public.lesson_pack_usage FOR INSERT TO public
-  WITH CHECK (((EXISTS ( SELECT 1
-   FROM (lesson_pack_purchases lpp
-     JOIN students s ON ((s.id = lpp.student_id)))
-  WHERE ((lpp.id = lesson_pack_usage.lesson_pack_purchase_id) AND (s.profile_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1
+  WITH CHECK ((EXISTS ( SELECT 1
    FROM profiles
-  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = 'instructor'::user_role)))) OR (EXISTS ( SELECT 1
-   FROM profiles
-  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = 'admin'::user_role))))));
+  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = ANY (ARRAY['instructor'::user_role, 'admin'::user_role]))))));
 CREATE POLICY lesson_pack_usage_select_policy ON public.lesson_pack_usage FOR SELECT TO public
   USING (((EXISTS ( SELECT 1
    FROM (lesson_pack_purchases lpp
