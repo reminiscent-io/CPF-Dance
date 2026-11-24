@@ -141,7 +141,7 @@ export function PrivateLessonActions({
           />
         </div>
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={() => setShowCancel(false)} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => setShowCancel(false)} disabled={submitting}>
             Keep lesson
           </Button>
           <Button

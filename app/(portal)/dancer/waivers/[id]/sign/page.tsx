@@ -177,7 +177,7 @@ export default function SignWaiverPage() {
           </Button>
           <Button
             onClick={handleDecline}
-            variant="outline"
+            variant="secondary"
             size="lg"
             className="flex-1"
           >
