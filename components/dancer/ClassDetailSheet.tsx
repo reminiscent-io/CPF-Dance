@@ -150,7 +150,7 @@ export function ClassDetailSheet({
             href={meetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-white font-medium rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-rose-700 hover:bg-rose-800 active:bg-rose-900 text-champagne-50 font-medium rounded-lg transition-colors"
           >
             <VideoCameraIcon className="w-5 h-5" />
             Join Google Meet

@@ -52,7 +52,7 @@ export function Select({
         id={selectId}
         className={`
           ${fieldClass}
-          ${error ? 'border-rose-500 focus:ring-rose-500' : 'border-champagne-200'}
+          ${error ? 'border-rose-600 focus:ring-rose-500' : ''}
           ${className}
         `}
         style={chevronStyle}

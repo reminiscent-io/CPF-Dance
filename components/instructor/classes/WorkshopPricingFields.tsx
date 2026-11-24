@@ -44,7 +44,7 @@ export function WorkshopPricingFields({
           id="workshop_full_only"
           checked={values.workshop_full_only || false}
           onChange={(e) => onChange({ workshop_full_only: e.target.checked })}
-          className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+          className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
         />
         <label htmlFor="workshop_full_only" className="text-sm font-medium text-charcoal-700 cursor-pointer">
           Full workshop only (no single-day drop-ins)

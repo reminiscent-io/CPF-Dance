@@ -207,7 +207,7 @@ export function useExternalSignup({
       )}
 
       <ModalFooter className="mt-6">
-        <Button variant="outline" onClick={cancel} disabled={confirming}>
+        <Button variant="secondary" onClick={cancel} disabled={confirming}>
           Cancel
         </Button>
         <Button onClick={confirm} loading={confirming}>

@@ -128,7 +128,7 @@ function AssetDetail({ asset, onClose, onUpdate, onDelete }: AssetDetailSheetPro
             className="flex-shrink-0"
           >
             {asset.favorite ? (
-              <HeartSolidIcon className="mr-1.5 h-4 w-4 text-rose-600" aria-hidden="true" />
+              <HeartSolidIcon className="mr-1.5 h-4 w-4 text-rose-700" aria-hidden="true" />
             ) : (
               <HeartIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
             )}

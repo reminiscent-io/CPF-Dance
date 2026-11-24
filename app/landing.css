@@ -12,9 +12,10 @@
   --lp-black: var(--color-charcoal-950);       /* Stage Black */
   --lp-graphite: var(--color-charcoal-500);    /* Stage Graphite */
   --lp-rose: var(--color-rose-600);            /* Stage Rose */
-  --lp-rose-deep: var(--color-rose-700);       /* Stage Rose Deep */
-  --lp-gilt: var(--color-gold-600);            /* Curtain Gilt */
-  --lp-gilt-deep: var(--color-gold-700);       /* Curtain Gilt Deep */
+  --lp-rose-deep: var(--color-rose-700);       /* Stage Rose Deep: rose text and button fills (AA on paper) */
+  --lp-rose-deeper: var(--color-rose-800);     /* rose button hover */
+  --lp-gilt: var(--color-gold-800);            /* Curtain Gilt button fill: gold-600 is 2.6:1 under paper text */
+  --lp-gilt-deep: var(--color-gold-900);       /* Curtain Gilt hover */
 
   --lp-gutter: clamp(20px, 6vw, 96px);
   --lp-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -68,8 +69,8 @@
   text-decoration: none;
   transition: background-color 0.25s var(--lp-ease);
 }
-.lp-button--rose { background: var(--lp-rose); }
-.lp-button--rose:hover { background: var(--lp-rose-deep); }
+.lp-button--rose { background: var(--lp-rose-deep); }
+.lp-button--rose:hover { background: var(--lp-rose-deeper); }
 .lp-button--gold {
   background: var(--lp-gilt);
   box-shadow: 0 2px 8px rgba(10, 10, 10, 0.06);

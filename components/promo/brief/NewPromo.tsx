@@ -379,21 +379,21 @@ export default function NewPromo() {
                       aria-label={`Date ${index + 1}`}
                       value={session.date}
                       onChange={(event) => setSession(index, { date: event.target.value })}
-                      className="col-span-3 min-h-control w-full rounded-lg sm:col-span-1 border border-champagne-200 bg-champagne-50 px-3 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="col-span-3 min-h-control w-full rounded-lg sm:col-span-1 border bg-champagne-50 px-3 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                     <input
                       type="time"
                       aria-label={`Start time ${index + 1}`}
                       value={session.start}
                       onChange={(event) => setSession(index, { start: event.target.value })}
-                      className="min-h-control w-full rounded-lg border border-champagne-200 bg-champagne-50 px-2 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="min-h-control w-full rounded-lg border bg-champagne-50 px-2 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                     <input
                       type="time"
                       aria-label={`End time ${index + 1}`}
                       value={session.end}
                       onChange={(event) => setSession(index, { end: event.target.value })}
-                      className="min-h-control w-full rounded-lg border border-champagne-200 bg-champagne-50 px-2 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="min-h-control w-full rounded-lg border bg-champagne-50 px-2 text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
                     />
                     <button
                       type="button"

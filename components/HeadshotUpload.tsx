@@ -161,7 +161,7 @@ export function HeadshotUpload({
     <div className="flex flex-col items-start gap-4">
       {/* Avatar display */}
       <div className="relative">
-        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-champagne-50 shadow-lg">
           {displayUrl ? (
             /* displayUrl is a FileReader data: URL while a new headshot is
                being previewed. next/image only accepts internal paths, static
@@ -216,12 +216,12 @@ export function HeadshotUpload({
           )}
         </div>
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-charcoal-500">
           JPEG, PNG, WebP, or GIF. Max 5MB.
         </p>
 
         {error && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-rose-700">
             {error}
           </p>
         )}

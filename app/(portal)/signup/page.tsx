@@ -14,9 +14,9 @@ const portalConfig = {
     subtitle: 'Start your dance journey today',
     icon: '💃',
     gradient: 'from-rose-50 to-pink-50',
-    buttonColor: 'bg-rose-600 hover:bg-rose-700',
+    buttonColor: 'bg-rose-700 hover:bg-rose-800',
     ringColor: 'focus:ring-rose-500',
-    textColor: 'text-rose-600',
+    textColor: 'text-rose-700',
     defaultRole: 'dancer' as UserRole,
   },
   instructor: {
@@ -24,9 +24,9 @@ const portalConfig = {
     subtitle: 'Join our teaching community',
     icon: '👩‍🏫',
     gradient: 'from-mauve-50 to-purple-50',
-    buttonColor: 'bg-mauve-600 hover:bg-mauve-700',
+    buttonColor: 'bg-mauve-700 hover:bg-mauve-800',
     ringColor: 'focus:ring-mauve-500',
-    textColor: 'text-mauve-600',
+    textColor: 'text-mauve-700',
     defaultRole: 'instructor' as UserRole,
   },
 }
@@ -106,7 +106,7 @@ function InstructorRequestForm() {
           </p>
           <Link
             href="/"
-            className={`inline-block ${config.buttonColor} text-white px-6 py-2 rounded-md transition duration-200 font-medium`}
+            className={`inline-block ${config.buttonColor} text-champagne-50 px-6 py-2 rounded-md transition duration-200 font-medium`}
           >
             Return Home
           </Link>
@@ -154,7 +154,7 @@ function InstructorRequestForm() {
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="Jane Smith"
               disabled={loading}
             />
@@ -173,7 +173,7 @@ function InstructorRequestForm() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -191,7 +191,7 @@ function InstructorRequestForm() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="(555) 123-4567"
               disabled={loading}
             />
@@ -209,7 +209,7 @@ function InstructorRequestForm() {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={3}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition resize-none`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition resize-none`}
               placeholder="Share your dance teaching experience, specialties, or what brings you here..."
               disabled={loading}
             />
@@ -218,7 +218,7 @@ function InstructorRequestForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-champagne-50 py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
             {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Submitting...' : 'Request Access'}
@@ -374,7 +374,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="Jane Smith"
               disabled={loading}
             />
@@ -393,7 +393,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -411,7 +411,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="(555) 123-4567"
               disabled={loading}
             />
@@ -431,7 +431,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
                     checked={formData.isAtLeast13}
                     onChange={() => handleAgeConfirmationChange(true)}
                     disabled={loading}
-                    className="mr-2 w-4 h-4 text-rose-600 focus:ring-rose-500"
+                    className="mr-2 w-4 h-4 text-rose-700 focus:ring-rose-500"
                   />
                   <span className="text-gray-700">Yes</span>
                 </label>
@@ -443,7 +443,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
                     checked={!formData.isAtLeast13}
                     onChange={() => handleAgeConfirmationChange(false)}
                     disabled={loading}
-                    className="mr-2 w-4 h-4 text-rose-600 focus:ring-rose-500"
+                    className="mr-2 w-4 h-4 text-rose-700 focus:ring-rose-500"
                   />
                   <span className="text-gray-700">No</span>
                 </label>
@@ -467,7 +467,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
                 value={formData.guardianEmail}
                 onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
                 required
-                className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+                className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
                 placeholder="guardian@example.com"
                 disabled={loading}
               />
@@ -488,7 +488,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
               minLength={8}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -508,7 +508,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -517,7 +517,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-champagne-50 py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
             {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Creating account...' : 'Create Account'}

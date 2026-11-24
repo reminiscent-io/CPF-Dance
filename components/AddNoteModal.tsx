@@ -140,7 +140,7 @@ export function AddNoteModal({
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.student_id}
               onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
               disabled={!!initialStudentId}
@@ -230,7 +230,7 @@ export function AddNoteModal({
                   onClick={() => toggleTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     formData.tags?.includes(tag)
-                      ? 'bg-rose-600 text-white'
+                      ? 'bg-rose-700 text-champagne-50'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -246,7 +246,7 @@ export function AddNoteModal({
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
             >
@@ -258,7 +258,7 @@ export function AddNoteModal({
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button type="submit" loading={submitting}>

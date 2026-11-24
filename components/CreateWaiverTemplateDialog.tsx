@@ -82,7 +82,7 @@ export function CreateWaiverTemplateDialog({
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Template Title <span className="text-red-500">*</span>
+            Template Title <span className="text-rose-700">*</span>
           </label>
           <Input
             value={title}
@@ -111,7 +111,7 @@ export function CreateWaiverTemplateDialog({
           <select
             value={waiverType}
             onChange={(e) => setWaiverType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             disabled={loading}
           >
             <option value="general">General</option>
@@ -128,7 +128,7 @@ export function CreateWaiverTemplateDialog({
               type="checkbox"
               checked={isShared}
               onChange={(e) => setIsShared(e.target.checked)}
-              className="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
+              className="w-4 h-4 text-rose-700 border-champagne-300 rounded focus:ring-2 focus:ring-rose-500"
               disabled={loading}
             />
             <span className="text-sm text-gray-700">
@@ -139,7 +139,7 @@ export function CreateWaiverTemplateDialog({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Waiver Content <span className="text-red-500">*</span>
+            Waiver Content <span className="text-rose-700">*</span>
           </label>
           <RichTextEditor
             content={content}
@@ -149,7 +149,7 @@ export function CreateWaiverTemplateDialog({
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button variant="secondary" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} loading={loading}>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { SlotDef, TemplateDefinition } from '@/lib/promo/types'
 
 const fieldClass =
-  'mt-1 w-full rounded-lg border border-champagne-200 bg-champagne-50 px-3 py-2 text-sm text-charcoal-900 ' +
+  'mt-1 w-full rounded-lg border bg-champagne-50 px-3 py-2 text-sm text-charcoal-900 ' +
   'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500'
 
 const BINDING_LABELS: Record<SlotDef['binding'], string> = {

@@ -85,7 +85,7 @@ export function UploadQueuePanel({ className = '' }: { className?: string }) {
                   aria-valuenow={Math.round(item.progress * 100)}
                 >
                   <div
-                    className="h-full rounded-full bg-rose-600 transition-[width] duration-300"
+                    className="h-full rounded-full bg-rose-700 transition-[width] duration-300"
                     style={{ width: `${Math.max(2, item.progress * 100)}%` }}
                   />
                 </div>

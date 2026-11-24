@@ -157,7 +157,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                 Student (Optional)
               </label>
               <select
-                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.student_id || ''}
                 onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
               >
@@ -178,7 +178,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                   id="create_is_virtual"
                   checked={formData.is_virtual || false}
                   onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
-                  className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                  className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
                 />
                 <label htmlFor="create_is_virtual" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                   Virtual lesson (Google Meet)
@@ -208,7 +208,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                     setRecurringEndDate('')
                   }
                 }}
-                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
               />
               <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                 {formData.class_type === 'private'
@@ -296,7 +296,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">
@@ -343,7 +343,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
             </div>
           </div>
           <ModalFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => setShowConfirmDialog(false)}>
+            <Button type="button" variant="secondary" onClick={() => setShowConfirmDialog(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={handleConfirmRecurring}>

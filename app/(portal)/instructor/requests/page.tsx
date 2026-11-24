@@ -236,12 +236,12 @@ export default function InstructorRequestsPage() {
 
                               <div className="flex flex-wrap gap-4 pt-2 text-charcoal-500">
                                 {contact.email && (
-                                  <a href={`mailto:${contact.email}`} className="hover:text-rose-600">
+                                  <a href={`mailto:${contact.email}`} className="hover:text-rose-700">
                                     {contact.email}
                                   </a>
                                 )}
                                 {contact.phone && (
-                                  <a href={`tel:${contact.phone}`} className="hover:text-rose-600">
+                                  <a href={`tel:${contact.phone}`} className="hover:text-rose-700">
                                     {contact.phone}
                                   </a>
                                 )}
@@ -538,7 +538,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                     setIsCreatingNewStudio(false)
                     setFormData({ ...formData, newStudioName: '' })
                   }}
-                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                  className="mr-2 text-rose-700 focus:ring-rose-500"
                 />
                 <span className="text-sm text-charcoal-700">Select existing</span>
               </label>
@@ -551,7 +551,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                     setIsCreatingNewStudio(true)
                     setFormData({ ...formData, studio_id: '' })
                   }}
-                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                  className="mr-2 text-rose-700 focus:ring-rose-500"
                 />
                 <span className="text-sm text-charcoal-700">Create new</span>
               </label>
@@ -565,7 +565,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               />
             ) : (
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.studio_id}
                 onChange={(e) => setFormData({ ...formData, studio_id: e.target.value })}
               >
@@ -602,7 +602,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               <select
                 id="duration-select"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Number.parseInt(e.target.value, 10))}
               >
@@ -617,7 +617,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" loading={isSubmitting}>

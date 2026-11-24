@@ -44,7 +44,7 @@ export function SegmentedControl<T extends string>({
               focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500
               ${
                 selected
-                  ? 'bg-rose-600 text-champagne-50'
+                  ? 'bg-rose-700 text-champagne-50'
                   : 'text-charcoal-500 hover:bg-champagne-100 hover:text-charcoal-900'
               }`}
           >

@@ -314,7 +314,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
           )}
         </SheetBody>
         <SheetFooter>
-          <Button variant="outline" onClick={() => setConfirmingBatch(null)} disabled={saving}>
+          <Button variant="secondary" onClick={() => setConfirmingBatch(null)} disabled={saving}>
             Back
           </Button>
           <Button onClick={() => saveBatch(confirmingBatch)} loading={saving}>
@@ -397,7 +397,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
                   onChange={(e) => update('is_recurring', e.target.checked)}
                 />
                 <span
-                  className="absolute inset-0 rounded-full bg-champagne-200 peer-checked:bg-rose-600 transition-colors"
+                  className="absolute inset-0 rounded-full bg-champagne-200 peer-checked:bg-rose-700 transition-colors"
                 />
                 <span
                   className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-champagne-50 shadow-soft transition-transform peer-checked:translate-x-4"
@@ -469,7 +469,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
       </SheetBody>
 
       <SheetFooter>
-        <Button variant="outline" onClick={onClose} disabled={saving}>
+        <Button variant="secondary" onClick={onClose} disabled={saving}>
           Cancel
         </Button>
         <Button onClick={handleSubmit} loading={saving}>

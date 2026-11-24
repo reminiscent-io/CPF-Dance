@@ -200,7 +200,7 @@ export function NoteDetailModal({
           />
 
           <ModalFooter className="mt-2">
-            <Button type="button" variant="outline" onClick={onBack}>
+            <Button type="button" variant="secondary" onClick={onBack}>
               Back
             </Button>
             {isOwn && (
@@ -260,7 +260,7 @@ export function NoteDetailModal({
           </div>
 
           <ModalFooter className="mt-2">
-            <Button type="button" variant="outline" onClick={cancelEdit} disabled={submitting}>
+            <Button type="button" variant="secondary" onClick={cancelEdit} disabled={submitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting || !content.trim()} loading={submitting}>

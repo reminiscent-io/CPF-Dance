@@ -274,7 +274,7 @@ function ActivePacksSection({ packs }: { packs: LessonPackPurchase[] }) {
               <p className="shrink-0 text-sm text-charcoal-700 tabular-nums">
                 {pack.remaining_lessons}
                 {lessonCount !== undefined && (
-                  <span className="text-charcoal-300"> / {lessonCount}</span>
+                  <span className="text-charcoal-400"> / {lessonCount}</span>
                 )}{' '}
                 left
               </p>

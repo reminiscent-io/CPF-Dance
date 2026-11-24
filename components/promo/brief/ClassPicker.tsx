@@ -72,7 +72,7 @@ export function ClassPicker({
             >
               <span
                 className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border ${
-                  selected ? 'border-rose-600 bg-rose-600 text-champagne-50' : 'border-champagne-300'
+                  selected ? 'border-rose-700 bg-rose-700 text-champagne-50' : 'border-champagne-300'
                 }`}
                 aria-hidden="true"
               >

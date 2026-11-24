@@ -258,7 +258,7 @@ export function IssueWaiverDialog({
                 value="student"
                 checked={recipientType === 'student'}
                 onChange={(e) => setRecipientType(e.target.value as 'student')}
-                className="w-4 h-4 text-rose-600"
+                className="w-4 h-4 text-rose-700"
                 disabled={loading}
               />
               <span className="text-sm">Student/Dancer</span>
@@ -269,7 +269,7 @@ export function IssueWaiverDialog({
                 value="studio"
                 checked={recipientType === 'studio'}
                 onChange={(e) => setRecipientType(e.target.value as 'studio')}
-                className="w-4 h-4 text-rose-600"
+                className="w-4 h-4 text-rose-700"
                 disabled={loading}
               />
               <span className="text-sm">Studio</span>
@@ -307,7 +307,7 @@ export function IssueWaiverDialog({
               <select
                 value={selectedRecipientId}
                 onChange={(e) => setSelectedRecipientId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 disabled={loading}
               >
                 <option value="">-- Select --</option>
@@ -331,7 +331,7 @@ export function IssueWaiverDialog({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {recipientType === 'student' ? 'Student' : 'Studio'} Name{' '}
-                  <span className="text-red-500">*</span>
+                  <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   value={newName}
@@ -378,7 +378,7 @@ export function IssueWaiverDialog({
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button variant="secondary" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
           <Button

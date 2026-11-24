@@ -206,13 +206,13 @@ export function NoteFocusMode({
             className="mobile-safe-modal fixed z-[60] bg-white md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-3xl md:w-full md:max-h-[90vh] md:rounded-lg md:shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-champagne-200 bg-white">
               <h2 className="text-lg font-semibold text-gray-900">
                 {note ? 'Edit Note' : 'New Note'}
               </h2>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={handleCancel}
                   disabled={saving}
                   className="text-sm px-3 py-1.5"
@@ -321,7 +321,7 @@ export function NoteFocusMode({
                     Link to Class (optional)
                   </label>
                   <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
                     value={getClassSelectValue()}
                     onChange={(e) => handleClassSelect(e.target.value)}
                   >

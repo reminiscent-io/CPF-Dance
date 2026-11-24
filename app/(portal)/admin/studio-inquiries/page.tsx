@@ -137,7 +137,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
               type="text"
               value={inquiry.contact_email}
               disabled
-              className="w-full px-3 py-2 border border-champagne-300 rounded-lg bg-champagne-100 text-charcoal-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-100 text-charcoal-500"
             />
           </div>
 
@@ -147,7 +147,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
               type="text"
               value={`CPF Dance Inquiry | ${inquiry.studio_name}`}
               disabled
-              className="w-full px-3 py-2 border border-champagne-300 rounded-lg bg-champagne-100 text-charcoal-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-100 text-charcoal-500"
             />
           </div>
 
@@ -217,7 +217,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
         </div>
 
         <div className="p-4 border-t border-champagne-200 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose} disabled={sending}>
+          <Button variant="secondary" onClick={onClose} disabled={sending}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSend} loading={sending}>
@@ -314,7 +314,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
         </div>
 
         <div className="p-4 border-t border-champagne-200 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
         </div>

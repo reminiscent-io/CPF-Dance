@@ -114,14 +114,14 @@ export function InstructorPrivateLessonCancel({
           )}
         </div>
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={submitting}>
             Keep lesson
           </Button>
           <Button
             type="button"
             onClick={handleConfirm}
             loading={submitting}
-            className="bg-rose-600 hover:bg-rose-700"
+            className="bg-rose-700 hover:bg-rose-800"
           >
             {submitting ? 'Cancelling…' : 'Cancel lesson'}
           </Button>

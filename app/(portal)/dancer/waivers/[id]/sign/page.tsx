@@ -140,7 +140,7 @@ export default function SignWaiverPage() {
         <Card className="mb-6">
           <CardTitle>Waiver Terms</CardTitle>
           <CardContent className="mt-4">
-            <div className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 max-h-64 overflow-y-auto">
+            <div className="prose prose-sm max-w-none bg-gray-50 p-6 rounded-lg border border-champagne-200 mb-6 max-h-64 overflow-y-auto">
               <div className="text-gray-700 whitespace-pre-wrap ph-no-capture">{waiver.content}</div>
             </div>
 
@@ -149,7 +149,7 @@ export default function SignWaiverPage() {
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
+                className="mt-1 w-4 h-4 text-rose-700 border-champagne-300 rounded focus:ring-2 focus:ring-rose-500"
               />
               <span className="text-sm text-gray-700">
                 I have read and agree to the terms stated in this waiver. I understand the risks and release the instructor and studio from liability.
@@ -177,7 +177,7 @@ export default function SignWaiverPage() {
           </Button>
           <Button
             onClick={handleDecline}
-            variant="outline"
+            variant="secondary"
             size="lg"
             className="flex-1"
           >

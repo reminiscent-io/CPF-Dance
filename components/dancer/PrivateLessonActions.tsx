@@ -141,14 +141,14 @@ export function PrivateLessonActions({
           />
         </div>
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={() => setShowCancel(false)} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => setShowCancel(false)} disabled={submitting}>
             Keep lesson
           </Button>
           <Button
             type="button"
             onClick={handleCancelConfirm}
             loading={submitting}
-            className="bg-rose-600 hover:bg-rose-700"
+            className="bg-rose-700 hover:bg-rose-800"
           >
             {submitting ? 'Cancelling…' : insideWindow ? 'Cancel and forfeit credit' : 'Cancel lesson'}
           </Button>
@@ -175,7 +175,7 @@ export function PrivateLessonActions({
           />
         </div>
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={() => setShowReschedule(false)} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => setShowReschedule(false)} disabled={submitting}>
             Cancel
           </Button>
           <Button type="button" onClick={handleRescheduleSubmit} loading={submitting}>

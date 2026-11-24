@@ -277,7 +277,7 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
   return (
     <div className="flex flex-col gap-2">
       {error && (
-        <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+        <div className="text-sm text-rose-800 bg-rose-50 px-3 py-2 rounded-lg">
           {error}
           {failedAudio && state === 'idle' && ' Your recording is saved.'}
         </div>
@@ -330,7 +330,7 @@ export function VoiceRecorder({ onTranscriptReady, disabled = false }: VoiceReco
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={cancelRecording}
             >

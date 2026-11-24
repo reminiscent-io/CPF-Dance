@@ -720,7 +720,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => {
                 setShowLinkModal(false)
                 setLinkEmail('')
@@ -795,7 +795,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseMergeModal}
               disabled={merging}
             >
@@ -870,7 +870,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseNoteModal}
               disabled={savingNote}
             >
@@ -1045,7 +1045,7 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-champagne-300 text-rose-600 focus:ring-rose-500"
+              className="rounded border-champagne-300 text-rose-700 focus:ring-rose-500"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-charcoal-700">
               Active Student
@@ -1054,7 +1054,7 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

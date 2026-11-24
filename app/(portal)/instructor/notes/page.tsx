@@ -503,7 +503,7 @@ function NotesContent() {
                       <span>
                         {(note.class || note.classes)?.title}
                         {(note.class || note.classes)?.start_time && (
-                          <span className="text-charcoal-300 ml-1">
+                          <span className="text-charcoal-400 ml-1">
                             ({new Date((note.class || note.classes).start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
                           </span>
                         )}
@@ -685,7 +685,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
               Student
             </label>
             <select
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.student_id}
               onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
             >
@@ -703,7 +703,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
               Related Class
             </label>
             <select
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.class_id || ''}
               onChange={(e) => setFormData({ ...formData, class_id: e.target.value || undefined })}
             >
@@ -744,7 +744,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
                   type="button"
                   onClick={handleFormatWithAI}
                   disabled={formatting || !formData.content.trim() || formData.content === '<p></p>'}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gold-700 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gold-800 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {formatting ? (
                     <>
@@ -792,7 +792,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
                   onClick={() => toggleTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     formData.tags?.includes(tag)
-                      ? 'bg-rose-600 text-champagne-50'
+                      ? 'bg-rose-700 text-champagne-50'
                       : 'bg-champagne-100 text-charcoal-700 hover:bg-champagne-200'
                   }`}
                 >
@@ -808,7 +808,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
             >
@@ -820,7 +820,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button type="submit" loading={submitting}>

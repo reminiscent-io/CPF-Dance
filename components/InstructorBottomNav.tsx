@@ -122,7 +122,7 @@ export function InstructorBottomNav() {
       )}
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-champagne-200 z-50"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center justify-around h-10 px-2 relative">
@@ -133,7 +133,7 @@ export function InstructorBottomNav() {
               onClick={() => handleNavClick(item.href)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isActive(item.href)
-                  ? 'text-rose-600'
+                  ? 'text-rose-700'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -149,20 +149,20 @@ export function InstructorBottomNav() {
               className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all transform -translate-y-3 ${
                 showPlusMenu
                   ? 'bg-gray-700 rotate-45'
-                  : 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-rose-700 hover:bg-rose-800'
               }`}
               aria-label={showPlusMenu ? 'Close menu' : 'Quick actions'}
               aria-expanded={showPlusMenu}
             >
-              <PlusIcon className="w-5 h-5 text-white transition-transform" />
+              <PlusIcon className="w-5 h-5 text-champagne-50 transition-transform" />
             </button>
 
             {/* Popup menu */}
             {showPlusMenu && (
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[200px] animate-slideUp">
+              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-champagne-200 overflow-hidden min-w-[200px] animate-slideUp">
                 <button
                   onClick={handleAddNote}
-                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-champagne-200"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                     <DocumentTextIcon className="w-5 h-5 text-blue-600" />
@@ -174,7 +174,7 @@ export function InstructorBottomNav() {
                 </button>
                 <button
                   onClick={handleCreateClass}
-                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-champagne-200"
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                     <AcademicCapIcon className="w-5 h-5 text-purple-600" />
@@ -207,7 +207,7 @@ export function InstructorBottomNav() {
               onClick={() => handleNavClick(item.href)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isActive(item.href)
-                  ? 'text-rose-600'
+                  ? 'text-rose-700'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >

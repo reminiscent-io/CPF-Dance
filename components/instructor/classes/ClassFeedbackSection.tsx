@@ -25,7 +25,7 @@ const linkButton =
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className="text-gold-600 tracking-[0.1em]" aria-label={`${rating} of 5 stars`}>
+    <span className="text-gold-700 tracking-[0.1em]" aria-label={`${rating} of 5 stars`}>
       {'★'.repeat(rating)}
       <span className="text-champagne-300">{'★'.repeat(5 - rating)}</span>
     </span>

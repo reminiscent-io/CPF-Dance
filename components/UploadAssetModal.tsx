@@ -124,7 +124,7 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
                 relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
                 ${dragActive
                   ? 'border-rose-500 bg-rose-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  : 'border-champagne-300 hover:border-champagne-400'
                 }
                 ${file ? 'bg-green-50 border-green-500' : ''}
               `}
@@ -142,13 +142,13 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
               {file ? (
                 <div>
                   <p className="text-sm font-medium text-green-900 mb-1">{file.name}</p>
-                  <p className="text-xs text-green-600">
+                  <p className="text-xs text-green-700">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                   <button
                     type="button"
                     onClick={() => setFile(null)}
-                    className="mt-2 text-sm text-rose-600 hover:text-rose-700 font-medium"
+                    className="mt-2 text-sm text-rose-700 hover:text-rose-800 font-medium"
                   >
                     Remove file
                   </button>
@@ -175,7 +175,7 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={uploading}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={uploading}>
             Cancel
           </Button>
           <Button type="submit" disabled={uploading || !file || !title} loading={uploading}>

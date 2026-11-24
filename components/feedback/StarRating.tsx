@@ -107,7 +107,7 @@ export function StarRating({ value, onChange, label = 'Overall experience' }: St
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                   className={`h-[2.5rem] w-[2.5rem] transition-colors duration-150 ${
-                    filled ? 'fill-gold-500 text-gold-600' : 'fill-transparent text-champagne-400'
+                    filled ? 'fill-gold-600 text-gold-700' : 'fill-transparent text-champagne-700'
                   }`}
                 >
                   <path d={STAR_PATH} stroke="currentColor" strokeWidth={1.25} strokeLinejoin="round" />

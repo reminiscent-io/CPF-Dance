@@ -149,7 +149,7 @@ export default function EditWaiverPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-charcoal-700 mb-1">
-                  Title <span className="text-rose-600">*</span>
+                  Title <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   value={title}
@@ -168,7 +168,7 @@ export default function EditWaiverPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief description (optional)"
                   rows={3}
-                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                   disabled={saving}
                 />
               </div>
@@ -197,7 +197,7 @@ export default function EditWaiverPage() {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-champagne-200">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => router.push(`/instructor/waivers/${params?.id}`)}
                   disabled={saving}
                 >

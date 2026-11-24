@@ -366,16 +366,16 @@ export function MobileCalendar({
                 h-10 flex flex-col items-center justify-center rounded-full relative
                 transition-all duration-150
                 ${selected 
-                  ? 'bg-rose-600 text-white' 
+                  ? 'bg-rose-700 text-champagne-50' 
                   : today 
-                    ? 'bg-rose-100 text-rose-600' 
+                    ? 'bg-rose-100 text-rose-700' 
                     : inCurrentMonth 
                       ? 'text-gray-900 hover:bg-gray-100' 
-                      : 'text-gray-400'
+                      : 'text-charcoal-400'
                 }
               `}
             >
-              <span className={`text-sm font-medium ${selected ? 'text-white' : ''}`}>
+              <span className={`text-sm font-medium ${selected ? 'text-champagne-50' : ''}`}>
                 {day.getDate()}
               </span>
               
@@ -439,16 +439,16 @@ export function MobileCalendar({
                   flex flex-col items-center justify-center rounded-full py-2 relative
                   transition-all duration-150 min-h-[52px]
                   ${selected 
-                    ? 'bg-rose-600 text-white' 
+                    ? 'bg-rose-700 text-champagne-50' 
                     : today 
-                      ? 'bg-rose-100 text-rose-600' 
+                      ? 'bg-rose-100 text-rose-700' 
                       : inCurrentMonth 
                         ? 'text-gray-900 hover:bg-gray-100' 
-                        : 'text-gray-400'
+                        : 'text-charcoal-400'
                   }
                 `}
               >
-                <span className={`text-sm font-medium ${selected ? 'text-white' : ''}`}>
+                <span className={`text-sm font-medium ${selected ? 'text-champagne-50' : ''}`}>
                   {day.getDate()}
                 </span>
                 
@@ -501,9 +501,9 @@ export function MobileCalendar({
     return (
       <div className="relative">
         {hours.map((hour) => (
-          <div key={hour} className="flex border-t border-gray-200" style={{ height: '60px' }}>
+          <div key={hour} className="flex border-t border-champagne-200" style={{ height: '60px' }}>
             <div className="w-14 flex-shrink-0 pr-2 text-right">
-              <span className="text-xs text-gray-400 -mt-2 block">
+              <span className="text-xs text-charcoal-500 -mt-2 block">
                 {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
               </span>
             </div>
@@ -568,7 +568,7 @@ export function MobileCalendar({
 
     return (
       <div className="relative">
-        <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
+        <div className="sticky top-0 bg-white z-10 border-b border-champagne-200">
           <div className="flex">
             <div className="flex-shrink-0" style={{ width: `${GUTTER_WIDTH}px` }} />
             {weekDays.map((day, index) => (
@@ -584,9 +584,9 @@ export function MobileCalendar({
                   className={`
                     w-6 h-6 rounded-full text-xs font-medium mx-auto flex items-center justify-center
                     ${isSelected(day)
-                      ? 'bg-rose-600 text-white'
+                      ? 'bg-rose-700 text-champagne-50'
                       : isToday(day)
-                        ? 'bg-rose-100 text-rose-600'
+                        ? 'bg-rose-100 text-rose-700'
                         : 'text-gray-900'
                     }
                   `}
@@ -600,14 +600,14 @@ export function MobileCalendar({
         
         <div className="relative">
           {hours.map((hour) => (
-            <div key={hour} className="flex border-t border-gray-100" style={{ height: `${HOUR_HEIGHT}px` }}>
+            <div key={hour} className="flex border-t border-champagne-200" style={{ height: `${HOUR_HEIGHT}px` }}>
               <div className="flex-shrink-0 text-right pr-1" style={{ width: `${GUTTER_WIDTH}px` }}>
                 <span className="text-[10px] text-gray-500 -mt-1.5 block">
                   {hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`}
                 </span>
               </div>
               {weekDays.map((_, dayIndex) => (
-                <div key={dayIndex} className="flex-1 border-l border-gray-100 relative" />
+                <div key={dayIndex} className="flex-1 border-l border-champagne-200 relative" />
               ))}
             </div>
           ))}
@@ -668,8 +668,8 @@ export function MobileCalendar({
                 }}
               >
                 <div className="relative flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-rose-600 -ml-1" />
-                  <div className="flex-1 h-0.5 bg-rose-600" />
+                  <div className="w-2 h-2 rounded-full bg-rose-700 -ml-1" />
+                  <div className="flex-1 h-0.5 bg-rose-700" />
                 </div>
               </div>
             )
@@ -718,7 +718,7 @@ export function MobileCalendar({
   const renderMonthEventList = () => {
     return (
       <>
-        <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-champagne-200">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
             {formatSelectedDateHeader()}
           </h3>
@@ -732,7 +732,7 @@ export function MobileCalendar({
               </svg>
             </div>
             <p className="text-gray-500 text-center">No classes scheduled</p>
-            <p className="text-xs text-gray-400 mt-1">Double-tap a day to zoom in</p>
+            <p className="text-xs text-charcoal-500 mt-1">Double-tap a day to zoom in</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -814,7 +814,7 @@ export function MobileCalendar({
             </h2>
             <button
               onClick={navigateToday}
-              className="text-xs text-rose-600 hover:text-rose-700 font-medium px-1.5 py-0.5 hover:bg-rose-50 rounded transition-colors"
+              className="text-xs text-rose-700 hover:text-rose-800 font-medium px-1.5 py-0.5 hover:bg-rose-50 rounded transition-colors"
             >
               Today
             </button>
@@ -839,7 +839,7 @@ export function MobileCalendar({
 
       </div>
 
-      <div className="border-t border-gray-200" />
+      <div className="border-t border-champagne-200" />
 
       <div 
         ref={timelineScrollRef}
@@ -855,7 +855,7 @@ export function MobileCalendar({
         
         {viewMode === 'day' && (
           <div className="bg-white">
-            <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b border-gray-200">
+            <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b border-champagne-200">
               <h3 className="text-sm font-semibold text-gray-700">
                 {formatSelectedDateHeader()}
               </h3>

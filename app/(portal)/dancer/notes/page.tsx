@@ -341,7 +341,7 @@ function DancerNotesContent() {
                 </span>
                 <span
                   className={`text-[0.7rem] tabular-nums ${
-                    active ? 'text-ballet-pink-600' : 'text-charcoal-300'
+                    active ? 'text-ballet-pink-700' : 'text-charcoal-300'
                   }`}
                 >
                   {count}

@@ -574,7 +574,7 @@ function AddStudentModal({ onClose, onSubmit }: AddStudentModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Add Student</Button>
@@ -682,7 +682,7 @@ function TagInstructorModal({
             </div>
 
             <ModalFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="secondary" onClick={onClose}>
                 Close
               </Button>
               <Button

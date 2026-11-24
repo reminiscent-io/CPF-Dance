@@ -160,7 +160,7 @@ export function GooglePlacesInput({
               focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent
               transition-all duration-200
               disabled:bg-gray-100 disabled:cursor-not-allowed
-              ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}
+              ${error ? 'border-rose-600 focus:ring-rose-500' : ''}
             `}
             aria-invalid={error ? 'true' : 'false'}
             autoComplete="off"
@@ -174,12 +174,12 @@ export function GooglePlacesInput({
 
           {/* Suggestions Dropdown */}
           {isOpen && (suggestions.length > 0 || !value) && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+            <div className="absolute z-50 w-full mt-1 bg-white border border-champagne-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => selectPlace(suggestion.place_id)}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0 transition-colors"
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-champagne-200 last:border-b-0 transition-colors"
                   type="button"
                 >
                   <div className="font-medium text-gray-900 text-sm">{suggestion.main_text}</div>
@@ -193,7 +193,7 @@ export function GooglePlacesInput({
                   setShowCustomInput(true)
                   setIsOpen(false)
                 }}
-                className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 text-rose-600 font-medium text-sm transition-colors border-t border-gray-200"
+                className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 text-rose-700 font-medium text-sm transition-colors border-t border-champagne-200"
                 type="button"
               >
                 + Enter Address Manually
@@ -203,13 +203,13 @@ export function GooglePlacesInput({
         </div>
       ) : (
         /* Custom Address Input Form */
-        <div className="space-y-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <div className="space-y-3 p-4 border border-champagne-200 rounded-lg bg-gray-50">
           <input
             type="text"
             placeholder="Street Address"
             value={customAddress}
             onChange={(e) => setCustomAddress(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
           />
           
           <div className="grid grid-cols-3 gap-2">
@@ -218,28 +218,28 @@ export function GooglePlacesInput({
               placeholder="City"
               value={customCity}
               onChange={(e) => setCustomCity(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
             <input
               type="text"
               placeholder="State"
               value={customState}
               onChange={(e) => setCustomState(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
             <input
               type="text"
               placeholder="Zip"
               value={customZip}
               onChange={(e) => setCustomZip(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={handleCustomSubmit}
-              className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium transition-colors"
+              className="flex-1 px-4 py-2 bg-rose-700 text-champagne-50 rounded-lg hover:bg-rose-800 font-medium transition-colors"
               type="button"
             >
               Save Address
@@ -263,7 +263,7 @@ export function GooglePlacesInput({
       )}
 
       {error && (
-        <p id="google-places-error" className="mt-1 text-sm text-red-600">
+        <p id="google-places-error" className="mt-1 text-sm text-rose-700">
           {error}
         </p>
       )}

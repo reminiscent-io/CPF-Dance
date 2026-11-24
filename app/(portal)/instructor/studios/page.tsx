@@ -209,7 +209,7 @@ export default function StudiosPage() {
                         <div className="text-sm font-medium text-charcoal-500">Email</div>
                         <a
                           href={`mailto:${studio.contact_email}`}
-                          className="text-sm text-rose-600 hover:text-rose-700"
+                          className="text-sm text-rose-700 hover:text-rose-800"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {studio.contact_email}
@@ -221,7 +221,7 @@ export default function StudiosPage() {
                         <div className="text-sm font-medium text-charcoal-500">Phone</div>
                         <a
                           href={`tel:${studio.contact_phone}`}
-                          className="text-sm text-rose-600 hover:text-rose-700"
+                          className="text-sm text-rose-700 hover:text-rose-800"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {studio.contact_phone}
@@ -330,7 +330,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
           />
 
           {formData.address && (
-            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-champagne-200">
               <div>
                 <p className="text-xs text-charcoal-500">Address</p>
                 <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>
@@ -374,7 +374,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
                 type="checkbox"
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="mr-2 h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+                className="mr-2 h-4 w-4 text-rose-700 focus:ring-rose-500 border-champagne-300 rounded"
               />
               <span className="text-sm font-medium text-charcoal-700">Active Studio</span>
             </label>
@@ -385,7 +385,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>
@@ -456,7 +456,7 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
           />
 
           {formData.address && (
-            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-champagne-200">
               <div>
                 <p className="text-xs text-charcoal-500">Address</p>
                 <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>
@@ -496,7 +496,7 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Add Studio</Button>

@@ -267,7 +267,7 @@ export function Sidebar({ profile, isOpen: controlledIsOpen, setIsOpen: controll
                   router.push(portalOptions.find(p => p.value === e.target.value)?.href || '/instructor')
                   setIsOpen(false)
                 }}
-                className="w-full text-sm font-medium bg-champagne-50 border border-champagne-200 rounded-md px-3 py-2 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600/40 transition"
+                className="w-full text-sm font-medium bg-champagne-50 border rounded-md px-3 py-2 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600/40 transition"
               >
                 {portalOptions.map(option => (
                   <option key={option.value} value={option.value}>

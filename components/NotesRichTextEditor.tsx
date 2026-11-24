@@ -56,16 +56,16 @@ export function NotesRichTextEditor({
 
   if (!editor) {
     return (
-      <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 animate-pulse" style={{ minHeight }}>
-        <div className="h-10 bg-gray-100 border-b border-gray-300" />
+      <div className="border border-champagne-300 rounded-lg overflow-hidden bg-gray-50 animate-pulse" style={{ minHeight }}>
+        <div className="h-10 bg-gray-100 border-b border-champagne-300" />
         <div className="p-4" />
       </div>
     )
   }
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-rose-500 focus-within:border-rose-500">
-      <div className="border-b border-gray-300 bg-gray-50 p-2 flex flex-wrap gap-1">
+    <div className="border border-champagne-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-rose-500 focus-within:border-rose-500">
+      <div className="border-b border-champagne-300 bg-gray-50 p-2 flex flex-wrap gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}

@@ -23,7 +23,7 @@ export function DeleteRequestDialog({
       </p>
       <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3">
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={onClose}
           disabled={isDeleting}
           className="mt-3 sm:mt-0 w-full sm:w-auto"

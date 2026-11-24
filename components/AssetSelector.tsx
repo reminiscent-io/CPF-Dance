@@ -81,7 +81,7 @@ export function AssetSelector({
 
       {selectedAsset ? (
         // Show selected asset
-        <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+        <div className="border border-champagne-300 rounded-lg p-4 bg-gray-50">
           <div className="flex items-start gap-4">
             <div className="relative w-20 h-20 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">
               {isImage(selectedAsset.file_type) ? (
@@ -104,7 +104,7 @@ export function AssetSelector({
               <button
                 type="button"
                 onClick={() => onSelect(null)}
-                className="text-sm text-rose-600 hover:text-rose-700 font-medium mt-2"
+                className="text-sm text-rose-700 hover:text-rose-800 font-medium mt-2"
               >
                 Remove
               </button>
@@ -137,13 +137,13 @@ export function AssetSelector({
           )}
 
           {showModal && (
-            <div className="border border-gray-300 rounded-lg p-4 mt-2 max-h-96 overflow-y-auto bg-white">
+            <div className="border border-champagne-300 rounded-lg p-4 mt-2 max-h-96 overflow-y-auto bg-white">
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-medium text-gray-900">Select an Asset</h4>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-charcoal-400 hover:text-charcoal-700"
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
@@ -182,7 +182,7 @@ export function AssetSelector({
                         onSelect(asset.id)
                         setShowModal(false)
                       }}
-                      className="border border-gray-200 rounded-lg p-2 hover:border-rose-400 hover:bg-rose-50 transition-colors text-left"
+                      className="border border-champagne-200 rounded-lg p-2 hover:border-rose-400 hover:bg-rose-50 transition-colors text-left"
                     >
                       <div className="relative aspect-video bg-gray-100 rounded overflow-hidden mb-2">
                         {isImage(asset.file_type) ? (
