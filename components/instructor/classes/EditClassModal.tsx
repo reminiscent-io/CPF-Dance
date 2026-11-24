@@ -386,7 +386,7 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                       id="apply_to_series"
                       checked={applyToSeries}
                       onChange={(e) => setApplyToSeries(e.target.checked)}
-                      className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                      className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
                     />
                     <label htmlFor="apply_to_series" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                       Apply changes to the other {otherUpcomingDays.length} upcoming {seriesNoun(otherUpcomingDays.length)}
@@ -518,7 +518,7 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                 id="edit_is_virtual"
                 checked={formData.is_virtual || false}
                 onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
-                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
               />
               <label htmlFor="edit_is_virtual" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                 Virtual lesson (Google Meet) — a meeting link is created and shared with the dancer

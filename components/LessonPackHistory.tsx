@@ -190,7 +190,7 @@ function PurchasesTable({ rows }: PurchasesTableProps) {
             const used = row.lesson_pack ? row.lesson_pack.lesson_count - row.remaining_lessons : 0
             const exhausted = row.remaining_lessons === 0
             const expiry = addMonths(row.purchased_at, PACK_VALIDITY_MONTHS)
-            const rowText = exhausted ? 'text-charcoal-300' : 'text-charcoal-900'
+            const rowText = exhausted ? 'text-charcoal-400' : 'text-charcoal-900'
             return (
               <tr key={row.id} className="border-b border-champagne-200 last:border-b-0">
                 <td className={`py-3 pr-4 tabular-nums ${rowText}`}>
@@ -206,7 +206,7 @@ function PurchasesTable({ rows }: PurchasesTableProps) {
                 <td className={`py-3 text-right tabular-nums ${rowText}`}>
                   {row.remaining_lessons}
                   {row.lesson_pack && (
-                    <span className="text-charcoal-300"> / {row.lesson_pack.lesson_count}</span>
+                    <span className="text-charcoal-400"> / {row.lesson_pack.lesson_count}</span>
                   )}
                   {used > 0 && row.remaining_lessons > 0 && (
                     <span className="sr-only"> ({used} used)</span>
@@ -295,7 +295,7 @@ interface UsageCostProps {
 
 function UsageCost({ mode, lessons, discountAmount }: UsageCostProps) {
   if (mode === 'free') {
-    return <span className="text-gold-700">on the house</span>
+    return <span className="text-gold-800">on the house</span>
   }
   if (mode === 'discounted') {
     return (

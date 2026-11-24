@@ -236,12 +236,12 @@ export default function InstructorRequestsPage() {
 
                               <div className="flex flex-wrap gap-4 pt-2 text-charcoal-500">
                                 {contact.email && (
-                                  <a href={`mailto:${contact.email}`} className="hover:text-rose-600">
+                                  <a href={`mailto:${contact.email}`} className="hover:text-rose-700">
                                     {contact.email}
                                   </a>
                                 )}
                                 {contact.phone && (
-                                  <a href={`tel:${contact.phone}`} className="hover:text-rose-600">
+                                  <a href={`tel:${contact.phone}`} className="hover:text-rose-700">
                                     {contact.phone}
                                   </a>
                                 )}
@@ -538,7 +538,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                     setIsCreatingNewStudio(false)
                     setFormData({ ...formData, newStudioName: '' })
                   }}
-                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                  className="mr-2 text-rose-700 focus:ring-rose-500"
                 />
                 <span className="text-sm text-charcoal-700">Select existing</span>
               </label>
@@ -551,7 +551,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
                     setIsCreatingNewStudio(true)
                     setFormData({ ...formData, studio_id: '' })
                   }}
-                  className="mr-2 text-rose-600 focus:ring-rose-500"
+                  className="mr-2 text-rose-700 focus:ring-rose-500"
                 />
                 <span className="text-sm text-charcoal-700">Create new</span>
               </label>

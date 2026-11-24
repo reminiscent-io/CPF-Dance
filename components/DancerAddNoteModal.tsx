@@ -210,7 +210,7 @@ export function DancerAddNoteModal({
                   onClick={() => toggleTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     tags.includes(tag)
-                      ? 'bg-rose-600 text-white'
+                      ? 'bg-rose-700 text-champagne-50'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >

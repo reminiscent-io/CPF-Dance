@@ -503,7 +503,7 @@ function NotesContent() {
                       <span>
                         {(note.class || note.classes)?.title}
                         {(note.class || note.classes)?.start_time && (
-                          <span className="text-charcoal-300 ml-1">
+                          <span className="text-charcoal-400 ml-1">
                             ({new Date((note.class || note.classes).start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
                           </span>
                         )}
@@ -744,7 +744,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
                   type="button"
                   onClick={handleFormatWithAI}
                   disabled={formatting || !formData.content.trim() || formData.content === '<p></p>'}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gold-700 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gold-800 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {formatting ? (
                     <>
@@ -792,7 +792,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
                   onClick={() => toggleTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     formData.tags?.includes(tag)
-                      ? 'bg-rose-600 text-champagne-50'
+                      ? 'bg-rose-700 text-champagne-50'
                       : 'bg-champagne-100 text-charcoal-700 hover:bg-champagne-200'
                   }`}
                 >

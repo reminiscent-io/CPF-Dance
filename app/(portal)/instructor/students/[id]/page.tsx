@@ -1045,7 +1045,7 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-champagne-300 text-rose-600 focus:ring-rose-500"
+              className="rounded border-champagne-300 text-rose-700 focus:ring-rose-500"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-charcoal-700">
               Active Student

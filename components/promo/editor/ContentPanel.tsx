@@ -16,7 +16,7 @@ import type { PromoBrief, SessionValue, SlotDef } from '@/lib/promo/types'
 import { useEditor, useEditorState } from './EditorContext'
 
 const fieldClass =
-  'w-full rounded-lg border border-champagne-200 bg-champagne-50 px-3 py-2 text-charcoal-900 placeholder:text-charcoal-300 ' +
+  'w-full rounded-lg border border-champagne-200 bg-champagne-50 px-3 py-2 text-charcoal-900 placeholder:text-charcoal-400 ' +
   'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500'
 
 function hasFacts(brief: Partial<PromoBrief>): brief is PromoBrief {

@@ -238,11 +238,11 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
                     </div>
                     <p className="text-sm text-gray-600">
                       From: <span className="font-medium">{inquiry.contact_name}</span> • {' '}
-                      <a href={`mailto:${inquiry.contact_email}`} className="text-rose-600 hover:text-rose-700">
+                      <a href={`mailto:${inquiry.contact_email}`} className="text-rose-700 hover:text-rose-800">
                         {inquiry.contact_email}
                       </a>
                       {inquiry.contact_phone && (
-                        <> • <a href={`tel:${inquiry.contact_phone}`} className="text-rose-600 hover:text-rose-700">
+                        <> • <a href={`tel:${inquiry.contact_phone}`} className="text-rose-700 hover:text-rose-800">
                           {inquiry.contact_phone}
                         </a></>
                       )}

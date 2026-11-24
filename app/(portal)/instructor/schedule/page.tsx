@@ -446,7 +446,7 @@ export default function InstructorSchedulePage() {
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
                                   <h3 className="font-serif text-lg font-semibold text-charcoal-950">{classItem.title}</h3>
                                   {classItem.has_notes && (
-                                    <DocumentTextIcon className="w-4 h-4 text-gold-600" aria-hidden="true" />
+                                    <DocumentTextIcon className="w-4 h-4 text-gold-700" aria-hidden="true" />
                                   )}
                                   <Badge className={getClassTypeClassName(classItem.class_type)}>
                                     {getClassTypeLabel(classItem.class_type)}

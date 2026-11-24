@@ -121,7 +121,7 @@ export function InstructorPrivateLessonCancel({
             type="button"
             onClick={handleConfirm}
             loading={submitting}
-            className="bg-rose-600 hover:bg-rose-700"
+            className="bg-rose-700 hover:bg-rose-800"
           >
             {submitting ? 'Cancelling…' : 'Cancel lesson'}
           </Button>

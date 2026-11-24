@@ -31,7 +31,7 @@ const statusTones: Record<string, StatusTone> = {
 const requestPaymentAction = (
   <Link
     href="/instructor/payments?request=true"
-    className="inline-flex min-h-control items-center justify-center rounded-lg bg-rose-600 px-4 py-2 text-base font-medium text-champagne-50 transition-colors duration-200 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+    className="inline-flex min-h-control items-center justify-center rounded-lg bg-rose-700 px-4 py-2 text-base font-medium text-champagne-50 transition-colors duration-200 hover:bg-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
   >
     <PlusIcon className="w-5 h-5 mr-1.5" aria-hidden="true" />
     Request payment

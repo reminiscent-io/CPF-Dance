@@ -868,7 +868,7 @@ function InstructorPaymentsContent() {
                         {formatCurrency(payment.amount)}
                       </div>
                       {payment.confirmed_by_instructor_at && (
-                        <div className="mt-1 text-xs text-gold-700">Confirmed</div>
+                        <div className="mt-1 text-xs text-gold-800">Confirmed</div>
                       )}
                     </div>
                   </div>

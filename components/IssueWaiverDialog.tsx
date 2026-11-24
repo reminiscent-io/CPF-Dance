@@ -258,7 +258,7 @@ export function IssueWaiverDialog({
                 value="student"
                 checked={recipientType === 'student'}
                 onChange={(e) => setRecipientType(e.target.value as 'student')}
-                className="w-4 h-4 text-rose-600"
+                className="w-4 h-4 text-rose-700"
                 disabled={loading}
               />
               <span className="text-sm">Student/Dancer</span>
@@ -269,7 +269,7 @@ export function IssueWaiverDialog({
                 value="studio"
                 checked={recipientType === 'studio'}
                 onChange={(e) => setRecipientType(e.target.value as 'studio')}
-                className="w-4 h-4 text-rose-600"
+                className="w-4 h-4 text-rose-700"
                 disabled={loading}
               />
               <span className="text-sm">Studio</span>
@@ -331,7 +331,7 @@ export function IssueWaiverDialog({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {recipientType === 'student' ? 'Student' : 'Studio'} Name{' '}
-                  <span className="text-red-500">*</span>
+                  <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   value={newName}

@@ -104,7 +104,7 @@ export function AssetSelector({
               <button
                 type="button"
                 onClick={() => onSelect(null)}
-                className="text-sm text-rose-600 hover:text-rose-700 font-medium mt-2"
+                className="text-sm text-rose-700 hover:text-rose-800 font-medium mt-2"
               >
                 Remove
               </button>
@@ -143,7 +143,7 @@ export function AssetSelector({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-charcoal-400 hover:text-charcoal-700"
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>

@@ -41,11 +41,11 @@ export function LoadingIndicator() {
         className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+3rem)] z-[110] flex justify-center px-4 md:top-5"
       >
         {!online ? (
-          <Notice icon={<span className="h-2 w-2 shrink-0 rounded-full bg-rose-600" />}>
+          <Notice icon={<span className="h-2 w-2 shrink-0 rounded-full bg-rose-700" />}>
             You&apos;re offline. Check your signal and try again.
           </Notice>
         ) : slow ? (
-          <Notice icon={<InlineSpinner className="text-rose-600" />}>Still loading…</Notice>
+          <Notice icon={<InlineSpinner className="text-rose-700" />}>Still loading…</Notice>
         ) : null}
       </div>
     </>

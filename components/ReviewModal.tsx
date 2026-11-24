@@ -211,9 +211,9 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
                     aria-label={`${star} star${star > 1 ? 's' : ''}`}
                   >
                     {filled ? (
-                      <StarIcon className="w-8 h-8 text-amber-400" />
+                      <StarIcon className="w-8 h-8 text-gold-700" />
                     ) : (
-                      <StarOutlineIcon className="w-8 h-8 text-gray-300" />
+                      <StarOutlineIcon className="w-8 h-8 text-champagne-700" />
                     )}
                   </button>
                 )
@@ -224,7 +224,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
           {/* Written review */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your Review <span className="text-gray-400 font-normal">(optional)</span>
+              Your Review <span className="text-charcoal-500 font-normal">(optional)</span>
             </label>
             <textarea
               value={content}
@@ -234,7 +234,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               maxLength={1000}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm resize-none"
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{content.length}/1000</p>
+            <p className="text-xs text-charcoal-500 mt-1 text-right">{content.length}/1000</p>
           </div>
 
           {/* Name opt-in */}
@@ -243,16 +243,16 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               type="checkbox"
               checked={showName}
               onChange={(e) => updateDraft({ showName: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-700 focus:ring-rose-500"
             />
             <span className="text-sm text-gray-600">
               Display my first name and last initial with this review.
-              <span className="text-gray-400"> Otherwise your review will be kept anonymous.</span>
+              <span className="text-charcoal-500"> Otherwise your review will be kept anonymous.</span>
             </span>
           </label>
 
           {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-rose-700">{error}</p>
           )}
 
           {/* Actions */}

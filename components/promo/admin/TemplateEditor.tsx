@@ -489,7 +489,7 @@ function TemplateSession({ data, brand, onReload }: { data: TemplateData; brand:
                     <span className="font-medium text-charcoal-900">Version {version.version}</span>
                     <span className="ml-2 text-charcoal-500">{dateFormat.format(new Date(version.published_at))}</span>
                     {version.id && data.currentVersion === version.version && (
-                      <span className="ml-2 text-xs text-gold-700">live</span>
+                      <span className="ml-2 text-xs text-gold-800">live</span>
                     )}
                     {version.notes && <p className="text-xs text-charcoal-500">{version.notes}</p>}
                   </li>

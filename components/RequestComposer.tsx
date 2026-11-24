@@ -169,7 +169,7 @@ function CostLine({ balance, costMode, dayOfPrice, onAddPack }: CostLineProps) {
   if (costMode === 'free') {
     return (
       <p className="mt-3 text-sm text-charcoal-500">
-        <span className="text-gold-700 font-medium">On the house</span> for this one.
+        <span className="text-gold-800 font-medium">On the house</span> for this one.
       </p>
     )
   }

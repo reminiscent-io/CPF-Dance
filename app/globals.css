@@ -138,6 +138,18 @@
   border-color: var(--color-champagne-200);
 }
 
+/* Form fields: Champagne Stroke is 1.2:1 on the paper, too faint to show
+   where a field is (WCAG 1.4.11 asks 3:1). Champagne-700 gives 4.2:1.
+   Unlayered like the rule above, so it also wins over border utilities;
+   fields with no border (border-0) are unaffected. */
+:where(
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='button'], [type='submit'], [type='reset']),
+  select,
+  textarea
+) {
+  border-color: var(--color-champagne-700);
+}
+
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
@@ -585,7 +597,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .rich-text-preview a {
-  color: var(--color-rose-600);
+  color: var(--color-rose-700);
   text-decoration: underline;
 }
 

@@ -137,7 +137,7 @@ export default function PromoUsagePage() {
                       aria-valuenow={Math.round(share * 100)}
                     >
                       <div
-                        className={`h-full rounded-full ${share >= 1 ? 'bg-rose-600' : 'bg-gold-600'}`}
+                        className={`h-full rounded-full ${share >= 1 ? 'bg-rose-700' : 'bg-gold-600'}`}
                         style={{ width: `${Math.max(1, share * 100)}%` }}
                       />
                     </div>

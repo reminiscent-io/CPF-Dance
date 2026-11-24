@@ -148,7 +148,7 @@ export function PrivateLessonActions({
             type="button"
             onClick={handleCancelConfirm}
             loading={submitting}
-            className="bg-rose-600 hover:bg-rose-700"
+            className="bg-rose-700 hover:bg-rose-800"
           >
             {submitting ? 'Cancelling…' : insideWindow ? 'Cancel and forfeit credit' : 'Cancel lesson'}
           </Button>

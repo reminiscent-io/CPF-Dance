@@ -149,7 +149,7 @@ export default function SignWaiverPage() {
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
+                className="mt-1 w-4 h-4 text-rose-700 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
               />
               <span className="text-sm text-gray-700">
                 I have read and agree to the terms stated in this waiver. I understand the risks and release the instructor and studio from liability.

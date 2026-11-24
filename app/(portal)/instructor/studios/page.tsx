@@ -209,7 +209,7 @@ export default function StudiosPage() {
                         <div className="text-sm font-medium text-charcoal-500">Email</div>
                         <a
                           href={`mailto:${studio.contact_email}`}
-                          className="text-sm text-rose-600 hover:text-rose-700"
+                          className="text-sm text-rose-700 hover:text-rose-800"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {studio.contact_email}
@@ -221,7 +221,7 @@ export default function StudiosPage() {
                         <div className="text-sm font-medium text-charcoal-500">Phone</div>
                         <a
                           href={`tel:${studio.contact_phone}`}
-                          className="text-sm text-rose-600 hover:text-rose-700"
+                          className="text-sm text-rose-700 hover:text-rose-800"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {studio.contact_phone}
@@ -374,7 +374,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
                 type="checkbox"
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="mr-2 h-4 w-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded"
+                className="mr-2 h-4 w-4 text-rose-700 focus:ring-rose-500 border-gray-300 rounded"
               />
               <span className="text-sm font-medium text-charcoal-700">Active Studio</span>
             </label>

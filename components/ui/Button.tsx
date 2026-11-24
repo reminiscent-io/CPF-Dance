@@ -31,11 +31,11 @@ export function Button({
   // Filled rose is reserved for the one primary action per page and for
   // selected states. Everything else gets neutral borders/text.
   const variants = {
-    primary: 'bg-rose-600 text-champagne-50 hover:bg-rose-700 focus:ring-rose-500 active:bg-rose-800',
+    primary: 'bg-rose-700 text-champagne-50 hover:bg-rose-800 focus:ring-rose-500 active:bg-rose-900',
     secondary: 'border border-champagne-300 text-charcoal-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
     outline: 'border border-champagne-300 text-charcoal-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
     ghost: 'text-charcoal-500 hover:text-rose-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
-    gold: 'bg-gold-600 text-champagne-50 hover:bg-gold-700 focus:ring-gold-500 active:bg-gold-800'
+    gold: 'bg-gold-800 text-champagne-50 hover:bg-gold-900 focus:ring-gold-500 active:bg-gold-950'
   }
 
   // md and lg sit on the shared control height (44px) so buttons, inputs,

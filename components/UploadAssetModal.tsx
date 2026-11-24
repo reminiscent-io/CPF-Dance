@@ -142,13 +142,13 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
               {file ? (
                 <div>
                   <p className="text-sm font-medium text-green-900 mb-1">{file.name}</p>
-                  <p className="text-xs text-green-600">
+                  <p className="text-xs text-green-700">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                   <button
                     type="button"
                     onClick={() => setFile(null)}
-                    className="mt-2 text-sm text-rose-600 hover:text-rose-700 font-medium"
+                    className="mt-2 text-sm text-rose-700 hover:text-rose-800 font-medium"
                   >
                     Remove file
                   </button>

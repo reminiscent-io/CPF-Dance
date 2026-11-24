@@ -68,7 +68,7 @@ export function ClassStudioField({ form, studios }: { form: ClassFormController;
               setIsCreatingNewStudio(false)
               patchForm({ newStudioName: '' })
             }}
-            className="mr-2 text-rose-600 focus:ring-rose-500"
+            className="mr-2 text-rose-700 focus:ring-rose-500"
           />
           <span className="text-sm text-charcoal-700">Select existing</span>
         </label>
@@ -81,7 +81,7 @@ export function ClassStudioField({ form, studios }: { form: ClassFormController;
               setIsCreatingNewStudio(true)
               patchForm({ studio_id: '' })
             }}
-            className="mr-2 text-rose-600 focus:ring-rose-500"
+            className="mr-2 text-rose-700 focus:ring-rose-500"
           />
           <span className="text-sm text-charcoal-700">Create new</span>
         </label>
@@ -224,7 +224,7 @@ export function ClassPublicField({ form, id }: { form: ClassFormController; id: 
         id={id}
         checked={formData.is_public || false}
         onChange={(e) => patchForm({ is_public: e.target.checked })}
-        className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+        className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
       />
       <label htmlFor={id} className="text-sm font-medium text-charcoal-700 cursor-pointer">
         Make class public for dancers and guardians to view and enroll
@@ -366,7 +366,7 @@ export function WeekdayPicker({
           }}
           className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
             selectedDays.includes(index)
-              ? 'bg-rose-600 text-champagne-50 border-rose-600'
+              ? 'bg-rose-700 text-champagne-50 border-rose-700'
               : 'bg-champagne-50 text-charcoal-700 border-champagne-200 hover:border-rose-400'
           }`}
         >

@@ -16,6 +16,12 @@
         "canonical": "#945563",
         "tonalRamp": ["#3a2328", "#5f3a43", "#7a4652", "#945563", "#b06472", "#d19ba3", "#ebd2d6", "#faf5f6"]
       },
+      "stage-rose-velvet": {
+        "role": "primary",
+        "displayName": "Stage Rose Velvet",
+        "canonical": "#7a4652",
+        "tonalRamp": ["#3a2328", "#5f3a43", "#7a4652", "#945563", "#b06472", "#d19ba3", "#ebd2d6", "#faf5f6"]
+      },
       "stage-rose-soft": {
         "role": "primary",
         "displayName": "Stage Rose Soft",
@@ -32,6 +38,12 @@
         "role": "secondary",
         "displayName": "Curtain Gilt Deep",
         "canonical": "#997a45",
+        "tonalRamp": ["#3b2d1c", "#685234", "#7d633d", "#997a45", "#b89651", "#d0af67", "#e8dbb8", "#faf8f0"]
+      },
+      "curtain-gilt-ink": {
+        "role": "secondary",
+        "displayName": "Curtain Gilt Ink",
+        "canonical": "#7d633d",
         "tonalRamp": ["#3b2d1c", "#685234", "#7d633d", "#997a45", "#b89651", "#d0af67", "#e8dbb8", "#faf8f0"]
       },
       "champagne-silk": {
@@ -75,6 +87,18 @@
         "displayName": "Stage Graphite",
         "canonical": "#4d4d4d",
         "tonalRamp": ["#0a0a0a", "#2d2d2d", "#404040", "#4d4d4d", "#666666", "#999999", "#cccccc", "#e5e5e5"]
+      },
+      "champagne-edge": {
+        "role": "neutral",
+        "displayName": "Champagne Edge",
+        "canonical": "#87745a",
+        "tonalRamp": ["#2f2920", "#584d3d", "#6b5d49", "#87745a", "#a8906f", "#c3ac8d", "#dfd4c3", "#faf8f5"]
+      },
+      "stage-smoke": {
+        "role": "neutral",
+        "displayName": "Stage Smoke",
+        "canonical": "#666666",
+        "tonalRamp": ["#0a0a0a", "#2d2d2d", "#4d4d4d", "#666666", "#999999", "#cccccc", "#e5e5e5", "#f8f8f8"]
       },
       "ash-veil": {
         "role": "neutral",
@@ -151,9 +175,9 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Stage Rose CTA. The default action button across the platform.",
+      "description": "Stage Rose Deep CTA (5.3:1 under Champagne Silk text). The default action button across the platform.",
       "html": "<button class=\"ds-btn-primary\">Save Note</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #b06472; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: #945563; } .ds-btn-primary:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; } .ds-btn-primary:active { background: #7a4652; }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #945563; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: #7a4652; } .ds-btn-primary:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; } .ds-btn-primary:active { background: #5f3a43; }"
     },
     {
       "name": "Outline Button",
@@ -161,7 +185,7 @@
       "refersTo": "button-outline",
       "description": "Secondary action. 2px Stage Rose stroke on Champagne Silk.",
       "html": "<button class=\"ds-btn-outline\">Cancel</button>",
-      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; background: #faf8f5; color: #b06472; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: 2px solid #b06472; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), border-color 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-outline:hover { background: #f5e8ea; border-color: #945563; color: #945563; } .ds-btn-outline:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; }"
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; background: #faf8f5; color: #945563; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: 2px solid #b06472; border-radius: 0.5rem; cursor: pointer; transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), border-color 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-outline:hover { background: #f5e8ea; border-color: #945563; color: #7a4652; } .ds-btn-outline:focus-visible { outline: 2px solid #b06472; outline-offset: 2px; }"
     },
     {
       "name": "Gold Button",
@@ -169,7 +193,7 @@
       "refersTo": "button-gold",
       "description": "Premium CTA. Reserved for paid actions and gold-tier moments. Rare, never doubled on a screen.",
       "html": "<button class=\"ds-btn-gold\">Confirm Payment</button>",
-      "css": ".ds-btn-gold { display: inline-flex; align-items: center; justify-content: center; background: #b89651; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-gold:hover { background: #997a45; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); } .ds-btn-gold:focus-visible { outline: 2px solid #b89651; outline-offset: 2px; }"
+      "css": ".ds-btn-gold { display: inline-flex; align-items: center; justify-content: center; background: #7d633d; color: #faf8f5; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.4; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); transition: background 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-gold:hover { background: #685234; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); } .ds-btn-gold:focus-visible { outline: 2px solid #b89651; outline-offset: 2px; }"
     },
     {
       "name": "Card",
@@ -183,9 +207,9 @@
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "Hairline border, champagne fill, rose ring on focus.",
+      "description": "Champagne Edge hairline (4.2:1, so the field reads), champagne fill, rose ring on focus.",
       "html": "<label class=\"ds-input-wrap\"><span class=\"ds-input-label\">Studio</span><input class=\"ds-input\" type=\"text\" placeholder=\"Search studios\" /></label>",
-      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; } .ds-input-label { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; color: #4d4d4d; } .ds-input { background: #faf8f5; color: #1a1a1a; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; line-height: 1.6; letter-spacing: 0.01em; padding: 0.5rem 1rem; border: 1px solid #ebe4d8; border-radius: 0.5rem; transition: border-color 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #999999; } .ds-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 2px #b06472; } .ds-input:disabled { background: #dfd4c3; color: #999999; cursor: not-allowed; }"
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; } .ds-input-label { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; color: #4d4d4d; } .ds-input { background: #faf8f5; color: #1a1a1a; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1rem; line-height: 1.6; letter-spacing: 0.01em; padding: 0.5rem 1rem; border: 1px solid #87745a; border-radius: 0.5rem; transition: border-color 200ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1); width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #666666; } .ds-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 2px #b06472; } .ds-input:disabled { background: #dfd4c3; color: #999999; cursor: not-allowed; }"
     },
     {
       "name": "Rose Chip",

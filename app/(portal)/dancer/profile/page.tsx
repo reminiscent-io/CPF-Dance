@@ -245,7 +245,7 @@ export default function DancerProfilePage() {
               </span>
             )}
             {saveStatus === 'saved' && (
-              <span className="text-gold-700 flex items-center gap-1.5">
+              <span className="text-gold-800 flex items-center gap-1.5">
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
                 Saved
               </span>

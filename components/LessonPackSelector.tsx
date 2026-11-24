@@ -123,7 +123,7 @@ export function LessonPackSelector({ instructorId }: LessonPackSelectorProps) {
                 </p>
                 <p
                   className={`mt-1 text-xs tabular-nums tracking-wide ${
-                    isBestRate ? 'text-gold-700' : 'text-charcoal-500'
+                    isBestRate ? 'text-gold-800' : 'text-charcoal-500'
                   }`}
                 >
                   {formatPrice(perLesson)} each

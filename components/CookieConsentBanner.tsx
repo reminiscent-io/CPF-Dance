@@ -161,7 +161,7 @@ export default function CookieConsentBanner() {
                   Analytics cookies help us understand how you use the site.{' '}
                   <a
                     href="/privacy-policy"
-                    className="text-ballet-pink-600 hover:text-ballet-pink-700 underline"
+                    className="text-ballet-pink-700 hover:text-ballet-pink-800 underline"
                   >
                     Learn more
                   </a>
@@ -182,7 +182,7 @@ export default function CookieConsentBanner() {
                 </button>
                 <button
                   onClick={handleAcceptAll}
-                  className="px-4 py-2 text-sm font-medium text-white bg-ballet-pink-600 hover:bg-ballet-pink-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-champagne-50 bg-ballet-pink-700 hover:bg-ballet-pink-800 rounded-lg transition-colors"
                 >
                   Accept all
                 </button>
@@ -206,7 +206,7 @@ export default function CookieConsentBanner() {
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-6 bg-ballet-pink-600 rounded-full relative">
+                  <div className="w-10 h-6 bg-ballet-pink-700 rounded-full relative">
                     <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export default function CookieConsentBanner() {
                 <button
                   onClick={() => setAnalyticsConsent(!analyticsConsent)}
                   className={`flex-shrink-0 w-10 h-6 rounded-full relative transition-colors ${
-                    analyticsConsent ? 'bg-ballet-pink-600' : 'bg-charcoal-300'
+                    analyticsConsent ? 'bg-ballet-pink-700' : 'bg-charcoal-300'
                   }`}
                   aria-label={analyticsConsent ? 'Disable analytics' : 'Enable analytics'}
                 >
@@ -245,7 +245,7 @@ export default function CookieConsentBanner() {
               </button>
               <button
                 onClick={handleSavePreferences}
-                className="px-4 py-2 text-sm font-medium text-white bg-ballet-pink-600 hover:bg-ballet-pink-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-champagne-50 bg-ballet-pink-700 hover:bg-ballet-pink-800 rounded-lg transition-colors"
               >
                 Save preferences
               </button>

@@ -324,7 +324,7 @@ function PrivateLessonsContent() {
                 </span>
                 <span className="text-sm text-charcoal-500">
                   {balance === 1 ? 'lesson left' : 'lessons left'}
-                  {balance === 1 && <span className="ml-1.5 text-gold-700">· last one</span>}
+                  {balance === 1 && <span className="ml-1.5 text-gold-800">· last one</span>}
                 </span>
               </p>
             ) : (

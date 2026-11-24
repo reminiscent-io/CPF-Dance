@@ -266,7 +266,7 @@ export default async function PublicClassPage({ params }: { params: Promise<{ sl
                 )}
                 <Link
                   href={getLoginPathFor(enrollPath)}
-                  className="inline-flex min-h-control w-full items-center justify-center rounded-lg bg-rose-600 px-4 py-2 font-medium text-champagne-50 transition-colors hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+                  className="inline-flex min-h-control w-full items-center justify-center rounded-lg bg-rose-700 px-4 py-2 font-medium text-champagne-50 transition-colors hover:bg-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
                 >
                   Sign in to enroll
                 </Link>

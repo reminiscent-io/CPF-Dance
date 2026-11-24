@@ -118,7 +118,7 @@ export default function InquiriesPage() {
                         <p>
                           <a
                             href={`mailto:${inquiry.contact_email}`}
-                            className="text-rose-600 hover:underline"
+                            className="text-rose-700 hover:underline"
                           >
                             {inquiry.contact_email}
                           </a>
@@ -129,7 +129,7 @@ export default function InquiriesPage() {
                         <p>
                           <a
                             href={`tel:${inquiry.contact_phone}`}
-                            className="text-rose-600 hover:underline"
+                            className="text-rose-700 hover:underline"
                           >
                             {inquiry.contact_phone}
                           </a>

@@ -197,7 +197,7 @@ export function Calendar({
               </div>
               <div
                 className={`text-sm sm:text-lg font-semibold ${
-                  isToday(day) ? 'text-rose-600' : 'text-gray-900'
+                  isToday(day) ? 'text-rose-700' : 'text-gray-900'
                 }`}
               >
                 {day.getDate()}
@@ -318,7 +318,7 @@ export function Calendar({
               >
                 <div
                   className={`text-xs sm:text-sm font-semibold mb-0.5 sm:mb-1 flex-shrink-0 ${
-                    isToday(day) ? 'text-rose-600' : 'text-gray-700'
+                    isToday(day) ? 'text-rose-700' : 'text-gray-700'
                   }`}
                 >
                   {day.getDate()}

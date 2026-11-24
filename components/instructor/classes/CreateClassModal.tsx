@@ -178,7 +178,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                   id="create_is_virtual"
                   checked={formData.is_virtual || false}
                   onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
-                  className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                  className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
                 />
                 <label htmlFor="create_is_virtual" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                   Virtual lesson (Google Meet)
@@ -208,7 +208,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                     setRecurringEndDate('')
                   }
                 }}
-                className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-champagne-200 rounded"
+                className="w-4 h-4 text-rose-700 focus:ring-rose-500 border-champagne-200 rounded"
               />
               <label htmlFor="recurring_toggle" className="text-sm font-medium text-charcoal-700 cursor-pointer">
                 {formData.class_type === 'private'

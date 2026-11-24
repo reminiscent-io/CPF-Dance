@@ -48,8 +48,8 @@ export function Spinner({
   }
 
   const colors = {
-    rose: 'text-rose-600',
-    gilt: 'text-gold-600',
+    rose: 'text-rose-700',
+    gilt: 'text-gold-700',
     champagne: 'text-champagne-50',
     graphite: 'text-charcoal-500'
   }

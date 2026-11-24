@@ -193,7 +193,7 @@ export function GooglePlacesInput({
                   setShowCustomInput(true)
                   setIsOpen(false)
                 }}
-                className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 text-rose-600 font-medium text-sm transition-colors border-t border-gray-200"
+                className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 text-rose-700 font-medium text-sm transition-colors border-t border-gray-200"
                 type="button"
               >
                 + Enter Address Manually
@@ -239,7 +239,7 @@ export function GooglePlacesInput({
           <div className="flex gap-2">
             <button
               onClick={handleCustomSubmit}
-              className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium transition-colors"
+              className="flex-1 px-4 py-2 bg-rose-700 text-champagne-50 rounded-lg hover:bg-rose-800 font-medium transition-colors"
               type="button"
             >
               Save Address
@@ -263,7 +263,7 @@ export function GooglePlacesInput({
       )}
 
       {error && (
-        <p id="google-places-error" className="mt-1 text-sm text-red-600">
+        <p id="google-places-error" className="mt-1 text-sm text-rose-700">
           {error}
         </p>
       )}

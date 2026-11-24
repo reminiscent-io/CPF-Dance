@@ -12,18 +12,18 @@ const portalConfig = {
     subtitle: 'Access your dance journey',
     icon: '💃',
     gradient: 'from-rose-50 to-pink-50',
-    buttonColor: 'bg-rose-600 hover:bg-rose-700',
+    buttonColor: 'bg-rose-700 hover:bg-rose-800',
     ringColor: 'focus:ring-rose-500',
-    textColor: 'text-rose-600',
+    textColor: 'text-rose-700',
   },
   instructor: {
     title: 'Instructor Login',
     subtitle: 'Manage your students and classes',
     icon: '👩‍🏫',
     gradient: 'from-mauve-50 to-purple-50',
-    buttonColor: 'bg-mauve-600 hover:bg-mauve-700',
+    buttonColor: 'bg-mauve-700 hover:bg-mauve-800',
     ringColor: 'focus:ring-mauve-500',
-    textColor: 'text-mauve-600',
+    textColor: 'text-mauve-700',
   },
   studio: {
     title: 'Studio Login',
@@ -153,7 +153,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center ${config.buttonColor} text-white py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
+            className={`w-full flex items-center justify-center ${config.buttonColor} text-champagne-50 py-3 rounded-md transition duration-200 font-medium disabled:cursor-progress`}
           >
             {loading && <InlineSpinner className="mr-2" />}
             {loading ? 'Signing in...' : 'Sign In'}

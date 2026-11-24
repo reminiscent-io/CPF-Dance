@@ -136,7 +136,7 @@ export function SignaturePad({ onSave, readonly = false, initialData }: Signatur
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg transition-colors"
+            className="flex-1 px-4 py-2 bg-rose-700 hover:bg-rose-800 text-champagne-50 font-medium rounded-lg transition-colors"
           >
             Sign Here
           </button>

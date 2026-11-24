@@ -149,7 +149,7 @@ export default function EditWaiverPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-charcoal-700 mb-1">
-                  Title <span className="text-rose-600">*</span>
+                  Title <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   value={title}

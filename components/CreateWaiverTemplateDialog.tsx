@@ -82,7 +82,7 @@ export function CreateWaiverTemplateDialog({
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Template Title <span className="text-red-500">*</span>
+            Template Title <span className="text-rose-700">*</span>
           </label>
           <Input
             value={title}
@@ -128,7 +128,7 @@ export function CreateWaiverTemplateDialog({
               type="checkbox"
               checked={isShared}
               onChange={(e) => setIsShared(e.target.checked)}
-              className="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
+              className="w-4 h-4 text-rose-700 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
               disabled={loading}
             />
             <span className="text-sm text-gray-700">
@@ -139,7 +139,7 @@ export function CreateWaiverTemplateDialog({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Waiver Content <span className="text-red-500">*</span>
+            Waiver Content <span className="text-rose-700">*</span>
           </label>
           <RichTextEditor
             content={content}

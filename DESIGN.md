@@ -4,16 +4,20 @@ description: Closed coaching platform between one elite instructor and her dance
 colors:
   stage-rose: "#b06472"
   stage-rose-deep: "#945563"
+  stage-rose-velvet: "#7a4652"
   stage-rose-soft: "#f5e8ea"
   curtain-gilt: "#b89651"
   curtain-gilt-deep: "#997a45"
+  curtain-gilt-ink: "#7d633d"
   champagne-silk: "#faf8f5"
   champagne-page: "#f5f1ea"
   champagne-stroke: "#ebe4d8"
   champagne-mute: "#dfd4c3"
+  champagne-edge: "#87745a"
   stage-black: "#0a0a0a"
   stage-ink: "#1a1a1a"
   stage-graphite: "#4d4d4d"
+  stage-smoke: "#666666"
   ash-veil: "#999999"
 typography:
   display:
@@ -61,21 +65,21 @@ spacing:
   3xl: "4rem"
 components:
   button-primary:
-    backgroundColor: "{colors.stage-rose}"
+    backgroundColor: "{colors.stage-rose-deep}"
     textColor: "{colors.champagne-silk}"
     typography: "{typography.label}"
     rounded: "{rounded.lg}"
     padding: "0.5rem 1rem"
   button-primary-hover:
-    backgroundColor: "{colors.stage-rose-deep}"
+    backgroundColor: "{colors.stage-rose-velvet}"
     textColor: "{colors.champagne-silk}"
   button-outline:
     backgroundColor: "{colors.champagne-silk}"
-    textColor: "{colors.stage-rose}"
+    textColor: "{colors.stage-rose-deep}"
     rounded: "{rounded.lg}"
     padding: "0.5rem 1rem"
   button-gold:
-    backgroundColor: "{colors.curtain-gilt}"
+    backgroundColor: "{colors.curtain-gilt-ink}"
     textColor: "{colors.champagne-silk}"
     rounded: "{rounded.lg}"
     padding: "0.5rem 1rem"
@@ -128,27 +132,33 @@ This system explicitly rejects the SaaS dashboard idiom (KPI-card grids, sidebar
 A four-family palette: champagne paper, stage charcoal, ballet rose, curtain gilt. Each family has a tonal scale; the names below are the canonical uses.
 
 ### Primary
-- **Stage Rose** (#b06472, oklch ~58% 0.08 14): The single accent color. Primary CTAs, active nav state, destructive-confirm buttons, error punctuation. Treated as a velvet ribbon, not a brand color: it appears, it carries the action, it leaves. Used on roughly 5–10% of any screen at rest.
-- **Stage Rose Deep** (#945563): Hover and pressed state for Stage Rose. Same hue, four steps darker.
+- **Stage Rose** (#b06472, oklch ~58% 0.08 14): The single accent color. Treated as a velvet ribbon, not a brand color: it appears, it carries the action, it leaves. Used on roughly 5–10% of any screen at rest. At 4.0:1 on Champagne Silk it is too light for body-size text, so it carries the accent where no words sit on it: focus rings, outline strokes, dots, progress fills, the loading ribbon.
+- **Stage Rose Deep** (#945563): Rose with words on it or in it. Primary CTA fills, rose links and labels, active nav text, error messages. 5.3:1 on Champagne Silk, both ways.
+- **Stage Rose Velvet** (#7a4652): Hover for anything in Stage Rose Deep. Pressed goes one step further, to #5f3a43.
 - **Stage Rose Soft** (#f5e8ea): Background tint for active nav, selected chips, rose-on-rose moments where the surface needs to whisper the accent.
 
 ### Secondary
 - **Curtain Gilt** (#b89651, oklch ~67% 0.07 80): Premium accent reserved for gold-tier moments: confirmed-paid badges, completed-milestone marks, premium CTAs (the `gold` button variant). Never used as a system color; never used at the same time as Stage Rose on the same surface unless the page is intentionally orchestrated for both.
-- **Curtain Gilt Deep** (#997a45): Hover state for Curtain Gilt.
+- **Curtain Gilt Deep** (#997a45): Gilt icons and stars (3.8:1, enough for a graphic, not for words).
+- **Curtain Gilt Ink** (#7d633d): Gilt with words. The `gold` button fill (5.3:1 under Champagne Silk text) and gilt text such as "on the house" or "Confirmed". Curtain Gilt itself is 2.6:1 under paper text, so it never carries a label. Gold button hover is #685234.
 
 ### Neutral
 - **Champagne Silk** (#faf8f5): The default page surface. Replaces `#fff` everywhere. This is the paper.
 - **Champagne Page** (#f5f1ea): Secondary surface for raised areas, alternating rows, subtle differentiation.
 - **Champagne Stroke** (#ebe4d8): The default border color. Globally applied via `* { border-color: var(--color-champagne-200); }`.
 - **Champagne Mute** (#dfd4c3): Disabled-state backgrounds, deepest dividers when `champagne-stroke` is too quiet.
+- **Champagne Edge** (#87745a): The border of form fields (inputs, selects, textareas). Champagne Stroke is 1.2:1 on the paper, which makes a field's edge disappear; Edge is 4.2:1. Applied globally in `globals.css`.
 - **Stage Black** (#0a0a0a): Display headings only. Used for the strongest typographic emphasis on the marketing landing.
 - **Stage Ink** (#1a1a1a): Body text default. Charcoal-900, never pure black.
 - **Stage Graphite** (#4d4d4d): Secondary text, captions, deemphasized labels.
-- **Ash Veil** (#999999): Tertiary text, placeholder text, disabled text, helper hints. Never used for anything a dancer needs to read.
+- **Stage Smoke** (#666666): Placeholder text and the quietest text a dancer still needs to read (lesson counts like "/ 12", used-up rows). 5.4:1.
+- **Ash Veil** (#999999): Disabled text and pure punctuation (separator dots, empty-cell dashes, chevrons). 2.7:1, so never used for anything a dancer needs to read, placeholders included.
 
 ### Named Rules
 
 **The One Ribbon Rule.** Stage Rose is the ribbon, not the wallpaper. It appears on no more than ~10% of any screen at rest. If a layout wants more rose, it is a layout problem, not a license. Curtain Gilt is similarly rare; the two never compete for attention on the same surface.
+
+**The Readable Ribbon Rule.** Words never sit in or on Stage Rose or Curtain Gilt; both fall under WCAG AA's 4.5:1 on the paper. Rose text and rose fills behind text use Stage Rose Deep; gilt text and the gold button use Curtain Gilt Ink. Every text pair clears 4.5:1, and every field edge, icon and star clears 3:1.
 
 **The No-White Rule.** `#fff` is forbidden anywhere a surface or text is intended to be neutral. Champagne Silk is white. Component code that says `bg-white` or `text-white` against a colored background is a tech-debt marker, not a design choice.
 
@@ -210,10 +220,10 @@ The system is mostly flat. Surfaces sit on the champagne page; differentiation c
 ### Buttons
 
 - **Shape:** Lightly rounded (8px / `rounded-lg`). The radius is small enough to read as architectural, not playful.
-- **Primary:** Stage Rose background, Champagne Silk text, 0.5rem × 1rem padding at the default size. Hover: Stage Rose Deep. Active: charcoal-tinted Stage Rose. Focus ring: 2px Stage Rose at 50% offset from a 2px champagne offset (the WCAG focus halo).
+- **Primary:** Stage Rose Deep background, Champagne Silk text, 0.5rem × 1rem padding at the default size. Hover: Stage Rose Velvet. Active: #5f3a43. Focus ring: 2px Stage Rose at 50% offset from a 2px champagne offset (the WCAG focus halo).
 - **Secondary:** A charcoal-tinted variant historically called `mauve-600` in the Tailwind config; treat as deprecated unless explicitly documented for an existing screen. Prefer `outline` or `gold` for differentiation.
-- **Outline:** 2px Stage Rose stroke on Champagne Silk, Stage Rose text. Hover: stroke darkens to Stage Rose Deep, fill becomes Stage Rose Soft.
-- **Gold:** Curtain Gilt background, Champagne Silk text, 1px-`shadow-soft` resting elevation, hover deepens to Curtain Gilt Deep with `shadow-soft-lg`. Reserved for premium-gated CTAs (subscribe, upgrade lesson pack, complete payment). Never two gold buttons on one screen.
+- **Outline:** 2px Stage Rose stroke on Champagne Silk, Stage Rose Deep text. Hover: stroke darkens to Stage Rose Deep, text to Stage Rose Velvet, fill becomes Stage Rose Soft.
+- **Gold:** Curtain Gilt Ink background, Champagne Silk text, 1px-`shadow-soft` resting elevation, hover deepens to #685234 with `shadow-soft-lg`. Reserved for premium-gated CTAs (subscribe, upgrade lesson pack, complete payment). Never two gold buttons on one screen.
 - **Sizes:** sm (0.375rem × 0.75rem, 0.875rem text), md (default), lg (0.75rem × 1.5rem, 1.125rem text). Touch targets on dancer-facing mobile must be ≥44px tall regardless of size token.
 
 ### Cards
@@ -227,7 +237,7 @@ The system is mostly flat. Surfaces sit on the champagne page; differentiation c
 
 ### Inputs
 
-- **Style:** 1px Champagne Stroke border, Champagne Silk fill, 8px radius, 0.5rem × 1rem internal padding.
+- **Style:** 1px Champagne Edge border, Champagne Silk fill, 8px radius, 0.5rem × 1rem internal padding. Placeholder in Stage Smoke.
 - **Focus:** Border becomes transparent, 2px Stage Rose ring appears outside via box-shadow. No border-color shift.
 - **Error:** Stage Rose stroke (yes, the same accent — error is a Rose moment, not a separate destructive color). 0.875rem error message in Stage Rose Deep below the field.
 - **Disabled:** Champagne Mute fill, Ash Veil text, 0.6 opacity is forbidden (it produces muddy gray; use the explicit colors).
@@ -252,7 +262,7 @@ The system is mostly flat. Surfaces sit on the champagne page; differentiation c
 
 - **Rose Chip:** Stage Rose Soft fill, Stage Rose Deep text, 4px radius, 0.25rem × 0.5rem padding. Used for selected filters, status of "active student", "scheduled".
 - **Neutral Chip:** Champagne Page fill, Stage Graphite text, same shape. Used for unselected filters, neutral metadata.
-- **Gilt Chip:** Reserved for "paid", "premium", "completed" — uses Curtain Gilt at low chroma (#e8dbb8) with Curtain Gilt Deep text. Rare.
+- **Gilt Chip:** Reserved for "paid", "premium", "completed" — uses Curtain Gilt at low chroma (#f3eedc) with Curtain Gilt Ink text (4.9:1). Rare.
 
 ### Rich Text Editor (TipTap signature)
 

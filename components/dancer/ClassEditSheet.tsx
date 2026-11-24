@@ -397,7 +397,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
                   onChange={(e) => update('is_recurring', e.target.checked)}
                 />
                 <span
-                  className="absolute inset-0 rounded-full bg-champagne-200 peer-checked:bg-rose-600 transition-colors"
+                  className="absolute inset-0 rounded-full bg-champagne-200 peer-checked:bg-rose-700 transition-colors"
                 />
                 <span
                   className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-champagne-50 shadow-soft transition-transform peer-checked:translate-x-4"

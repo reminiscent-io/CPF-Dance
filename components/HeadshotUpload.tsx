@@ -216,12 +216,12 @@ export function HeadshotUpload({
           )}
         </div>
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-charcoal-500">
           JPEG, PNG, WebP, or GIF. Max 5MB.
         </p>
 
         {error && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-rose-700">
             {error}
           </p>
         )}

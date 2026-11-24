@@ -133,7 +133,7 @@ export function InstructorBottomNav() {
               onClick={() => handleNavClick(item.href)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isActive(item.href)
-                  ? 'text-rose-600'
+                  ? 'text-rose-700'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -149,12 +149,12 @@ export function InstructorBottomNav() {
               className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all transform -translate-y-3 ${
                 showPlusMenu
                   ? 'bg-gray-700 rotate-45'
-                  : 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-rose-700 hover:bg-rose-800'
               }`}
               aria-label={showPlusMenu ? 'Close menu' : 'Quick actions'}
               aria-expanded={showPlusMenu}
             >
-              <PlusIcon className="w-5 h-5 text-white transition-transform" />
+              <PlusIcon className="w-5 h-5 text-champagne-50 transition-transform" />
             </button>
 
             {/* Popup menu */}
@@ -207,7 +207,7 @@ export function InstructorBottomNav() {
               onClick={() => handleNavClick(item.href)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isActive(item.href)
-                  ? 'text-rose-600'
+                  ? 'text-rose-700'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
