@@ -200,7 +200,7 @@ export function NoteDetailModal({
           />
 
           <ModalFooter className="mt-2">
-            <Button type="button" variant="outline" onClick={onBack}>
+            <Button type="button" variant="secondary" onClick={onBack}>
               Back
             </Button>
             {isOwn && (

@@ -693,7 +693,7 @@ export default function DancerSchedulePage() {
                 )}
               </div>
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => {
                   setShowEventModal(false)
                   setShowCalendarMenu(false)

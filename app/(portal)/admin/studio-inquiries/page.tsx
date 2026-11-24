@@ -314,7 +314,7 @@ function ThreadViewModal({ inquiry, onClose }: ThreadViewModalProps) {
         </div>
 
         <div className="p-4 border-t border-champagne-200 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
         </div>

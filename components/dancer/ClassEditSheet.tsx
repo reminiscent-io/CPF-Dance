@@ -314,7 +314,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
           )}
         </SheetBody>
         <SheetFooter>
-          <Button variant="outline" onClick={() => setConfirmingBatch(null)} disabled={saving}>
+          <Button variant="secondary" onClick={() => setConfirmingBatch(null)} disabled={saving}>
             Back
           </Button>
           <Button onClick={() => saveBatch(confirmingBatch)} loading={saving}>

@@ -682,7 +682,7 @@ function TagInstructorModal({
             </div>
 
             <ModalFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="secondary" onClick={onClose}>
                 Close
               </Button>
               <Button
