@@ -1,4 +1,4 @@
--- Migration 57: Dancers can't write lesson-pack credits
+-- Migration 58: Dancers can't write lesson-pack credits
 --
 -- Two policies let a dancer (or her guardian) write lesson_pack_purchases
 -- straight through the Supabase REST API: INSERT a purchase with any

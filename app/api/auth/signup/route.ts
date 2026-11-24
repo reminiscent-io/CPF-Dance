@@ -21,23 +21,11 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    let guardianId = null
-
-    // If guardian email is provided, link the guardian's existing profile
-    if (guardianEmail && !isAtLeast13 && role === 'dancer') {
-      // Check if guardian profile already exists
-      const { data: existingGuardian } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', guardianEmail)
-        .single()
-
-      // A guardian is only linked when they already have an account: a
-      // profile row needs an auth user behind it, so one can't be made here.
-      if (existingGuardian) {
-        guardianId = existingGuardian.id
-      }
-    }
+    // A guardian link exposes both profiles (can_view_profile), so signup never
+    // sets one: the trigger ignores guardian_id in metadata (migration 57) and
+    // the instructor links the guardian. The email rides along for her to see.
+    const guardianContact =
+      guardianEmail && !isAtLeast13 && role === 'dancer' ? String(guardianEmail).trim() : null
 
     // Pass user data as metadata - the database trigger will create profile and student records
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -48,7 +36,7 @@ export async function POST(request: Request) {
           full_name: fullName,
           phone: phone || null,
           role: role,
-          guardian_id: guardianId,
+          guardian_email: guardianContact,
         }
       }
     })
@@ -63,7 +51,6 @@ export async function POST(request: Request) {
     }
 
     // Profile and student records are automatically created by the database trigger
-    // If guardianId exists, it will be linked to the profile
 
     const roleRedirects: Record<UserRole, string> = {
       instructor: '/instructor',

@@ -2,9 +2,10 @@
 --
 -- The production schema after migration 53, generated on 2026-11-12 from the
 -- live database's catalog, plus migrations 54-55 (class feedback), 56
--- (voice-notes bucket) and 57 (dancers can't write lesson credits) written in
--- by hand. To build a new database, run this file once in the SQL editor of a
--- fresh Supabase project, then any migration numbered above 57.
+-- (voice-notes bucket), 57 (guardian links) and 58 (dancers can't write
+-- lesson credits) written in by hand. To build a new database, run this file
+-- once in the SQL editor of a fresh Supabase project, then any migration
+-- numbered above 58.
 --
 -- migrations/ is the change history, not a way to build a database: 01-04 were
 -- deleted, and production has changes no migration made (the user_role enum
@@ -904,7 +905,6 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 AS $function$
 DECLARE
   user_role TEXT;
-  guardian_uuid UUID;
 BEGIN
   -- Get role from metadata, default to 'dancer' if not provided.
   -- SECURITY: clamp self-service signups to non-privileged roles.
@@ -913,22 +913,21 @@ BEGIN
     user_role := 'dancer';
   END IF;
 
-  guardian_uuid := (NEW.raw_user_meta_data->>'guardian_id')::UUID;
-
-  INSERT INTO public.profiles (id, email, phone, full_name, role, guardian_id, consent_given)
+  -- SECURITY: no guardian_id from metadata. The signer-up writes it, and a
+  -- guardian link exposes both profiles (can_view_profile). Staff set it.
+  INSERT INTO public.profiles (id, email, phone, full_name, role, consent_given)
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'phone',
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
     user_role::public.user_role,
-    guardian_uuid,
     false
   );
 
   IF user_role = 'dancer' THEN
-    INSERT INTO public.students (profile_id, guardian_id, is_active)
-    VALUES (NEW.id, guardian_uuid, true);
+    INSERT INTO public.students (profile_id, is_active)
+    VALUES (NEW.id, true);
   END IF;
 
   RETURN NEW;
@@ -1008,8 +1007,26 @@ AS $function$
 BEGIN
   IF current_user IN ('authenticated', 'anon')
      AND (NEW.role IS DISTINCT FROM OLD.role
-          OR NEW.linked_profile_id IS DISTINCT FROM OLD.linked_profile_id) THEN
-    RAISE EXCEPTION 'Only an administrator can change a profile''s role or linked profile'
+          OR NEW.linked_profile_id IS DISTINCT FROM OLD.linked_profile_id
+          OR NEW.guardian_id IS DISTINCT FROM OLD.guardian_id) THEN
+    RAISE EXCEPTION 'Only an administrator can change a profile''s role, linked profile or guardian'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+CREATE OR REPLACE FUNCTION public.protect_student_links()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+BEGIN
+  IF current_user IN ('authenticated', 'anon')
+     AND (NEW.guardian_id IS DISTINCT FROM OLD.guardian_id
+          OR NEW.profile_id IS DISTINCT FROM OLD.profile_id)
+     AND COALESCE(public.user_role(), '') NOT IN ('instructor', 'admin') THEN
+    RAISE EXCEPTION 'Only an instructor can change a student''s guardian or linked profile'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
   RETURN NEW;
@@ -1109,6 +1126,7 @@ CREATE TRIGGER promo_template_versions_freeze BEFORE DELETE OR UPDATE ON promo_t
 CREATE TRIGGER update_promo_template_versions_updated_at BEFORE UPDATE ON promo_template_versions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_promo_templates_updated_at BEFORE UPDATE ON promo_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON reviews FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER protect_student_links BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION protect_student_links();
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_studios_updated_at BEFORE UPDATE ON studios FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trigger_update_waiver_templates_updated_at BEFORE UPDATE ON waiver_templates FOR EACH ROW EXECUTE FUNCTION update_waiver_templates_updated_at();
@@ -1729,4 +1747,5 @@ COMMENT ON FUNCTION public.can_view_profile(uuid) IS 'Returns TRUE when the curr
 COMMENT ON FUNCTION public.promo_is_admin() IS 'True when the caller''s primary profile is an admin.';
 COMMENT ON FUNCTION public.promo_is_instructor() IS 'True when the caller''s primary profile is an instructor or admin.';
 COMMENT ON FUNCTION public.promo_owner_id() IS 'Primary profile id for the caller (follows linked_profile_id). Promo Studio ownership key.';
-COMMENT ON FUNCTION public.protect_profile_privileges() IS 'Blocks API users from changing profiles.role or profiles.linked_profile_id (migration 48).';
+COMMENT ON FUNCTION public.protect_profile_privileges() IS 'Blocks API users from changing profiles.role, linked_profile_id or guardian_id (migrations 48, 57).';
+COMMENT ON FUNCTION public.protect_student_links() IS 'Blocks dancers and guardians from changing students.guardian_id or profile_id; instructors, admins and the service role pass (migration 57).';
