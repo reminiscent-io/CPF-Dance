@@ -175,7 +175,7 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={uploading}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={uploading}>
             Cancel
           </Button>
           <Button type="submit" disabled={uploading || !file || !title} loading={uploading}>

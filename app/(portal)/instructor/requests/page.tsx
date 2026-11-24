@@ -617,7 +617,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" loading={isSubmitting}>

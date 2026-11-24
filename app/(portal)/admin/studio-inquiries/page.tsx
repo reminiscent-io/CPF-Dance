@@ -217,7 +217,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
         </div>
 
         <div className="p-4 border-t border-champagne-200 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose} disabled={sending}>
+          <Button variant="secondary" onClick={onClose} disabled={sending}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSend} loading={sending}>

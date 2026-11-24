@@ -378,7 +378,7 @@ export function IssueWaiverDialog({
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button variant="secondary" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
           <Button

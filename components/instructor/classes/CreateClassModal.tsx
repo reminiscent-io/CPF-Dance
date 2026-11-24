@@ -296,7 +296,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">
@@ -343,7 +343,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
             </div>
           </div>
           <ModalFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => setShowConfirmDialog(false)}>
+            <Button type="button" variant="secondary" onClick={() => setShowConfirmDialog(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={handleConfirmRecurring}>

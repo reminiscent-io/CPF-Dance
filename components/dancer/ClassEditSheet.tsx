@@ -469,7 +469,7 @@ export function ClassEditSheet({ isOpen, onClose, editing, onSaved }: ClassEditS
       </SheetBody>
 
       <SheetFooter>
-        <Button variant="outline" onClick={onClose} disabled={saving}>
+        <Button variant="secondary" onClick={onClose} disabled={saving}>
           Cancel
         </Button>
         <Button onClick={handleSubmit} loading={saving}>

@@ -820,7 +820,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button type="submit" loading={submitting}>

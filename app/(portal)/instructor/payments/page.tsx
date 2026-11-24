@@ -1031,7 +1031,7 @@ function InstructorPaymentsContent() {
 
           <div className="flex gap-3 pt-4">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseRequestModal}
               disabled={submittingRequest}
               className="flex-1"
@@ -1176,7 +1176,7 @@ function InstructorPaymentsContent() {
 
           <div className="flex gap-3 pt-4">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseRecordPaymentModal}
               disabled={recordingPayment}
               className="flex-1"

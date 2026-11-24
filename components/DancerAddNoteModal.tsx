@@ -246,7 +246,7 @@ export function DancerAddNoteModal({
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={submitting || !content.trim()} loading={submitting}>

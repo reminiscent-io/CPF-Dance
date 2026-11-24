@@ -774,7 +774,7 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
             </svg>
           </button>
           <div className="flex-1"></div>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

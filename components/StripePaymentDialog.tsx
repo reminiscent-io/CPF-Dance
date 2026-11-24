@@ -129,7 +129,7 @@ export function StripePaymentDialog({
         )}
 
         <ModalFooter>
-          <Button variant="outline" onClick={onClose} disabled={processing}>
+          <Button variant="secondary" onClick={onClose} disabled={processing}>
             Cancel
           </Button>
           <Button

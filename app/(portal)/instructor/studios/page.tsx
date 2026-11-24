@@ -385,7 +385,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>
@@ -496,7 +496,7 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Add Studio</Button>

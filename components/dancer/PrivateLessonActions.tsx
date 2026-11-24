@@ -175,7 +175,7 @@ export function PrivateLessonActions({
           />
         </div>
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={() => setShowReschedule(false)} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => setShowReschedule(false)} disabled={submitting}>
             Cancel
           </Button>
           <Button type="button" onClick={handleRescheduleSubmit} loading={submitting}>

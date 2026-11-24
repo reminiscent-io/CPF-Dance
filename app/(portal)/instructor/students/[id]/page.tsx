@@ -720,7 +720,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => {
                 setShowLinkModal(false)
                 setLinkEmail('')
@@ -795,7 +795,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseMergeModal}
               disabled={merging}
             >
@@ -870,7 +870,7 @@ export default function StudentDetailPage() {
 
           <ModalFooter className="mt-6">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleCloseNoteModal}
               disabled={savingNote}
             >
@@ -1054,7 +1054,7 @@ function EditStudentModal({ student, onClose, onSubmit }: EditStudentModalProps)
         </div>
 
         <ModalFooter className="mt-6">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

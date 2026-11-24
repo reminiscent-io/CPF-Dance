@@ -197,7 +197,7 @@ export default function EditWaiverPage() {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-champagne-200">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => router.push(`/instructor/waivers/${params?.id}`)}
                   disabled={saving}
                 >

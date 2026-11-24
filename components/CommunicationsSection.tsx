@@ -352,7 +352,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
           <ModalFooter className="mt-6">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowResponseModal(false)}
               disabled={responding}
             >
@@ -395,7 +395,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
           <ModalFooter className="mt-6">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowLinkModal(false)}
               disabled={linking}
             >

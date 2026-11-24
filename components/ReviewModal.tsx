@@ -257,7 +257,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={submitting || !selectedInstructorId || rating === 0} loading={submitting}>
               {submitting ? 'Submitting...' : existingReview ? 'Update Review' : 'Submit Review'}
             </Button>
