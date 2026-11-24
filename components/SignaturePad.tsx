@@ -123,7 +123,7 @@ export function SignaturePad({ onSave, readonly = false, initialData }: Signatur
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
-        className={`w-full border-2 border-gray-300 rounded-lg bg-white cursor-${readonly ? 'default' : 'crosshair'}`}
+        className={`w-full border-2 border-champagne-300 rounded-lg bg-white cursor-${readonly ? 'default' : 'crosshair'}`}
         style={{ touchAction: 'none' }}
       />
       {!readonly && (

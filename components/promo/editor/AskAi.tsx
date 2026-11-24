@@ -101,7 +101,7 @@ export function AskAi({ revise, onUndo }: { revise: ReviseState; onUndo: () => v
           value={instruction}
           maxLength={300}
           onChange={(event) => setInstruction(event.target.value)}
-          className="min-h-control min-w-0 flex-1 rounded-lg border border-champagne-200 bg-champagne-50 px-3 text-charcoal-900 placeholder:text-charcoal-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="min-h-control min-w-0 flex-1 rounded-lg border bg-champagne-50 px-3 text-charcoal-900 placeholder:text-charcoal-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
         />
         <Button type="submit" variant="outline" disabled={revise.busy || instruction.trim().length < 2} loading={revise.busy}>
           <SparklesIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />

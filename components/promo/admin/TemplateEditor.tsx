@@ -474,7 +474,7 @@ function TemplateSession({ data, brand, onReload }: { data: TemplateData; brand:
                   onChange={(event) => setJson({ text: event.target.value, error: null })}
                   spellCheck={false}
                   rows={24}
-                  className="w-full rounded-lg border border-champagne-200 bg-champagne-50 p-3 font-mono text-xs text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full rounded-lg border bg-champagne-50 p-3 font-mono text-xs text-charcoal-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
                 {json.error && <p className="text-sm text-rose-700">{json.error}</p>}
                 <Button variant="outline" onClick={applyJson}>
@@ -513,7 +513,7 @@ function TemplateSession({ data, brand, onReload }: { data: TemplateData; brand:
               maxLength={500}
               onChange={(event) => setNotes(event.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-champagne-200 bg-champagne-50 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full rounded-lg border bg-champagne-50 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
         }

@@ -161,7 +161,7 @@ export function HeadshotUpload({
     <div className="flex flex-col items-start gap-4">
       {/* Avatar display */}
       <div className="relative">
-        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-champagne-50 shadow-lg">
           {displayUrl ? (
             /* displayUrl is a FileReader data: URL while a new headshot is
                being previewed. next/image only accepts internal paths, static

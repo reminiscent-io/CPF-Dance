@@ -134,20 +134,24 @@
   --color-cream-950: var(--color-champagne-950);
 }
 
-* {
-  border-color: var(--color-champagne-200);
-}
+/* Default border colors. These sit in the base layer, after Tailwind's
+   preflight (which sets borders to currentColor), so any border-* utility
+   on an element still wins. Unlayered, they used to beat every utility. */
+@layer base {
+  * {
+    border-color: var(--color-champagne-200);
+  }
 
-/* Form fields: Champagne Stroke is 1.2:1 on the paper, too faint to show
-   where a field is (WCAG 1.4.11 asks 3:1). Champagne-700 gives 4.2:1.
-   Unlayered like the rule above, so it also wins over border utilities;
-   fields with no border (border-0) are unaffected. */
-:where(
-  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='button'], [type='submit'], [type='reset']),
-  select,
-  textarea
-) {
-  border-color: var(--color-champagne-700);
+  /* Form fields: Champagne Stroke is 1.2:1 on the paper, too faint to show
+     where a field is (WCAG 1.4.11 asks 3:1). Champagne Edge gives 4.2:1.
+     Give a field a border-* class only for a state (focus, error). */
+  :where(
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='button'], [type='submit'], [type='reset']),
+    select,
+    textarea
+  ) {
+    border-color: var(--color-champagne-700);
+  }
 }
 
 html, body {

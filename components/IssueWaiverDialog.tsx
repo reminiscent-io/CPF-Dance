@@ -307,7 +307,7 @@ export function IssueWaiverDialog({
               <select
                 value={selectedRecipientId}
                 onChange={(e) => setSelectedRecipientId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 disabled={loading}
               >
                 <option value="">-- Select --</option>

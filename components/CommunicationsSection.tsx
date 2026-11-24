@@ -158,7 +158,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
   }
 
   return (
-    <div className="mt-12 pt-8 border-t border-gray-200">
+    <div className="mt-12 pt-8 border-t border-champagne-200">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Communications</h2>
         <p className="text-gray-600">Manage studio inquiries, link to studios, and track your responses</p>
@@ -254,7 +254,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
                 </div>
 
                 {inquiry.message && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-champagne-200">
                     <p className="text-sm text-gray-700">{inquiry.message}</p>
                   </div>
                 )}
@@ -271,7 +271,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 flex-wrap gap-3">
+                <div className="flex items-center justify-between pt-4 border-t border-champagne-200 flex-wrap gap-3">
                   <div>
                     {linkedStudio ? (
                       <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
               <select
                 value={contactMethod}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setContactMethod(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 required
               >
                 <option value="">— Select method —</option>
@@ -380,7 +380,7 @@ export function CommunicationsSection({ studios, profile }: CommunicationsSectio
               <select
                 value={selectedStudioId}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStudioId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               >
                 <option value="">— Clear Link —</option>
                 {studios.map((studio) => (

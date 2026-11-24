@@ -183,12 +183,12 @@ export function Calendar({
     return (
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
-        <div className="grid grid-cols-8 border-b border-gray-200 flex-shrink-0">
-          <div className="p-1.5 sm:p-2 border-r border-gray-200 bg-gray-50"></div>
+        <div className="grid grid-cols-8 border-b border-champagne-200 flex-shrink-0">
+          <div className="p-1.5 sm:p-2 border-r border-champagne-200 bg-gray-50"></div>
           {days.map((day, index) => (
             <div
               key={index}
-              className={`p-1 sm:p-2 text-center border-r border-gray-200 ${
+              className={`p-1 sm:p-2 text-center border-r border-champagne-200 ${
                 isToday(day) ? 'bg-rose-50' : 'bg-gray-50'
               }`}
             >
@@ -209,11 +209,11 @@ export function Calendar({
         {/* Time grid - flex-1 to fill remaining space */}
         <div className="grid grid-cols-8 flex-1 min-h-0">
           {/* Time column */}
-          <div className="border-r border-gray-200 flex flex-col">
+          <div className="border-r border-champagne-200 flex flex-col">
             {hours.map(hour => (
               <div
                 key={hour}
-                className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 text-[10px] sm:text-xs text-gray-500 text-right pr-1 sm:pr-2 flex items-start min-h-[50px] sm:min-h-[70px]"
+                className="flex-1 border-b border-champagne-200 p-0.5 sm:p-1 text-[10px] sm:text-xs text-gray-500 text-right pr-1 sm:pr-2 flex items-start min-h-[50px] sm:min-h-[70px]"
               >
                 {hour % 12 || 12} {hour < 12 ? 'AM' : 'PM'}
               </div>
@@ -224,14 +224,14 @@ export function Calendar({
           {days.map((day, dayIndex) => {
             const dayHourMap = eventsByDateAndHour.get(getDateKeyET(day)) ?? EMPTY_HOUR_MAP
             return (
-            <div key={dayIndex} className="border-r border-gray-200 flex flex-col">
+            <div key={dayIndex} className="border-r border-champagne-200 flex flex-col">
               {hours.map(hour => {
                 const dayEvents = dayHourMap.get(hour) ?? EMPTY_EVENTS
 
                 return (
                   <div
                     key={hour}
-                    className="flex-1 border-b border-gray-200 p-0.5 sm:p-1 relative min-h-[50px] sm:min-h-[70px]"
+                    className="flex-1 border-b border-champagne-200 p-0.5 sm:p-1 relative min-h-[50px] sm:min-h-[70px]"
                   >
                     {dayEvents.map(event => (
                       <div
@@ -287,11 +287,11 @@ export function Calendar({
     return (
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
-        <div className="grid grid-cols-7 border-b border-gray-200 flex-shrink-0">
+        <div className="grid grid-cols-7 border-b border-champagne-200 flex-shrink-0">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div
               key={day}
-              className="p-1 sm:p-2 text-center text-xs sm:text-sm font-semibold text-gray-700 bg-gray-50 border-r border-gray-200"
+              className="p-1 sm:p-2 text-center text-xs sm:text-sm font-semibold text-gray-700 bg-gray-50 border-r border-champagne-200"
             >
               <span className="hidden sm:inline">{day}</span>
               <span className="sm:hidden">{day.charAt(0)}</span>
@@ -303,7 +303,7 @@ export function Calendar({
         <div className={`grid grid-cols-7 flex-1 min-h-0`} style={{ gridTemplateRows: `repeat(${numRows}, minmax(150px, 1fr))` }}>
           {days.map((day, index) => {
             if (!day) {
-              return <div key={index} className="border-r border-b border-gray-200 bg-gray-50"></div>
+              return <div key={index} className="border-r border-b border-champagne-200 bg-gray-50"></div>
             }
 
             const dayEvents = getEventsForDate(day)
@@ -312,7 +312,7 @@ export function Calendar({
             return (
               <div
                 key={index}
-                className={`border-r border-b border-gray-200 p-1 sm:p-2 flex flex-col overflow-hidden ${
+                className={`border-r border-b border-champagne-200 p-1 sm:p-2 flex flex-col overflow-hidden ${
                   isToday(day) ? 'bg-rose-50' : ''
                 }`}
               >
@@ -363,9 +363,9 @@ export function Calendar({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-champagne-200 overflow-hidden">
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-4 border-b border-gray-200 gap-2 sm:gap-0 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-4 border-b border-champagne-200 gap-2 sm:gap-0 flex-shrink-0">
         <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4">
           <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
             {viewMode === 'month' ? formatMonthYear(currentDate) : formatWeekRange(currentDate)}

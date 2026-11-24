@@ -565,7 +565,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               />
             ) : (
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.studio_id}
                 onChange={(e) => setFormData({ ...formData, studio_id: e.target.value })}
               >
@@ -602,7 +602,7 @@ function CreatePrivateLessonClassModal({ request, studios, onClose, onSuccess }:
               <select
                 id="duration-select"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Number.parseInt(e.target.value, 10))}
               >

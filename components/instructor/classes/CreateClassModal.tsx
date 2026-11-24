@@ -157,7 +157,7 @@ export function CreateClassModal({ studios, onClose, onSubmit }: CreateClassModa
                 Student (Optional)
               </label>
               <select
-                className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={formData.student_id || ''}
                 onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
               >

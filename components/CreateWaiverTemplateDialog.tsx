@@ -111,7 +111,7 @@ export function CreateWaiverTemplateDialog({
           <select
             value={waiverType}
             onChange={(e) => setWaiverType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             disabled={loading}
           >
             <option value="general">General</option>
@@ -128,7 +128,7 @@ export function CreateWaiverTemplateDialog({
               type="checkbox"
               checked={isShared}
               onChange={(e) => setIsShared(e.target.checked)}
-              className="w-4 h-4 text-rose-700 border-gray-300 rounded focus:ring-2 focus:ring-rose-500"
+              className="w-4 h-4 text-rose-700 border-champagne-300 rounded focus:ring-2 focus:ring-rose-500"
               disabled={loading}
             />
             <span className="text-sm text-gray-700">

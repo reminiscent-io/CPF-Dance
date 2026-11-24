@@ -169,7 +169,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               <select
                 value={selectedInstructorId}
                 onChange={(e) => setPickedInstructorId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm"
               >
                 <option value="">Select an instructor</option>
                 {instructors.map((inst) => (
@@ -232,7 +232,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               placeholder="Share your experience..."
               rows={4}
               maxLength={1000}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm resize-none"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm resize-none"
             />
             <p className="text-xs text-charcoal-500 mt-1 text-right">{content.length}/1000</p>
           </div>
@@ -243,7 +243,7 @@ export default function ReviewModal({ isOpen, onClose, onReviewSubmitted }: Revi
               type="checkbox"
               checked={showName}
               onChange={(e) => updateDraft({ showName: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-700 focus:ring-rose-500"
+              className="mt-0.5 h-4 w-4 rounded border-champagne-300 text-rose-700 focus:ring-rose-500"
             />
             <span className="text-sm text-gray-600">
               Display my first name and last initial with this review.

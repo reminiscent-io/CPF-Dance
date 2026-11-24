@@ -330,7 +330,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
           />
 
           {formData.address && (
-            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-champagne-200">
               <div>
                 <p className="text-xs text-charcoal-500">Address</p>
                 <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>
@@ -374,7 +374,7 @@ function EditStudioModal({ studio, onClose, onSubmit }: EditStudioModalProps) {
                 type="checkbox"
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="mr-2 h-4 w-4 text-rose-700 focus:ring-rose-500 border-gray-300 rounded"
+                className="mr-2 h-4 w-4 text-rose-700 focus:ring-rose-500 border-champagne-300 rounded"
               />
               <span className="text-sm font-medium text-charcoal-700">Active Studio</span>
             </label>
@@ -456,7 +456,7 @@ function AddStudioModal({ onClose, onSubmit }: AddStudioModalProps) {
           />
 
           {formData.address && (
-            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg border border-champagne-200">
               <div>
                 <p className="text-xs text-charcoal-500">Address</p>
                 <p className="text-sm font-medium text-charcoal-950">{formData.address}</p>

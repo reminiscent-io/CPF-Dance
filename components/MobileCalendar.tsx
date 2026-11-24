@@ -501,7 +501,7 @@ export function MobileCalendar({
     return (
       <div className="relative">
         {hours.map((hour) => (
-          <div key={hour} className="flex border-t border-gray-200" style={{ height: '60px' }}>
+          <div key={hour} className="flex border-t border-champagne-200" style={{ height: '60px' }}>
             <div className="w-14 flex-shrink-0 pr-2 text-right">
               <span className="text-xs text-charcoal-500 -mt-2 block">
                 {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
@@ -568,7 +568,7 @@ export function MobileCalendar({
 
     return (
       <div className="relative">
-        <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
+        <div className="sticky top-0 bg-white z-10 border-b border-champagne-200">
           <div className="flex">
             <div className="flex-shrink-0" style={{ width: `${GUTTER_WIDTH}px` }} />
             {weekDays.map((day, index) => (
@@ -600,14 +600,14 @@ export function MobileCalendar({
         
         <div className="relative">
           {hours.map((hour) => (
-            <div key={hour} className="flex border-t border-gray-100" style={{ height: `${HOUR_HEIGHT}px` }}>
+            <div key={hour} className="flex border-t border-champagne-200" style={{ height: `${HOUR_HEIGHT}px` }}>
               <div className="flex-shrink-0 text-right pr-1" style={{ width: `${GUTTER_WIDTH}px` }}>
                 <span className="text-[10px] text-gray-500 -mt-1.5 block">
                   {hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`}
                 </span>
               </div>
               {weekDays.map((_, dayIndex) => (
-                <div key={dayIndex} className="flex-1 border-l border-gray-100 relative" />
+                <div key={dayIndex} className="flex-1 border-l border-champagne-200 relative" />
               ))}
             </div>
           ))}
@@ -718,7 +718,7 @@ export function MobileCalendar({
   const renderMonthEventList = () => {
     return (
       <>
-        <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-champagne-200">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
             {formatSelectedDateHeader()}
           </h3>
@@ -839,7 +839,7 @@ export function MobileCalendar({
 
       </div>
 
-      <div className="border-t border-gray-200" />
+      <div className="border-t border-champagne-200" />
 
       <div 
         ref={timelineScrollRef}
@@ -855,7 +855,7 @@ export function MobileCalendar({
         
         {viewMode === 'day' && (
           <div className="bg-white">
-            <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b border-gray-200">
+            <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b border-champagne-200">
               <h3 className="text-sm font-semibold text-gray-700">
                 {formatSelectedDateHeader()}
               </h3>

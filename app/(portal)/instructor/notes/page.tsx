@@ -685,7 +685,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
               Student
             </label>
             <select
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.student_id}
               onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
             >
@@ -703,7 +703,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
               Related Class
             </label>
             <select
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.class_id || ''}
               onChange={(e) => setFormData({ ...formData, class_id: e.target.value || undefined })}
             >
@@ -808,7 +808,7 @@ function EditNoteModal({ note, students, classes, onClose, onSubmit }: EditNoteM
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-champagne-200 bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border bg-champagne-50 text-charcoal-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
             >

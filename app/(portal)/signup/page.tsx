@@ -154,7 +154,7 @@ function InstructorRequestForm() {
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="Jane Smith"
               disabled={loading}
             />
@@ -173,7 +173,7 @@ function InstructorRequestForm() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -191,7 +191,7 @@ function InstructorRequestForm() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="(555) 123-4567"
               disabled={loading}
             />
@@ -209,7 +209,7 @@ function InstructorRequestForm() {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={3}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition resize-none`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition resize-none`}
               placeholder="Share your dance teaching experience, specialties, or what brings you here..."
               disabled={loading}
             />
@@ -374,7 +374,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="Jane Smith"
               disabled={loading}
             />
@@ -393,7 +393,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -411,7 +411,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="(555) 123-4567"
               disabled={loading}
             />
@@ -467,7 +467,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
                 value={formData.guardianEmail}
                 onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
                 required
-                className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+                className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
                 placeholder="guardian@example.com"
                 disabled={loading}
               />
@@ -488,7 +488,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
               minLength={8}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />
@@ -508,7 +508,7 @@ function DancerSignupForm({ next }: { next: string | null }) {
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />

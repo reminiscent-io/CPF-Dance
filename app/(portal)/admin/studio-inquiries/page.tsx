@@ -137,7 +137,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
               type="text"
               value={inquiry.contact_email}
               disabled
-              className="w-full px-3 py-2 border border-champagne-300 rounded-lg bg-champagne-100 text-charcoal-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-100 text-charcoal-500"
             />
           </div>
 
@@ -147,7 +147,7 @@ function EmailComposeModal({ inquiry, onClose, onSent }: EmailComposeModalProps)
               type="text"
               value={`CPF Dance Inquiry | ${inquiry.studio_name}`}
               disabled
-              className="w-full px-3 py-2 border border-champagne-300 rounded-lg bg-champagne-100 text-charcoal-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-100 text-charcoal-500"
             />
           </div>
 

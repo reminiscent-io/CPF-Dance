@@ -131,7 +131,7 @@ export function DancerAddNoteModal({
               Link to Class (optional)
             </label>
             {initialClass ? (
-              <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="px-4 py-3 bg-gray-50 border border-champagne-200 rounded-lg">
                 <p className="font-medium text-gray-900">{initialClass.title}</p>
                 <p className="text-sm text-gray-500">
                   {formatClassDate(initialClass.start_time)}
@@ -140,7 +140,7 @@ export function DancerAddNoteModal({
               </div>
             ) : availableClasses.length > 0 ? (
               <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                 value={getSelectValue()}
                 onChange={(e) => handleClassChange(e.target.value)}
               >

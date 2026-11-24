@@ -36,7 +36,7 @@ export function Input({
         id={inputId}
         className={`
           ${fieldClass}
-          ${error ? 'border-rose-500 focus:ring-rose-500' : 'border-champagne-200'}
+          ${error ? 'border-rose-600 focus:ring-rose-500' : ''}
           ${className}
         `}
         aria-invalid={error ? 'true' : 'false'}
@@ -84,7 +84,7 @@ export function Textarea({
         id={textareaId}
         className={`
           ${fieldClass}
-          ${error ? 'border-rose-500 focus:ring-rose-500' : 'border-champagne-200'}
+          ${error ? 'border-rose-600 focus:ring-rose-500' : ''}
           ${className}
         `}
         aria-invalid={error ? 'true' : 'false'}

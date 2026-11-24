@@ -935,7 +935,7 @@ function InstructorPaymentsContent() {
                   }
                 }
               }}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- Select {requestFormData2.recipient_type} --</option>
               {requestFormData2.recipient_type === 'student'
@@ -966,7 +966,7 @@ function InstructorPaymentsContent() {
                   value={requestFormData2.recipient_name}
                   onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_name: e.target.value })}
                   placeholder={requestFormData2.recipient_type === 'student' ? 'e.g., Sarah Johnson' : 'e.g., Downtown Dance Studio'}
-                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
 
@@ -979,7 +979,7 @@ function InstructorPaymentsContent() {
                   value={requestFormData2.recipient_email}
                   onChange={(e) => setRequestFormData2({ ...requestFormData2, recipient_email: e.target.value })}
                   placeholder="e.g., sarah@example.com"
-                  className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
             </>
@@ -996,7 +996,7 @@ function InstructorPaymentsContent() {
               value={requestFormData2.amount}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
@@ -1007,7 +1007,7 @@ function InstructorPaymentsContent() {
             <select
               value={requestFormData2.payment_method}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, payment_method: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="cash">Cash</option>
               <option value="check">Check</option>
@@ -1024,7 +1024,7 @@ function InstructorPaymentsContent() {
               value={requestFormData2.notes}
               onChange={(e) => setRequestFormData2({ ...requestFormData2, notes: e.target.value })}
               placeholder="Additional notes or description..."
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               rows={3}
             />
           </div>
@@ -1069,7 +1069,7 @@ function InstructorPaymentsContent() {
             <select
               value={recordPaymentData.student_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, student_id: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- Select Student --</option>
               {students.map(s => (
@@ -1091,7 +1091,7 @@ function InstructorPaymentsContent() {
               value={recordPaymentData.amount}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
@@ -1102,7 +1102,7 @@ function InstructorPaymentsContent() {
             <select
               value={recordPaymentData.payment_method}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, payment_method: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="cash">Cash</option>
               <option value="check">Check</option>
@@ -1118,7 +1118,7 @@ function InstructorPaymentsContent() {
               type="date"
               value={recordPaymentData.transaction_date}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, transaction_date: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
@@ -1129,7 +1129,7 @@ function InstructorPaymentsContent() {
             <select
               value={recordPaymentData.class_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, class_id: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- None --</option>
               {classEarnings.map(cls => (
@@ -1150,7 +1150,7 @@ function InstructorPaymentsContent() {
             <select
               value={recordPaymentData.studio_id}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, studio_id: e.target.value })}
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
               <option value="">-- None --</option>
               {studios.map(s => (
@@ -1169,7 +1169,7 @@ function InstructorPaymentsContent() {
               value={recordPaymentData.notes}
               onChange={(e) => setRecordPaymentData({ ...recordPaymentData, notes: e.target.value })}
               placeholder="Additional notes about this payment..."
-              className="w-full px-3 py-2 border border-champagne-200 rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              className="w-full px-3 py-2 border rounded-lg bg-champagne-50 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
               rows={3}
             />
           </div>

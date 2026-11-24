@@ -140,7 +140,7 @@ export function AddNoteModal({
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.student_id}
               onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
               disabled={!!initialStudentId}
@@ -246,7 +246,7 @@ export function AddNoteModal({
             </label>
             <select
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value as NoteVisibility })}
             >

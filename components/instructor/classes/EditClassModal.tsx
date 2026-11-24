@@ -466,7 +466,7 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                   Add Student
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                   onChange={async (e) => {
                     const studentId = e.target.value
                     if (studentId) {
@@ -633,7 +633,7 @@ export function EditClassModal({ classData, studios, onClose, onSubmit, onDelete
                       ].filter(Boolean).join(' · ')}
                     </div>
                     <select
-                      className="w-full px-3 py-2 text-sm border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
                       defaultValue=""
                       onChange={async (e) => {
                         const select = e.currentTarget

@@ -43,9 +43,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   }
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
+    <div className="border border-champagne-300 rounded-lg overflow-hidden">
       {/* Toolbar */}
-      <div className="border-b border-gray-300 bg-gray-50 p-2 flex flex-wrap gap-1">
+      <div className="border-b border-champagne-300 bg-gray-50 p-2 flex flex-wrap gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -155,7 +155,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       </div>
 
       {/* Template Variables Helper */}
-      <div className="border-t border-gray-200 bg-gray-50 p-2 text-xs text-gray-600">
+      <div className="border-t border-champagne-200 bg-gray-50 p-2 text-xs text-gray-600">
         <strong>Available variables:</strong> {'{'}
         {'{'}issue_date{'}'} {'}'}, {'{'}
         {'{'}signature_date{'}'} {'}'}, {'{'}

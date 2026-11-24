@@ -124,7 +124,7 @@ export function UploadAssetModal({ onClose, onSuccess }: UploadAssetModalProps) 
                 relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
                 ${dragActive
                   ? 'border-rose-500 bg-rose-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  : 'border-champagne-300 hover:border-champagne-400'
                 }
                 ${file ? 'bg-green-50 border-green-500' : ''}
               `}

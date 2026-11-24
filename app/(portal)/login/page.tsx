@@ -125,7 +125,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="you@example.com"
               disabled={loading}
             />
@@ -144,7 +144,7 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
+              className={`w-full px-4 py-2 border rounded-md focus:ring-2 ${config.ringColor} focus:border-transparent transition`}
               placeholder="••••••••"
               disabled={loading}
             />

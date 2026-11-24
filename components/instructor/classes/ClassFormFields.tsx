@@ -24,7 +24,7 @@ export function ClassInstructorField({ form }: { form: ClassFormController }) {
         Instructor (leave blank to use yourself)
       </label>
       <select
-        className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
         value={formData.instructor_id || ''}
         onChange={(e) => patchForm({ instructor_id: e.target.value })}
       >
@@ -95,7 +95,7 @@ export function ClassStudioField({ form, studios }: { form: ClassFormController;
         />
       ) : (
         <select
-          className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
           value={formData.studio_id}
           onChange={(e) => patchForm({ studio_id: e.target.value })}
         >
@@ -120,7 +120,7 @@ export function ClassTypeField({ form }: { form: ClassFormController }) {
       </label>
       <select
         required
-        className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
         value={formData.class_type}
         onChange={(e) => patchForm({ class_type: e.target.value as ClassType })}
       >
@@ -169,7 +169,7 @@ export function ClassScheduleFields({ form }: { form: ClassFormController }) {
         </label>
         <select
           required
-          className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
           value={durationMinutes}
           onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
         >
@@ -243,7 +243,7 @@ export function ClassPricingFields({ form }: { form: ClassFormController }) {
         </label>
         <select
           required
-          className="w-full px-4 py-2 border border-champagne-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
           value={formData.pricing_model || 'per_person'}
           onChange={(e) => patchForm({ pricing_model: e.target.value as PricingModel })}
         >

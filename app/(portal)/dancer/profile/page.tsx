@@ -339,7 +339,7 @@ export default function DancerProfilePage() {
                       <select
                         value={formData.skill_level}
                         onChange={(e) => handleFieldChange('skill_level', e.target.value)}
-                        className="w-full px-3 py-2 border border-champagne-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                        className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
                       >
                         {skillLevelOptions.map((option) => (
                           <option key={option.value} value={option.value}>
