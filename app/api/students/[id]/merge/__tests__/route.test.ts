@@ -141,6 +141,46 @@ describe('POST /api/students/[id]/merge', () => {
     expect(find(sessionCalls, 'students', 'update')[0].values).toEqual({ goals: 'Turns' })
   })
 
+  it('moves reviews, feedback, class sales, reschedule requests and personal classes', async () => {
+    const studentOf = (call: Call) => call.filters.find(([column]) => column === 'student_id')?.[1]
+    adminRespond = (call) => {
+      if (call.table === 'reviews' && call.op === 'select') {
+        // Both students reviewed instructor-1; the source also reviewed instructor-2
+        return studentOf(call) === SOURCE
+          ? ok([{ id: 'rev-src-1', instructor_id: 'instructor-1' }, { id: 'rev-src-2', instructor_id: 'instructor-2' }])
+          : ok([{ instructor_id: 'instructor-1' }])
+      }
+      if (call.table === 'reviews' && call.op === 'update') return ok([{ id: 'rev-src-2' }])
+      if (call.table === 'class_purchases' && call.op === 'update') return ok([{ id: 'sale-1' }])
+      if (call.table === 'class_feedback' && call.op === 'update') return ok([{ id: 'fb-1' }])
+      if (call.table === 'lesson_reschedule_requests' && call.op === 'update') return ok([{ id: 'rr-1' }])
+      if (call.table === 'personal_classes' && call.op === 'update') return ok([{ id: 'pc-1' }])
+      return ok([])
+    }
+
+    const response = await merge()
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.records_transferred).toMatchObject({
+      reviews: 1,
+      class_purchases: 1,
+      class_feedback: 1,
+      lesson_reschedule_requests: 1,
+      personal_classes: 1,
+    })
+
+    // The target's own review of instructor-1 wins; the source's duplicate goes
+    const [reviewDelete] = find(adminCalls, 'reviews', 'delete')
+    expect(reviewDelete.filters).toEqual([['id', ['rev-src-1']]])
+
+    for (const table of ['class_purchases', 'class_feedback', 'lesson_reschedule_requests', 'personal_classes']) {
+      const [moveCall] = find(adminCalls, table, 'update')
+      expect(moveCall.values).toEqual({ student_id: TARGET })
+      expect(moveCall.filters).toEqual([['student_id', SOURCE]])
+    }
+  })
+
   it('returns an error and keeps the source student when the purchase transfer fails', async () => {
     adminRespond = admin({
       'lesson_pack_purchases:update': { data: null, error: { message: 'permission denied' } },
