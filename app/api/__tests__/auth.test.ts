@@ -120,28 +120,13 @@ describe('Auth API Routes', () => {
       expect(data.error).toBe('Failed to create account')
     })
 
-    it('should handle guardian creation for under-13 dancers', async () => {
-      const newUser = {
-        id: 'young-dancer-id',
-        email: 'young@test.com',
-        user_metadata: { full_name: 'Young Dancer', role: 'dancer' },
-      }
-
+    it('never links a guardian at signup, only passes the email along', async () => {
       mockSignUp.mockResolvedValue({
-        data: { user: newUser, session: null },
+        data: {
+          user: { id: 'young-dancer-id', email: 'young@test.com', user_metadata: {} },
+          session: null,
+        },
         error: null,
-      })
-
-      // Mock guardian profile check and creation
-      const mockInsert = vi.fn().mockReturnThis()
-      const mockSelect = vi.fn().mockReturnThis()
-      mockFrom.mockReturnValue({
-        select: mockSelect,
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn()
-          .mockResolvedValueOnce({ data: null, error: { code: 'PGRST116' } }) // Guardian not found
-          .mockResolvedValueOnce({ data: { id: 'new-guardian-id' }, error: null }), // After insert
-        insert: mockInsert,
       })
 
       const request = new NextRequest('http://localhost:5000/api/auth/signup', {
@@ -153,7 +138,7 @@ describe('Auth API Routes', () => {
           fullName: 'Young Dancer',
           role: 'dancer',
           isAtLeast13: false,
-          guardianEmail: 'parent@test.com',
+          guardianEmail: ' parent@test.com ',
         }),
       })
 
@@ -162,6 +147,12 @@ describe('Auth API Routes', () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
+      // A guardian link exposes both profiles, so signup must not look one up
+      // or hand the trigger a guardian_id (migration 57).
+      expect(mockFrom).not.toHaveBeenCalled()
+      const metadata = mockSignUp.mock.calls[0][0].options.data
+      expect(metadata).not.toHaveProperty('guardian_id')
+      expect(metadata.guardian_email).toBe('parent@test.com')
     })
 
     it('should reject admin self-registration for security', async () => {
