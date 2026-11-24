@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCurrentUserWithRole } from '@/lib/auth/server-auth'
-import { hasInstructorPrivileges } from '@/lib/auth/privileges'
+import { findCurrentDancerStudent, getCurrentUserWithRole } from '@/lib/auth/server-auth'
+import { hasDancerPrivileges, hasInstructorPrivileges } from '@/lib/auth/privileges'
 import { refundCreditForClass } from '@/lib/lesson-credits'
 import { notifyCancellation } from '@/lib/notifications/private-lessons'
 import { deleteMeetEvent } from '@/lib/google/calendar'
@@ -55,7 +54,6 @@ export async function POST(
     }
 
     const { id: classId } = await params
-    const supabase = await createClient()
     const admin = createAdminClient()
 
     const body = await request.json().catch(() => ({}))
@@ -79,20 +77,33 @@ export async function POST(
       return NextResponse.json({ error: 'Class is already cancelled' }, { status: 400 })
     }
 
-    const isInstructor = hasInstructorPrivileges(profile)
-    const enrolledStudent = classRow.enrollments[0]?.students
-    const isEnrolledDancer = profile.role === 'dancer' && enrolledStudent?.profile_id === profile.id
+    // This route cancels the whole class row, refunds a lesson-pack credit and
+    // closes the private-lesson request. That's only right for a private lesson.
+    // Group classes and workshop days are cancelled from the class edit dialog.
+    if (classRow.class_type !== 'private') {
+      return NextResponse.json({ error: 'Only private lessons can be cancelled here' }, { status: 400 })
+    }
 
-    if (!isInstructor && !isEnrolledDancer) {
-      // Verify session-side that the dancer truly owns this enrollment.
-      const { data: ownEnrollment } = await supabase
-        .from('enrollments')
-        .select('id')
-        .eq('class_id', classId)
-        .maybeSingle()
-      if (!ownEnrollment) {
+    const isInstructor = hasInstructorPrivileges(profile)
+    let enrolledStudent = classRow.enrollments[0]?.students
+
+    if (isInstructor) {
+      if (profile.role !== 'admin' && classRow.instructor_id !== profile.id) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
+    } else {
+      if (!hasDancerPrivileges(profile)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      // The dancer must hold the lesson alone: every enrollment on it is hers.
+      const student = await findCurrentDancerStudent()
+      const enrollments = classRow.enrollments
+      const ownsLesson = !!student && enrollments.length > 0 &&
+        enrollments.every(enrollment => enrollment.student_id === student.id)
+      if (!ownsLesson) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      enrolledStudent = enrollments[0].students
     }
 
     const cancelledBy: 'dancer' | 'instructor' = isInstructor ? 'instructor' : 'dancer'
