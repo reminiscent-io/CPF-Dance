@@ -29,11 +29,12 @@ export function Button({
     (loading ? 'cursor-progress' : 'disabled:opacity-50 disabled:cursor-not-allowed')
 
   // Filled rose is reserved for the one primary action per page and for
-  // selected states. Everything else gets neutral borders/text.
+  // selected states. Outline carries the rose as a stroke (DESIGN.md);
+  // secondary and ghost stay neutral.
   const variants = {
     primary: 'bg-rose-700 text-champagne-50 hover:bg-rose-800 focus:ring-rose-500 active:bg-rose-900',
     secondary: 'border border-champagne-300 text-charcoal-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
-    outline: 'border border-champagne-300 text-charcoal-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
+    outline: 'border-2 border-rose-600 bg-champagne-50 text-rose-700 hover:border-rose-700 hover:bg-rose-100 hover:text-rose-800 focus:ring-rose-500 active:bg-rose-200',
     ghost: 'text-charcoal-500 hover:text-rose-700 hover:bg-champagne-100 focus:ring-rose-500 active:bg-champagne-200',
     gold: 'bg-gold-800 text-champagne-50 hover:bg-gold-900 focus:ring-gold-500 active:bg-gold-950'
   }
