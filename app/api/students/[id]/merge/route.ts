@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireInstructor } from '@/lib/auth/server-auth'
+
+// A failed transfer step. Every child table's student_id FK is ON DELETE
+// CASCADE, so deleting the source after a failed move would destroy the rows
+// left behind (paid lesson-pack credits included). The route stops instead.
+class MergeStepError extends Error {
+  constructor(public step: string, public cause: unknown) {
+    super(`Merge step failed: ${step}`)
+  }
+}
+
+function checked<T>(step: string, result: { data: T; error: unknown }): T {
+  if (result.error) throw new MergeStepError(step, result.error)
+  return result.data
+}
 
 export async function POST(
   request: NextRequest,
@@ -72,6 +87,13 @@ export async function POST(
       )
     }
 
+    // The caller is an authorized instructor and the merge moves the student's
+    // whole record, so the transfers run with the service role. The session
+    // client can't: payments and lesson_pack_purchases have no instructor
+    // UPDATE policy, and enrollments, notes, waivers and relationships only
+    // let the caller update rows tied to her own classes, notes or waivers.
+    const admin = createAdminClient()
+
     const recordsTransferred = {
       enrollments: 0,
       notes: 0,
@@ -83,15 +105,15 @@ export async function POST(
     }
 
     // 1. Handle enrollments (must handle unique constraint on student_id + class_id)
-    const { data: sourceEnrollments } = await supabase
+    const sourceEnrollments = checked('enrollments', await admin
       .from('enrollments')
       .select('id, class_id')
-      .eq('student_id', sourceStudentId)
+      .eq('student_id', sourceStudentId))
 
-    const { data: targetEnrollments } = await supabase
+    const targetEnrollments = checked('enrollments', await admin
       .from('enrollments')
       .select('class_id')
-      .eq('student_id', targetStudentId)
+      .eq('student_id', targetStudentId))
 
     const targetClassIds = new Set(targetEnrollments?.map(e => e.class_id) || [])
 
@@ -101,78 +123,78 @@ export async function POST(
       .map(e => e.id) || []
 
     if (conflictingEnrollmentIds.length > 0) {
-      await supabase
+      checked('enrollments', await admin
         .from('enrollments')
         .delete()
-        .in('id', conflictingEnrollmentIds)
+        .in('id', conflictingEnrollmentIds))
     }
 
     // Update remaining enrollments
-    const { data: updatedEnrollments } = await supabase
+    const updatedEnrollments = checked('enrollments', await admin
       .from('enrollments')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.enrollments = updatedEnrollments?.length || 0
 
     // 2. Transfer notes
-    const { data: updatedNotes } = await supabase
+    const updatedNotes = checked('notes', await admin
       .from('notes')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.notes = updatedNotes?.length || 0
 
     // 3. Transfer payments
-    const { data: updatedPayments } = await supabase
+    const updatedPayments = checked('payments', await admin
       .from('payments')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.payments = updatedPayments?.length || 0
 
     // 4. Transfer private lesson requests
-    const { data: updatedRequests } = await supabase
+    const updatedRequests = checked('private_lesson_requests', await admin
       .from('private_lesson_requests')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.private_lesson_requests = updatedRequests?.length || 0
 
-    // 5. Transfer lesson pack purchases
-    const { data: updatedPacks } = await supabase
+    // 5. Transfer lesson pack purchases (their usage rows follow the purchase id)
+    const updatedPacks = checked('lesson_pack_purchases', await admin
       .from('lesson_pack_purchases')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.lesson_pack_purchases = updatedPacks?.length || 0
 
     // 6. Transfer waivers
-    const { data: updatedWaivers } = await supabase
+    const updatedWaivers = checked('waivers', await admin
       .from('waivers')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.waivers = updatedWaivers?.length || 0
 
     // 7. Handle instructor_student_relationships
     // Get source relationships
-    const { data: sourceRelationships } = await supabase
+    const sourceRelationships = checked('relationships', await admin
       .from('instructor_student_relationships')
       .select('id, instructor_id')
-      .eq('student_id', sourceStudentId)
+      .eq('student_id', sourceStudentId))
 
     // Get target relationships to check for duplicates
-    const { data: targetRelationships } = await supabase
+    const targetRelationships = checked('relationships', await admin
       .from('instructor_student_relationships')
       .select('instructor_id')
-      .eq('student_id', targetStudentId)
+      .eq('student_id', targetStudentId))
 
     const targetInstructorIds = new Set(targetRelationships?.map(r => r.instructor_id) || [])
 
@@ -182,18 +204,18 @@ export async function POST(
       .map(r => r.id) || []
 
     if (conflictingRelIds.length > 0) {
-      await supabase
+      checked('relationships', await admin
         .from('instructor_student_relationships')
         .delete()
-        .in('id', conflictingRelIds)
+        .in('id', conflictingRelIds))
     }
 
     // Update remaining relationships
-    const { data: updatedRels } = await supabase
+    const updatedRels = checked('relationships', await admin
       .from('instructor_student_relationships')
       .update({ student_id: targetStudentId })
       .eq('student_id', sourceStudentId)
-      .select()
+      .select('id'))
 
     recordsTransferred.relationships = updatedRels?.length || 0
 
@@ -216,10 +238,10 @@ export async function POST(
     }
 
     if (Object.keys(profileUpdates).length > 0) {
-      await supabase
+      checked('profile fields', await supabase
         .from('students')
         .update(profileUpdates)
-        .eq('id', targetStudentId)
+        .eq('id', targetStudentId))
     }
 
     // 9. Delete source student
@@ -258,6 +280,15 @@ export async function POST(
       message: `Successfully merged student into ${profile?.full_name || 'dancer account'}`
     })
   } catch (error) {
+    if (error instanceof MergeStepError) {
+      console.error(`Merge failed moving ${error.step}:`, error.cause)
+      // Steps run in order and each moves by student_id, so a retry picks up
+      // whatever is still on the source.
+      return NextResponse.json(
+        { error: `Merge stopped while moving ${error.step}. The source student was kept; run the merge again to finish.` },
+        { status: 500 }
+      )
+    }
     console.error('Unexpected error during merge:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
